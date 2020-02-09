@@ -30,7 +30,7 @@ body {font-family: Arial, Helvetica, sans-serif;}
                 success:function(res){
                     var data = "<form method='POST' action=''><select name='group'>";
                     $.each(res,function(index,value){
-                        data += "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                        data += "<option value='" + value['id'] + "'>" + value['name'] + "</option>";
                     });
                     data += "</select></form>";
                     $("#datalist").html(data);
