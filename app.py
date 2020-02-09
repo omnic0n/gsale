@@ -28,7 +28,6 @@ def livesearch():
     query = "select * from groups where name LIKE '%{}%' order by name".format(searchbox)
     cur.execute(query)
     result = list(cur.fetchall())
-    print result
     return jsonify(result)
 
 @app.route('/groups/add', methods=['GET', 'POST'])
@@ -54,10 +53,7 @@ def groups_list():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY id ASC")
     groups = list(cur.fetchall())
-    value = ''
-    for group in groups:
-        value += "<TR><TD>%s</TD><TD>%s</TD></TR>" % (str(group['id']), str(group['name']))
-    return "<TABLE border = '1'><TR><TH>ID</TH><TH>Name</TH></TR>" + value + "</TABLE><BR><A HREF='/'>Home</A>"
+    return render_template('list.html', groups=groups)
 
 if __name__ == '__main__':
     app.run(debug=True)
