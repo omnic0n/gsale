@@ -28,6 +28,7 @@ def livesearch():
     query = "select * from groups where name LIKE '%{}%' order by name".format(searchbox)
     cur.execute(query)
     result = list(cur.fetchall())
+    print result
     return jsonify(result)
 
 @app.route('/groups/add', methods=['GET', 'POST'])
