@@ -1,0 +1,28 @@
+<HTML>
+{% extends "layout.html" %}
+{% block body %}
+<center>
+<form method="POST" action="">
+    <H1>Enter Group Information </H1> <br>
+    <table><tr><td>
+    Date <input type = "text" name= "date" />
+    </td></tr><tr><td>
+    Location
+    <select name="location">
+        <option value="gsale">Garage Sale</option>
+        <option value="online">Online</option>
+        <option value="pawn">Pawn Shop</option>
+        <option value="store">Store</option>
+        <option value="thrift">Thrift Store</option>
+    </select>
+    </td></tr><tr><td>
+    Items <input type = "text" name= "items" />
+    </td></tr><tr><td>
+    <input type = "submit">
+    </td></tr><tr></table>
+</form>
+<br>
+<a href="/">Home</a>
+</center>
+{% endblock %}
+</HTML>

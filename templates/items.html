@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<style>
+body {font-family: Arial, Helvetica, sans-serif;}
+    * {box-sizing: border-box;}
+    
+    .form-inline {  
+      display: flex;
+      flex-flow: row wrap;
+      align-items: center;
+    }
+</style>
+</head>
+<body>
+<form class="form-inline">
+    <input type="text" id = "livebox">
+    <p id = "datalist"></p>
+</form>
+</body>
+<script>
+    $(document).ready(function(){
+        $("#livebox").on("input",function(e){
+            $("#datalist").empty();
+            $.ajax({
+                method:"post",
+                url:"/livesearch",
+                data:{text:$("#livebox").val()},
+                success:function(res){
+                    var data = "<form method='POST' action=''><select name='group'>";
+                    $.each(res,function(index,value){
+                        data += "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    });
+                    data += "</select></form>";
+                    $("#datalist").html(data);
+                }
+            });
+        });
+    });
+</script>
+</html>
