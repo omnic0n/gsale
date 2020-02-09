@@ -59,4 +59,4 @@ def groups_list():
     return "<TABLE border = '1'><TR><TH>ID</TH><TH>Name</TH></TR>" + value + "</TABLE><BR><A HREF='/'>Home</A>"
 
 if __name__ == '__main__':
-    app.run(debut=True)
+    app.run(debug=True)
