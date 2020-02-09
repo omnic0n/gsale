@@ -14,13 +14,12 @@
     <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
-          <a class="navbar-brand mr-4" href="/">Flask Blog</a>
+          <a class="navbar-brand mr-4" href="/">Gsale App</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="/">Home</a>
               <a class="nav-item nav-link" href="/about">About</a>
             </div>
             <!-- Navbar Right Side -->
@@ -39,13 +38,21 @@
         </div>
         <div class="col-md-4">
           <div class="content-section">
-            <h3>Sidebar</h3>
+            <h3>Navigation</h3>
             <p class='text-muted'>You can put any information here you'd like.
               <ul class="list-group">
-                <li class="list-group-item list-group-item-light">Home</li>
-                <li class="list-group-item list-group-item-light">List Groups</li>
-                <li class="list-group-item list-group-item-light">List Items</li>
-                <li class="list-group-item list-group-item-light">Add Items</li>
+                <li class="list-group-item list-group-item-light">
+                    <a class="navbar-brand mr-4" href="/items/list">List Items</a>
+                </li>
+                <li class="list-group-item list-group-item-light">
+                    <a class="navbar-brand mr-4" href="groups/list">List Groups</a>
+                </li>
+                <li class="list-group-item list-group-item-light">
+                    <a class="navbar-brand mr-4" href="/items/add">Add Items</a>
+                </li>
+                <li class="list-group-item list-group-item-light">
+                    <a class="navbar-brand mr-4" href="/groups/add">Add Groups</a>
+                </li>
               </ul>
             </p>
           </div>
