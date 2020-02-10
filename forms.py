@@ -7,7 +7,7 @@ class PurchaseForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired(), Length(min=2, max=20)])
     location = SelectField('location', coerce=int)
-    group = SelectField('group') 
+    group = SelectField('group', coerce=int) 
     price = StringField('price') 
     submit = SubmitField('Submit')
 
