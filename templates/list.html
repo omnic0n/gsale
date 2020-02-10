@@ -1,16 +1,13 @@
 <HTML>
 {% extends "layout.html" %}
-{% block body %}
+{% block content %}
 <TABLE border = '1'>
 {% for group in groups %}
 <TR>
-    <TD>{{ group.id }}</TD>
-    <TD>{{ group.name }}</TD>
+    <TD>{{ group['id'] }}</TD>
+    <TD>{{ group['name'] }}</TD>
 </TR>
 {% endfor %}
 </TABLE>
-    <center>
-        <a href="/">Home</a>
-    </center>
-{% endblock %}   
+{% endblock content %}
 </HTML>
