@@ -2,9 +2,8 @@
 {% extends "layout.html" %}
 {% block body %}
 <TABLE border = '1'>
-{% for groups in group %}
+{% for group in groups %}
 <TR>
-    <TD>{{ group }}</TD>
     <TD>{{ group.id }}</TD>
     <TD>{{ group.name }}</TD>
 </TR>
