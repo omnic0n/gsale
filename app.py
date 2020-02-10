@@ -18,8 +18,9 @@ def index():
     return render_template('index.html')
 
 @app.route('/items/bought')
-def items():
-    return render_template('items.html')
+def bought_items():
+    form = PurchaseForm()
+    return render_template('items.html', form=form)
 
 @app.route("/livesearch",methods=["POST","GET"])
 def livesearch():
