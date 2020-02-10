@@ -28,7 +28,7 @@ def bought_items():
 
     form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
-    form.location.choices = [(location['id'], location['name']) for location in location]
+    form.location.choices = [(location['id'], location['name']) for location in locations]
     return render_template('items.html', form=form)
 
 @app.route("/livesearch",methods=["POST","GET"])
