@@ -15,5 +15,7 @@ class AddGroup(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired(), Length(min=2, max=20)])
     location = SelectField('location')
-    price = StringField('price') 
+    price = StringField('price')
+    date = StringField('date',
+                           validators=[DataRequired())])
     submit = SubmitField('Submit')
