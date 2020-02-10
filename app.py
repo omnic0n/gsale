@@ -50,7 +50,9 @@ def groups_add():
     form.location.choices = [(location['id'], location['name']) for location in locations]
     if request.method == "POST":
         details = request.form
-        groupName = '_'.join([details['date'], details['location'], details['name']])
+        cur.execute("SELECT name FROM location where id = %s", details['location'])
+        location = cur.fetchone()
+        groupName = '_'.join([details['date'], location, details['name']])
         cur = mysql.connection.cursor()
         cur.execute("SELECT id FROM groups where name = %s", (groupName,))
         rv = cur.fetchone()
