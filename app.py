@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
+from forms import PurchaseForm
+
 app = Flask(__name__)
 
 app.secret_key = '4T3*%go^Gcn7TrYm'
