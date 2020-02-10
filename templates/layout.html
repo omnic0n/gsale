@@ -72,7 +72,27 @@
       </div>
     </main>
 
-
+    <!-- Live Search lookup -->
+    <script>
+        $(document).ready(function(){
+            $("#livebox").on("input",function(e){
+                $("#datalist").empty();
+                $.ajax({
+                    method:"post",
+                    url:"/livesearch",
+                    data:{text:$("#livebox").val()},
+                    success:function(res){
+                        var data = "<form method='POST' action=''><select name='group'>";
+                        $.each(res,function(index,value){
+                            data += "<option value='" + value['id'] + "'>" + value['name'] + "</option>";
+                        });
+                        data += "</select></form>";
+                        $("#datalist").html(data);
+                    }
+                });
+            });
+        });
+    </script>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
