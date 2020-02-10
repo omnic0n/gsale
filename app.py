@@ -21,6 +21,10 @@ def index():
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM groups ORDER BY id ASC")
+    groups = list(cur.fetchall())
+    print groups
     form = PurchaseForm()
     return render_template('items.html', form=form)
 
