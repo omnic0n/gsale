@@ -19,7 +19,7 @@ mysql = MySQL(app)
 def index():
     return render_template('index.html')
 
-@app.route('/items/bought')
+@app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     form = PurchaseForm()
     return render_template('items.html', form=form)
