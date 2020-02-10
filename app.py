@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
-from forms import PurchaseForm
+from forms import PurchaseForm, AddGroup
 
 app = Flask(__name__)
 
