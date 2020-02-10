@@ -55,7 +55,7 @@ def groups_add():
         cur.execute("SELECT id FROM groups where name = %s", (groupName,))
         rv = cur.fetchone()
         if not cur.rowcount:
-            cur.execute("INSERT INTO groups(name, price) VALUES (%s)", (groupName, price))
+            cur.execute("INSERT INTO groups(name, price) VALUES (%s, %s)", (groupName, details['price']))
             mysql.connection.commit()
             flash('Successfully added value to groups')
         else:
