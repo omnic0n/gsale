@@ -8,14 +8,14 @@ CREATE TABLE items (
 
 CREATE TABLE purchase (
      id MEDIUMINT NOT NULL,
-     location CHAR(50) NOT NULL,
+     location MEDIUMINT NOT NULL,
      date DATE NOT NULL,
      price  DECIMAL(6,2) NOT NULL
 );
 
 CREATE TABLE sale (
      id MEDIUMINT NOT NULL,
-     location CHAR(50) NOT NULL,
+     location MEDIUMINT NOT NULL,
      date DATE NOT NULL,
      price  DECIMAL(6,2) NOT NULL,
      price_tax DECIMAL(6,2),
@@ -30,3 +30,21 @@ CREATE TABLE groups (
      PRIMARY KEY (id),
      UNIQUE (name)
 );
+
+CREATE TABLE location (
+     id MEDIUMINT NOT NULL AUTO_INCREMENT,
+     name CHAR(50) NOT NULL,
+     PRIMARY KEY (id),
+     UNIQUE (name)
+);
+
+INSERT INTO location (id, name) values 
+('', 'garage sale'), 
+('', 'thrift'), 
+('', 'pawn'), 
+('', 'ebay'), 
+('', 'facebook'), 
+('', 'hibid'), 
+('', 'brockbuysgames'), 
+('', 'store'), 
+('', 'other');

@@ -23,9 +23,12 @@ def bought_items():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY id ASC")
     groups = list(cur.fetchall())
+    cur.execute("SELECT * FROM location ORDER BY id ASC")
+    locations = list(cur.fetchall())
 
     form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
+    form.location.choices = [(location['id'], location['name']) for location in location]
     return render_template('items.html', form=form)
 
 @app.route("/livesearch",methods=["POST","GET"])
