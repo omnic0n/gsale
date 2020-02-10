@@ -1,11 +1,9 @@
-<HTML>
 {% extends "layout.html" %}
 {% block content %}
-<form class="form-inline">
-    Group Search <input type="text" id = "livebox">
-    <p id = "datalist"></p>
-</form>
-{% endblock content %}
+    <form class="form-inline">
+        Group Search <input type="text" id = "livebox">
+        <p id = "datalist"></p>
+    </form>
 <!-- Live Search lookup -->
 <script>
 $(document).ready(function(){
@@ -27,4 +25,4 @@ $(document).ready(function(){
     });
 });
 </script>
-</html>
+{% endblock content %}
