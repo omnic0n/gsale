@@ -62,7 +62,7 @@ def groups_add():
             flash('This value already exists')
         cur.close()
         return redirect(url_for('groups_add'))
-    return render_template('groups.html')
+    return render_template('groups.html', form=form)
 
 @app.route('/groups/list')
 def groups_list():
