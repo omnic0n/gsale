@@ -15,8 +15,18 @@ body {font-family: Arial, Helvetica, sans-serif;}
 </head>
 <body>
 <form class="form-inline">
-    <input type="text" id = "livebox">
+    Group Search <input type="text" id = "livebox">
     <p id = "datalist"></p>
+    Date <input type = "text" name= "date" />
+    Location
+    <select name="location">
+        <option value="gsale">Garage Sale</option>
+        <option value="online">Online</option>
+        <option value="pawn">Pawn Shop</option>
+        <option value="store">Store</option>
+        <option value="thrift">Thrift Store</option>
+    </select>
+    Price <input type = "text" name= "price" />
 </form>
 </body>
 <script>
