@@ -42,14 +42,20 @@ def livesearch():
 
 @app.route('/groups/add', methods=['GET', 'POST'])
 def groups_add():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM location ORDER BY id ASC")
+    locations = list(cur.fetchall())
+
+    form = AddGroup()
+    form.location.choices = [(location['id'], location['name']) for location in locations]
     if request.method == "POST":
         details = request.form
-        groupName = '_'.join([details['date'], details['location'], details['items']])
+        groupName = '_'.join([details['date'], details['location'], details['name']])
         cur = mysql.connection.cursor()
         cur.execute("SELECT id FROM groups where name = %s", (groupName,))
         rv = cur.fetchone()
         if not cur.rowcount:
-            cur.execute("INSERT INTO groups(name) VALUES (%s)", (groupName,))
+            cur.execute("INSERT INTO groups(name, price) VALUES (%s)", (groupName, price))
             mysql.connection.commit()
             flash('Successfully added value to groups')
         else:
