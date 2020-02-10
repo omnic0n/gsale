@@ -4,25 +4,5 @@
         Group Search <input type="text" id = "livebox">
         <p id = "datalist"></p>
     </form>
-<!-- Live Search lookup -->
-<script>
-$(document).ready(function(){
-    $("#livebox").on("input",function(e){
-        $("#datalist").empty();
-        $.ajax({
-            method:"post",
-            url:"/livesearch",
-            data:{text:$("#livebox").val()},
-            success:function(res){
-                var data = "<form method='POST' action=''><select name='group'>";
-                $.each(res,function(index,value){
-                    data += "<option value='" + value['id'] + "'>" + value['name'] + "</option>";
-                });
-                data += "</select></form>";
-                $("#datalist").html(data);
-            }
-        });
-    });
-});
-</script>
 {% endblock content %}
+
