@@ -12,6 +12,6 @@ class PurchaseForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired(), Length(min=2, max=20)])
     location = SelectField('location', choices=location_list)
-    group = StringField('group') 
+    group = SelectField('group') 
     price = StringField('price',validators=[DataRequired()]) 
     submit = SubmitField('Submit')

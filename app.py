@@ -6,7 +6,6 @@ app = Flask(__name__)
 
 app.secret_key = '4T3*%go^Gcn7TrYm'
 
-
 app.config['MYSQL_HOST'] = 'gsale.cz541jbd6nid.us-east-2.rds.amazonaws.com'
 app.config['MYSQL_USER'] = 'gsale'
 app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
@@ -15,17 +14,19 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
+cur = mysql.connection.cursor()
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
-    cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY id ASC")
     groups = list(cur.fetchall())
-    print groups
+
     form = PurchaseForm()
+    form.group.choices = [(group['id'], group['name']) for group in groups]
     return render_template('items.html', form=form)
 
 @app.route("/livesearch",methods=["POST","GET"])
@@ -57,7 +58,6 @@ def groups_add():
 
 @app.route('/groups/list')
 def groups_list():
-    cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY id ASC")
     groups = list(cur.fetchall())
     return render_template('list.html', groups=groups)
