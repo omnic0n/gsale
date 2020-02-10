@@ -17,7 +17,7 @@ mysql = MySQL(app)
 def index():
     return render_template('index.html')
 
-@app.route('/items')
+@app.route('/items/bought')
 def items():
     return render_template('items.html')
 
