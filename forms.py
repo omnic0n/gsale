@@ -6,7 +6,7 @@ from wtforms.validators import DataRequired, Length, EqualTo
 class PurchaseForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired(), Length(min=2, max=20)])
-    location = SelectField('location')
+    location = SelectField('location', choice=[])
     group = SelectField('group') 
     price = StringField('price') 
     submit = SubmitField('Submit')
@@ -14,7 +14,7 @@ class PurchaseForm(FlaskForm):
 class AddGroup(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired(), Length(min=2, max=20)])
-    location = SelectField('location')
+    location = SelectField('location', choice=[])
     price = StringField('price')
     date = StringField('date',
                            validators=[DataRequired(), Length(min=8, max=8)])
