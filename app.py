@@ -14,14 +14,13 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
-cur = mysql.connection.cursor()
-
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
+    cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY id ASC")
     groups = list(cur.fetchall())
 
@@ -58,6 +57,7 @@ def groups_add():
 
 @app.route('/groups/list')
 def groups_list():
+    cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY id ASC")
     groups = list(cur.fetchall())
     return render_template('list.html', groups=groups)
