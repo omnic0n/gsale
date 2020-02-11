@@ -9,6 +9,9 @@ class PurchaseForm(FlaskForm):
     location = SelectField('location', coerce=int)
     group = SelectField('group', coerce=int) 
     price = StringField('price') 
+    date = StringField('date',
+                           validators=[DataRequired(), Length(min=8, max=8)])
+    description = StringField('description')
     submit = SubmitField('Submit')
 
 class AddGroup(FlaskForm):

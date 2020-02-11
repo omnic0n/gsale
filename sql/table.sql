@@ -2,6 +2,7 @@ CREATE TABLE items (
      id MEDIUMINT NOT NULL AUTO_INCREMENT,
      group_id MEDIUMINT,
      name CHAR(50) NOT NULL,
+     sold BOOLEAN NOT NULL DEFAULT 0,
      description CHAR(120) NOT NULL,
      PRIMARY KEY (id),
 );
@@ -39,13 +40,12 @@ CREATE TABLE location (
      UNIQUE (name)
 );
 
-INSERT INTO location (id, name) values 
-('', 'garagesale'), 
-('', 'thrift'), 
-('', 'pawn'), 
-('', 'ebay'), 
-('', 'facebook'), 
-('', 'hibid'), 
-('', 'brockbuysgames'), 
-('', 'store'), 
-('', 'other');
+INSERT INTO location (id, name, long_name) values 
+('', 'garagesale', 'Garage Sale'), 
+('', 'thrift', 'Thrift Store'), 
+('', 'pawn', 'Pawn Shop'), 
+('', 'ebay', 'Ebay'), 
+('', 'facebook', 'Facebook Marketplace'), 
+('', 'hibid', 'Hibid'), 
+('', 'brockbuysgames', 'BrockBuysGames'), 
+('', 'halfpricebooks', 'Half Price Books');
