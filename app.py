@@ -35,10 +35,9 @@ def bought_items():
         details = request.form
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO items(group_id, name, description) VALUES (%s, %s, %s)", 
-                    (details['group'], details['name'], details['description'],))
-        return str(cur.lastrowid)
+                    (details['group'], details['name'], details['description'],)) 
         cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
-                    (item_id, details['location'], details['date'], details['price'],))
+                    (str(cur.lastrowid), details['location'], details['date'], details['price'],))
         cur.close()
         return redirect(url_for('bought_items'))
     return render_template('items_purchased.html', form=form)
