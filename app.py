@@ -97,7 +97,7 @@ def items_list():
 def describe_item():
     item = request.args.get('item', type = str)
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items where id is %s", item)
+    cur.execute("SELECT * FROM items where id is %s", (item, ))
     item = list(cur.fetchall())
     return render_template('items_describe.html', item=item)
 
