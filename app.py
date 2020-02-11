@@ -112,7 +112,7 @@ def describe_item():
                             item=item, 
                             purchase=purchase, 
                             location=location, 
-                            group=get_group_name_from_id(item['group_id']))
+                            group=get_group_name_from_id(item[0]['group_id']))
 
 if __name__ == '__main__':
     app.run(debug=True)
