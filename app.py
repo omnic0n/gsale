@@ -101,9 +101,10 @@ def describe_item():
     item = list(cur.fetchone())
     cur.execute("SELECT * FROM purchase where id = %s", (id, ))
     purchase = list(cur.fetchone())
-    cur.execute("SELECT name FROM location where id = %s", (purchase['location'],))
-    location = cur.fetchone()['name']
-    return render_template('items_describe.html', item=item, purchase=purchase, location=location)
+    print purchase['location']
+    #cur.execute("SELECT name FROM location where id = %s", (purchase['location'],))
+    #location = cur.fetchone()['name']
+    return render_template('items_describe.html', item=item, purchase=purchase)
 
 if __name__ == '__main__':
     app.run(debug=True)
