@@ -22,7 +22,7 @@ def get_group_name_from_id(group_id):
 def get_location_from_id(attribute, location_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT %s FROM location where id = %s", (attribute, location_id,))
-    return cur.fetchone()[attribute]
+    return cur.fetchone()['%s', (attribute)]
 
 @app.route('/')
 def index():
