@@ -32,8 +32,12 @@ def bought_items():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO items(group_id, name, description) VALUES (%s, %s, %s)", (details['group'], details['name'], details['description'])) 
-        #cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", (str(cur.lastrowid), details['location'], details['date'], details['price'],))
+        cur.execute("INSERT INTO items(group_id, name, description) VALUES (%s, %s, %s)", 
+                    (details['group'], details['name'], details['description']))
+        mysql.connection.commit()
+        cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
+                    (str(cur.lastrowid), details['location'], details['date'], details['price'],))
+        mysql.connection.commit()
         cur.close()
         return redirect(url_for('bought_items'))
     return render_template('items_purchased.html', form=form)
