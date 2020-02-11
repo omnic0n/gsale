@@ -37,7 +37,8 @@ def bought_items():
         cur.execute("INSERT INTO items(group_id, name, description) VALUES (%s, %s, %s)", 
                     (details['group'], details['name'], details['description'],))
         cur.execute("SELECT LAST_INSERT_ID()")
-        item_id = cur.fetchone()['id']
+        item_id = cur.fetchone()
+        return item_id
         cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
                     (item_id, details['location'], details['date'], details['price'],))
         cur.close()
