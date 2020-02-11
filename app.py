@@ -3,7 +3,6 @@ from flask_mysqldb import MySQL
 from forms import PurchaseForm, AddGroup
 
 import config 
-mysql = MySQL(app)
 
 @app.route('/')
 def index():
