@@ -9,7 +9,7 @@
 </TR>
 {% for item in items %}
 <TR>
-    <TD>{{ item['name'] }}</TD>
+    <TD><a href = "/items/describe?item={{ item['name'] }}">{{ item['name'] }}</TD>
     <TD>{{ item['description'] }}</TD>
     <TD>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</TD>
 </TR>

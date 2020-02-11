@@ -93,5 +93,10 @@ def items_list():
     items = list(cur.fetchall())
     return render_template('items_list.html', items=items)
 
+@app.route('/items/describe')
+def describe_item():
+    item = request.args.get('item', type = str)
+    return item
+    
 if __name__ == '__main__':
     app.run(debug=True)
