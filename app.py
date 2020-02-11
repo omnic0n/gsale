@@ -31,6 +31,19 @@ def bought_items():
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if not form.validate_on_submit():
         return render_template('items_purchased.html',form=form)
+    if request.method == "POST":
+        details = request.form
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO items(group_id, name, description) 
+                     VALUES (%s, %s, %s)", 
+                     (details['group'], details['name'], details['description'],))
+        cur.execute("SELECT LAST_INSERT_ID()")
+        item_id = cur.fetchone()['id']
+        cur.execute("INSERT INTO purchase(id, location, date, price) 
+                     VALUES (%s, %s, %s, %s)", 
+                     (item_id, details['location'], details['date'], details['price'],))
+        cur.close()
+        return redirect(url_for('bought_items'))
     return render_template('items_purchased.html', form=form)
 
 @app.route("/livesearch",methods=["POST","GET"])
