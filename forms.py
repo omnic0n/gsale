@@ -11,5 +11,5 @@ class PurchaseForm(FlaskForm):
     price = StringField('price') 
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
-    description = StringField('description')
+    platform = SelectField('platform', coerce=int)
     submit = SubmitField('Submit')

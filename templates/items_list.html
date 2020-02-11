@@ -5,7 +5,7 @@
     <thead>
         <tr>
             <th>Name</th> 
-            <th>Description</th>
+            <th>Platform</th>
             <th>Sold</th>
         </tr>
     </thead>
@@ -20,7 +20,7 @@
         {% for item in items %}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{{ item['description'] }}</td>
+            <td>{{ item['platform'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
         </tr>
         {% endfor %}

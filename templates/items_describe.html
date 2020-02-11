@@ -6,7 +6,7 @@
         <tr>
             <td>ID</td> 
             <td>Name</td> 
-            <td>Description</td>
+            <td>Platform</td>
             <td>Sold</td>
             <td>Price</td>
             <td>Date</td>
@@ -18,7 +18,7 @@
         <tr>
             <td>{{ info['id'] }}</td>
             <td>{{ info['name'] }}</td>
-            <td>{{ info['description'] }}</td>
+            <td>{{ info['platform'] }}</td>
             <td>{% if info['sold'] == 0 %}False{% else %}True{% endif %}</td>
         {% endfor %}
         {% for info in purchase %}

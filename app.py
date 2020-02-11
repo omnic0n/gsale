@@ -29,23 +29,33 @@ def get_all_from_purchases(item_id):
     cur.execute("SELECT * FROM purchase where id = %s", (item_id, ))
     return list(cur.fetchall())
 
+def get_all_from_locations():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM location ORDER BY name ASC")
+    return list(cur.fetchall())
+
+def get_all_from_platforms():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM platform ORDER BY name ASC")
+    return list(cur.fetchall())
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM location ORDER BY id ASC")
-    locations = list(cur.fetchall())
+    locations = get_all_from_locations()
+    platforms = get_all_from_platforms()
 
     form = PurchaseForm()
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
+    form.platform.choices = [(platform['id'], platform['long_name']) for platform in platforms]
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO items(name, description) VALUES (%s, %s)", 
-                    (details['name'], details['description']))
+        cur.execute("INSERT INTO items(name, platform) VALUES (%s, %s)", 
+                    (details['name'], details['platform']))
         mysql.connection.commit()
         cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
                     (str(cur.lastrowid), details['location'], details['date'], details['price'],))
