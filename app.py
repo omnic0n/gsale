@@ -99,6 +99,7 @@ def describe_item():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items where id = %s", (item, ))
     item = list(cur.fetchall())
+    print item
     return render_template('items_describe.html', item=item)
 
 if __name__ == '__main__':
