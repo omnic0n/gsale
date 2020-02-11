@@ -1,3 +1,5 @@
+import config 
+
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     cur = mysql.connection.cursor()
