@@ -68,6 +68,7 @@ def bought_items():
 def items_list():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
+                 t1.id, 
                  t1.name, 
                  t1.sold, 
                  t2.long_name as platform 
