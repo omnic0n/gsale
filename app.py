@@ -114,7 +114,7 @@ def groups_list():
 @app.route('/groups/describe')
 def describe_group():
     id = request.args.get('group', type = str)
-    items = get_all_from_items_by_group_id(group)
+    items = get_all_from_items_by_group_id(id)
     return render_template('groups_describe.html', 
                             items=items)
 
