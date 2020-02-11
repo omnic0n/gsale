@@ -36,9 +36,7 @@ def bought_items():
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO items(group_id, name, description) VALUES (%s, %s, %s)", 
                     (details['group'], details['name'], details['description'],))
-        cur.execute("SELECT LAST_INSERT_ID()")
-        item_id = cur.fetchone()['LAST_INSERT_ID']
-        return item_id
+        return cur.lastrowid
         cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
                     (item_id, details['location'], details['date'], details['price'],))
         cur.close()
