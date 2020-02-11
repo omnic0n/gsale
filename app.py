@@ -95,12 +95,13 @@ def items_list():
 
 @app.route('/items/describe')
 def describe_item():
-    item = request.args.get('item', type = str)
+    id = request.args.get('item', type = str)
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items where id = %s", (item, ))
+    cur.execute("SELECT * FROM items where id = %s", (id, ))
     item = list(cur.fetchall())
-    print item
-    return render_template('items_describe.html', item=item)
+    cur.execute("SELECT * FROM purchase where id = %s", (id, ))
+    purchase = list(cur.fetchall())
+    return render_template('items_describe.html', item=item, purchase=purchase)
 
 if __name__ == '__main__':
     app.run(debug=True)

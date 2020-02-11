@@ -3,17 +3,27 @@
 {% block content %}
 <TABLE border = '1'>
 <TR>
+    <TD>ID</TD> 
     <TD>Name</TD> 
     <TD>Description</TD>
     <TD>Sold</TD>
+    <TD>Price</TD>
+    <TD>Date</TD>
+    <TD>Location</TD>
 </TR>
-{% for info in item %}
 <TR>
-    <TD>{{ item['name'] }}</TD>
-    <TD>{{ item['description'] }}</TD>
-    <TD>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</TD>
-</TR>
+{% for info in item %}
+    <TD>{{ info['id'] }}</TD>
+    <TD>{{ info['name'] }}</TD>
+    <TD>{{ info['description'] }}</TD>
+    <TD>{% if info['sold'] == 0 %}False{% else %}True{% endif %}</TD>
 {% endfor %}
+{% for info in purchase %}
+    <TD>{{ info['price'] }}</TD>
+    <TD>{{ info['date'] }}</TD>
+    <TD>{{ info['location'] }}</TD>
+{% endfor %}
+</TR>
 </TABLE>
 {% endblock content %}
 </HTML>
