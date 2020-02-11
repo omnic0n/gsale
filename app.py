@@ -108,7 +108,11 @@ def describe_item():
     purchase = list(cur.fetchall())
     cur.execute("SELECT long_name FROM location where id = %s", (purchase[0]['location'],))
     location = cur.fetchone()['long_name']
-    return render_template('items_describe.html', item=item, purchase=purchase, location=location, group=get_group_name_from_id())
+    return render_template('items_describe.html', 
+                            item=item, 
+                            purchase=purchase, 
+                            location=location, 
+                            group=get_group_name_from_id(item['group_id']))
 
 if __name__ == '__main__':
     app.run(debug=True)
