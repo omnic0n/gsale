@@ -24,6 +24,16 @@ def get_long_name_location_from_id(location_id):
     value = cur.execute("SELECT long_name FROM location where id = %s", (location_id,))
     return cur.fetchone()['long_name']
 
+def get_all_from_items(item_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM items where id = %s", (item_id, ))
+    return list(cur.fetchall())
+
+def get_all_from_purchases(item_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM purchase where id = %s", (item_id, ))
+    return list(cur.fetchall())
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -106,14 +116,9 @@ def items_list():
 @app.route('/items/describe')
 def describe_item():
     id = request.args.get('item', type = str)
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items where id = %s", (id, ))
-    item = list(cur.fetchall())
-    cur.execute("SELECT * FROM purchase where id = %s", (id, ))
-    purchase = list(cur.fetchall())
     return render_template('items_describe.html', 
-                            item=item, 
-                            purchase=purchase, 
+                            item=get_all_from_items(id),
+                            purchase=get_all_from_purchases(id), 
                             location=get_long_name_location_from_id(purchase[0]['location']), 
                             group=get_group_name_from_id(item[0]['group_id']))
 
