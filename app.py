@@ -67,13 +67,13 @@ def bought_items():
 @app.route('/items/list')
 def items_list():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT 
+    cur.execute("""SELECT 
                  t1.name, 
                  t1.sold, 
                  t2.long_name as platform 
                  FROM items t1 
                  INNER JOIN platform t2 
-                 ON t1.platform = t2.id")
+                 ON t1.platform = t2.id""")
     items = list(cur.fetchall())
     return render_template('items_list.html', items=items)
 
