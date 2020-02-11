@@ -4,7 +4,7 @@ CREATE TABLE items (
      name CHAR(50) NOT NULL,
      sold BOOLEAN NOT NULL DEFAULT 0,
      description CHAR(120) NOT NULL,
-     PRIMARY KEY (id),
+     PRIMARY KEY (id)
 );
 
 CREATE TABLE purchase (

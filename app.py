@@ -29,6 +29,11 @@ def get_all_from_items(item_id):
     cur.execute("SELECT * FROM items where id = %s", (item_id, ))
     return list(cur.fetchall())
 
+def get_all_from_items_by_group_id(group_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM items where group_id = %s", (group_id, ))
+    return list(cur.fetchall())
+
 def get_all_from_purchases(item_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM purchase where id = %s", (item_id, ))
@@ -105,6 +110,13 @@ def groups_list():
     cur.execute("SELECT * FROM groups ORDER BY id ASC")
     groups = list(cur.fetchall())
     return render_template('groups_list.html', groups=groups)
+
+@app.route('/groups/describe')
+def describe_group():
+    id = request.args.get('group', type = str)
+    items = get_all_from_items_by_group_id(group)
+    return render_template('groups_describe.html', 
+                            items=items)
 
 @app.route('/items/list')
 def items_list():

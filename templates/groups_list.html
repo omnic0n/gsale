@@ -4,8 +4,7 @@
 <TABLE border = '1'>
 {% for group in groups %}
 <TR>
-    <TD>{{ group['id'] }}</TD>
-    <TD>{{ group['name'] }}</TD>
+    <TD><a href = "/groups/describe?group={{ group['id'] }}">{{ group['name'] }}</TD>
 </TR>
 {% endfor %}
 </TABLE>
