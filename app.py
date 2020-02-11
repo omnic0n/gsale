@@ -101,7 +101,7 @@ def describe_item():
     item = list(cur.fetchall())
     cur.execute("SELECT * FROM purchase where id = %s", (id, ))
     purchase = list(cur.fetchall())
-    cur.execute("SELECT name FROM location where id = %s", (purchase[0]['location'],))
+    cur.execute("SELECT long_name FROM location where id = %s", (purchase[0]['location'],))
     location = cur.fetchone()['name']
     return render_template('items_describe.html', item=item, purchase=purchase, location=location)
 
