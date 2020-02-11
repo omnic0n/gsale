@@ -2,13 +2,36 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_mysqldb import MySQL
 from forms import PurchaseForm, AddGroup
 
-import config 
+app = Flask(__name__)
+
+app.secret_key = '4T3*%go^Gcn7TrYm'
+
+app.config['MYSQL_HOST'] = 'gsale.cz541jbd6nid.us-east-2.rds.amazonaws.com'
+app.config['MYSQL_USER'] = 'gsale'
+app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
+app.config['MYSQL_DB'] = 'gsale'
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+
+mysql = MySQL(app)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-import items 
+@app.route('/items/bought',methods=["POST","GET"])
+def bought_items():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id,name FROM groups ORDER BY id ASC")
+    groups = list(cur.fetchall())
+    cur.execute("SELECT * FROM location ORDER BY id ASC")
+    locations = list(cur.fetchall())
+
+    form = PurchaseForm()
+    form.group.choices = [(group['id'], group['name']) for group in groups]
+    form.location.choices = [(location['id'], location['long_name']) for location in locations]
+    if not form.validate_on_submit():
+        return render_template('items_purchased.html',form=form)
+    return render_template('items_purchased.html', form=form)
 
 @app.route("/livesearch",methods=["POST","GET"])
 def livesearch():
