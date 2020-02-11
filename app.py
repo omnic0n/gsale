@@ -116,11 +116,15 @@ def items_list():
 @app.route('/items/describe')
 def describe_item():
     id = request.args.get('item', type = str)
+    purchase = get_all_from_purchases(id)
+    item = get_all_from_items(id)
+    location = get_long_name_location_from_id(purchase[0]['location'])
+    group = get_group_name_from_id(item[0]['group_id'])
     return render_template('items_describe.html', 
-                            item=get_all_from_items(id),
-                            purchase=get_all_from_purchases(id), 
-                            location=get_long_name_location_from_id(purchase[0]['location']), 
-                            group=get_group_name_from_id(item[0]['group_id']))
+                            item=item,
+                            purchase=purchase, 
+                            location=location, 
+                            group=group)
 
 if __name__ == '__main__':
     app.run(debug=True)
