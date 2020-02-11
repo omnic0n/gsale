@@ -86,5 +86,12 @@ def groups_list():
     groups = list(cur.fetchall())
     return render_template('groups_list.html', groups=groups)
 
+@app.route('/items/list')
+def groups_list():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM items ORDER BY id ASC")
+    items = list(cur.fetchall())
+    return render_template('items_list.html', items=items)
+
 if __name__ == '__main__':
     app.run(debug=True)
