@@ -61,6 +61,7 @@ INSERT INTO platform (id, company, name, long_name) values
 ('', 'nintendo', 'switch', 'Switch'),
 ('', 'nintendo', 'gameboy', 'Gameboy'),
 ('', 'nintendo', 'gameboycolor', 'Gameboy Color'), 
+('', 'nintendo', 'gameboyadvance', 'Gameboy Advance'), 
 ('', 'nintendo', 'nintendods', 'Nintendo DS'), 
 ('', 'nintendo', 'nintendo3ds', 'Nintendo 3DS'), 
 ('', 'sony', 'ps1', 'Playstation 1'),
