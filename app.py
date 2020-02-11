@@ -29,9 +29,6 @@ def bought_items():
     form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
-    if not form.validate_on_submit():
-        print 'not working'
-        return render_template('items_purchased.html',form=form)
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
