@@ -4,7 +4,7 @@ from flask import Blueprint
 
 mod = Blueprint('items', __name__)
 
-@app.route('/items/bought',methods=["POST","GET"])
+@mod.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     cur = mysql.connection.cursor()
     cur.execute("SELECT id,name FROM groups ORDER BY id ASC")
