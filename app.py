@@ -51,7 +51,7 @@ def groups_add():
     form = AddGroup()
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if not form.validate_on_submit():
-        return render_template('add_groups.html',form=form)
+        return render_template('groups_add.html',form=form)
     if request.method == "POST":
         details = request.form
         cur.execute("SELECT name FROM location where id = %s", details['location'])
@@ -68,14 +68,14 @@ def groups_add():
             flash('This value already exists')
         cur.close()
         return redirect(url_for('groups_add'))
-    return render_template('add_groups.html', form=form)
+    return render_template('groups_add.html', form=form)
 
 @app.route('/groups/list')
 def groups_list():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY id ASC")
     groups = list(cur.fetchall())
-    return render_template('list.html', groups=groups)
+    return render_template('groups_list.html', groups=groups)
 
 if __name__ == '__main__':
     app.run(debug=True)
