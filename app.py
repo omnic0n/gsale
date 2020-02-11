@@ -49,7 +49,7 @@ def groups_add():
     locations = list(cur.fetchall())
 
     form = AddGroup()
-    form.location.choices = [(location['id'], location['name']) for location in locations]
+    form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if not form.validate_on_submit():
         return render_template('add_groups.html',form=form)
     if request.method == "POST":
