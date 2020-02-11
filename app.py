@@ -14,6 +14,11 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
+def get_group_name_from_id(self, group_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT name FROM groups where id = %s", (group_id,))
+    return cur.fetchone()['name']
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -103,9 +108,7 @@ def describe_item():
     purchase = list(cur.fetchall())
     cur.execute("SELECT long_name FROM location where id = %s", (purchase[0]['location'],))
     location = cur.fetchone()['long_name']
-    cur.execute("SELECT name FROM groups where id = %s", (item[0]['group_id'],))
-    group = cur.fetchone()['name']
-    return render_template('items_describe.html', item=item, purchase=purchase, location=location, group=group)
+    return render_template('items_describe.html', item=item, purchase=purchase, location=location, group=get_group_name_from_id())
 
 if __name__ == '__main__':
     app.run(debug=True)
