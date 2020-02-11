@@ -14,11 +14,6 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
-def get_group_name_from_id(group_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT name FROM groups where id = %s", (group_id,))
-    return cur.fetchone()['name']
-
 def get_long_name_location_from_id(location_id):
     cur = mysql.connection.cursor()
     value = cur.execute("SELECT long_name FROM location where id = %s", (location_id,))
@@ -27,11 +22,6 @@ def get_long_name_location_from_id(location_id):
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items where id = %s", (item_id, ))
-    return list(cur.fetchall())
-
-def get_all_from_items_by_group_id(group_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items where group_id = %s", (group_id, ))
     return list(cur.fetchall())
 
 def get_all_from_purchases(item_id):
@@ -46,19 +36,16 @@ def index():
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id,name FROM groups ORDER BY id ASC")
-    groups = list(cur.fetchall())
     cur.execute("SELECT * FROM location ORDER BY id ASC")
     locations = list(cur.fetchall())
 
     form = PurchaseForm()
-    form.group.choices = [(group['id'], group['name']) for group in groups]
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO items(group_id, name, description) VALUES (%s, %s, %s)", 
-                    (details['group'], details['name'], details['description']))
+        cur.execute("INSERT INTO items(name, description) VALUES (%s, %s)", 
+                    (details['name'], details['description']))
         mysql.connection.commit()
         cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
                     (str(cur.lastrowid), details['location'], details['date'], details['price'],))
@@ -66,57 +53,6 @@ def bought_items():
         cur.close()
         return redirect(url_for('bought_items'))
     return render_template('items_purchased.html', form=form)
-
-@app.route("/livesearch",methods=["POST","GET"])
-def livesearch():
-    searchbox = request.form.get("text")
-    cur = mysql.connection.cursor()
-    query = "select * from groups where name LIKE '%{}%' order by name".format(searchbox)
-    cur.execute(query)
-    result = list(cur.fetchall())
-    return jsonify(result)
-
-@app.route('/groups/add', methods=['GET', 'POST'])
-def groups_add():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM location ORDER BY id ASC")
-    locations = list(cur.fetchall())
-
-    form = AddGroup()
-    form.location.choices = [(location['id'], location['long_name']) for location in locations]
-    if not form.validate_on_submit():
-        return render_template('groups_add.html',form=form)
-    if request.method == "POST":
-        details = request.form
-        cur.execute("SELECT name FROM location where id = %s", details['location'])
-        location = cur.fetchone()['name']
-        groupName = '_'.join([details['date'], location, details['name']])
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT id FROM groups where name = %s", (groupName,))
-        rv = cur.fetchone()
-        if not cur.rowcount:
-            cur.execute("INSERT INTO groups(name) VALUES (%s)", (groupName,))
-            mysql.connection.commit()
-            flash('Successfully added value to groups')
-        else:
-            flash('This value already exists')
-        cur.close()
-        return redirect(url_for('groups_add'))
-    return render_template('groups_add.html', form=form)
-
-@app.route('/groups/list')
-def groups_list():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM groups ORDER BY id ASC")
-    groups = list(cur.fetchall())
-    return render_template('groups_list.html', groups=groups)
-
-@app.route('/groups/describe')
-def describe_group():
-    id = request.args.get('group', type = str)
-    items = get_all_from_items_by_group_id(id)
-    return render_template('groups_describe.html', 
-                            items=items)
 
 @app.route('/items/list')
 def items_list():
@@ -131,12 +67,10 @@ def describe_item():
     purchase = get_all_from_purchases(id)
     item = get_all_from_items(id)
     location = get_long_name_location_from_id(purchase[0]['location'])
-    group = get_group_name_from_id(item[0]['group_id'])
     return render_template('items_describe.html', 
                             item=item,
                             purchase=purchase, 
-                            location=location, 
-                            group=group)
+                            location=location)
 
 if __name__ == '__main__':
     app.run(debug=True)

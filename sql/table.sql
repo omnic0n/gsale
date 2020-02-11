@@ -1,6 +1,5 @@
 CREATE TABLE items (
      id MEDIUMINT NOT NULL AUTO_INCREMENT,
-     group_id MEDIUMINT,
      name CHAR(50) NOT NULL,
      sold BOOLEAN NOT NULL DEFAULT 0,
      description CHAR(120) NOT NULL,
@@ -23,13 +22,6 @@ CREATE TABLE sale (
      ebay_fee DECIMAL(6,2),
      paypal_fee DECIMAL(6,2),
      shipping_fee DECIMAL(5,2)
-);
-
-CREATE TABLE groups (
-     id MEDIUMINT NOT NULL AUTO_INCREMENT,
-     name CHAR(50) NOT NULL,
-     PRIMARY KEY (id),
-     UNIQUE (name)
 );
 
 CREATE TABLE location (
