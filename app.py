@@ -98,10 +98,9 @@ def describe_item():
     id = request.args.get('item', type = str)
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items where id = %s", (id, ))
-    item = list(cur.fetchall())
+    item = list(cur.fetchone())
     cur.execute("SELECT * FROM purchase where id = %s", (id, ))
-    purchase = list(cur.fetchall())
-    print purchase['location']
+    purchase = list(cur.fetchone())
     cur.execute("SELECT name FROM location where id = %s", (purchase['location'],))
     location = cur.fetchone()['name']
     return render_template('items_describe.html', item=item, purchase=purchase, location=location)
