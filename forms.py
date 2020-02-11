@@ -11,7 +11,7 @@ class PurchaseForm(FlaskForm):
     group = SelectField('group', coerce=int) 
     price = StringField('price') 
     date = DateField('date',
-                           validators=[DataRequired(),format='%Y-%m-%d'])
+                           validators=[DataRequired()], format='%Y-%m-%d')
     description = StringField('description')
     submit = SubmitField('Submit')
 
@@ -20,5 +20,5 @@ class AddGroup(FlaskForm):
                            validators=[DataRequired(), Length(min=2, max=20)])
     location = SelectField('location', coerce=int)
     date = DateField('date',
-                           validators=[DataRequired(),format='%Y-%m-%d'])
+                           validators=[DataRequired()], format='%Y-%m-%d')
     submit = SubmitField('Submit')
