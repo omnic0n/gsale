@@ -14,7 +14,7 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
-def get_group_name_from_id(self, group_id):
+def get_group_name_from_id(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT name FROM groups where id = %s", (group_id,))
     return cur.fetchone()['name']
