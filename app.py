@@ -20,6 +20,8 @@ def get_group_name_from_id(group_id):
     return cur.fetchone()['name']
 
 def get_location_from_id(attribute, location_id):
+    print attribute
+    print location_id
     cur = mysql.connection.cursor()
     value = cur.execute("SELECT %s FROM location where id = %s", (attribute, location_id,))
     print value
