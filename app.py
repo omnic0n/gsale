@@ -56,7 +56,6 @@ def groups_add():
         details = request.form
         cur.execute("SELECT name FROM location where id = %s", details['location'])
         location = cur.fetchone()['name']
-        return location
         groupName = '_'.join([details['date'], location, details['name']])
         cur = mysql.connection.cursor()
         cur.execute("SELECT id FROM groups where name = %s", (groupName,))
