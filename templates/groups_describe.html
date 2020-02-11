@@ -7,13 +7,13 @@
     <TD>Name</TD> 
     <TD>Description</TD>
 </TR>
-<TR>
 {% for item in items %}
+<TR>
     <TD>{{ item['id'] }}</TD>
     <TD>{{ item['name'] }}</TD>
     <TD>{{ item['description'] }}</TD>
-{% endfor %}
 </TR>
+{% endfor %}
 </TABLE>
 {% endblock content %}
 </HTML>
