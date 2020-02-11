@@ -98,9 +98,9 @@ def describe_item():
     id = request.args.get('item', type = str)
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items where id = %s", (id, ))
-    item = list(cur.fetchone())
+    item = list(cur.fetchall())
     cur.execute("SELECT * FROM purchase where id = %s", (id, ))
-    purchase = list(cur.fetchone())
+    purchase = list(cur.fetchall())
     #print purchase['location']
     #cur.execute("SELECT name FROM location where id = %s", (purchase['location'],))
     #location = cur.fetchone()['name']
