@@ -3,14 +3,12 @@
 {% block content %}
 <TABLE border = '1'>
 <TR>
-    <TD>ID</TD> 
     <TD>Name</TD> 
     <TD>Description</TD>
 </TR>
 {% for item in items %}
 <TR>
-    <TD>{{ item['id'] }}</TD>
-    <TD>{{ item['name'] }}</TD>
+    <TD><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</TD>
     <TD>{{ item['description'] }}</TD>
 </TR>
 {% endfor %}
