@@ -96,7 +96,10 @@ def items_list():
 @app.route('/items/describe')
 def describe_item():
     item = request.args.get('item', type = str)
-    return item
-    
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM items where id is %s", item)
+    item = list(cur.fetchall())
+    return render_template('items_describe.html', item=item)
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,19 @@
+<HTML>
+{% extends "layout.html" %}
+{% block content %}
+<TABLE border = '1'>
+<TR>
+    <TD>Name</TD> 
+    <TD>Description</TD>
+    <TD>Sold</TD>
+</TR>
+{% for info in item %}
+<TR>
+    <TD>{{ item['name'] }}</TD>
+    <TD>{{ item['description'] }}</TD>
+    <TD>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</TD>
+</TR>
+{% endfor %}
+</TABLE>
+{% endblock content %}
+</HTML>
