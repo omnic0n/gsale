@@ -19,13 +19,10 @@ def get_group_name_from_id(group_id):
     cur.execute("SELECT name FROM groups where id = %s", (group_id,))
     return cur.fetchone()['name']
 
-def get_location_from_id(attribute, location_id):
-    print attribute
-    print location_id
+def get_long_name_location_from_id(location_id):
     cur = mysql.connection.cursor()
-    value = cur.execute("SELECT %s FROM location where id = %s", (attribute, location_id,))
-    print value
-    return cur.fetchone()[attribute]
+    value = cur.execute("SELECT long_name FROM location where id = %s", (location_id,))
+    return cur.fetchone()['long_name']
 
 @app.route('/')
 def index():
@@ -117,7 +114,7 @@ def describe_item():
     return render_template('items_describe.html', 
                             item=item, 
                             purchase=purchase, 
-                            location=get_location_from_id('long_name', purchase[0]['location']), 
+                            location=get_long_name_location_from_id(purchase[0]['location']), 
                             group=get_group_name_from_id(item[0]['group_id']))
 
 if __name__ == '__main__':
