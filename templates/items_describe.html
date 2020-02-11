@@ -10,6 +10,7 @@
     <TD>Price</TD>
     <TD>Date</TD>
     <TD>Location</TD>
+    <TD>Group</TD>
 </TR>
 <TR>
 {% for info in item %}
@@ -21,8 +22,9 @@
 {% for info in purchase %}
     <TD>{{ info['price'] }}</TD>
     <TD>{{ info['date'] }}</TD>
-    <TD>{{ location }}</TD>
 {% endfor %}
+    <TD>{{ location }}</TD>
+    <TD>{{ group }}</TD>
 </TR>
 </TABLE>
 {% endblock content %}
