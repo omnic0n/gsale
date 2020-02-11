@@ -28,7 +28,7 @@ def bought_items():
 
     form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
-    form.location.choices = [(location['id'], location['name']) for location in locations]
+    form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if not form.validate_on_submit():
         return render_template('items_purchased.html',form=form)
     return render_template('items_purchased.html', form=form)
@@ -51,7 +51,7 @@ def groups_add():
     form = AddGroup()
     form.location.choices = [(location['id'], location['name']) for location in locations]
     if not form.validate_on_submit():
-        return render_template('groups.html',form=form)
+        return render_template('add_groups.html',form=form)
     if request.method == "POST":
         details = request.form
         cur.execute("SELECT name FROM location where id = %s", details['location'])
@@ -68,7 +68,7 @@ def groups_add():
             flash('This value already exists')
         cur.close()
         return redirect(url_for('groups_add'))
-    return render_template('groups.html', form=form)
+    return render_template('add_groups.html', form=form)
 
 @app.route('/groups/list')
 def groups_list():

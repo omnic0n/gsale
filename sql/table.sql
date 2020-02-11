@@ -34,6 +34,7 @@ CREATE TABLE groups (
 CREATE TABLE location (
      id MEDIUMINT NOT NULL AUTO_INCREMENT,
      name CHAR(50) NOT NULL,
+     long_name CHAR(50) NOT NULL,
      PRIMARY KEY (id),
      UNIQUE (name)
 );
