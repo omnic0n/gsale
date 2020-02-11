@@ -1,0 +1,21 @@
+<HTML>
+{% extends "layout.html" %}
+{% block content %}
+<TABLE border = '1'>
+<TR>
+    <TD>Name</TD> 
+    <TD>Group</TD>
+    <TD>Description</TD>
+    <TD>Sold</TD>
+</TR>
+{% for item in items %}
+<TR>
+    <TD>{{ group['name'] }}</TD>
+    <TD>{{ group['group_id'] }}</TD>
+    <TD>{{ group['description'] }}</TD>
+    <TD>{{ group['sold'] }}</TD>
+</TR>
+{% endfor %}
+</TABLE>
+{% endblock content %}
+</HTML>
