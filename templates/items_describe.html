@@ -1,29 +1,40 @@
-<HTML>
+<html>
 {% extends "layout.html" %}
 {% block content %}
-<TABLE border = '1'>
-<TR>
-    <TD>ID</TD> 
-    <TD>Name</TD> 
-    <TD>Description</TD>
-    <TD>Sold</TD>
-    <TD>Price</TD>
-    <TD>Date</TD>
-    <TD>Location</TD>
-</TR>
-<TR>
-{% for info in item %}
-    <TD>{{ info['id'] }}</TD>
-    <TD>{{ info['name'] }}</TD>
-    <TD>{{ info['description'] }}</TD>
-    <TD>{% if info['sold'] == 0 %}False{% else %}True{% endif %}</TD>
-{% endfor %}
-{% for info in purchase %}
-    <TD>{{ info['price'] }}</TD>
-    <TD>{{ info['date'] }}</TD>
-{% endfor %}
-    <TD>{{ location }}</TD>
-</TR>
-</TABLE>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>ID</td> 
+            <td>Name</td> 
+            <td>Description</td>
+            <td>Sold</td>
+            <td>Price</td>
+            <td>Date</td>
+            <td>Location</td>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+        <td colspan="7">
+        <div class="links"><a href="#">&laquo;</a> <a class="active" href="#">1</a> <a href="#">2</a> <a href="#">3</a> <a href="#">4</a> <a href="#">&raquo;</a></div>
+        </td>
+        </tr>
+    </tfoot>
+    <tbody>
+        {% for info in item %}
+        <tr>
+            <td>{{ info['id'] }}</td>
+            <td>{{ info['name'] }}</td>
+            <td>{{ info['description'] }}</td>
+            <td>{% if info['sold'] == 0 %}False{% else %}True{% endif %}</td>
+        {% endfor %}
+        {% for info in purchase %}
+            <td>{{ info['price'] }}</td>
+            <td>{{ info['date'] }}</td>
+        {% endfor %}
+            <td>{{ location }}</td>
+        </tr>
+    </tbody>
+</table>
 {% endblock content %}
-</HTML>
+</html>

@@ -2,27 +2,29 @@
 {% extends "layout.html" %}
 {% block content %}
 <table class="blueTable">
-<thead>
-<tr>
-    <th>Name</th> 
-    <th>Description</th>
-    <th>Sold</th>
-</tr>
-</thead>
-<tfoot>
-    <tr>
-    <td colspan="3">
-    <div class="links"><a href="#">&laquo;</a> <a class="active" href="#">1</a> <a href="#">2</a> <a href="#">3</a> <a href="#">4</a> <a href="#">&raquo;</a></div>
-    </td>
-    </tr>
-</tfoot>
-{% for item in items %}
-<tr>
-    <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-    <td>{{ item['description'] }}</td>
-    <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
-</tr>
-{% endfor %}
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Description</th>
+            <th>Sold</th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <td colspan="3">
+            <div class="links"><a href="#">&laquo;</a> <a class="active" href="#">1</a> <a href="#">2</a> <a href="#">3</a> <a href="#">4</a> <a href="#">&raquo;</a></div>
+            </td>
+        </tr>
+    </tfoot>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
+            <td>{{ item['description'] }}</td>
+            <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
 {% endblock content %}
 </html>
