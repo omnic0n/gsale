@@ -87,7 +87,7 @@ def groups_list():
     return render_template('groups_list.html', groups=groups)
 
 @app.route('/items/list')
-def groups_list():
+def items_list():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items ORDER BY id ASC")
     items = list(cur.fetchall())
