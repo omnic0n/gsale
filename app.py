@@ -18,7 +18,7 @@ mysql = MySQL(app)
 def index():
     return render_template('index.html')
 
-from items import mod
+import items 
 
 @app.route("/livesearch",methods=["POST","GET"])
 def livesearch():
