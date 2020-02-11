@@ -27,7 +27,6 @@ CREATE TABLE sale (
 CREATE TABLE groups (
      id MEDIUMINT NOT NULL AUTO_INCREMENT,
      name CHAR(50) NOT NULL,
-     price  DECIMAL(6,2) NOT NULL,
      PRIMARY KEY (id),
      UNIQUE (name)
 );
@@ -40,7 +39,7 @@ CREATE TABLE location (
 );
 
 INSERT INTO location (id, name) values 
-('', 'garage sale'), 
+('', 'garagesale'), 
 ('', 'thrift'), 
 ('', 'pawn'), 
 ('', 'ebay'), 
