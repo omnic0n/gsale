@@ -31,6 +31,7 @@ def bought_items():
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if request.method == "POST":
         details = request.form
+        print details
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO items(group_id, name, description) VALUES (%s, %s, %s)", 
                     (details['group'], details['name'], details['description'],)) 
