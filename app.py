@@ -89,6 +89,22 @@ def sold_items():
     form = SaleForm()
     form.name.choices = [(item['id'], item['name']) for item in items]
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
+    if request.method == "POST":
+        details = request.form
+        #cur = mysql.connection.cursor()
+        if ebay_fee:
+            ebay_fee = details['price'] * .10
+        else:
+            ebay_fee = 0
+        print ebay_fee
+        #cur.execute("INSERT INTO items(name, platform) VALUES (%s, %s)", 
+        #            (details['name'], details['platform']))
+        #mysql.connection.commit()
+        #cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
+       #             (str(cur.lastrowid), details['location'], details['date'], details['price'],))
+        #mysql.connection.commit()
+        #cur.close()
+        return redirect(url_for('sold_items'))
     return render_template('items_sold.html', form=form)
 
 @app.route('/items/list')
