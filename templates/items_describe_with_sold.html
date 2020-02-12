@@ -8,9 +8,6 @@
             <td>Name</td> 
             <td>Platform</td>
             <td>Sold</td>
-            <td>Price</td>
-            <td>Date</td>
-            <td>Location</td>
         </tr>
     </thead>
     <tbody>
@@ -19,6 +16,19 @@
             <td>{{ item[0]['name'] }}</td>
             <td>{{ item[0]['platform'] }}</td>
             <td>{% if item[0]['sold'] == 0 %}False{% else %}True{% endif %}</td>
+        </tr>
+    </tbody>
+</table>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>Price</td>
+            <td>Date</td>
+            <td>Location</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
             <td>{{ item[0]['price'] }}</td>
             <td>{{ item[0]['date'] }}</td>
             <td>{{ item[0]['location'] }}</td>
@@ -28,10 +38,6 @@
 <table class="blueTable">
     <thead>
         <tr>
-            <td>ID</td> 
-            <td>Name</td> 
-            <td>Platform</td>
-            <td>Sold</td>
             <td>Price</td>
             <td>Ebay Fee</td>
             <td>Paypal Fee</td>
@@ -43,10 +49,6 @@
     </thead>
     <tbody>
         <tr>
-            <td>{{ item[0]['id'] }}</td>
-            <td>{{ item[0]['name'] }}</td>
-            <td>{{ item[0]['platform'] }}</td>
-            <td>{% if item[0]['sold'] == 0 %}False{% else %}True{% endif %}</td>
             <td>{{ sold[0]['price'] }}</td>
             <td>{{ sold[0]['ebay_fee'] }}</td>
             <td>{{ sold[0]['paypal_fee'] }}</td>
