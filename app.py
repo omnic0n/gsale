@@ -96,7 +96,14 @@ def sold_items():
             ebay_fee = format(float(details['price']) * .10, '.2f')
         else:
             ebay_fee = 0
+        
+        if details['paypal']:
+            paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
+        else:
+            paypal_fee = 0
+        
         print ebay_fee
+        print paypal_fee
         #cur.execute("INSERT INTO items(name, platform) VALUES (%s, %s)", 
         #            (details['name'], details['platform']))
         #mysql.connection.commit()
