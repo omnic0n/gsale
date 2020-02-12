@@ -38,7 +38,7 @@ def get_data_for_item_describe(item_id):
                     inner join platform platform on items.platform = platform.id 
                     inner join purchase purchase on purchase.id = items.id
                     inner join location location on purchase.location = location.id
-                    where items.id = 1 where id = %s""", (item_id, ))
+                    where items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
 def get_all_from_locations():
