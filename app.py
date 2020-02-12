@@ -46,6 +46,21 @@ def get_data_for_item_describe(item_id):
                     where items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
+def get_data_for_item_sold(item_id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" select 
+                    sale.price, 
+                    sale.tax,
+                    sale.date, 
+                    sale.ebay_fee,
+                    sale.paypal_fee,
+                    sale.shipping_fee,
+                    location.long_name as location 
+                    from sale sale
+                    inner join location location on sale.location = location.id
+                    where sale.id = %s""", (item_id, ))
+    return list(cur.fetchall())
+
 def get_all_from_locations():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM location ORDER BY name ASC")
@@ -138,9 +153,14 @@ def items_list():
 def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
-    print str(item[0]['sold'])
+    if str(item[0]['sold']) == 1:
+        sold = get_data_for_sold_item(id)
+        print sold
+    else:
+        sold = ""
     return render_template('items_describe.html', 
-                            item=item)
+                            item=item,
+                            sold=sold)
 
 if __name__ == '__main__':
     app.run(debug=True)
