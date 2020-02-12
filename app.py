@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SalesForm
+from forms import PurchaseForm, SaleForm
 
 app = Flask(__name__)
 
@@ -78,10 +78,9 @@ def bought_items():
 
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
-    form = SalesForm()
+    form = SaleForm()
 
     return render_template('items_sold.html', form=form)
-
 
 @app.route('/items/list')
 def items_list():
