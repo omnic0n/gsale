@@ -20,8 +20,8 @@ class SaleForm(FlaskForm):
     price = StringField('price')
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
-    tax = BooleanField('taxable')
-    paypal = BooleanField('paypal_used')
-    ebay = BooleanField('ebay_used')
+    tax = BooleanField('tax')
+    paypal = BooleanField('paypal')
+    ebay = BooleanField('ebay')
     shipping_fee = StringField('shipping_fee')
     submit = SubmitField('Submit')
