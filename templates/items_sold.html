@@ -45,42 +45,42 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.tax.label(class="form-control-label") }}
-                    {% if form.tax.errors %}
-                        {{ form.tax(class="form-control form-control-lg is-invalid") }}
+                    {{ form.taxable.label(class="form-control-label") }}
+                    {% if form.taxable.errors %}
+                        {{ form.taxable(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.tax.errors %}
+                            {% for error in form.taxable.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.tax(class="form-control form-control-lg") }}
+                        {{ form.taxable(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.paypal.label(class="form-control-label") }}
-                    {% if form.paypal.errors %}
-                        {{ form.paypal(class="form-control form-control-lg is-invalid") }}
+                    {{ form.paypal_used.label(class="form-control-label") }}
+                    {% if form.paypal_used.errors %}
+                        {{ form.paypal_used(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.paypal.errors %}
+                            {% for error in form.paypal_used.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.paypal(class="form-control form-control-lg") }}
+                        {{ form.paypal_used(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.ebay.label(class="form-control-label") }}
-                    {% if form.ebay.errors %}
-                        {{ form.ebay(class="form-control form-control-lg is-invalid") }}
+                    {{ form.ebay_used.label(class="form-control-label") }}
+                    {% if form.ebay_used.errors %}
+                        {{ form.ebay_used(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.ebay.errors %}
+                            {% for error in form.ebay_used.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.ebay(class="form-control form-control-lg") }}
+                        {{ form.ebay_used(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
                 <div class="form-group">

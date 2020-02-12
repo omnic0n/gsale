@@ -23,5 +23,5 @@ class SaleForm(FlaskForm):
     tax = BooleanField('taxable')
     paypal = BooleanField('paypal_used')
     ebay = BooleanField('ebay_used')
-    shipping_fee = SelectField('shipping_fee', coerce=int)
+    shipping_fee = StringField('shipping_fee')
     submit = SubmitField('Submit')
