@@ -75,7 +75,7 @@ def get_all_from_platforms():
 @app.route('/')
 def index():
     cur = mysql.connection.cursor()
-    purchase = cur.execute("select sum(price) as price from purchase")
+    purchase = list(cur.execute("select sum(price) as price from purchase"))
     print purchase[0]['price']
     return render_template('index.html')
 
