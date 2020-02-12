@@ -14,16 +14,14 @@
         </tr>
     </thead>
     <tbody>
-        {% for info in item %}
         <tr>
-            <td>{{ info['id'] }}</td>
-            <td>{{ info['name'] }}</td>
-            <td>{{ info['platform'] }}</td>
-            <td>{% if info['sold'] == 0 %}False{% else %}True{% endif %}</td>
-            <td>{{ info['price'] }}</td>
-            <td>{{ info['date'] }}</td>
-            <td>{{ info['location'] }}</td>
-        {% endfor %}
+            <td>{{ item[0]['id'] }}</td>
+            <td>{{ item[0]['name'] }}</td>
+            <td>{{ item[0]['platform'] }}</td>
+            <td>{% if item[0]['sold'] == 0 %}False{% else %}True{% endif %}</td>
+            <td>{{ item[0]['price'] }}</td>
+            <td>{{ item[0]['date'] }}</td>
+            <td>{{ item[0]['location'] }}</td>
         </tr>
     </tbody>
 </table>
