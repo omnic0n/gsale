@@ -46,8 +46,8 @@
         <tr>
             <td>Profit</td>
             <td>{{ sold[0]['net'] - item[0]['price']}}</td>
-            <td></td>
-            <td></td>
+            <td>{{ sold[0]['date'] - item[0]['date']</td>
+            <td>NA</td>
         </tr>
     </tbody>
 </table>
@@ -59,6 +59,7 @@
             <td>Ebay Fee</td>
             <td>Paypal Fee</td>
             <td>Shipping Fee</td>
+            <td>Net</td>
         </tr>
     </thead>
     <tbody>
@@ -67,6 +68,7 @@
             <td>{{ sold[0]['ebay_fee'] }}</td>
             <td>{{ sold[0]['paypal_fee'] }}</td>
             <td>{{ sold[0]['shipping_fee'] }}</td>
+            <td>{{ sold[0]['net'] }}</td>
         </tr>
     </tbody>
 </table>
