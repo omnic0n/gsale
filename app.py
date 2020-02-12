@@ -104,9 +104,18 @@ def sold_items():
         
         cur.execute("update items set sold = 1 where id = %s", (details['name'], ))
         mysql.connection.commit()
-        #cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
-        #            (str(cur.lastrowid), details['location'], details['date'], details['price'],))
-        #mysql.connection.commit()
+        cur.execute("""INSERT INTO sold(
+                    id, 
+                    location, 
+                    date, 
+                    price, 
+                    tax, 
+                    ebay_fee, 
+                    paypal_fee, 
+                    shipping_fee) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", 
+                    (details['name'], details['location'], details['date'], details['price'],details['tax'], ebay_fee, paypal_fee, details['shipping_fee'], ))
+        mysql.connection.commit()
         cur.close()
         return redirect(url_for('sold_items'))
     return render_template('items_sold.html', form=form)
