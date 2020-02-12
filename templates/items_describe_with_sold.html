@@ -1,7 +1,7 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
-<h2>Item Info</h2>
+<h3>Item Info</h3>
 <table class="blueTable">
     <thead>
         <tr>
@@ -20,7 +20,7 @@
         </tr>
     </tbody>
 </table>
-<br><h2>Purchase Info</h2>
+<br><h3>Purchase Info</h3>
 <table class="blueTable">
     <thead>
         <tr>
@@ -37,7 +37,7 @@
         </tr>
     </tbody>
 </table>
-<br><h2>Sale Info</h2>
+<br><h3>Sale Info</h3>
 <table class="blueTable">
     <thead>
         <tr>
@@ -54,7 +54,7 @@
         </tr>
     </tbody>
 </table>
-<br><h2>Sale Fees</h2>
+<br><h3>Sale Fees</h3>
 <table class="blueTable">
     <thead>
         <tr>
@@ -73,6 +73,22 @@
         </tr>
     </tbody>
 </table>
-<br><br><h2>Profit: {{ sold[0]['net'] - item[0]['price']}}</h2>
+<br><h3>Final Totals</h3>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>Purchase</td>
+            <td>Sale</td> 
+            <td>Profit</td>   
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ item[0]['price'] }}</td>
+            <td>{{ sold[0]['net'] }}</td>
+            <td>{{ sold[0]['net'] - item[0]['price']}}</td>
+        </tr>
+    </tbody>
+</table>
 {% endblock content %}
 </html>
