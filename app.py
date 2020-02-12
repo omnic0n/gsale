@@ -76,7 +76,7 @@ def get_all_from_platforms():
 def index():
     cur = mysql.connection.cursor()
     purchase = cur.execute("select sum(price) as total from purchase")
-    purchase = list(cur.fetchone())
+    purchase = list(cur.fetchall())
     print purchase
     return render_template('index.html')
 
