@@ -24,9 +24,9 @@ def get_all_from_items(item_id):
     cur.execute("SELECT * FROM items where id = %s", (item_id, ))
     return list(cur.fetchall())
 
-def get_all_items():
+def get_all_items_not_sold():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items")
+    cur.execute("SELECT * FROM items where sold = 0")
     return list(cur.fetchall())
 
 def get_data_for_item_describe(item_id):
@@ -84,7 +84,7 @@ def bought_items():
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
     locations = get_all_from_locations()
-    items = get_all_items()
+    items = get_all_items_not_sold()
 
     form = SaleForm()
     form.name.choices = [(item['id'], item['name']) for item in items]
