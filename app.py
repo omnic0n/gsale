@@ -77,7 +77,7 @@ def index():
     cur = mysql.connection.cursor()
     purchase = cur.execute("select sum(price) as total from purchase")
     purchase = list(cur.fetchall())
-    print purchase['total']
+    print purchase[0]['total']
     return render_template('index.html')
 
 @app.route('/items/bought',methods=["POST","GET"])
