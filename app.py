@@ -24,6 +24,11 @@ def get_all_from_items(item_id):
     cur.execute("SELECT * FROM items where id = %s", (item_id, ))
     return list(cur.fetchall())
 
+def get_all_items():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM items")
+    return list(cur.fetchall())
+
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" select 
@@ -79,8 +84,10 @@ def bought_items():
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
     locations = get_all_from_locations()
+    items = get_all_items()
 
     form = SaleForm()
+    form.name.choices = [(item['id'], item['name']) for item in items]
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     return render_template('items_sold.html', form=form)
 
