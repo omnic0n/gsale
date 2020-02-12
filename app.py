@@ -102,9 +102,9 @@ def sold_items():
         else:
             paypal_fee = 0
         
-        cur.execute("update items set sold = 1 where id = %s)", 
-                    (details['name'], ))
-        mysql.connection.commit()
+        print details['name']
+        #cur.execute("update items set sold = 1 where id = %s)", (details['name'], ))
+        #mysql.connection.commit()
         #cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
         #            (str(cur.lastrowid), details['location'], details['date'], details['price'],))
         #mysql.connection.commit()
