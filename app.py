@@ -156,12 +156,13 @@ def describe_item():
     item = get_data_for_item_describe(id)
     if int(item[0]['sold']) == 1:
         sold = get_data_for_item_sold(id)
-        print sold
+        return render_template('items_describe_with_sold.html', 
+                                item=item,
+                                sold=sold)
     else:
-        sold = ""
-    return render_template('items_describe.html', 
-                            item=item,
-                            sold=sold)
+        return render_template('items_describe.html', 
+                                item=item)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

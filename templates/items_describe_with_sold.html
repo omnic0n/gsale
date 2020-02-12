@@ -1,0 +1,61 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>ID</td> 
+            <td>Name</td> 
+            <td>Platform</td>
+            <td>Sold</td>
+            <td>Price</td>
+            <td>Date</td>
+            <td>Location</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ item[0]['id'] }}</td>
+            <td>{{ item[0]['name'] }}</td>
+            <td>{{ item[0]['platform'] }}</td>
+            <td>{% if item[0]['sold'] == 0 %}False{% else %}True{% endif %}</td>
+            <td>{{ item[0]['price'] }}</td>
+            <td>{{ item[0]['date'] }}</td>
+            <td>{{ item[0]['location'] }}</td>
+        </tr>
+    </tbody>
+</table>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>ID</td> 
+            <td>Name</td> 
+            <td>Platform</td>
+            <td>Sold</td>
+            <td>Price</td>
+            <td>Ebay Fee</td>
+            <td>Paypal Fee</td>
+            <td>Shipping Fee</td>
+            <td>Net</td>    
+            <td>Date</td></td> >
+            <td>Location</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ item[0]['id'] }}</td>
+            <td>{{ item[0]['name'] }}</td>
+            <td>{{ item[0]['platform'] }}</td>
+            <td>{% if item[0]['sold'] == 0 %}False{% else %}True{% endif %}</td>
+            <td>{{ sale[0]['price'] }}</td>
+            <td>{{ sale[0]['ebay_fee'] }}</td>
+            <td>{{ sale[0]['paypal_fee'] }}</td>
+            <td>{{ sale[0]['shipping_fee'] }}</td>
+            <td>{{ sale[0]['net'] }}</td>
+            <td>{{ sale[0]['date'] }}</td>
+            <td>{{ sale[0]['location'] }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock content %}
+</html>
