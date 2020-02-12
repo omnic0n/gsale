@@ -20,6 +20,7 @@
         </tr>
     </tbody>
 </table>
+<br>
 <table class="blueTable">
     <thead>
         <tr>
@@ -38,7 +39,7 @@
         </tr>
         <tr>
             <td>Sold</td>
-            <td>{{ sold[0]['price'] }}</td>
+            <td>{{ sold[0]['net'] }}</td>
             <td>{{ sold[0]['date'] }}</td>
             <td>{{ sold[0]['location'] }}</td>
         </tr>
@@ -54,18 +55,18 @@
 <table class="blueTable">
     <thead>
         <tr>
+            <td>Sold Price</td>    
             <td>Ebay Fee</td>
             <td>Paypal Fee</td>
             <td>Shipping Fee</td>
-            <td>Net</td>    
         </tr>
     </thead>
     <tbody>
         <tr>
+            <td>{{ sold[0]['price'] }}</td>
             <td>{{ sold[0]['ebay_fee'] }}</td>
             <td>{{ sold[0]['paypal_fee'] }}</td>
             <td>{{ sold[0]['shipping_fee'] }}</td>
-            <td>{{ sold[0]['net'] }}</td>
         </tr>
     </tbody>
 </table>
