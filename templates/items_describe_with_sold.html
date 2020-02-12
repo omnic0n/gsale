@@ -1,6 +1,7 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
+<h1>Item Info</h1>
 <table class="blueTable">
     <thead>
         <tr>
@@ -19,7 +20,7 @@
         </tr>
     </tbody>
 </table>
-<br>
+<br><h1>Purchase Info</h1>
 <table class="blueTable">
     <thead>
         <tr>
@@ -36,30 +37,31 @@
         </tr>
     </tbody>
 </table>
-<br>
+<br><h1>Sale Info</h1>
 <table class="blueTable">
     <thead>
         <tr>
             <td>Price</td>
+            <td>Date</td></td>
+            <td>Location</td>
             <td>Ebay Fee</td>
             <td>Paypal Fee</td>
             <td>Shipping Fee</td>
             <td>Net</td>    
-            <td>Date</td></td>
-            <td>Location</td>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>{{ sold[0]['price'] }}</td>
+            <td>{{ sold[0]['date'] }}</td>
+            <td>{{ sold[0]['location'] }}</td>
             <td>{{ sold[0]['ebay_fee'] }}</td>
             <td>{{ sold[0]['paypal_fee'] }}</td>
             <td>{{ sold[0]['shipping_fee'] }}</td>
             <td>{{ sold[0]['net'] }}</td>
-            <td>{{ sold[0]['date'] }}</td>
-            <td>{{ sold[0]['location'] }}</td>
         </tr>
     </tbody>
 </table>
+<br><br>Profit: {{ sold[0]['net'] - item['price']}}
 {% endblock content %}
 </html>
