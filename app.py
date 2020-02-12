@@ -104,7 +104,7 @@ def sold_items():
         
         cur.execute("update items set sold = 1 where id = %s", (details['name'], ))
         mysql.connection.commit()
-        cur.execute("""INSERT INTO sold(
+        cur.execute("""INSERT INTO sale(
                     id, 
                     location, 
                     date, 
