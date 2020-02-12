@@ -78,8 +78,10 @@ def bought_items():
 
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
-    form = SaleForm()
+    locations = get_all_from_locations()
 
+    form = SaleForm()
+    form.location.choices = [(location['id'], location['long_name']) for location in locations]
     return render_template('items_sold.html', form=form)
 
 @app.route('/items/list')
