@@ -55,6 +55,7 @@ def get_data_for_item_sold(item_id):
                     sale.ebay_fee,
                     sale.paypal_fee,
                     sale.shipping_fee,
+                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) as net,
                     location.long_name as location 
                     from sale sale
                     inner join location location on sale.location = location.id
