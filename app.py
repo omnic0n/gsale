@@ -24,9 +24,21 @@ def get_all_from_items(item_id):
     cur.execute("SELECT * FROM items where id = %s", (item_id, ))
     return list(cur.fetchall())
 
-def get_all_from_purchases(item_id):
+def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM purchase where id = %s", (item_id, ))
+    cur.execute(""" select 
+                    items.name, 
+                    items.sold, 
+                    items.id, 
+                    platform.long_name as platform, 
+                    purchase.price, 
+                    purchase.date, 
+                    location.long_name as location 
+                    from items items
+                    inner join platform platform on items.platform = platform.id 
+                    inner join purchase purchase on purchase.id = items.id
+                    inner join location location on purchase.location = location.id
+                    where items.id = 1 where id = %s""", (item_id, ))
     return list(cur.fetchall())
 
 def get_all_from_locations():
@@ -81,13 +93,9 @@ def items_list():
 @app.route('/items/describe')
 def describe_item():
     id = request.args.get('item', type = str)
-    purchase = get_all_from_purchases(id)
-    item = get_all_from_items(id)
-    location = get_long_name_location_from_id(purchase[0]['location'])
+    item = get_data_for_item_describe(id)
     return render_template('items_describe.html', 
-                            item=item,
-                            purchase=purchase, 
-                            location=location)
+                            item=item)
 
 if __name__ == '__main__':
     app.run(debug=True)

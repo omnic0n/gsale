@@ -20,12 +20,10 @@
             <td>{{ info['name'] }}</td>
             <td>{{ info['platform'] }}</td>
             <td>{% if info['sold'] == 0 %}False{% else %}True{% endif %}</td>
-        {% endfor %}
-        {% for info in purchase %}
             <td>{{ info['price'] }}</td>
             <td>{{ info['date'] }}</td>
+            <td>{{ info['location'] }}</td>
         {% endfor %}
-            <td>{{ location }}</td>
         </tr>
     </tbody>
 </table>
