@@ -154,7 +154,7 @@ def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     if str(item[0]['sold']) == 1:
-        sold = get_data_for_sold_item(id)
+        sold = get_data_for_item_sold(id)
         print sold
     else:
         sold = ""
