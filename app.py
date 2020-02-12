@@ -138,8 +138,7 @@ def items_list():
 def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
-    if item[0]['sold'] == 1:
-        print sold
+    print item
     return render_template('items_describe.html', 
                             item=item)
 
