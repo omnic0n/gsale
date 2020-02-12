@@ -153,6 +153,8 @@ def items_list():
 def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
+    sold = get_data_for_item_sold(id)
+    print sold
     if str(item[0]['sold']) == 1:
         sold = get_data_for_item_sold(id)
         print sold
