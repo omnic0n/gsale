@@ -62,6 +62,25 @@
         </tr>
     </tbody>
 </table>
-<br><br>Profit: {{ sold[0]['net'] - item['price']}}
+<br><h1>Sale Fees</h1>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>Ebay Fee</td>
+            <td>Paypal Fee</td>
+            <td>Shipping Fee</td>
+            <td>Net</td>    
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ sold[0]['ebay_fee'] }}</td>
+            <td>{{ sold[0]['paypal_fee'] }}</td>
+            <td>{{ sold[0]['shipping_fee'] }}</td>
+            <td>{{ sold[0]['net'] }}</td>
+        </tr>
+    </tbody>
+</table>
+<br><br>Profit: {{ sold[0]['net'] - item[0]['price']}}
 {% endblock content %}
 </html>
