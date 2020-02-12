@@ -18,10 +18,10 @@ CREATE TABLE sale (
      location MEDIUMINT NOT NULL,
      date DATE NOT NULL,
      price  DECIMAL(6,2) NOT NULL,
-     price_tax DECIMAL(6,2),
-     ebay_fee DECIMAL(6,2),
-     paypal_fee DECIMAL(6,2),
-     shipping_fee DECIMAL(5,2)
+     price_tax DECIMAL(6,2) DEFAULT 0.00,
+     ebay_fee DECIMAL(6,2) DEFAULT 0.00,
+     paypal_fee DECIMAL(6,2) DEFAULT 0.00,
+     shipping_fee DECIMAL(5,2) DEFAULT 0.00
 );
 
 CREATE TABLE location (

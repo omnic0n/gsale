@@ -91,26 +91,24 @@ def sold_items():
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if request.method == "POST":
         details = request.form
-        #cur = mysql.connection.cursor()
+        cur = mysql.connection.cursor()
         if details['ebay']:
             ebay_fee = format(float(details['price']) * .10, '.2f')
         else:
             ebay_fee = 0
-        
+
         if details['paypal']:
             paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
         else:
             paypal_fee = 0
         
-        print ebay_fee
-        print paypal_fee
-        #cur.execute("INSERT INTO items(name, platform) VALUES (%s, %s)", 
-        #            (details['name'], details['platform']))
-        #mysql.connection.commit()
+        cur.execute("update item set sold = 1 where id = %s)", 
+                    (details['name'], ))
+        mysql.connection.commit()
         #cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
-       #             (str(cur.lastrowid), details['location'], details['date'], details['price'],))
+        #            (str(cur.lastrowid), details['location'], details['date'], details['price'],))
         #mysql.connection.commit()
-        #cur.close()
+        cur.close()
         return redirect(url_for('sold_items'))
     return render_template('items_sold.html', form=form)
 
