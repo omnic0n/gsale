@@ -92,7 +92,7 @@ def sold_items():
     if request.method == "POST":
         details = request.form
         #cur = mysql.connection.cursor()
-        if ebay_fee:
+        if details['ebay']:
             ebay_fee = details['price'] * .10
         else:
             ebay_fee = 0
