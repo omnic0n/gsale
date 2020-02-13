@@ -20,9 +20,9 @@
         {% for item in items %}
         <tr>
             {% if item['sold'] == 0 %}
-                {% set color = 'red' %}
+                {% set color = 'black' %}
             {% else %}
-            {% set color = 'blue' %}
+            {% set color = 'red' %}
             {% endif %}
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{{ item['platform'] }}</td>
