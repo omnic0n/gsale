@@ -16,50 +16,50 @@ mysql = MySQL(app)
 
 def get_long_name_location_from_id(location_id):
     cur = mysql.connection.cursor()
-    value = cur.execute("SELECT long_name FROM location where id = %s", (location_id,))
+    value = cur.execute("SELECT long_name FROM location WHERE id = %s", (location_id,))
     return cur.fetchone()['long_name']
 
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items where id = %s", (item_id, ))
+    cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
     return list(cur.fetchall())
 
 def get_all_items_not_sold():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items where sold = 0")
+    cur.execute("SELECT * FROM items WHERE sold = 0 ORDER BY name ASC")
     return list(cur.fetchall())
 
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
-    cur.execute(""" select 
+    cur.execute(""" SELECT 
                     items.name, 
                     items.sold, 
                     items.id, 
-                    platform.long_name as platform, 
+                    platform.long_name AS platform, 
                     purchase.price, 
                     purchase.date, 
-                    location.long_name as location 
-                    from items items
-                    inner join platform platform on items.platform = platform.id 
-                    inner join purchase purchase on purchase.id = items.id
-                    inner join location location on purchase.location = location.id
-                    where items.id = %s""", (item_id, ))
+                    location.long_name AS location 
+                    FROM items items
+                    INNER JOIN platform platform ON items.platform = platform.id 
+                    INNER JOIN purchase purchase ON purchase.id = items.id
+                    INNER JOIN location location ON purchase.location = location.id
+                    WHERE items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
 def get_data_for_item_sold(item_id):
     cur = mysql.connection.cursor()
-    cur.execute(""" select 
+    cur.execute(""" SELECT 
                     sale.price, 
                     sale.tax,
                     sale.date, 
                     sale.ebay_fee,
                     sale.paypal_fee,
                     sale.shipping_fee,
-                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) as net,
+                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net,
                     location.long_name as location 
-                    from sale sale
-                    inner join location location on sale.location = location.id
-                    where sale.id = %s""", (item_id, ))
+                    FROM sale sale
+                    INNER JOIN location location ON sale.location = location.id
+                    WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
 def get_all_from_locations():
@@ -74,9 +74,9 @@ def get_all_from_platforms():
 
 def get_profit():
     cur = mysql.connection.cursor()
-    cur.execute("select sum(price) as price from purchase")
+    cur.execute("SELECT sum(price) AS price FROM purchase")
     purchase = list(cur.fetchall())
-    sale = cur.execute("select sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) as price from sale")
+    sale = cur.execute("SELECT sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) AS price FROM sale")
     sale = list(cur.fetchall())
     return sale[0]['price'],purchase[0]['price']
 
@@ -127,7 +127,7 @@ def sold_items():
              paypal_fee = 0
 
         cur = mysql.connection.cursor()
-        cur.execute("update items set sold = 1 where id = %s", (details['name'], ))
+        cur.execute("UPDATE items SET sold = 1 WHERE id = %s", (details['name'], ))
         cur.execute("""INSERT INTO sale(
                     id, 
                     location, 
