@@ -118,12 +118,12 @@ def sold_items():
         details = request.form
         print details
         cur = mysql.connection.cursor()
-        if details['ebay']:
+        if details['ebay'] is not None:
             ebay_fee = format(float(details['price']) * .10, '.2f')
         else:
             ebay_fee = 0
 
-        if details['paypal']:
+        if details['paypal'] is not None:
             paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
         else:
             paypal_fee = 0
