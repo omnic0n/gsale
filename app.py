@@ -163,13 +163,14 @@ def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     if int(item[0]['sold']) == 1:
-        sold = get_data_for_item_sold(id)
-        return render_template('items_describe_with_sold.html', 
-                                item=item,
-                                sold=sold)
+        item_sold = get_data_for_item_sold(id)
+        sold_state = 1
     else:
-        return render_template('items_describe.html', 
-                                item=item)
+        sold_state = 0
+    return render_template('items_describe_with_sold.html', 
+                            item=item,
+                            sold=item_sold,
+                            sold_state=sold_state)
 
 
 if __name__ == '__main__':
