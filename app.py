@@ -150,13 +150,14 @@ def sold_items():
 def items_list():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
-                 t1.id, 
-                 t1.name, 
-                 t1.sold, 
-                 t2.long_name as platform 
-                 FROM items t1 
-                 INNER JOIN platform t2 
-                 ON t1.platform = t2.id""")
+                 items.id, 
+                 items.name, 
+                 items.sold,
+                 platform.long_name as platform,
+                 purchase.date
+                 FROM items items 
+                 INNER JOIN platform platform ON items.platform = platform.id
+                 INNER JOIN purchase purchase ON items.id = purchase.id""")
     items = list(cur.fetchall())
     return render_template('items_list.html', items=items)
 

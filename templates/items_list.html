@@ -4,9 +4,10 @@
 <table class="blueTable">
     <thead>
         <tr>
-            <th id="name_header">Name</th> 
-            <th id="platform_header">Platform</th>
-            <th id="sold_header">Sold</th>
+            <th>Name</th> 
+            <th>Platform</th>
+            <th>Sold</th>
+            <th>Purchase Date</th>
         </tr>
     </thead>
     <tfoot>
@@ -27,6 +28,7 @@
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{{ item['platform'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
+            <td>{{ item['date'] }}</td>
         </tr>
         {% endfor %}
     </tbody>
