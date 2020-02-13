@@ -21,7 +21,10 @@ class SaleForm(FlaskForm):
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
     tax = StringField('tax')
-    paypal = BooleanField('paypal')
+    paypal = SelectField('paypal', choices=[
+                        ('none', 'None'),
+                        ('percent_and_fee', 'Percent and Fee'), 
+                        ('percent_only', 'Percent Only')])
     ebay = BooleanField('ebay')
     shipping_fee = StringField('shipping_fee')
     submit = SubmitField('Submit')
