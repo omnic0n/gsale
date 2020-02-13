@@ -117,13 +117,15 @@ def sold_items():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        if details['ebay']:
-            ebay_fee = format(float(details['price']) * .10, '.2f')
+        try:
+            if details['ebay']:
+                ebay_fee = format(float(details['price']) * .10, '.2f')
         else:
             ebay_fee = 0
 
-        if details['paypal']:
-            paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
+        try:
+            if details['paypal']:
+                paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
         else:
             paypal_fee = 0
         
