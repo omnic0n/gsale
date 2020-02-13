@@ -78,7 +78,7 @@ def get_profit():
     purchase = list(cur.fetchall())
     sale = cur.execute("select sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) as price from sale")
     sale = list(cur.fetchall())
-    return sale[0]['price'] - purchase[0]['price']
+    return sale[0]['price'],purchase[0]['price']
 
 @app.route('/')
 def index():
