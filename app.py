@@ -74,9 +74,9 @@ def get_all_from_platforms():
 
 def get_profit():
     cur = mysql.connection.cursor()
-    cur.execute("select sum(price) as total from purchase")
+    cur.execute("select sum(price) as price from purchase")
     purchase = list(cur.fetchall())
-    sale = cur.execute("select sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) as net from sale")
+    sale = cur.execute("select sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) as price from sale")
     sale = list(cur.fetchall())
     return sale[0]['price'] - purchase[0]['price']
 
