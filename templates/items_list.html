@@ -23,7 +23,7 @@
                 {% set color = 'red' %}
             {% else %}
             {% set color = 'blue' %}
-            {% end if %}
+            {% endif %}
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{{ item['platform'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
