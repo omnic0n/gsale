@@ -21,8 +21,9 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="/about">About</a>
-              <a class="navbar-brand mr-4" href="/items/bought">Add Item</a>
+              <a class="nav-item nav-link" href="/items/list">List Items</a>
+              <a class="nav-item nav-link" href="/items/bought">Add Item</a>
+              <a class="nav-item nav-link" href="/items/sold">Sell Item</a>
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
@@ -46,24 +47,6 @@
             {% endif %}
           {% endwith %}
           {% block content %}{% endblock %}
-        </div>
-        <div class="col-md-4">
-          <div class="content-section">
-            <h3>Navigation</h3>
-            <p class='text-muted'>
-              <ul class="list-group">
-                <li class="list-group-item list-group-item-light">
-                    <a class="navbar-brand mr-4" href="/items/bought">Add Item</a>
-                </li>
-                <li class="list-group-item list-group-item-light">
-                    <a class="navbar-brand mr-4" href="/items/sold">Sell Item</a>
-                </li>
-                <li class="list-group-item list-group-item-light">
-                    <a class="navbar-brand mr-4" href="/items/list">List Items</a>
-                </li>
-              </ul>
-            </p>
-          </div>
         </div>
       </div>
     </main>
