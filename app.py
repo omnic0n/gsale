@@ -121,9 +121,9 @@ def sold_items():
         else:
             ebay_fee = 0
        
-        if details['paypal'] = 'percent_and_fee':
+        if details['paypal'] == 1:
             paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
-        elif details['paypal'] = 'percent_only':
+        elif details['paypal'] == 2:
             paypal_fee = format((float(details['price']) + float(details['tax']) * .029), '.2f')
         else:
             paypal_fee = 0
