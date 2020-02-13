@@ -72,40 +72,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script>
-      var table = $('table');
-          
-      $('#name_header, #platform_header, #sold_header')
-          .wrapInner('<span title="sort this column"/>')
-          .each(function(){
-              
-              var th = $(this),
-                  thIndex = th.index(),
-                  inverse = false;
-              
-              th.click(function(){
-                  
-                  table.find('td').filter(function(){
-                      
-                      return $(this).index() === thIndex;
-                      
-                  }).sortElements(function(a, b){
-                      
-                      return $.text([a]) > $.text([b]) ?
-                          inverse ? -1 : 1
-                          : inverse ? 1 : -1;
-                      
-                  }, function(){
-                      
-                      // parentNode is the element we want to move
-                      return this.parentNode; 
-                      
-                  });
-                  
-                  inverse = !inverse;
-                      
-              });
-                  
-          });
-        </script>
+      const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+      const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
+          v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+          )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+      // do the work...
+      document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+          const table = th.closest('table');
+          Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
+              .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+              .forEach(tr => table.appendChild(tr) );
+      })));
+    </script>
   </body>
 </html>
