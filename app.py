@@ -72,13 +72,18 @@ def get_all_from_platforms():
     cur.execute("SELECT * FROM platform ORDER BY name ASC")
     return list(cur.fetchall())
 
+def get_profit():
+    cur = mysql.connection.cursor()
+    cur.execute("select sum(price) as total from purchase")
+    purchase = list(cur.fetchall())
+    sale = cur.execute("select sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) as net from sale")
+    sale = list(cur.fetchall())
+    return sale[0]['price'] - purchase[0]['price']
+
 @app.route('/')
 def index():
-    cur = mysql.connection.cursor()
-    purchase = cur.execute("select sum(price) as total from purchase")
-    purchase = list(cur.fetchall())
-    print purchase[0]['total']
-    return render_template('index.html')
+    profit = get_profit()
+    return render_template('index.html', profit=profit)
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
