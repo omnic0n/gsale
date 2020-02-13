@@ -116,19 +116,15 @@ def sold_items():
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if request.method == "POST":
         details = request.form
-        try:
-            details['ebay']
-        except NameError:
-            ebay_fee = 0
-        else:
+        if 'ebay' in request.form:
             ebay_fee = format(float(details['price']) * .10, '.2f')
-
-        try:
-            details['paypal']
-        except NameError:
-            paypal_fee = 0
         else:
+            ebay_fee = 0
+
+        if 'paypal' in request.form:
             paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
+        else:
+             paypal_fee = 0
 
         cur = mysql.connection.cursor()
         cur.execute("update items set sold = 1 where id = %s", (details['name'], ))
