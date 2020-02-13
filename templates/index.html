@@ -1,9 +1,21 @@
 <HTML>
 {% extends "layout.html" %}
 {% block content %}
-<H5>Purchases: {{ profit[1] }}</H5>
-<H5>Sales: {{ profit[0] }}</H5>
-<H5>Profit: {{ profit[0] - profit[1] }}</H5>
-
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>Purchases</td> 
+            <td>Purchases</td> 
+            <td>Profit</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ profit[1] }}</td>
+            <td>{{ profit[0] }}</td>
+            <td>{{ profit[0] - profit[1] }}</td>
+        </tr>
+    </tbody>
+</table>
 {% endblock content %}
 </HTML>
