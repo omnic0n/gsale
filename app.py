@@ -168,7 +168,7 @@ def describe_item():
     else:
         item_sold = 0
         sold_state = 0
-    return render_template('items_describe_with_sold.html', 
+    return render_template('item_describe.html', 
                             item=item,
                             sold=item_sold,
                             sold_state=sold_state)
