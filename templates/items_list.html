@@ -19,7 +19,7 @@
     <tbody>
         {% for item in items %}
         <tr>
-            <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
+            <td><font color = red><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</font></td>
             <td>{{ item['platform'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
         </tr>
