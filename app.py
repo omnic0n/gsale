@@ -116,6 +116,7 @@ def sold_items():
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if request.method == "POST":
         details = request.form
+        print details
         cur = mysql.connection.cursor()
         if details['ebay']:
             ebay_fee = format(float(details['price']) * .10, '.2f')
