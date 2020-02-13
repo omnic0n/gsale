@@ -166,6 +166,7 @@ def describe_item():
         item_sold = get_data_for_item_sold(id)
         sold_state = 1
     else:
+        item_sold = 0
         sold_state = 0
     return render_template('items_describe_with_sold.html', 
                             item=item,
