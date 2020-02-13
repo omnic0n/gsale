@@ -1,6 +1,9 @@
 <HTML>
 {% extends "layout.html" %}
 {% block content %}
-<H3>Profit: {{ profit }}</H3>
+<H5>Purchases: {{ profit[1] }}</H5>
+<H5>Sales: {{ profit[0] }}</H5>
+<H5>Profit: {{ profit[0] - profit[1] }}</H5>
+
 {% endblock content %}
 </HTML>
