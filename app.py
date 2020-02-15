@@ -159,7 +159,12 @@ def items_list():
                  INNER JOIN platform platform ON items.platform = platform.id
                  INNER JOIN purchase purchase ON items.id = purchase.id""")
     items = list(cur.fetchall())
-    return render_template('items_list.html', items=items)
+    cur.execute("""SELECT
+                    id,
+                    date 
+                    FROM sale""")
+    sold = list(cur.fetchall())
+    return render_template('items_list.html', items=items, sold=sold)
 
 @app.route('/items/describe')
 def describe_item():

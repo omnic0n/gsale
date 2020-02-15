@@ -8,6 +8,7 @@
             <th>Platform</th>
             <th>Sold</th>
             <th>Purchase Date</th>
+            <th>Sold Date</th>
         </tr>
     </thead>
     <tbody>
@@ -22,6 +23,11 @@
             <td>{{ item['platform'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
             <td>{{ item['date'] }}</td>
+            {% if item['id'] in sold %}
+            <td>Sold</td>
+            {% else %}
+            <td>Not Sold</td>
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>
