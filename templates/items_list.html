@@ -28,6 +28,7 @@
                     {% if item['id'] in sold_item['id'] %}
                        <td>Sold</td>
                         {% set found = 1 %}
+                    {% endif %}
                 {% endfor %}
             {% if not found %}
             <td>Not Sold</td>
