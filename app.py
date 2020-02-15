@@ -164,6 +164,7 @@ def items_list():
                     date 
                     FROM sale""")
     sold = list(cur.fetchall())
+    print sold
     return render_template('items_list.html', items=items, sold=sold)
 
 @app.route('/items/describe')
