@@ -27,7 +27,7 @@
             {% for sold_item in sold %}
                 {% if item['id'] == sold_item['id'] %}
                     <td>{{ sold_item['date']}}</td>
-                    {% found = 1 %}
+                    {% set found = 1 %}
                 {% endif %}
             {% endfor %}
             <td> {{ found }} </td>
