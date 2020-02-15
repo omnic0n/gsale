@@ -24,11 +24,11 @@
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
             <td>{{ item['date'] }}</td>
             {% set found = 0 %}
-            {% for sold_item in sold %}
-                {% if item['id'] in sold_item['id'] %}
-                    <td>Sold</td>
-                    {% set found = 1 %}
-            {% endfor %}
+                {% for sold_item in sold %}
+                    {% if item['id'] in sold_item['id'] %}
+                       <td>Sold</td>
+                        {% set found = 1 %}
+                {% endfor %}
             {% if not found %}
             <td>Not Sold</td>
             {% endif %}
