@@ -30,7 +30,9 @@
                     {% set found = 1 %}
                 {% endif %}
             {% endfor %}
-            <td> {{ found }} </td>
+            {% if item['sold'] == 0 %}
+            <td></td>
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>
