@@ -104,7 +104,6 @@ def bought_items():
                     (item_id, details['location'], details['date'], details['price'],))
         mysql.connection.commit()
         cur.close()
-        print item_id
         return redirect(url_for('describe_item',item=item_id))
     return render_template('items_purchased.html', form=form)
 
