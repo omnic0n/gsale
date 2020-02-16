@@ -121,16 +121,12 @@ def sold_items():
         else:
             ebay_fee = 0
        
-        print details['paypal']
         if details['paypal'] == "1":
             paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
-            print "percent+fee"
         elif details['paypal'] == "2":
             paypal_fee = format((float(details['price']) + float(details['tax']) * .029), '.2f')
-            print "percent"
         else:
             paypal_fee = 0
-            print "none"
 
         cur = mysql.connection.cursor()
         cur.execute("UPDATE items SET sold = 1 WHERE id = %s", (details['name'], ))
@@ -145,7 +141,7 @@ def sold_items():
                     shipping_fee) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", 
                     (details['name'], details['location'], details['date'], details['price'],details['tax'], ebay_fee, paypal_fee, details['shipping_fee'], ))
-        #mysql.connection.commit()
+        mysql.connection.commit()
         cur.close()
         return redirect(url_for('sold_items'))
     return render_template('items_sold.html', form=form)
