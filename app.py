@@ -99,11 +99,12 @@ def bought_items():
         cur.execute("INSERT INTO items(name, platform) VALUES (%s, %s)", 
                     (details['name'], details['platform']))
         mysql.connection.commit()
+        item_id = str(cur.lastrowid)
         cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
-                    (str(cur.lastrowid), details['location'], details['date'], details['price'],))
+                    (item_id, details['location'], details['date'], details['price'],))
         mysql.connection.commit()
         cur.close()
-        return redirect(url_for('describe_item',item=str(cur.lastrowid)))
+        return redirect(url_for('describe_item',item=item_id))
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/sold',methods=["POST","GET"])
