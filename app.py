@@ -121,6 +121,7 @@ def sold_items():
         else:
             ebay_fee = 0
        
+        print details['paypal']
         if details['paypal'] == 1:
             paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
             print "percent+fee"
