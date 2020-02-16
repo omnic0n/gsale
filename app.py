@@ -103,7 +103,7 @@ def bought_items():
                     (str(cur.lastrowid), details['location'], details['date'], details['price'],))
         mysql.connection.commit()
         cur.close()
-        return redirect(url_for('bought_items'))
+        return redirect(url_for('describe_item',item=str(cur.lastrowid)))
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/sold',methods=["POST","GET"])
@@ -141,7 +141,7 @@ def sold_items():
                     shipping_fee) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", 
                     (details['name'], details['location'], details['date'], details['price'],details['tax'], ebay_fee, paypal_fee, details['shipping_fee'], ))
-        #mysql.connection.commit()
+        mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=details['name']))
     return render_template('items_sold.html', form=form)
