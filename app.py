@@ -143,7 +143,7 @@ def sold_items():
                     (details['name'], details['location'], details['date'], details['price'],details['tax'], ebay_fee, paypal_fee, details['shipping_fee'], ))
         #mysql.connection.commit()
         cur.close()
-        return redirect(url_for('describe_item',item=item['id']))
+        return redirect(url_for('describe_item',item=details['name']))
     return render_template('items_sold.html', form=form)
 
 @app.route('/items/list')
