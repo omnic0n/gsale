@@ -125,7 +125,7 @@ def sold_items():
         if details['paypal'] == "1":
             paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
         elif details['paypal'] == "2":
-            paypal_fee = format((float(details['price']) + float(details['tax']) * .029), '.2f')
+            paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029), '.2f')
         else:
             paypal_fee = 0
 
