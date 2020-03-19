@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm
+from forms import PurchaseForm, SaleForm, GroupForm
 
 app = Flask(__name__)
 
@@ -84,6 +84,23 @@ def get_profit():
 def index():
     profit = get_profit()
     return render_template('index.html', profit=profit)
+
+@app.route('/items/create_group',methods=["POST","GET"])
+def bought_items():
+    locations = get_all_from_locations()
+
+    form = GroupForm()
+    form.location.choices = [(location['id'], location['long_name']) for location in locations]
+    if request.method == "POST":
+        details = request.form
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO group_items(group_name, date, price,location) VALUES (%s, %s, %s, %s)", 
+                    (details['name'], details['date'], details['price'], details['location']))
+        mysql.connection.commit()
+        group_id = str(cur.lastrowid)
+        cur.close()
+        return redirect(url_for('describe_group',item=group_id))
+    return render_template('groups_add.html', form=form)
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():

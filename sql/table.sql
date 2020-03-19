@@ -3,14 +3,18 @@ CREATE TABLE items (
      name CHAR(50) NOT NULL,
      sold BOOLEAN NOT NULL DEFAULT 0,
      platform CHAR(120) NOT NULL,
+     group_id MEDIUMINT DEFAULT NULL,
      PRIMARY KEY (id)
 );
 
 CREATE TABLE group_items (
      id MEDIUMINT NOT NULL AUTO_INCREMENT,
      date DATE NOT NULL,
+     location MEDIUMINT NOT NULL,
      price  DECIMAL(6,2) NOT NULL,
-     PRIMARY KEY (id)
+     group_name CHAR(120) NOT NULL,
+     PRIMARY KEY (id),
+     UNIQUE (group_name)
 );
 
 CREATE TABLE purchase (
