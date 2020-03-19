@@ -175,9 +175,13 @@ def bought_items():
     form.platform.choices = [(platform['id'], platform['long_name']) for platform in platforms]
     if request.method == "POST":
         details = request.form
+        if 'sellable' in request.form:
+            sellable = 2;
+        else:
+            sellable = 0;
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO items(name, platform, group_id) VALUES (%s, %s, %s)", 
-                    (details['name'], details['platform'],details['group']))
+        cur.execute("INSERT INTO items(name, platform, group_id, sold) VALUES (%s, %s, %s, %s)", 
+                    (details['name'], details['platform'],details['group'],sellable,))
         mysql.connection.commit()
         item_id = str(cur.lastrowid)
         if details['group'] == "1":
