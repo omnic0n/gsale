@@ -52,6 +52,7 @@ def get_data_from_group_describe(group_id):
                     group_items.name, 
                     group_items.price, 
                     group_items.id,
+                    group_items.date,
                     location.long_name AS location 
                     FROM group_items group_items
                     INNER JOIN location location ON group_items.location = location.id
@@ -111,7 +112,7 @@ def add_groups():
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
         cur.close()
-        return redirect(url_for('describe_group',item=group_id))
+        return redirect(url_for('describe_group',group_items=group_id))
     return render_template('groups_add.html', form=form)
 
 @app.route('/items/bought',methods=["POST","GET"])
