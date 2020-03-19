@@ -35,7 +35,8 @@
             <td>{% if item['group_id'] %}
                 <a href = "/groups/describe?group_id={{ item['group_id'] }}">
                 {% endif %}
-                {{ item['group_id'] }}</td>
+                {{ item['group_id'] }}
+            </td>
             </tr>
         {% endfor %}
     </tbody>
