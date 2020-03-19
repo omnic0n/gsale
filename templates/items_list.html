@@ -38,7 +38,7 @@
             {% endif %}
             <td>{% if item['group_id'] == 1%}
                 None
-                {% elfif item['group_id'] %}
+                {% elsif item['group_id'] %}
                 <a href = "/groups/describe?group_id={{ item['group_id'] }}">
                 {{ item['group_id'] }}
                 </a>
