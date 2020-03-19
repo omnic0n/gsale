@@ -1,0 +1,27 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>Name</td> 
+            <td>Location</td>
+            <td>Price</td>
+            <td>Date</td>
+            <td>ID</td> 
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in groups %}
+        <tr>
+            <td><a href = "/groups/describe?item={{ item['id'] }}">{{ group['name'] }}</td>
+            <td>{{ group['location'] }}</td>
+            <td>{{ group['price'] }}</td>
+            <td>{{ group['date'] }}</td>
+            <td>{{ group['id']}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+</html>

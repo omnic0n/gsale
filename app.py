@@ -98,7 +98,7 @@ def index():
     profit = get_profit()
     return render_template('index.html', profit=profit)
 
-@app.route('/items/create_group',methods=["POST","GET"])
+@app.route('/groups/create',methods=["POST","GET"])
 def add_groups():
     locations = get_all_from_locations()
 
@@ -112,8 +112,23 @@ def add_groups():
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
         cur.close()
-        return redirect(url_for('describe_group',group_items=group_id))
+        return redirect(url_for('describe_group',group=group_id))
     return render_template('groups_add.html', form=form)
+
+@app.route('/groups/list')
+def groups_list():
+    cur = mysql.connection.cursor()
+    cur.execute(""" SELECT 
+                    group_items.name, 
+                    group_items.price, 
+                    group_items.id,
+                    group_items.date,
+                    location.long_name AS location 
+                    FROM group_items group_items
+                    INNER JOIN location location ON group_items.location = location.id""")
+    groups = list(cur.fetchall())
+    return render_template('groups_list.html', groups=groups)
+
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
@@ -216,7 +231,7 @@ def describe_item():
 
 @app.route('/groups/describe')
 def describe_group():
-    id = request.args.get('group_items', type = str)
+    id = request.args.get('group', type = str)
     group_items = get_data_from_group_describe(id)
     return render_template('groups_describe.html', 
                             group_items=group_items)
