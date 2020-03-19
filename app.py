@@ -163,7 +163,7 @@ def bought_items():
                         #(item_id,group_data[0]['location'],group_data[0]['date'],))
         #mysql.connection.commit()
         cur.close()
-        return redirect(url_for('describe_item',item=item_id))
+        return redirect(url_for('describe_item',item=5))
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/sold',methods=["POST","GET"])
