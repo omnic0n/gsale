@@ -176,7 +176,9 @@ def bought_items():
     if request.method == "POST":
         details = request.form
         if 'not_selling' in request.form:
-            not_selling = '2'
+            not_selling = 2
+        else:
+            not_selling = 0
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO items(name, platform, group_id, sold) VALUES (%s, %s, %s, %s)", 
                     (details['name'], details['platform'],details['group'],not_selling,))
