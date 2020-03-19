@@ -112,7 +112,7 @@ def add_groups():
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
         cur.close()
-        return redirect(url_for('describe_group',group=group_id))
+        return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
 
 @app.route('/groups/list')
@@ -231,10 +231,10 @@ def describe_item():
 
 @app.route('/groups/describe')
 def describe_group():
-    id = request.args.get('group', type = str)
-    group_items = get_data_from_group_describe(id)
+    id = request.args.get('group_id', type = str)
+    group_id = get_data_from_group_describe(id)
     return render_template('groups_describe.html', 
-                            group_items=group_items)
+                            group_id=group_id)
 
 
 
