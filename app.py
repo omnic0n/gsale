@@ -34,6 +34,19 @@ def get_all_from_items(item_id):
     cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
     return list(cur.fetchall())
 
+def get_data_from_item_groups(group_id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" SELECT 
+                    items.name, 
+                    items.sold, 
+                    items.id, 
+                    platform.long_name AS platform, 
+                    FROM items items
+                    INNER JOIN platform platform ON items.platform = platform.id 
+                    INNER JOIN location location ON purchase.location = location.id
+                    WHERE items.group_id = %s""", (group_id, ))
+    return list(cur.fetchall())
+
 def get_all_items_not_sold():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items WHERE sold = 0 ORDER BY name ASC")
@@ -261,8 +274,10 @@ def describe_item():
 def describe_group():
     id = request.args.get('group_id', type = str)
     group_id = get_data_from_group_describe(id)
+    items = get_data_from_item_groups(id)
     return render_template('groups_describe.html', 
-                            group_id=group_id)
+                            group_id=group_id,
+                            items=items)
 
 
 

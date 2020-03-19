@@ -5,16 +5,16 @@
 <table class="blueTable">
     <thead>
         <tr>
-            <td>ID</td> 
             <td>Name</td> 
             <td>Location</td>
-            <td>Price</td>
+            <td>Purchase</td>
+            <td>Sold</td>
+            <td>Net</td>
             <td>Date</td>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td>{{ group_id[0]['id'] }}</td>
             <td>{{ group_id[0]['name'] }}</td>
             <td>{{ group_id[0]['location'] }}</td>
             <td>{{ group_id[0]['price'] }}</td>
@@ -23,5 +23,28 @@
     </tbody>
 </table>
 <br>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Platform</th>
+            <th>Sold</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            {% if item['sold'] == 0 %}
+                {% set color = 'black' %}
+            {% else %}
+            {% set color = 'red' %}
+            {% endif %}
+            <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
+            <td>{{ item['platform'] }}</td>
+            <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock content %}
 </html>
