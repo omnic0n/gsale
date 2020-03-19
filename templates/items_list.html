@@ -32,8 +32,8 @@
             {% if item['sold'] == 0 %}
             <td></td>
             {% endif %}
-            <td>{{ item['group_id']}}</td>
-        </tr>
+            <td><a href = "/groups/describe?group_id={{ item['group_id'] }}">{{ item['group_id'] }}</td>
+            </tr>
         {% endfor %}
     </tbody>
 </table>
