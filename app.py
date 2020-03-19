@@ -58,7 +58,8 @@ def get_data_for_item_describe(item_id):
     cur.execute(""" SELECT 
                     items.name, 
                     items.sold, 
-                    items.id, 
+                    items.id,
+                    items.group_id, 
                     platform.long_name AS platform, 
                     purchase.price, 
                     purchase.date, 
@@ -293,7 +294,7 @@ def describe_group():
     sold_price = get_group_profit(id)
     if not sold_price:
         sold_price = 0
-        
+
     return render_template('groups_describe.html', 
                             group_id=group_id,
                             items=items,
