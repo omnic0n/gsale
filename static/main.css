@@ -86,6 +86,6 @@
   }
 
   .col-md-8 {  
-    flex: 0 0 80%;
-    max-width: 0 0 80%;
+    flex: 80%;
+    max-width: 80%;
   }
