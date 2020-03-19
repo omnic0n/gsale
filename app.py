@@ -19,6 +19,11 @@ def get_long_name_location_from_id(location_id):
     value = cur.execute("SELECT long_name FROM location WHERE id = %s", (location_id,))
     return cur.fetchone()['long_name']
 
+def get_name_location_from_id(location_id):
+    cur = mysql.connection.cursor()
+    value = cur.execute("SELECT name FROM location WHERE id = %s", (location_id,))
+    return cur.fetchone()['name']
+
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
@@ -113,7 +118,8 @@ def group_add():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        group_name = "%s-%s-%s" % (details['date'],details['location'],details['name'])
+        location = get_name_location_from_id(details['location'])
+        group_name = "%s-%s-%s" % (details['date'],location,details['name'])
         cur.execute("INSERT INTO groups(name, date, price,location) VALUES (%s, %s, %s, %s)", 
                     (group_name, details['date'], details['price'], details['location']))
         mysql.connection.commit()
