@@ -18,7 +18,9 @@
             <td>{{ item[0]['name'] }}</td>
             <td>{{ item[0]['platform'] }}</td>
             <td>{% if sold_state %}True{% else %}False{% endif %}</td>
-            {% if item[0]['group_id'] %}<td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</td>{% endif %}
+            {% if item[0]['group_id'] %}
+            <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</td>
+            {% endif %}
         </tr>
     </tbody>
 </table>
