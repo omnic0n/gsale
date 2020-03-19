@@ -117,7 +117,7 @@ def get_all_from_platforms():
 def get_profit():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT SUM(table.price) AS price
-                FROM (SELECT price FROM purchases
+                FROM (SELECT price FROM purchase
                 UNION ALL
                 SELECT price FROM groups) tbl""")
     purchase = list(cur.fetchall())
