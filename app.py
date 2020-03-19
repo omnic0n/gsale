@@ -157,8 +157,7 @@ def bought_items():
         else:
             group_data = get_all_from_group(details['group'])
             print group_data
-            print group_data[0]
-            print group_data[0]['date']
+            print group_data['date']
             #cur.execute("INSERT INTO purchase(id,location,date) VALUES (%s)", 
                         #(item_id,group_data[0]['location'],group_data[0]['date'],))
         #mysql.connection.commit()
