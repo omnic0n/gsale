@@ -82,7 +82,7 @@ def get_all_from_locations():
 
 def get_all_from_groups():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM group_ ORDER BY name ASC")
+    cur.execute("SELECT * FROM groups ORDER BY name ASC")
     return list(cur.fetchall())
 
 def get_all_from_platforms():
