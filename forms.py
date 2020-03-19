@@ -21,7 +21,7 @@ class PurchaseForm(FlaskForm):
     price = StringField('price') 
     date = DateField('date', format='%Y-%m-%d')
     platform = SelectField('platform', coerce=int)
-    sellable = BooleanField('sellable', active=True)
+    not_selling = BooleanField('not_selling')
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):
