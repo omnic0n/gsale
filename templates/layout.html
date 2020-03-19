@@ -79,11 +79,11 @@
           $('#price').attr('required', '');
           $('#price').attr('data-error', 'This field is required.');
 
-          $('#location').attr("readonly", true);
+          $('#location').hide();
           $('#location').attr('required', '');
           $('#location').attr('data-error', 'This field is required.');
 
-          $('#date').attr("readonly", true);
+          $('#date').hide();
           $('#date').attr('required', '');
           $('#date').attr('data-error', 'This field is required.');
         } else {
@@ -91,11 +91,11 @@
           $('#price').attr('required', '');
           $('#price').attr('data-error', 'This field is required.');
 
-          $('#location').attr("readonly", false);
+          $('#location').show();
           $('#location').attr('required', '');
           $('#location').attr('data-error', 'This field is required.');
 
-          $('#date').attr("readonly", false);
+          $('#date').show();
           $('#date').attr('required', '');
           $('#date').attr('data-error', 'This field is required.');
         }
