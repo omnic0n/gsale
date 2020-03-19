@@ -147,23 +147,20 @@ def bought_items():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        #cur.execute("INSERT INTO items(name, platform, group_id) VALUES (%s, %s, %s)", 
-                   # (details['name'], details['platform'],details['group']))
-        #mysql.connection.commit()
-        #item_id = str(cur.lastrowid)
+        cur.execute("INSERT INTO items(name, platform, group_id) VALUES (%s, %s, %s)", 
+                    (details['name'], details['platform'],details['group']))
+        mysql.connection.commit()
+        item_id = str(cur.lastrowid)
         if details['group'] == "1":
-           print 'nothin'
-           # cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
-            #            (item_id, details['location'], details['date'], details['price'],))
+            cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
+                        (item_id, details['location'], details['date'], details['price'],))
         else:
             group_data = get_all_from_group(details['group'])
-            print group_data
-            print group_data['date']
-            #cur.execute("INSERT INTO purchase(id,location,date) VALUES (%s)", 
-                        #(item_id,group_data[0]['location'],group_data[0]['date'],))
-        #mysql.connection.commit()
+            cur.execute("INSERT INTO purchase(id,location,date) VALUES (%s)", 
+                        (item_id,group_data['location'],group_data['date'],))
+        mysql.connection.commit()
         cur.close()
-        return redirect(url_for('describe_item',item=5))
+        return redirect(url_for('describe_item',item=item_id))
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/sold',methods=["POST","GET"])
