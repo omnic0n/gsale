@@ -291,6 +291,7 @@ def describe_group():
     group_id = get_data_from_group_describe(id)
     items = get_data_from_item_groups(id)
     sold_price = get_group_profit(id)
+    print sold_price
     return render_template('groups_describe.html', 
                             group_id=group_id,
                             items=items,
