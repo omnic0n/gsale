@@ -36,10 +36,13 @@
             {% elif item['sold'] == 2 %}
             <td>NA</td>
             {% endif %}
-            <td>{% if item['group_id'] %}
+            <td>{% if item['group_id'] == 1%}
+                None
+                {% elfif item['group_id'] %}
                 <a href = "/groups/describe?group_id={{ item['group_id'] }}">
-                {% endif %}
                 {{ item['group_id'] }}
+                </a>
+                {% endif %}
             </td>
             </tr>
         {% endfor %}
