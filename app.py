@@ -24,6 +24,11 @@ def get_name_location_from_id(location_id):
     value = cur.execute("SELECT name FROM location WHERE id = %s", (location_id,))
     return cur.fetchone()['name']
 
+def get_location_from_group(group_id):
+    cur = mysql.connection.cursor()
+    value = cur.execute("SELECT location FROM groups WHERE id = %s", (group_id,))
+    return cur.fetchone()['location']
+
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
@@ -150,8 +155,9 @@ def bought_items():
             cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
                         (item_id, details['location'], details['date'], details['price'],))
         else:
-            cur.execute("INSERT INTO purchase(id) VALUES (%s)", 
-                        (item_id,))
+            location = get_location_from_group(details['group'])
+            cur.execute("INSERT INTO purchase(id,location) VALUES (%s)", 
+                        (item_id,location,))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=item_id))
