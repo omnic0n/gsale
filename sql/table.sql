@@ -6,6 +6,13 @@ CREATE TABLE items (
      PRIMARY KEY (id)
 );
 
+CREATE TABLE group_items (
+     id MEDIUMINT NOT NULL AUTO_INCREMENT,
+     date DATE NOT NULL,
+     price  DECIMAL(6,2) NOT NULL,
+     PRIMARY KEY (id)
+);
+
 CREATE TABLE purchase (
      id MEDIUMINT NOT NULL,
      location MEDIUMINT NOT NULL,

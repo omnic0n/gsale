@@ -154,6 +154,7 @@ def items_list():
                  items.id, 
                  items.name, 
                  items.sold,
+                 items.group_id,
                  platform.long_name as platform,
                  purchase.date
                  FROM items items 
