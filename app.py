@@ -86,7 +86,7 @@ def index():
     return render_template('index.html', profit=profit)
 
 @app.route('/items/create_group',methods=["POST","GET"])
-def bought_items():
+def add_groups():
     locations = get_all_from_locations()
 
     form = GroupForm()
