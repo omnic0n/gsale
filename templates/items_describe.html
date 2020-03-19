@@ -35,14 +35,12 @@
         </tr>
     </thead>
     <tbody>
-        {% if item[0]['price'] > 0 and not item[0]['group_id'] %}
         <tr>
             <td>Purchase</td>
             <td>{{ item[0]['price'] }}</td>
             <td>{{ item[0]['date'] }}</td>
             <td>{{ item[0]['location'] }}</td>
         </tr>
-        {% endif %}
         {% if sold_state %}
         <tr>
             <td>Sold</td>
