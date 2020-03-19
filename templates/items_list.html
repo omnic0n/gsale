@@ -17,6 +17,8 @@
         <tr>
             {% if item['sold'] == 0 %}
                 {% set color = 'black' %}
+            {% if item['sold'] == 2 %}
+                {% set color = 'green' %}
             {% else %}
             {% set color = 'red' %}
             {% endif %}
@@ -29,7 +31,7 @@
                     <td>{{ sold_item['date']}}</td>
                 {% endif %}
             {% endfor %}
-            {% if item['sold'] == 0 %}
+            {% if item['sold'] == 0 or item['sold'] == 2 %}
             <td></td>
             {% endif %}
             <td>{% if item['group_id'] %}
