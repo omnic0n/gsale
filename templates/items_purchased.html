@@ -84,16 +84,16 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.sellable.label(class="form-control-label") }}
-                    {% if form.sellable.errors %}
-                        {{ form.sellable(class="form-control form-control-lg is-invalid") }}
+                    {{ form.not_selling.label(class="form-control-label") }}
+                    {% if form.not_selling.errors %}
+                        {{ form.not_selling(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.sellable.errors %}
+                            {% for error in form.not_selling.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.sellable(class="form-control form-control-lg") }}
+                        {{ form.not_selling(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
             </fieldset>
