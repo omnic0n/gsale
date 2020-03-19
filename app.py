@@ -99,7 +99,7 @@ def index():
     return render_template('index.html', profit=profit)
 
 @app.route('/groups/create',methods=["POST","GET"])
-def add_groups():
+def group_add():
     locations = get_all_from_locations()
 
     form = GroupForm()
