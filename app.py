@@ -55,7 +55,7 @@ def get_data_from_group_describe(group_id):
                     location.long_name AS location 
                     FROM group_items group_items
                     INNER JOIN location location ON group_items.location = location.id
-                    WHERE items.id = %s""", (group_id, ))
+                    WHERE group_items.id = %s""", (group_id, ))
     return list(cur.fetchall())
 
 def get_data_for_item_sold(item_id):
