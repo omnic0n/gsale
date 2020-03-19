@@ -75,7 +75,7 @@
     <script>
       $("#group").change(function() {
         if ($(this).val() != "None") {
-          $('#price').attr("readonly", true);
+          $('#price').hide();
           $('#price').attr('required', '');
           $('#price').attr('data-error', 'This field is required.');
 
@@ -87,7 +87,7 @@
           $('#date').attr('required', '');
           $('#date').attr('data-error', 'This field is required.');
         } else {
-          $('#price').attr("readonly", false);
+          $('#price').show();
           $('#price').attr('required', '');
           $('#price').attr('data-error', 'This field is required.');
 
