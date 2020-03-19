@@ -151,7 +151,7 @@ def bought_items():
                         (item_id, details['location'], details['date'], details['price'],))
         else:
             cur.execute("INSERT INTO purchase(id) VALUES (%s)", 
-                        (item_id))
+                        (item_id,))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=item_id))
