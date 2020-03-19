@@ -19,9 +19,9 @@ CREATE TABLE groups (
 
 CREATE TABLE purchase (
      id MEDIUMINT NOT NULL,
-     location MEDIUMINT NOT NULL,
-     date DATE NOT NULL,
-     price  DECIMAL(6,2) NOT NULL
+     location MEDIUMINT,
+     date DATE,
+     price  DECIMAL(6,2)
 );
 
 CREATE TABLE sale (
