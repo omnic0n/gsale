@@ -7,14 +7,14 @@ CREATE TABLE items (
      PRIMARY KEY (id)
 );
 
-CREATE TABLE group_items (
+CREATE TABLE groups (
      id MEDIUMINT NOT NULL AUTO_INCREMENT,
      date DATE NOT NULL,
      location MEDIUMINT NOT NULL,
      price  DECIMAL(6,2) NOT NULL,
      name CHAR(120) NOT NULL,
      PRIMARY KEY (id),
-     UNIQUE (group_name)
+     UNIQUE (name)
 );
 
 CREATE TABLE purchase (

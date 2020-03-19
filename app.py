@@ -49,14 +49,14 @@ def get_data_for_item_describe(item_id):
 def get_data_from_group_describe(group_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
-                    group_items.name, 
-                    group_items.price, 
-                    group_items.id,
-                    group_items.date,
+                    groups.name, 
+                    groups.price, 
+                    groups.id,
+                    groups.date,
                     location.long_name AS location 
-                    FROM group_items group_items
-                    INNER JOIN location location ON group_items.location = location.id
-                    WHERE group_items.id = %s""", (group_id, ))
+                    FROM groups groups
+                    INNER JOIN location location ON groups.location = location.id
+                    WHERE groups.id = %s""", (group_id, ))
     return list(cur.fetchall())
 
 def get_data_for_item_sold(item_id):
@@ -78,6 +78,11 @@ def get_data_for_item_sold(item_id):
 def get_all_from_locations():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM location ORDER BY name ASC")
+    return list(cur.fetchall())
+
+def get_all_from_groups():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM group_ ORDER BY name ASC")
     return list(cur.fetchall())
 
 def get_all_from_platforms():
@@ -108,7 +113,7 @@ def group_add():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO group_items(name, date, price,location) VALUES (%s, %s, %s, %s)", 
+        cur.execute("INSERT INTO groups(name, date, price,location) VALUES (%s, %s, %s, %s)", 
                     (details['name'], details['date'], details['price'], details['location']))
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
@@ -120,10 +125,12 @@ def group_add():
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     locations = get_all_from_locations()
+    groups = get_all_from_groups()
     platforms = get_all_from_platforms()
 
     form = PurchaseForm()
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
+    form.group.choices = [(group['id'], group['name']) for group in groups]
     form.platform.choices = [(platform['id'], platform['long_name']) for platform in platforms]
     if request.method == "POST":
         details = request.form
@@ -184,13 +191,13 @@ def sold_items():
 def groups_list():
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
-                    group_items.name, 
-                    group_items.price, 
-                    group_items.id,
-                    group_items.date,
+                    groups.name, 
+                    groups.price, 
+                    groups.id,
+                    groups.date,
                     location.long_name AS location 
-                    FROM group_items group_items
-                    INNER JOIN location location ON group_items.location = location.id""")
+                    FROM groups groups
+                    INNER JOIN location location ON groups.location = location.id""")
     groups = list(cur.fetchall())
     return render_template('groups_list.html', groups=groups)
 
