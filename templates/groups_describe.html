@@ -40,7 +40,7 @@
                 {% set color = 'black' %}
             {% elif item['sold'] == 2 %}
                 {% set color = 'green' %}
-            {$ else %}
+            {% else %}
                 {% set color = 'red' %}
             {% endif %}
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
