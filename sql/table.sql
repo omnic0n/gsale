@@ -12,7 +12,7 @@ CREATE TABLE group_items (
      date DATE NOT NULL,
      location MEDIUMINT NOT NULL,
      price  DECIMAL(6,2) NOT NULL,
-     group_name CHAR(120) NOT NULL,
+     name CHAR(120) NOT NULL,
      PRIMARY KEY (id),
      UNIQUE (group_name)
 );

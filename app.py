@@ -46,6 +46,18 @@ def get_data_for_item_describe(item_id):
                     WHERE items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
+def get_data_from_group_describe(group_id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" SELECT 
+                    group_items.name, 
+                    group_items.price, 
+                    group_items.id,
+                    location.long_name AS location 
+                    FROM group_items group_items
+                    INNER JOIN location location ON group_items.location = location.id
+                    WHERE items.id = %s""", (group_id, ))
+    return list(cur.fetchall())
+
 def get_data_for_item_sold(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
@@ -94,7 +106,7 @@ def add_groups():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO group_items(group_name, date, price,location) VALUES (%s, %s, %s, %s)", 
+        cur.execute("INSERT INTO group_items(name, date, price,location) VALUES (%s, %s, %s, %s)", 
                     (details['name'], details['date'], details['price'], details['location']))
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
@@ -200,6 +212,14 @@ def describe_item():
                             item=item,
                             sold=item_sold,
                             sold_state=sold_state)
+
+@app.route('/groups/describe')
+def describe_group():
+    id = request.args.get('group_items', type = str)
+    group_items = get_data_from_group_describe(id)
+    return render_template('groups_describe.html', 
+                            group_items=group_items)
+
 
 
 if __name__ == '__main__':
