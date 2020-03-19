@@ -31,8 +31,10 @@
                     <td>{{ sold_item['date']}}</td>
                 {% endif %}
             {% endfor %}
-            {% if item['sold'] == 0 or item['sold'] == 2 %}
+            {% if item['sold'] == 0 %}
             <td></td>
+            {% elif item['sold'] == 2 %}
+            <td>NA</td>
             {% endif %}
             <td>{% if item['group_id'] %}
                 <a href = "/groups/describe?group_id={{ item['group_id'] }}">
