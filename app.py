@@ -119,7 +119,7 @@ def get_profit():
     cur.execute("""SELECT SUM(table.price) AS price
                 FROM (SELECT price FROM purchase
                 UNION ALL
-                SELECT price FROM groups) tbl""")
+                SELECT price FROM groups) table""")
     purchase = list(cur.fetchall())
     cur.execute("SELECT sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) AS price FROM sale")
     sale = list(cur.fetchall())
