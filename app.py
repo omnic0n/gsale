@@ -40,7 +40,7 @@ def get_data_from_item_groups(group_id):
                     items.name, 
                     items.sold, 
                     items.id, 
-                    platform.long_name AS platform, 
+                    platform.long_name AS platform 
                     FROM items items
                     INNER JOIN platform platform ON items.platform = platform.id 
                     INNER JOIN location location ON purchase.location = location.id
