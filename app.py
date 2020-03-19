@@ -16,18 +16,18 @@ mysql = MySQL(app)
 
 def get_long_name_location_from_id(location_id):
     cur = mysql.connection.cursor()
-    value = cur.execute("SELECT long_name FROM location WHERE id = %s", (location_id,))
+    cur.execute("SELECT long_name FROM location WHERE id = %s", (location_id,))
     return cur.fetchone()['long_name']
 
 def get_name_location_from_id(location_id):
     cur = mysql.connection.cursor()
-    value = cur.execute("SELECT name FROM location WHERE id = %s", (location_id,))
+    cur.execute("SELECT name FROM location WHERE id = %s", (location_id,))
     return cur.fetchone()['name']
 
-def get_location_from_group(group_id):
+def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
-    value = cur.execute("SELECT location FROM groups WHERE id = %s", (group_id,))
-    return cur.fetchone()['location']
+    cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
+    return list(cur.fetchone())
 
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
@@ -104,7 +104,7 @@ def get_profit():
     cur = mysql.connection.cursor()
     cur.execute("SELECT sum(price) AS price FROM purchase")
     purchase = list(cur.fetchall())
-    sale = cur.execute("SELECT sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) AS price FROM sale")
+    cur.execute("SELECT sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) AS price FROM sale")
     sale = list(cur.fetchall())
     return sale[0]['price'],purchase[0]['price']
 
@@ -155,9 +155,9 @@ def bought_items():
             cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
                         (item_id, details['location'], details['date'], details['price'],))
         else:
-            location = get_location_from_group(details['group'])
-            cur.execute("INSERT INTO purchase(id,location) VALUES (%s)", 
-                        (item_id,location,))
+            group_data = get_all_from_group(details['group'])
+            cur.execute("INSERT INTO purchase(id,location,date) VALUES (%s)", 
+                        (item_id,group_data['location'],group_data['date'],))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=item_id))
