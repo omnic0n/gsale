@@ -98,6 +98,7 @@ def index():
     profit = get_profit()
     return render_template('index.html', profit=profit)
 
+#Data Section
 @app.route('/groups/create',methods=["POST","GET"])
 def group_add():
     locations = get_all_from_locations()
@@ -114,20 +115,6 @@ def group_add():
         cur.close()
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
-
-@app.route('/groups/list')
-def groups_list():
-    cur = mysql.connection.cursor()
-    cur.execute(""" SELECT 
-                    group_items.name, 
-                    group_items.price, 
-                    group_items.id,
-                    group_items.date,
-                    location.long_name AS location 
-                    FROM group_items group_items
-                    INNER JOIN location location ON group_items.location = location.id""")
-    groups = list(cur.fetchall())
-    return render_template('groups_list.html', groups=groups)
 
 
 @app.route('/items/bought',methods=["POST","GET"])
@@ -192,6 +179,21 @@ def sold_items():
         return redirect(url_for('describe_item',item=details['name']))
     return render_template('items_sold.html', form=form)
 
+#List Section
+@app.route('/groups/list')
+def groups_list():
+    cur = mysql.connection.cursor()
+    cur.execute(""" SELECT 
+                    group_items.name, 
+                    group_items.price, 
+                    group_items.id,
+                    group_items.date,
+                    location.long_name AS location 
+                    FROM group_items group_items
+                    INNER JOIN location location ON group_items.location = location.id""")
+    groups = list(cur.fetchall())
+    return render_template('groups_list.html', groups=groups)
+
 @app.route('/items/list')
 def items_list():
     cur = mysql.connection.cursor()
@@ -214,6 +216,8 @@ def items_list():
     print sold
     return render_template('items_list.html', items=items, sold=sold)
 
+
+#Describe Section
 @app.route('/items/describe')
 def describe_item():
     id = request.args.get('item', type = str)
