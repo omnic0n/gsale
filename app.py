@@ -157,7 +157,7 @@ def bought_items():
         else:
             group_data = get_all_from_group(details['group'])
             cur.execute("INSERT INTO purchase(id,location,date) VALUES (%s)", 
-                        (item_id,group_data['location'],group_data['date'],))
+                        (item_id,int(group_data['location']),date(group_data['date']),))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=item_id))
