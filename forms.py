@@ -8,7 +8,7 @@ class GroupForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired()])
     location = SelectField('location', coerce=int)
-    price = StringField('price') 
+    price = StringField('price')
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
     submit = SubmitField('Submit')

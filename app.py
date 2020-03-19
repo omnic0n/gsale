@@ -113,8 +113,9 @@ def group_add():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
+        group_name = "%s-%s-%s" % (details['date'],details['location'],details['name'])
         cur.execute("INSERT INTO groups(name, date, price,location) VALUES (%s, %s, %s, %s)", 
-                    (details['name'], details['date'], details['price'], details['location']))
+                    (group_name, details['date'], details['price'], details['location']))
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
         cur.close()
