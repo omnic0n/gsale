@@ -125,6 +125,17 @@ def get_profit():
     sale = list(cur.fetchall())
     return sale[0]['price'],purchase[0]['price']
 
+def get_group_profit(group_id):
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) 
+                AS price FROM sale 
+                WHERE id IN 
+                    (SELECT id FROM items 
+                     WHERE sold = 1 
+                     AND group_id = %s)""", (group_id, ))
+    sale = list(cur.fetchall())
+    return sale[0]['price']
+
 @app.route('/')
 def index():
     profit = get_profit()
@@ -279,11 +290,11 @@ def describe_group():
     id = request.args.get('group_id', type = str)
     group_id = get_data_from_group_describe(id)
     items = get_data_from_item_groups(id)
+    sold_price = get_group_profit(id)
     return render_template('groups_describe.html', 
                             group_id=group_id,
-                            items=items)
-
-
+                            items=items,
+                            sold_price=sold_price)
 
 if __name__ == '__main__':
     app.run(debug=True)

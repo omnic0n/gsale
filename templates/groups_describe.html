@@ -7,18 +7,18 @@
         <tr>
             <td>Name</td> 
             <td>Location</td>
-            <td>Purchase</td>
-            <td>Sold</td>
-            <td>Net</td>
             <td>Date</td>
+            <td>Purchase</td>
+            <td>Net</td>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>{{ group_id[0]['name'] }}</td>
             <td>{{ group_id[0]['location'] }}</td>
-            <td>{{ group_id[0]['price'] }}</td>
             <td>{{ group_id[0]['date'] }}</td>
+            <td>${{ group_id[0]['price'] }}</td>
+            <td>${{ sold_price - group_id[0]['price'] }}</td>
         </tr>
     </tbody>
 </table>
