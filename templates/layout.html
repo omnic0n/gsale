@@ -72,5 +72,18 @@
               .forEach(tr => tbody.appendChild(tr) );
       })));
     </script>
+    <script>
+      $("#group").change(function() {
+        if ($(this).val() != "None") {
+          $('#price').hide();
+          $('#price').attr('required', '');
+          $('#price').attr('data-error', 'This field is required.');
+        } else {
+          $('#price').show();
+          $('#price').removeAttr('required');
+          $('#price').removeAttr('data-error');
+        }
+      });
+    </script>
   </body>
 </html>
