@@ -42,8 +42,9 @@ def get_data_from_item_groups(group_id):
                     items.id, 
                     platform.long_name AS platform 
                     FROM items items
-                    INNER JOIN platform platform ON items.platform = platform.id 
-                    INNER JOIN location location ON purchase.location = location.id
+                    INNER JOIN platform platform ON items.platform = platform.id
+                    INNER JOIN groups groups ON items.group_id = groups.id 
+                    INNER JOIN location location ON groups.location = location.id
                     WHERE items.group_id = %s""", (group_id, ))
     return list(cur.fetchall())
 
