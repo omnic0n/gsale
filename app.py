@@ -27,7 +27,7 @@ def get_name_location_from_id(location_id):
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
-    return list(cur.fetchone())
+    return cur.fetchone()
 
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
