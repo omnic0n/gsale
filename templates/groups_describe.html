@@ -1,0 +1,27 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<h3>Group Info</h3>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>ID</td> 
+            <td>Name</td> 
+            <td>Location</td>
+            <td>Price</td>
+            <td>Date</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ group_items[0]['id'] }}</td>
+            <td>{{ group_items[0]['name'] }}</td>
+            <td>{{ group_items[0]['location'] }}</td>
+            <td>{{ group_items[0]['price'] }}</td>
+            <td>{{ group_items[0]['date'] }}</td>
+        </tr>
+    </tbody>
+</table>
+<br>
+{% endblock content %}
+</html>
