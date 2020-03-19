@@ -149,7 +149,10 @@ def bought_items():
         if details['group'] == "1":
             cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
                         (item_id, details['location'], details['date'], details['price'],))
-            mysql.connection.commit()
+        else:
+            cur.execute("INSERT INTO purchase(id) VALUES (%s)", 
+                        (item_id))
+        mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=item_id))
     return render_template('items_purchased.html', form=form)
