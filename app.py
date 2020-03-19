@@ -142,7 +142,7 @@ def bought_items():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO items(name, platform,group_id) VALUES (%s, %s, %s)", 
+        cur.execute("INSERT INTO items(name, platform, group_id) VALUES (%s, %s, %s)", 
                     (details['name'], details['platform'],details['group']))
         mysql.connection.commit()
         item_id = str(cur.lastrowid)
