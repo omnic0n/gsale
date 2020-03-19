@@ -76,16 +76,8 @@
       $("#group").change(function() {
         if ($(this).val() != "1") {
           $('#price').hide();
-          $('#price').attr('required', '');
-          $('#price').attr('data-error', 'This field is required.');
-
           $('#location').hide();
-          $('#location').attr('required', '');
-          $('#location').attr('data-error', 'This field is required.');
-
           $('#date').hide();
-          $('#date').attr('required', '');
-          $('#date').attr('data-error', 'This field is required.');
         } else {
           $('#price').show();
           $('#price').attr('required', '');
