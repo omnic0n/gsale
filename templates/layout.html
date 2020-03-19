@@ -75,11 +75,11 @@
     <script>
       $("#group").change(function() {
         if ($(this).val() != "None") {
-          $('#price').disabled();
+          $('#price').attr("readonly", true);
           $('#price').attr('required', '');
           $('#price').attr('data-error', 'This field is required.');
         } else {
-          $('#price').enabled();
+          $('#price').attr("readonly", false);
           $('#price').removeAttr('required');
           $('#price').removeAttr('data-error');
         }
