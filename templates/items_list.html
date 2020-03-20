@@ -4,30 +4,47 @@
 <table class="blueTable">
     <thead>
         <tr>
-            <th id="name_header">Name</th> 
-            <th id="platform_header">Platform</th>
-            <th id="sold_header">Sold</th>
+            <th>Name</th> 
+            <th>Platform</th>
+            <th>Sold</th>
+            <th>Purchase Date</th>
+            <th>Sold Date</th>
+            <th>Group ID</th> 
         </tr>
     </thead>
-    <tfoot>
-        <tr>
-            <td colspan="3">
-            <div class="links"><a href="#">&laquo;</a> <a class="active" href="#">1</a> <a href="#">2</a> <a href="#">3</a> <a href="#">4</a> <a href="#">&raquo;</a></div>
-            </td>
-        </tr>
-    </tfoot>
     <tbody>
         {% for item in items %}
         <tr>
             {% if item['sold'] == 0 %}
                 {% set color = 'black' %}
+            {% elif item['sold'] == 2 %}
+                {% set color = 'green' %}
             {% else %}
-            {% set color = 'red' %}
+                {% set color = 'red' %}
             {% endif %}
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{{ item['platform'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
-        </tr>
+            <td>{{ item['date'] }}</td>
+            {% for sold_item in sold %}
+                {% if item['id'] == sold_item['id'] %}
+                    <td>{{ sold_item['date']}}</td>
+                {% endif %}
+            {% endfor %}
+            {% if item['sold'] == 0 %}
+            <td></td>
+            {% elif item['sold'] == 2 %}
+            <td>NA</td>
+            {% endif %}
+            <td>{% if item['group_id'] == 1%}
+                None
+                {% elif item['group_id'] %}
+                <a href = "/groups/describe?group_id={{ item['group_id'] }}">
+                {{ item['group_id'] }}
+                </a>
+                {% endif %}
+            </td>
+            </tr>
         {% endfor %}
     </tbody>
 </table>

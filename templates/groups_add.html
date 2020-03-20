@@ -4,7 +4,7 @@
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Add Item</legend>
+                <legend class="border-bottom mb-4">Add Group</legend>
                 <div class="form-group">
                     {{ form.name.label(class="form-control-label") }}
                     {% if form.name.errors %}
@@ -19,19 +19,6 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.group.label(class="form-control-label") }}
-                    {% if form.group.errors %}
-                        {{ form.group(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.group.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.group(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="form-group">
                     {{ form.price.label(class="form-control-label") }}
                     {% if form.price.errors %}
                         {{ form.price(class="form-control form-control-lg is-invalid") }}
@@ -42,19 +29,6 @@
                         </div>
                     {% else %}
                         {{ form.price(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    {{ form.platform.label(class="form-control-label") }}
-                    {% if form.platform.errors %}
-                        {{ form.platform(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.platform.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.platform(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
                 <div class="form-group">
@@ -81,19 +55,6 @@
                         </div>
                     {% else %}
                         {{ form.date(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    {{ form.not_selling.label(class="form-control-label") }}
-                    {% if form.not_selling.errors %}
-                        {{ form.not_selling(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.not_selling.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.not_selling(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
             </fieldset>

@@ -5,10 +5,11 @@
 <table class="blueTable">
     <thead>
         <tr>
-            <td>ID</td> 
-            <td>Name</td> 
-            <td>Platform</td>
-            <td>Sold</td>
+            <th>ID</th> 
+            <th>Name</th> 
+            <th>Platform</th>
+            <th>Sold</th>
+            {% if item[0]['group_id'] != 1 %}<td>Group</td>{% endif %}
         </tr>
     </thead>
     <tbody>
@@ -16,18 +17,21 @@
             <td>{{ item[0]['id'] }}</td>
             <td>{{ item[0]['name'] }}</td>
             <td>{{ item[0]['platform'] }}</td>
-            <td>{% if item[0]['sold'] == 0 %}False{% else %}True{% endif %}</td>
+            <td>{% if sold_state %}True{% else %}False{% endif %}</td>
+            {% if item[0]['group_id'] != 1 %}
+            <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</td>
+            {% endif %}
         </tr>
     </tbody>
 </table>
-<br><h3>Purchase Info</h3>
+<br>
 <table class="blueTable">
     <thead>
         <tr>
-            <td>Category</td>
-            <td>Price</td>
-            <td>Date</td>
-            <td>Location</td>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Date</th>
+            <th>Location</th>
         </tr>
     </thead>
     <tbody>
@@ -37,7 +41,44 @@
             <td>{{ item[0]['date'] }}</td>
             <td>{{ item[0]['location'] }}</td>
         </tr>
+        {% if sold_state %}
+        <tr>
+            <td>Sold</td>
+            <td>{{ sold[0]['net'] }}</td>
+            <td>{{ sold[0]['date'] }}</td>
+            <td>{{ sold[0]['location'] }}</td>
+        </tr>
+        <tr>
+            <td>Profit</td>
+            <td>{{ sold[0]['net'] - item[0]['price'] }}</td>
+            <td>{{ sold[0]['date'] - item[0]['date'] }}</td>
+            <td>NA</td>
+        </tr>
+        {% endif %}
+    </tbody>
+{% if sold_state %}
+</table>
+<br><h3>Sale Fees</h3>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Sold Price</th>    
+            <th>Ebay Fee</th>
+            <th>Paypal Fee</th>
+            <th>Shipping Fee</th>
+            <th>Net</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ sold[0]['price'] }}</td>
+            <td>{{ sold[0]['ebay_fee'] }}</td>
+            <td>{{ sold[0]['paypal_fee'] }}</td>
+            <td>{{ sold[0]['shipping_fee'] }}</td>
+            <td>{{ sold[0]['net'] }}</td>
+        </tr>
     </tbody>
 </table>
+{% endif %}
 {% endblock content %}
 </html>

@@ -21,6 +21,8 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="/groups/create">Add Group</a>
+              <a class="nav-item nav-link" href="/groups/list">List Group</a>
               <a class="nav-item nav-link" href="/items/list">List Items</a>
               <a class="nav-item nav-link" href="/items/bought">Add Item</a>
               <a class="nav-item nav-link" href="/items/sold">Sell Item</a>
@@ -69,6 +71,27 @@
               .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
               .forEach(tr => tbody.appendChild(tr) );
       })));
+    </script>
+    <script>
+      $("#group").change(function() {
+        if ($(this).val() != "1") {
+          $('#price').hide();
+          $('#location').hide();
+          $('#date').hide();
+        } else {
+          $('#price').show();
+          $('#price').attr('required', '');
+          $('#price').attr('data-error', 'This field is required.');
+
+          $('#location').show();
+          $('#location').attr('required', '');
+          $('#location').attr('data-error', 'This field is required.');
+
+          $('#date').show();
+          $('#date').attr('required', '');
+          $('#date').attr('data-error', 'This field is required.');
+        }
+      });
     </script>
   </body>
 </html>
