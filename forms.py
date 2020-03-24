@@ -13,7 +13,7 @@ class GroupForm(FlaskForm):
                            validators=[DataRequired()], format='%Y-%m-%d')
     submit = SubmitField('Submit')
 
-class Form(FlaskForm):
+class ListForm(FlaskForm):
     purchase_start = DateField('start', format='%Y-%m-%d')
     purchase_end = DateField('end', format='%Y-%m-%d')
     sold_start = DateField('start', format='%Y-%m-%d')
