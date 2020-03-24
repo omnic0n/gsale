@@ -279,11 +279,13 @@ def items_list():
     form = ListForm()
     if request.method == "POST":
         details = request.form
-        print details['not_selling']
         if 'not_selling' in request.form:
             not_selling = 1
+            print not_selling
         else:
             not_selling = 0
+            print not_selling
+            
         items = get_list_of_items_purchased_by_date(details['start'],details['end'])
     else:
         items = get_list_of_items_purchased_by_date()
