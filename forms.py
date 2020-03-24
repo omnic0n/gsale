@@ -16,6 +16,7 @@ class GroupForm(FlaskForm):
 class ListForm(FlaskForm):
     start = DateField('start', format='%Y-%m-%d')
     end = DateField('end', format='%Y-%m-%d')
+    not_selling = BooleanField('Not Selling')
     submit = SubmitField('Submit')
 
 class PurchaseForm(FlaskForm):
