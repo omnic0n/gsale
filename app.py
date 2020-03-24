@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm
+from datetime import datetime
+
 
 app = Flask(__name__)
 
@@ -99,6 +101,27 @@ def get_data_for_item_sold(item_id):
                     INNER JOIN location location ON sale.location = location.id
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
+
+def get_list_of_items_purchased_by_date(start_date='',end_date=''):
+        if not start_date:
+            start_date = '1969-01-01'
+        if not end_date:
+            end_date = datetime.today().strftime('%Y-%m-%d')
+
+        cur = mysql.connection.cursor()
+        cur.execute("""SELECT 
+                    items.id, 
+                    items.name, 
+                    items.sold,
+                    items.group_id,
+                    platform.long_name as platform,
+                    purchase.date
+                    FROM items items 
+                    INNER JOIN platform platform ON items.platform = platform.id
+                    INNER JOIN purchase purchase ON items.id = purchase.id
+                    WHERE purchase.date > %s AND purchase.date < %s""",
+                    (start_date,end_date,))
+        return list(cur.fetchall())
 
 def get_all_from_locations():
     cur = mysql.connection.cursor()
@@ -254,50 +277,19 @@ def groups_list():
 @app.route('/items/list',methods=["POST","GET"])
 def items_list():
     form = ListForm()
+    if request.method == "POST":
+        details = request.form
+        items = get_list_of_items_purchased_by_date(details['start'],details['end'])
+    else:
+        items = get_list_of_items_purchased_by_date()
+        
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT 
-                 items.id, 
-                 items.name, 
-                 items.sold,
-                 items.group_id,
-                 platform.long_name as platform,
-                 purchase.date
-                 FROM items items 
-                 INNER JOIN platform platform ON items.platform = platform.id
-                 INNER JOIN purchase purchase ON items.id = purchase.id""")
-    items = list(cur.fetchall())
     cur.execute("""SELECT
                     id,
                     date 
                     FROM sale""")
     sold = list(cur.fetchall())
-
-    if request.method == "POST":
-        details = request.form
-        print details['start']
-        print details['end']
-        cur = mysql.connection.cursor()
-        cur.execute("""SELECT 
-                    items.id, 
-                    items.name, 
-                    items.sold,
-                    items.group_id,
-                    platform.long_name as platform,
-                    purchase.date
-                    FROM items items 
-                    INNER JOIN platform platform ON items.platform = platform.id
-                    INNER JOIN purchase purchase ON items.id = purchase.id
-                    WHERE purchase.date > %s AND purchase.date < %s""",
-                    (details['start'],details['end'],))
-        items = list(cur.fetchall())
-        cur.execute("""SELECT
-                        id,
-                        date 
-                        FROM sale""")
-        sold = list(cur.fetchall())
-        return render_template('items_list.html', items=items, sold=sold, form=form)
     return render_template('items_list.html', items=items, sold=sold, form=form)
-
 
 #Describe Section
 @app.route('/items/describe')
