@@ -274,7 +274,6 @@ def items_list():
 
     if request.method == "POST":
         details = request.form
-        print details['date']
         cur = mysql.connection.cursor()
         cur.execute("""SELECT 
                     items.id, 
