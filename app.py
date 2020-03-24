@@ -286,8 +286,8 @@ def items_list():
                     FROM items items 
                     INNER JOIN platform platform ON items.platform = platform.id
                     INNER JOIN purchase purchase ON items.id = purchase.id
-                    WHERE purchase.date > %s""",
-                    (details['date'],))
+                    WHERE purchase.date > %s AND purchase.date < %s""",
+                    (details['start'],details['end'],))
         items = list(cur.fetchall())
         cur.execute("""SELECT
                         id,
