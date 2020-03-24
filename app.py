@@ -253,6 +253,8 @@ def groups_list():
 
 @app.route('/items/list',methods=["POST","GET"])
 def items_list():
+    form = ListForm()
+    
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
                  items.id, 
@@ -270,6 +272,7 @@ def items_list():
                     date 
                     FROM sale""")
     sold = list(cur.fetchall())
+
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
