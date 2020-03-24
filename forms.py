@@ -13,6 +13,9 @@ class GroupForm(FlaskForm):
                            validators=[DataRequired()], format='%Y-%m-%d')
     submit = SubmitField('Submit')
 
+class ListForm(FlaskForm):
+    date = DateField('date', format='%Y-%m-%d')
+
 class PurchaseForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired()])

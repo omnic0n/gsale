@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm
 
 app = Flask(__name__)
 
@@ -251,7 +251,7 @@ def groups_list():
     groups = list(cur.fetchall())
     return render_template('groups_list.html', groups=groups)
 
-@app.route('/items/list')
+@app.route('/items/list',methods=["POST","GET"])
 def items_list():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
@@ -270,6 +270,28 @@ def items_list():
                     date 
                     FROM sale""")
     sold = list(cur.fetchall())
+    if request.method == "POST":
+        details = request.form
+        cur = mysql.connection.cursor()
+        cur.execute("""SELECT 
+                    items.id, 
+                    items.name, 
+                    items.sold,
+                    items.group_id,
+                    platform.long_name as platform,
+                    purchase.date
+                    FROM items items 
+                    INNER JOIN platform platform ON items.platform = platform.id
+                    INNER JOIN purchase purchase ON items.id = purchase.id
+                    WHERE items.date > '%s'""",
+                    (details['date'])
+        items = list(cur.fetchall())
+        cur.execute("""SELECT
+                        id,
+                        date 
+                        FROM sale""")
+        sold = list(cur.fetchall())
+        return render_template('items_list.html', items=items, sold=sold)
     return render_template('items_list.html', items=items, sold=sold)
 
 
