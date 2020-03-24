@@ -282,7 +282,8 @@ def items_list():
         items = get_list_of_items_purchased_by_date(details['start'],details['end'])
     else:
         items = get_list_of_items_purchased_by_date()
-        
+
+    cur = mysql.connection.cursor()    
     cur.execute("""SELECT
                     id,
                     date 
