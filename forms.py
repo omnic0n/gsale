@@ -15,6 +15,7 @@ class GroupForm(FlaskForm):
 
 class ListForm(FlaskForm):
     date = DateField('date', format='%Y-%m-%d')
+    submit = SubmitField('Submit')
 
 class PurchaseForm(FlaskForm):
     name = StringField('name',
