@@ -5,14 +5,28 @@
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
+            <table class="blueTable">
+            <td>
             <div class="form-group">
-                {{ form.start.label(class="form-control-label") }}
-                {{ form.start(class="form-control form-control-lg") }}
+                {{ form.purchase_start.label(class="form-control-label") }}
+                {{ form.purchase_start(class="form-control form-control-lg") }}
             </div>
             <div class="form-group">
-                {{ form.end.label(class="form-control-label") }}
-                {{ form.end(class="form-control form-control-lg") }}
+                {{ form.purchase_end.label(class="form-control-label") }}
+                {{ form.purchase_end(class="form-control form-control-lg") }}
             </div>
+            </td>
+            <td>
+                <div class="form-group">
+                    {{ form.sold_start.label(class="form-control-label") }}
+                    {{ form.sold_start(class="form-control form-control-lg") }}
+                </div>
+                <div class="form-group">
+                    {{ form.sold_end.label(class="form-control-label") }}
+                    {{ form.sold_end(class="form-control form-control-lg") }}
+                </div>
+                </td>
+            </table>
         </fieldset>
         <div class="form-group">
             {{ form.submit(class="btn btn-outline-info") }}
