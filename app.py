@@ -102,7 +102,7 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(start_date='',end_date=''):
+def get_list_of_items_purchased_by_date(start_date='',end_date='',not_selling=0):
         if not start_date:
             start_date = '1969-01-01'
         if not end_date:
@@ -119,8 +119,8 @@ def get_list_of_items_purchased_by_date(start_date='',end_date=''):
                     FROM items items 
                     INNER JOIN platform platform ON items.platform = platform.id
                     INNER JOIN purchase purchase ON items.id = purchase.id
-                    WHERE purchase.date > %s AND purchase.date < %s""",
-                    (start_date,end_date,))
+                    WHERE purchase.date > %s AND purchase.date < %s AND items.sold > %s""",
+                    (start_date,end_date,not_selling,))
         return list(cur.fetchall())
 
 def get_all_from_locations():
@@ -285,8 +285,8 @@ def items_list():
         else:
             not_selling = 0
             print not_selling
-            
-        items = get_list_of_items_purchased_by_date(details['start'],details['end'])
+
+        items = get_list_of_items_purchased_by_date(details['start'],details['end'],not_selling)
     else:
         items = get_list_of_items_purchased_by_date()
 
