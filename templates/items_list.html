@@ -10,7 +10,7 @@
                 {% if form.start.errors %}
                     {{ form.start(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                        {% for error in form.date.errors %}
+                        {% for error in form.start.errors %}
                             <span>{{ error }}</span>
                         {% endfor %}
                     </div>
@@ -23,7 +23,7 @@
                 {% if form.end.errors %}
                     {{ form.end(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                        {% for error in form.date.errors %}
+                        {% for error in form.end.errors %}
                             <span>{{ error }}</span>
                         {% endfor %}
                     </div>
