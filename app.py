@@ -254,7 +254,6 @@ def groups_list():
 @app.route('/items/list',methods=["POST","GET"])
 def items_list():
     form = ListForm()
-    
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
                  items.id, 
@@ -294,8 +293,8 @@ def items_list():
                         date 
                         FROM sale""")
         sold = list(cur.fetchall())
-        return render_template('items_list.html', items=items, sold=sold)
-    return render_template('items_list.html', items=items, sold=sold)
+        return render_template('items_list.html', items=items, sold=sold, form=form)
+    return render_template('items_list.html', items=items, sold=sold, form=form)
 
 
 #Describe Section
