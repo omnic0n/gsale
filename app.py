@@ -103,25 +103,40 @@ def get_data_for_item_sold(item_id):
     return list(cur.fetchall())
 
 def get_list_of_items_purchased_by_date(start_date='',end_date=''):
-        if not start_date:
-            start_date = '1969-01-01'
-        if not end_date:
-            end_date = datetime.today().strftime('%Y-%m-%d')
+    if not start_date:
+        start_date = '1969-01-01'
+    if not end_date:
+        end_date = datetime.today().strftime('%Y-%m-%d')
 
-        cur = mysql.connection.cursor()
-        cur.execute("""SELECT 
-                    items.id, 
-                    items.name, 
-                    items.sold,
-                    items.group_id,
-                    platform.long_name as platform,
-                    purchase.date
-                    FROM items items 
-                    INNER JOIN platform platform ON items.platform = platform.id
-                    INNER JOIN purchase purchase ON items.id = purchase.id
-                    WHERE purchase.date > %s AND purchase.date < %s""",
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT 
+                items.id, 
+                items.name, 
+                items.sold,
+                items.group_id,
+                platform.long_name as platform,
+                purchase.date
+                FROM items items 
+                INNER JOIN platform platform ON items.platform = platform.id
+                INNER JOIN purchase purchase ON items.id = purchase.id
+                WHERE purchase.date > %s AND purchase.date < %s""",
+                (start_date,end_date,))
+    return list(cur.fetchall())
+
+def get_list_of_items_sold_by_date(start_date='',end_date=''):
+    if not start_date:
+        start_date = '1969-01-01'
+    if not end_date:
+        end_date = datetime.today().strftime('%Y-%m-%d')
+
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT
+                    id,
+                    date 
+                    FROM sale
+                    WHERE sale.date > %s AND sale.date < %s""",
                     (start_date,end_date,))
-        return list(cur.fetchall())
+    return list(cur.fetchall())
 
 def get_all_from_locations():
     cur = mysql.connection.cursor()
@@ -279,16 +294,12 @@ def items_list():
     form = ListForm()
     if request.method == "POST":
         details = request.form
-        items = get_list_of_items_purchased_by_date(details['start'],details['end'])
+        items = get_list_of_items_purchased_by_date(details['purchase_start'],details['purchase_end'])
+        sold = get_list_of_items_sold_by_date(details['sold_start'],details['sold_end'])
     else:
         items = get_list_of_items_purchased_by_date()
-        
-    cur = mysql.connection.cursor()
-    cur.execute("""SELECT
-                    id,
-                    date 
-                    FROM sale""")
-    sold = list(cur.fetchall())
+        sold = get_list_of_items_sold_by_date()
+
     return render_template('items_list.html', items=items, sold=sold, form=form)
 
 #Describe Section
