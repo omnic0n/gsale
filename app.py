@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 app.secret_key = '4T3*%go^Gcn7TrYm'
 
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = 'localhostg'
 app.config['MYSQL_USER'] = 'gsale'
 app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
 app.config['MYSQL_DB'] = 'gsale'
@@ -106,7 +106,7 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',not_selling=0)
         if not start_date:
             start_date = '1969-01-01'
         if not end_date:
-            end_date = datetime.today().strftime('%Y-%m-%d')
+            end_date = '3000-01-01'
 
         cur = mysql.connection.cursor()
         cur.execute("""SELECT 
