@@ -92,6 +92,15 @@
           $('#date').attr('data-error', 'This field is required.');
         }
       });
+      $("#ebay").change(function() {
+        if ($(this).val() != "1") {
+          $('#ebay_percent').show();
+          $('#ebay_percent').attr('required', '');
+          $('#ebay_percent').attr('data-error', 'This field is required.');
+        } else {
+          $('#ebay_percent').hide();
+        }
+      });
     </script>
   </body>
 </html>
