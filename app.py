@@ -230,7 +230,7 @@ def sold_items():
     if request.method == "POST":
         details = request.form
         if 'ebay' in request.form:
-            ebay_fee = format(float(details['price']) * details['ebay_percent'], '.2f')
+            ebay_fee = format(float(details['price']) * float(details['ebay_percent']), '.2f')
         else:
             ebay_fee = 0
        
