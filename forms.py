@@ -42,5 +42,6 @@ class SaleForm(FlaskForm):
                         ('1', 'Percent and Fee'), 
                         ('2', 'Percent Only')])
     ebay = BooleanField('ebay')
+    ebay_percent = StringField('ebay_percent', default=(.10))
     shipping_fee = StringField('shipping_fee')
     submit = SubmitField('Submit')

@@ -97,6 +97,19 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
+                    {{ form.ebay_percent.label(class="form-control-label") }}
+                    {% if form.ebay_percent.errors %}
+                        {{ form.ebay_percent(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.ebay_percent.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.ebay_percent(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
                     {{ form.shipping_fee.label(class="form-control-label") }}
                     {% if form.shipping_fee.errors %}
                         {{ form.shipping_fee(class="form-control form-control-lg is-invalid") }}
