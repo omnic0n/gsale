@@ -102,7 +102,7 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(start_date='',end_date='',not_selling=0):
+def get_list_of_items_purchased_by_date(start_date='',end_date='',not_selling=-1):
         if not start_date:
             start_date = '1969-01-01'
         if not end_date:
@@ -283,7 +283,7 @@ def items_list():
             not_selling = 1
             print not_selling
         else:
-            not_selling = 0
+            not_selling = -1
             print not_selling
 
         items = get_list_of_items_purchased_by_date(details['start'],details['end'],not_selling)
