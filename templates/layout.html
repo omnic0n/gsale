@@ -94,15 +94,19 @@
       });
     </script>
     <script>
-      $('#ebay_percent').hide();
-      $("#ebay").click(function() {
-        if ($(this).checked) {
-          $('#ebay_percent').show();
-          $('#ebay_percent').attr('required', '');
-          $('#ebay_percent').attr('data-error', 'This field is required.');
-        } else {
-          $('#ebay_percent').hide();
-        }
+      $(document).ready(function(){
+
+        $('#ebay_percent').hide();
+
+        $("#ebay").click(function(e) {
+          if ($(this).prop('checked')) {
+            $('#ebay_percent').show();
+            $('#ebay_percent').attr('required', '');
+            $('#ebay_percent').attr('data-error', 'This field is required.');
+          } else {
+            $('#ebay_percent').hide();
+          }
+        });
       });
     </script>
   </body>
