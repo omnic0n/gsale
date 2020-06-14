@@ -293,7 +293,9 @@ def items_list():
     cur = mysql.connection.cursor()    
     cur.execute("""SELECT
                     id,
-                    date 
+                    date,
+                    price,
+                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net
                     FROM sale""")
     sold = list(cur.fetchall())
     return render_template('items_list.html', items=items, sold=sold, form=form)
