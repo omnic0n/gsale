@@ -59,8 +59,12 @@
             {% endfor %}
             {% if item['sold'] == 0 %}
             <td></td>
+            <td></td>
+            <td></td>
             {% elif item['sold'] == 2 %}
             <td>NA</td>
+            <td></td>
+            <td></td>
             {% endif %}
             <td>{% if item['group_id'] == 1%}
                 None
