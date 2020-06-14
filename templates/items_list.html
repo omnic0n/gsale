@@ -53,17 +53,14 @@
             {% for sold_item in sold %}
                 {% if item['id'] == sold_item['id'] %}
                     <td>{{ sold_item['date']}}</td>
-                    <td>{{ sold_item['price']}}</td>
                     <td>{{ sold_item['net']}}</td>
                 {% endif %}
             {% endfor %}
             {% if item['sold'] == 0 %}
             <td></td>
             <td></td>
-            <td></td>
             {% elif item['sold'] == 2 %}
             <td>NA</td>
-            <td></td>
             <td></td>
             {% endif %}
             <td>{% if item['group_id'] == 1%}

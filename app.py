@@ -294,7 +294,6 @@ def items_list():
     cur.execute("""SELECT
                     id,
                     date,
-                    price,
                     (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net
                     FROM sale""")
     sold = list(cur.fetchall())
