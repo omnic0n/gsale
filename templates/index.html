@@ -5,7 +5,8 @@
     <thead>
         <tr>
             <th>Purchases</th> 
-            <th>Sales</th> 
+            <th>Sales</th>
+            <th>Expenses</th> 
             <th>Profit</th>
         </tr>
     </thead>
@@ -13,7 +14,8 @@
         <tr>
             <td>${{ profit[1] }}</td>
             <td>${{ profit[0] }}</td>
-            <td>${{ profit[0] - profit[1] }}</td>
+            <td>${{ profit[2] }}</td>
+            <td>${{ profit[0] - profit[1] - profit[2] }}</td>
         </tr>
     </tbody>
 </table>

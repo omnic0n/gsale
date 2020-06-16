@@ -146,9 +146,14 @@ def get_profit():
                 UNION ALL
                 SELECT price FROM groups) tbl""")
     purchase = list(cur.fetchall())
+    cur.execute("""SELECT SUM(tbl.expense) AS expense
+            FROM (SELECT expense FROM purchase
+            UNION ALL
+            SELECT expense FROM groups) tbl""")
+    expense = list(cur.fetchall())
     cur.execute("SELECT sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) AS price FROM sale")
     sale = list(cur.fetchall())
-    return sale[0]['price'],purchase[0]['price']
+    return sale[0]['price'],purchase[0]['price'],expense[0]['expense']
 
 def get_group_profit(group_id):
     cur = mysql.connection.cursor()
