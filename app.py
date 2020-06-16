@@ -177,8 +177,8 @@ def group_add():
         cur = mysql.connection.cursor()
         location = get_name_location_from_id(details['location'])
         group_name = "%s-%s-%s" % (details['date'],location,details['name'])
-        cur.execute("INSERT INTO groups(name, date, price,location) VALUES (%s, %s, %s, %s)", 
-                    (group_name, details['date'], details['price'], details['location']))
+        cur.execute("INSERT INTO groups(name, date, price,location,expense) VALUES (%s, %s, %s, %s, %s)", 
+                    (group_name, details['date'], details['price'], details['location'], details['expense']))
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
         cur.close()
