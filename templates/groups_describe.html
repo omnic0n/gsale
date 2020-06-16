@@ -22,7 +22,7 @@
             <td>${{ group_id[0]['price'] }}</td>
             <td>${{ group_id[0]['expense'] }}</td>
             <td>${{ sold_price }}</td>
-            <td>${{ sold_price - group_id[0]['price'] }}</td>
+            <td>${{ sold_price - group_id[0]['price'] - group_id[0]['expense'] }}</td>
         </tr>
     </tbody>
 </table>
