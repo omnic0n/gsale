@@ -274,6 +274,7 @@ def groups_list():
                     groups.price, 
                     groups.id,
                     groups.date,
+                    groups.expense,
                     location.long_name AS location 
                     FROM groups groups
                     INNER JOIN location location ON groups.location = location.id""")
