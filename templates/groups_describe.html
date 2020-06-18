@@ -38,7 +38,7 @@
     <tbody>
         {% for item in items %}
         <tr>
-            {% if item['sold'] == 0 %}
+            {% if item['sold'] == 0 || or NOT items['sold'] %}
                 {% set color = 'black' %}
             {% elif item['sold'] == 2 %}
                 {% set color = 'green' %}
