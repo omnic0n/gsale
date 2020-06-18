@@ -25,7 +25,7 @@
                 <td>{{ group['location'] }}</td>
                 <td>{{ group['price'] }}</td>
                 <td>{{ group['expense'] }}</td>
-                <td>{{ profit }}</td>
+                <td>{{ group[price] - profit }}</td>
                 <td>{{ group['date'] }}</td>
             </tr>
         {% endif %}
