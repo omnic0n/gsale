@@ -15,12 +15,12 @@
     <tbody>
         {% for group in groups %}
         {% if group['name'] != 'None' %}
-            {% if group['net'] - group['price'] == 0 %}
-                {% set color = 'black' %}
+            {% if group['net'] - group['price'] < 0 %}
+                {% set color = 'red' %}
             {% elif group['net'] - group['price'] > 0 %}
                 {% set color = 'green' %}
             {% else %}
-                {% set color = 'red' %}
+                {% set color = 'black' %}
         {% endif %}
         <tr>
             <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
