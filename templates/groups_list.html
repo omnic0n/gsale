@@ -16,9 +16,9 @@
         {% for group in groups %}
         {% if group['name'] != 'None' %}
             {% if not group['net'] %}
-                {% set profit = 0 - group[price] %}
+                {% set profit = 0 - group['price'] %}
             {% else %}
-                {% set profit = group['net'] - group[price] %}    
+                {% set profit = group['net'] - group['price'] %}    
             {% endif %}
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
