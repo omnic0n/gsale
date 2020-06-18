@@ -16,7 +16,6 @@
         {% for group in groups %}
         {% if group['name'] != 'None' %}
             {% if group['net'] == 'None' %}
-                {% set group['net'] = 0 %}
                 {% set color = 'black' %}
             {% elif group['net'] - group['price'] < 0 %}
                 {% set color = 'red' %}
