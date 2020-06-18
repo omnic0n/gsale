@@ -15,7 +15,8 @@
     <tbody>
         {% for group in groups %}
         {% if group['name'] != 'None' %}
-            {% if group['net'] %}
+            {% if group['net'] == NULL %}
+                {% group['net'] = 0 %}
                 {% if group['net'] - group['price'] < 0 %}
                     {% set color = 'red' %}
                 {% elif group['net'] - group['price'] > 0 %}
