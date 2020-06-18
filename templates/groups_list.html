@@ -15,14 +15,16 @@
     <tbody>
         {% for group in groups %}
         {% if group['name'] != 'None' %}
-        <tr>
-            <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
-            <td>{{ group['location'] }}</td>
-            <td>{{ group['price'] }}</td>
-            <td>{{ group['expense'] }}</td>
-            <td><font color = {{ color }}>{{group['net'] - group['price']}}</font></td>
-            <td>{{ group['date'] }}</td>
-        </tr>
+        {% if group['net'] != 'None' %}
+            <tr>
+                <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
+                <td>{{ group['location'] }}</td>
+                <td>{{ group['price'] }}</td>
+                <td>{{ group['expense'] }}</td>
+                <td><font color = {{ color }}>{{group['net'] - group['price']}}</font></td>
+                <td>{{ group['date'] }}</td>
+            </tr>
+        {% endif %}
         {% endif %}
         {% endfor %}
     </tbody>
