@@ -15,7 +15,7 @@
     <tbody>
         {% for group in groups %}
         {% if group['name'] != 'None' %}
-            {% if group['net'] == 'None' %}
+            {% if not group['net'] %}
                 {% set profit = 0 %}
             {% else %}
                 {% set profit = group['net'] %}    
