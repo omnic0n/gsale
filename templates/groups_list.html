@@ -15,12 +15,17 @@
     <tbody>
         {% for group in groups %}
         {% if group['name'] != 'None' %}
+            {% if group['net'] == 'None' %}
+                {% set profit = 0 %}
+            {% else %}
+                {% set profit = group['net'] %}    
+            {% endif %}
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['location'] }}</td>
                 <td>{{ group['price'] }}</td>
                 <td>{{ group['expense'] }}</td>
-                <td>{% if group['net'] == 'None' %}{% set group['net'] = 0 %}{% endif %}{{ group['net'] }}</td>
+                <td>{{ profit }}</td>
                 <td>{{ group['date'] }}</td>
             </tr>
         {% endif %}
