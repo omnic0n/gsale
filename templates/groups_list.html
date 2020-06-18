@@ -8,6 +8,7 @@
             <th>Location</th>
             <th>Price</th>
             <th>Expense</th>
+            <th>Profit</th>
             <th>Date</th>
         </tr>
     </thead>
@@ -19,6 +20,7 @@
             <td>{{ group['location'] }}</td>
             <td>{{ group['price'] }}</td>
             <td>{{ group['expense'] }}</td>
+            <td>{{ group['net'] - group['price']}}</td>
             <td>{{ group['date'] }}</td>
         </tr>
         {% endif %}

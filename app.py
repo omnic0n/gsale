@@ -270,14 +270,21 @@ def sold_items():
 def groups_list():
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
+                    sale.id, 
+                    items.id,
+                    items.group_id,
                     groups.name, 
                     groups.price, 
                     groups.id,
                     groups.date,
                     groups.expense,
+                    sum(sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee - groups.expense) AS net, 
                     location.long_name AS location 
                     FROM groups groups
-                    INNER JOIN location location ON groups.location = location.id""")
+                    INNER JOIN location location ON groups.location = location.id
+                    INNER JOIN items items ON groups.id = items.group_id 
+                    INNER JOIN sale sale ON sale.id = items.id
+                    GROUP by items.group_id""")
     groups = list(cur.fetchall())
     return render_template('groups_list.html', groups=groups)
 
