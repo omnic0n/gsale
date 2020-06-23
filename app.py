@@ -279,7 +279,7 @@ def groups_list():
     groups = list(cur.fetchall())
     return render_template('groups_list.html', groups=groups)
 
-@app.route('/items/sold_list',methods=["POST","GET"])
+@app.route('/items/sold_list')
 def sold_list():
     items = get_list_of_items_purchased_by_date(sold=1)
 
@@ -294,11 +294,11 @@ def sold_list():
     sold = list(cur.fetchall())
     return render_template('items_sold_list.html', items=items, sold=sold)
 
-@app.route('/items/unsold_list',methods=["POST","GET"])
+@app.route('/items/unsold_list')
 def unsold_list():
     items = get_list_of_items_purchased_by_date(sold=0)
 
-    return render_template('items_list.html', items=items)
+    return render_template('items_unsold_list.html', items=items)
 
 @app.route('/items/notselling_list',methods=["POST","GET"])
 def notselling_list():
