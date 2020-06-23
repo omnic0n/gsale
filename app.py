@@ -279,8 +279,47 @@ def groups_list():
     groups = list(cur.fetchall())
     return render_template('groups_list.html', groups=groups)
 
-@app.route('/items/list',methods=["POST","GET"])
-def items_list():
+@app.route('/items/sold_list',methods=["POST","GET"])
+def sold_list():
+    items = get_list_of_items_purchased_by_date()
+
+    cur = mysql.connection.cursor()    
+    cur.execute("""SELECT
+                    id,
+                    date,
+                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net
+                    FROM sale
+                    WHERE sold = 1""")
+    sold = list(cur.fetchall())
+    return render_template('items_sold_list.html', items=items, sold=sold)
+
+@app.route('/items/unsold_list',methods=["POST","GET"])
+def unsold_list():
+    form = ListForm()
+    if request.method == "POST":
+        details = request.form
+        if 'not_selling' in request.form:
+            not_selling = 1
+            print not_selling
+        else:
+            not_selling = -1
+            print not_selling
+
+        items = get_list_of_items_purchased_by_date(details['start'],details['end'],not_selling)
+    else:
+        items = get_list_of_items_purchased_by_date()
+
+    cur = mysql.connection.cursor()    
+    cur.execute("""SELECT
+                    id,
+                    date,
+                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net
+                    FROM sale""")
+    sold = list(cur.fetchall())
+    return render_template('items_list.html', items=items, sold=sold, form=form)
+
+@app.route('/items/notselling_list',methods=["POST","GET"])
+def notselling_list():
     form = ListForm()
     if request.method == "POST":
         details = request.form
