@@ -296,7 +296,6 @@ def sold_list():
 
 @app.route('/items/unsold_list',methods=["POST","GET"])
 def unsold_list():
-    form = ListForm()
     items = get_list_of_items_purchased_by_date(sold=0)
 
     return render_template('items_list.html', items=items)
