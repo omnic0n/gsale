@@ -80,7 +80,6 @@ def get_data_from_group_describe(group_id):
                     groups.price, 
                     groups.id,
                     groups.date,
-                    groups.expense,
                     location.long_name AS location 
                     FROM groups groups
                     INNER JOIN location location ON groups.location = location.id
@@ -146,14 +145,9 @@ def get_profit():
                 UNION ALL
                 SELECT price FROM groups) tbl""")
     purchase = list(cur.fetchall())
-    cur.execute("""SELECT SUM(tbl.expense) AS expense
-            FROM (SELECT expense FROM purchase
-            UNION ALL
-            SELECT expense FROM groups) tbl""")
-    expense = list(cur.fetchall())
     cur.execute("SELECT sum((sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee)) AS price FROM sale")
     sale = list(cur.fetchall())
-    return sale[0]['price'],purchase[0]['price'],expense[0]['expense']
+    return sale[0]['price'],purchase[0]['price']
 
 def get_group_profit(group_id):
     cur = mysql.connection.cursor()
@@ -183,8 +177,8 @@ def group_add():
         cur = mysql.connection.cursor()
         location = get_name_location_from_id(details['location'])
         group_name = "%s-%s-%s" % (details['date'],location,details['name'])
-        cur.execute("INSERT INTO groups(name, date, price,location,expense) VALUES (%s, %s, %s, %s, %s)", 
-                    (group_name, details['date'], details['price'], details['location'], details['expense']))
+        cur.execute("INSERT INTO groups(name, date, price,location) VALUES (%s, %s, %s, %s)", 
+                    (group_name, details['date'], details['price'], details['location']))
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
         cur.close()
@@ -274,12 +268,11 @@ def groups_list():
                     groups.price, 
                     groups.id,
                     groups.date,
-                    groups.expense,
-                    sum(sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee - groups.expense) AS net, 
+                    sum(sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net, 
                     location.long_name AS location 
                     FROM groups groups
                     LEFT JOIN location location ON groups.location = location.id
-                    LEFT JOIN items items ON groups.id = items.group_id 
+                    RIGHT JOIN items items ON groups.id = items.group_id 
                     LEFT JOIN sale sale ON sale.id = items.id
                     GROUP by items.group_id
                     ORDER by groups.id""")

@@ -7,7 +7,6 @@
             <th>Name</th> 
             <th>Location</th>
             <th>Price</th>
-            <th>Expense</th>
             <th>Profit</th>
             <th>Date</th>
         </tr>
@@ -16,15 +15,14 @@
         {% for group in groups %}
         {% if group['name'] != 'None' %}
             {% if not group['net'] %}
-                {% set profit = 0 - group['price'] - group['expense'] %}
+                {% set profit = 0 - group['price'] %}
             {% else %}
-                {% set profit = group['net'] - group['price'] - group['expense'] %}    
+                {% set profit = group['net'] - group['price'] %}    
             {% endif %}
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['location'] }}</td>
                 <td>{{ group['price'] }}</td>
-                <td>{{ group['expense'] }}</td>
                 <td>{{ profit }}</td>
                 <td>{{ group['date'] }}</td>
             </tr>

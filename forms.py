@@ -9,7 +9,6 @@ class GroupForm(FlaskForm):
                            validators=[DataRequired()])
     location = SelectField('location', coerce=int)
     price = StringField('price')
-    expense = StringField('expense')
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
     submit = SubmitField('Submit')
@@ -26,7 +25,6 @@ class PurchaseForm(FlaskForm):
     location = SelectField('location', coerce=int)
     group = SelectField('group', coerce=int, default=1)
     price = StringField('price')
-    expense = StringField('expense')
     date = DateField('date', format='%Y-%m-%d')
     platform = SelectField('platform', coerce=int)
     not_selling = BooleanField('not_selling')

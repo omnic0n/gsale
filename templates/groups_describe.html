@@ -9,7 +9,6 @@
             <th>Location</th>
             <th>Date</th>
             <th>Purchase</th>
-            <th>Expense</th>
             <th>Sale</th>
             <th>Profit</th>
         </tr>
@@ -20,9 +19,8 @@
             <td>{{ group_id[0]['location'] }}</td>
             <td>{{ group_id[0]['date'] }}</td>
             <td>${{ group_id[0]['price'] }}</td>
-            <td>${{ group_id[0]['expense'] }}</td>
             <td>${{ sold_price }}</td>
-            <td>${{ sold_price - group_id[0]['price'] - group_id[0]['expense'] }}</td>
+            <td>${{ sold_price - group_id[0]['price']}}</td>
         </tr>
     </tbody>
 </table>

@@ -12,7 +12,6 @@ CREATE TABLE groups (
      date DATE NOT NULL,
      location MEDIUMINT NOT NULL,
      price  DECIMAL(6,2) NOT NULL,
-     expense DECIMAL(6,2) DEFAULT 0.00,
      name CHAR(120) NOT NULL,
      PRIMARY KEY (id),
      UNIQUE (name)
@@ -23,7 +22,6 @@ CREATE TABLE purchase (
      location MEDIUMINT,
      date DATE,
      price  DECIMAL(6,2),
-     expense DECIMAL(6,2) DEFAULT 0.00
 );
 
 CREATE TABLE sale (
