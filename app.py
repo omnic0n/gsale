@@ -102,7 +102,7 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(start_date='',end_date='',not_selling=-1):
+def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
         if not start_date:
             start_date = '1969-01-01'
         if not end_date:
@@ -119,8 +119,8 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',not_selling=-1
                     FROM items items 
                     INNER JOIN platform platform ON items.platform = platform.id
                     INNER JOIN purchase purchase ON items.id = purchase.id
-                    WHERE purchase.date > %s AND purchase.date < %s AND items.sold > %s""",
-                    (start_date,end_date,not_selling,))
+                    WHERE purchase.date > %s AND purchase.date < %s AND items.sold = %s""",
+                    (start_date,end_date,sold,))
         return list(cur.fetchall())
 
 def get_all_from_locations():
@@ -281,7 +281,7 @@ def groups_list():
 
 @app.route('/items/sold_list',methods=["POST","GET"])
 def sold_list():
-    items = get_list_of_items_purchased_by_date()
+    items = get_list_of_items_purchased_by_date(sold=1)
 
     cur = mysql.connection.cursor()    
     cur.execute("""SELECT
