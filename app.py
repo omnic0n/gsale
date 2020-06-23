@@ -300,31 +300,11 @@ def unsold_list():
 
     return render_template('items_unsold_list.html', items=items)
 
-@app.route('/items/notselling_list',methods=["POST","GET"])
-def notselling_list():
-    form = ListForm()
-    if request.method == "POST":
-        details = request.form
-        if 'not_selling' in request.form:
-            not_selling = 1
-            print not_selling
-        else:
-            not_selling = -1
-            print not_selling
+@app.route('/items/kept_list')
+def kept_list():
+    items = get_list_of_items_purchased_by_date(sold=2)
 
-        items = get_list_of_items_purchased_by_date(details['start'],details['end'],not_selling)
-    else:
-        items = get_list_of_items_purchased_by_date()
-
-    cur = mysql.connection.cursor()    
-    cur.execute("""SELECT
-                    id,
-                    date,
-                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net
-                    FROM sale""")
-    sold = list(cur.fetchall())
-    return render_template('items_list.html', items=items, sold=sold, form=form)
-
+    return render_template('items_unsold_list.html', items=items)
 
 #Describe Section
 @app.route('/items/describe')
