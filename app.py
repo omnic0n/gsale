@@ -285,11 +285,12 @@ def sold_list():
 
     cur = mysql.connection.cursor()    
     cur.execute("""SELECT
-                    id,
-                    date,
+                    sale.id,
+                    sale.date,
                     (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net
                     FROM sale
-                    WHERE sold = 1""")
+                    INNER JOIN items items ON items.id = sale.id
+                    WHERE items.sold = 1""")
     sold = list(cur.fetchall())
     return render_template('items_sold_list.html', items=items, sold=sold)
 
