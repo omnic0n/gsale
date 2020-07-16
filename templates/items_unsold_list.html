@@ -1,0 +1,32 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Platform</th>
+            <th>Purchase Date</th>
+            <th>Group ID</th> 
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
+            <td>{{ item['platform'] }}</td>
+            <td>{{ item['date'] }}</td>
+            <td>{% if item['group_id'] == 1%}
+                None
+                {% elif item['group_id'] %}
+                <a href = "/groups/describe?group_id={{ item['group_id'] }}">
+                {{ item['group_id'] }}
+                </a>
+                {% endif %}
+            </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+</html>

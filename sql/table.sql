@@ -21,7 +21,7 @@ CREATE TABLE purchase (
      id MEDIUMINT NOT NULL,
      location MEDIUMINT,
      date DATE,
-     price  DECIMAL(6,2)
+     price  DECIMAL(6,2),
 );
 
 CREATE TABLE sale (

@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 app.secret_key = '4T3*%go^Gcn7TrYm'
 
-app.config['MYSQL_HOST'] = 'gsale.cz541jbd6nid.us-east-2.rds.amazonaws.com'
+app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'gsale'
 app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
 app.config['MYSQL_DB'] = 'gsale'
@@ -102,11 +102,11 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(start_date='',end_date='',not_selling=0):
+def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
         if not start_date:
             start_date = '1969-01-01'
         if not end_date:
-            end_date = datetime.today().strftime('%Y-%m-%d')
+            end_date = '3000-01-01'
 
         cur = mysql.connection.cursor()
         cur.execute("""SELECT 
@@ -119,8 +119,8 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',not_selling=0)
                     FROM items items 
                     INNER JOIN platform platform ON items.platform = platform.id
                     INNER JOIN purchase purchase ON items.id = purchase.id
-                    WHERE purchase.date > %s AND purchase.date < %s AND items.sold > %s""",
-                    (start_date,end_date,not_selling,))
+                    WHERE purchase.date > %s AND purchase.date < %s AND items.sold = %s""",
+                    (start_date,end_date,sold,))
         return list(cur.fetchall())
 
 def get_all_from_locations():
@@ -230,7 +230,7 @@ def sold_items():
     if request.method == "POST":
         details = request.form
         if 'ebay' in request.form:
-            ebay_fee = format(float(details['price']) * .10, '.2f')
+            ebay_fee = format(float(details['price']) * float(details['ebay_percent']), '.2f')
         else:
             ebay_fee = 0
        
@@ -268,36 +268,43 @@ def groups_list():
                     groups.price, 
                     groups.id,
                     groups.date,
+                    sum(sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net, 
                     location.long_name AS location 
                     FROM groups groups
-                    INNER JOIN location location ON groups.location = location.id""")
+                    LEFT JOIN location location ON groups.location = location.id
+                    RIGHT JOIN items items ON groups.id = items.group_id 
+                    LEFT JOIN sale sale ON sale.id = items.id
+                    GROUP by items.group_id
+                    ORDER by groups.id""")
     groups = list(cur.fetchall())
     return render_template('groups_list.html', groups=groups)
 
-@app.route('/items/list',methods=["POST","GET"])
-def items_list():
-    form = ListForm()
-    if request.method == "POST":
-        details = request.form
-        if 'not_selling' in request.form:
-            not_selling = 1
-            print not_selling
-        else:
-            not_selling = 0
-            print not_selling
-
-        items = get_list_of_items_purchased_by_date(details['start'],details['end'],not_selling)
-    else:
-        items = get_list_of_items_purchased_by_date()
+@app.route('/items/sold_list')
+def sold_list():
+    items = get_list_of_items_purchased_by_date(sold=1)
 
     cur = mysql.connection.cursor()    
     cur.execute("""SELECT
-                    id,
-                    date 
-                    FROM sale""")
+                    sale.id,
+                    sale.date,
+                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net
+                    FROM sale
+                    INNER JOIN items items ON items.id = sale.id
+                    WHERE items.sold = 1""")
     sold = list(cur.fetchall())
-    return render_template('items_list.html', items=items, sold=sold, form=form)
+    return render_template('items_sold_list.html', items=items, sold=sold)
 
+@app.route('/items/unsold_list')
+def unsold_list():
+    items = get_list_of_items_purchased_by_date(sold=0)
+
+    return render_template('items_unsold_list.html', items=items)
+
+@app.route('/items/kept_list')
+def kept_list():
+    items = get_list_of_items_purchased_by_date(sold=2)
+
+    return render_template('items_unsold_list.html', items=items)
 
 #Describe Section
 @app.route('/items/describe')
