@@ -220,6 +220,7 @@ def bought_items_bulk():
             not_selling = 2
         else:
             not_selling = 0
+        print details['name']
         cur = mysql.connection.cursor()
         #cur.execute("INSERT INTO items(name, group_id, sold) VALUES (%s, %s, %s)", 
         #            (details['name'],details['group'],not_selling,))
