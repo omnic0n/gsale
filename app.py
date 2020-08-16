@@ -235,7 +235,7 @@ def bought_items_bulk():
         #mysql.connection.commit()
         print group_data
         cur.close()
-        return redirect(url_for('describe_group',group_id=group_id))
+        return redirect(url_for('describe_group',group_id=70))
     return render_template('items_purchased_bulk.html', form=form)
 
 @app.route('/items/sold',methods=["POST","GET"])
