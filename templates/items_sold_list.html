@@ -5,7 +5,6 @@
     <thead>
         <tr>
             <th>Name</th> 
-            <th>Platform</th>
             <th>Purchase Date</th>
             <th>Sold Date</th>
             <th>Sold Net</th>
@@ -16,7 +15,6 @@
         {% for item in items %}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{{ item['platform'] }}</td>
             <td>{{ item['date'] }}</td>
             {% for sold_item in sold %}
                 {% if item['id'] == sold_item['id'] %}

@@ -29,7 +29,6 @@
     <thead>
         <tr>
             <th>Name</th> 
-            <th>Platform</th>
             <th>Sold</th>
         </tr>
     </thead>
@@ -44,7 +43,6 @@
                 {% set color = 'red' %}
             {% endif %}
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{{ item['platform'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% elif item['sold'] == 2 %}Not Selling{% else %}True{% endif %}</td>
         </tr>
         {% endfor %}

@@ -26,7 +26,6 @@ class PurchaseForm(FlaskForm):
     group = SelectField('group', coerce=int, default=1)
     price = StringField('price')
     date = DateField('date', format='%Y-%m-%d')
-    platform = SelectField('platform', coerce=int)
     not_selling = BooleanField('not_selling')
     submit = SubmitField('Submit')
 
