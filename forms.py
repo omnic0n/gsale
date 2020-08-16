@@ -30,7 +30,7 @@ class PurchaseForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class PurchaseFormBulk(FlaskForm):
-    names = TextField('name',
+    name = TextField('name',
                            validators=[DataRequired()])
     location = SelectField('location', coerce=int)
     group = SelectField('group', coerce=int, default=1)
