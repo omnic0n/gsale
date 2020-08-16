@@ -41,7 +41,7 @@ def get_data_from_item_groups(group_id):
     cur.execute(""" SELECT 
                     items.name, 
                     items.sold, 
-                    items.id, 
+                    items.id 
                     FROM items items
                     INNER JOIN groups groups ON items.group_id = groups.id 
                     INNER JOIN location location ON groups.location = location.id
