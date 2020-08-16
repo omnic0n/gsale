@@ -211,7 +211,7 @@ def bought_items_bulk():
     locations = get_all_from_locations()
     groups = get_all_from_groups()
 
-    form = PurchaseForm()
+    form = PurchaseFormBulk()
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     form.group.choices = [(group['id'], group['name']) for group in groups]
     if request.method == "POST":
