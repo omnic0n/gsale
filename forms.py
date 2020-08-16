@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextField, SubmitField, SelectField, BooleanField
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField
 from wtforms.fields.html5 import DateField
 from wtforms.validators import DataRequired, Length, EqualTo
 
@@ -30,7 +30,7 @@ class PurchaseForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class PurchaseFormBulk(FlaskForm):
-    name = TextField('name',
+    name = TextAreaField('name',
                            validators=[DataRequired()])
     location = SelectField('location', coerce=int)
     group = SelectField('group', coerce=int, default=1)
