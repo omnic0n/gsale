@@ -222,7 +222,7 @@ def bought_items():
             not_selling = 0
         cur = mysql.connection.cursor()
         #cur.execute("INSERT INTO items(name, group_id, sold) VALUES (%s, %s, %s)", 
-                    (details['name'],details['group'],not_selling,))
+        #            (details['name'],details['group'],not_selling,))
         #mysql.connection.commit()
         #item_id = str(cur.lastrowid)
         #if details['group'] == "1":
