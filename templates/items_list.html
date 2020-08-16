@@ -27,7 +27,6 @@
     <thead>
         <tr>
             <th>Name</th> 
-            <th>Platform</th>
             <th>Sold</th>
             <th>Purchase Date</th>
             <th>Sold Date</th>
@@ -46,7 +45,6 @@
                 {% set color = 'red' %}
             {% endif %}
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{{ item['platform'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
             <td>{{ item['date'] }}</td>
             {% for sold_item in sold %}

@@ -42,9 +42,7 @@ def get_data_from_item_groups(group_id):
                     items.name, 
                     items.sold, 
                     items.id, 
-                    platform.long_name AS platform 
                     FROM items items
-                    INNER JOIN platform platform ON items.platform = platform.id
                     INNER JOIN groups groups ON items.group_id = groups.id 
                     INNER JOIN location location ON groups.location = location.id
                     WHERE items.group_id = %s""", (group_id, ))
@@ -62,12 +60,10 @@ def get_data_for_item_describe(item_id):
                     items.sold, 
                     items.id,
                     items.group_id, 
-                    platform.long_name AS platform, 
                     purchase.price, 
                     purchase.date, 
                     location.long_name AS location 
                     FROM items items
-                    INNER JOIN platform platform ON items.platform = platform.id 
                     INNER JOIN purchase purchase ON purchase.id = items.id
                     INNER JOIN location location ON purchase.location = location.id
                     WHERE items.id = %s""", (item_id, ))
@@ -114,10 +110,8 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
                     items.name, 
                     items.sold,
                     items.group_id,
-                    platform.long_name as platform,
                     purchase.date
                     FROM items items 
-                    INNER JOIN platform platform ON items.platform = platform.id
                     INNER JOIN purchase purchase ON items.id = purchase.id
                     WHERE purchase.date > %s AND purchase.date < %s AND items.sold = %s""",
                     (start_date,end_date,sold,))
@@ -131,11 +125,6 @@ def get_all_from_locations():
 def get_all_from_groups():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY name ASC")
-    return list(cur.fetchall())
-
-def get_all_from_platforms():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM platform ORDER BY name ASC")
     return list(cur.fetchall())
 
 def get_profit():
@@ -190,12 +179,10 @@ def group_add():
 def bought_items():
     locations = get_all_from_locations()
     groups = get_all_from_groups()
-    platforms = get_all_from_platforms()
 
     form = PurchaseForm()
     form.location.choices = [(location['id'], location['long_name']) for location in locations]
     form.group.choices = [(group['id'], group['name']) for group in groups]
-    form.platform.choices = [(platform['id'], platform['long_name']) for platform in platforms]
     if request.method == "POST":
         details = request.form
         if 'not_selling' in request.form:
@@ -203,8 +190,8 @@ def bought_items():
         else:
             not_selling = 0
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO items(name, platform, group_id, sold) VALUES (%s, %s, %s, %s)", 
-                    (details['name'], details['platform'],details['group'],not_selling,))
+        cur.execute("INSERT INTO items(name, group_id, sold) VALUES (%s, %s, %s)", 
+                    (details['name'],details['group'],not_selling,))
         mysql.connection.commit()
         item_id = str(cur.lastrowid)
         if details['group'] == "1":

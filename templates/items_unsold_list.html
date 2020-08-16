@@ -5,7 +5,6 @@
     <thead>
         <tr>
             <th>Name</th> 
-            <th>Platform</th>
             <th>Purchase Date</th>
             <th>Group ID</th> 
         </tr>
@@ -14,7 +13,6 @@
         {% for item in items %}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{{ item['platform'] }}</td>
             <td>{{ item['date'] }}</td>
             <td>{% if item['group_id'] == 1%}
                 None
