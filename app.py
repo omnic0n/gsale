@@ -207,7 +207,7 @@ def bought_items():
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/bought_bulk',methods=["POST","GET"])
-def bought_items():
+def bought_items_bulk():
     locations = get_all_from_locations()
     groups = get_all_from_groups()
 
