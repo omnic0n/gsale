@@ -229,10 +229,11 @@ def bought_items_bulk():
         #    cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
         #                (item_id, details['location'], details['date'], details['price'],))
         #else:
-        #    group_data = get_all_from_group(details['group'])
+            group_data = get_all_from_group(details['group'])
         #    cur.execute("INSERT INTO purchase(id,location,date) VALUES (%s,%s,%s)", 
         #                (item_id,group_data['location'],group_data['date'],))
         #mysql.connection.commit()
+        print group_data
         cur.close()
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('items_purchased_bulk.html', form=form)
