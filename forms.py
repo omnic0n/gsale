@@ -19,21 +19,11 @@ class ListForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class PurchaseForm(FlaskForm):
-    name = StringField('name',
-                           validators=[DataRequired()])
-    group = SelectField('group', coerce=int, default=1)
-    price = StringField('price')
-    date = DateField('date', format='%Y-%m-%d')
-    not_selling = BooleanField('not_selling')
-    submit = SubmitField('Submit')
-
-class PurchaseFormBulk(FlaskForm):
     name = TextAreaField('name',
                            validators=[DataRequired()])
     group = SelectField('group', coerce=int, default=1)
     price = StringField('price')
     date = DateField('date', format='%Y-%m-%d')
-    not_selling = BooleanField('not_selling')
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):

@@ -177,22 +177,18 @@ def bought_items():
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/bought',methods=["POST","GET"])
-def bought_items_bulk():
+def bought_items():
     groups = get_all_from_groups()
 
-    form = PurchaseFormBulk()
+    form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
     if request.method == "POST":
         details = request.form
-        if 'not_selling' in request.form:
-            not_selling = 2
-        else:
-            not_selling = 0
 
         cur = mysql.connection.cursor()
         for item in details['name'].splitlines():
-            cur.execute("INSERT INTO items(name, group_id, sold) VALUES (%s, %s, %s)", 
-                        (item,details['group'],not_selling,))
+            cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s, %s)", 
+                        (item,details['group'],))
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
             if details['group'] == "1":
@@ -205,7 +201,7 @@ def bought_items_bulk():
             mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_group',group_id=group_data['id']))
-    return render_template('items_purchased_bulk.html', form=form)
+    return render_template('items_purchased.html', form=form)
 
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
