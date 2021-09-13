@@ -146,36 +146,6 @@ def group_add():
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
 
-
-@app.route('/items/bought',methods=["POST","GET"])
-def bought_items():
-    groups = get_all_from_groups()
-
-    form = PurchaseForm()
-    form.group.choices = [(group['id'], group['name']) for group in groups]
-    if request.method == "POST":
-        details = request.form
-        if 'not_selling' in request.form:
-            not_selling = 2
-        else:
-            not_selling = 0
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO items(name, group_id, sold) VALUES (%s, %s, %s)", 
-                    (details['name'],details['group'],not_selling,))
-        mysql.connection.commit()
-        item_id = str(cur.lastrowid)
-        if details['group'] == "1":
-            cur.execute("INSERT INTO purchase(id, date, price) VALUES (%s, %s, %s)", 
-                        (item_id, details['date'], details['price'],))
-        else:
-            group_data = get_all_from_group(details['group'])
-            cur.execute("INSERT INTO purchase(id,date) VALUES (%s,%s)", 
-                        (item_id,group_data['date'],))
-        mysql.connection.commit()
-        cur.close()
-        return redirect(url_for('describe_item',item=item_id))
-    return render_template('items_purchased.html', form=form)
-
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     groups = get_all_from_groups()
