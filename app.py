@@ -240,7 +240,7 @@ def groups_list():
                     groups.price, 
                     groups.id,
                     groups.date,
-                    sum(sale.price - sale.shipping_fee) AS net, 
+                    sum(sale.price - sale.shipping_fee) AS net 
                     FROM groups groups
                     RIGHT JOIN items items ON groups.id = items.group_id 
                     LEFT JOIN sale sale ON sale.id = items.id
