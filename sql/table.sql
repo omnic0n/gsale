@@ -2,7 +2,6 @@ CREATE TABLE items (
      id MEDIUMINT NOT NULL AUTO_INCREMENT,
      name CHAR(50) NOT NULL,
      sold BOOLEAN NOT NULL DEFAULT 0,
-     platform CHAR(120) NOT NULL,
      group_id MEDIUMINT DEFAULT NULL,
      PRIMARY KEY (id)
 );
