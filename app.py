@@ -73,7 +73,7 @@ def get_data_for_item_sold(item_id):
                     sale.price, 
                     sale.tax,
                     sale.date,
-                    (sale.price - sale.shipping_fee) AS net,
+                    (sale.price - sale.shipping_fee) AS net
                     FROM sale sale
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
