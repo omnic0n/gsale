@@ -241,7 +241,7 @@ def groups_list():
                     groups.id,
                     groups.date,
                     sum(sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net, 
-                    FROM groups groups
+                    FROM groups
                     RIGHT JOIN items items ON groups.id = items.group_id 
                     LEFT JOIN sale sale ON sale.id = items.id
                     GROUP by items.group_id
