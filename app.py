@@ -161,13 +161,9 @@ def bought_items():
                         (item,details['group'],))
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
-            if details['group'] == "1":
-                cur.execute("INSERT INTO purchase(id, date, price) VALUES (%s, %s, %s)", 
-                            (item_id, details['date'], details['price'],))
-            else:
-                group_data = get_all_from_group(details['group'])
-                cur.execute("INSERT INTO purchase(id,date) VALUES (%s,%s)", 
-                            (item_id,group_data['date'],))
+            group_data = get_all_from_group(details['group'])
+            cur.execute("INSERT INTO purchase(id,date) VALUES (%s,%s)", 
+                        (item_id,group_data['date'],))
             mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_group',group_id=group_data['id']))
