@@ -7,7 +7,6 @@ from wtforms.validators import DataRequired, Length, EqualTo
 class GroupForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired()])
-    location = SelectField('location', coerce=int)
     price = StringField('price')
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
@@ -22,7 +21,6 @@ class ListForm(FlaskForm):
 class PurchaseForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired()])
-    location = SelectField('location', coerce=int)
     group = SelectField('group', coerce=int, default=1)
     price = StringField('price')
     date = DateField('date', format='%Y-%m-%d')
@@ -32,7 +30,6 @@ class PurchaseForm(FlaskForm):
 class PurchaseFormBulk(FlaskForm):
     name = TextAreaField('name',
                            validators=[DataRequired()])
-    location = SelectField('location', coerce=int)
     group = SelectField('group', coerce=int, default=1)
     price = StringField('price')
     date = DateField('date', format='%Y-%m-%d')
@@ -41,7 +38,6 @@ class PurchaseFormBulk(FlaskForm):
 
 class SaleForm(FlaskForm):
     name = SelectField('name', coerce=int)
-    location = SelectField('location', coerce=int)
     price = StringField('price')
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
