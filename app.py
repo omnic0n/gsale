@@ -185,9 +185,10 @@ def sold_items():
         cur.execute("""INSERT INTO sale(
                     id, 
                     date, 
-                    price) 
-                    VALUES (%s, %s, %s)""", 
-                    (details['name'], details['date'], details['price'],))
+                    price,
+                    shipping_fee) 
+                    VALUES (%s, %s, %s, %s)""", 
+                    (details['name'], details['date'], details['price'], details['shipping_fee'],))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=details['name']))
