@@ -16,16 +16,6 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
-def get_long_name_location_from_id(location_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT long_name FROM location WHERE id = %s", (location_id,))
-    return cur.fetchone()['long_name']
-
-def get_name_location_from_id(location_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT name FROM location WHERE id = %s", (location_id,))
-    return cur.fetchone()['name']
-
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
@@ -44,7 +34,6 @@ def get_data_from_item_groups(group_id):
                     items.id 
                     FROM items items
                     INNER JOIN groups groups ON items.group_id = groups.id 
-                    INNER JOIN location location ON groups.location = location.id
                     WHERE items.group_id = %s""", (group_id, ))
     return list(cur.fetchall())
 
@@ -62,10 +51,8 @@ def get_data_for_item_describe(item_id):
                     items.group_id, 
                     purchase.price, 
                     purchase.date, 
-                    location.long_name AS location 
                     FROM items items
                     INNER JOIN purchase purchase ON purchase.id = items.id
-                    INNER JOIN location location ON purchase.location = location.id
                     WHERE items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
@@ -76,9 +63,7 @@ def get_data_from_group_describe(group_id):
                     groups.price, 
                     groups.id,
                     groups.date,
-                    location.long_name AS location 
                     FROM groups groups
-                    INNER JOIN location location ON groups.location = location.id
                     WHERE groups.id = %s""", (group_id, ))
     return list(cur.fetchall())
 
@@ -92,9 +77,7 @@ def get_data_for_item_sold(item_id):
                     sale.paypal_fee,
                     sale.shipping_fee,
                     (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net,
-                    location.long_name as location 
                     FROM sale sale
-                    INNER JOIN location location ON sale.location = location.id
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
@@ -116,11 +99,6 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
                     WHERE purchase.date > %s AND purchase.date < %s AND items.sold = %s""",
                     (start_date,end_date,sold,))
         return list(cur.fetchall())
-
-def get_all_from_locations():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM location ORDER BY name ASC")
-    return list(cur.fetchall())
 
 def get_all_from_groups():
     cur = mysql.connection.cursor()
@@ -157,17 +135,14 @@ def index():
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
 def group_add():
-    locations = get_all_from_locations()
-
     form = GroupForm()
-    form.location.choices = [(location['id'], location['long_name']) for location in locations]
+
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        location = get_name_location_from_id(details['location'])
-        group_name = "%s-%s-%s" % (details['date'],location,details['name'])
-        cur.execute("INSERT INTO groups(name, date, price,location) VALUES (%s, %s, %s, %s)", 
-                    (group_name, details['date'], details['price'], details['location']))
+        group_name = "%s-%s" % (details['date'],details['name'])
+        cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
+                    (group_name, details['date'], details['price']))
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
         cur.close()
@@ -177,11 +152,9 @@ def group_add():
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
-    locations = get_all_from_locations()
     groups = get_all_from_groups()
 
     form = PurchaseForm()
-    form.location.choices = [(location['id'], location['long_name']) for location in locations]
     form.group.choices = [(group['id'], group['name']) for group in groups]
     if request.method == "POST":
         details = request.form
@@ -195,12 +168,12 @@ def bought_items():
         mysql.connection.commit()
         item_id = str(cur.lastrowid)
         if details['group'] == "1":
-            cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
-                        (item_id, details['location'], details['date'], details['price'],))
+            cur.execute("INSERT INTO purchase(id, date, price) VALUES (%s, %s, %s)", 
+                        (item_id, details['date'], details['price'],))
         else:
             group_data = get_all_from_group(details['group'])
-            cur.execute("INSERT INTO purchase(id,location,date) VALUES (%s,%s,%s)", 
-                        (item_id,group_data['location'],group_data['date'],))
+            cur.execute("INSERT INTO purchase(id,date) VALUES (%s,%s)", 
+                        (item_id,group_data['date'],))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=item_id))
@@ -208,11 +181,9 @@ def bought_items():
 
 @app.route('/items/bought_bulk',methods=["POST","GET"])
 def bought_items_bulk():
-    locations = get_all_from_locations()
     groups = get_all_from_groups()
 
     form = PurchaseFormBulk()
-    form.location.choices = [(location['id'], location['long_name']) for location in locations]
     form.group.choices = [(group['id'], group['name']) for group in groups]
     if request.method == "POST":
         details = request.form
@@ -228,12 +199,12 @@ def bought_items_bulk():
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
             if details['group'] == "1":
-                cur.execute("INSERT INTO purchase(id, location, date, price) VALUES (%s, %s, %s, %s)", 
-                            (item_id, details['location'], details['date'], details['price'],))
+                cur.execute("INSERT INTO purchase(id, date, price) VALUES (%s, %s, %s)", 
+                            (item_id, details['date'], details['price'],))
             else:
                 group_data = get_all_from_group(details['group'])
-                cur.execute("INSERT INTO purchase(id,location,date) VALUES (%s,%s,%s)", 
-                            (item_id,group_data['location'],group_data['date'],))
+                cur.execute("INSERT INTO purchase(id,date) VALUES (%s,%s)", 
+                            (item_id,group_data['date'],))
             mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_group',group_id=group_data['id']))
@@ -241,12 +212,10 @@ def bought_items_bulk():
 
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
-    locations = get_all_from_locations()
     items = get_all_items_not_sold()
 
     form = SaleForm()
     form.name.choices = [(item['id'], item['name']) for item in items]
-    form.location.choices = [(location['id'], location['long_name']) for location in locations]
     if request.method == "POST":
         details = request.form
         if 'ebay' in request.form:
@@ -265,15 +234,14 @@ def sold_items():
         cur.execute("UPDATE items SET sold = 1 WHERE id = %s", (details['name'], ))
         cur.execute("""INSERT INTO sale(
                     id, 
-                    location, 
                     date, 
                     price, 
                     tax, 
                     ebay_fee, 
                     paypal_fee, 
                     shipping_fee) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", 
-                    (details['name'], details['location'], details['date'], details['price'],details['tax'], ebay_fee, paypal_fee, details['shipping_fee'], ))
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
+                    (details['name'], details['date'], details['price'],details['tax'], ebay_fee, paypal_fee, details['shipping_fee'], ))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=details['name']))
@@ -289,9 +257,7 @@ def groups_list():
                     groups.id,
                     groups.date,
                     sum(sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net, 
-                    location.long_name AS location 
                     FROM groups groups
-                    LEFT JOIN location location ON groups.location = location.id
                     RIGHT JOIN items items ON groups.id = items.group_id 
                     LEFT JOIN sale sale ON sale.id = items.id
                     GROUP by items.group_id
