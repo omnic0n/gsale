@@ -29,7 +29,6 @@
             <th>Category</th>
             <th>Price</th>
             <th>Date</th>
-            <th>Location</th>
         </tr>
     </thead>
     <tbody>
@@ -37,20 +36,17 @@
             <td>Purchase</td>
             <td>{{ item[0]['price'] }}</td>
             <td>{{ item[0]['date'] }}</td>
-            <td>{{ item[0]['location'] }}</td>
         </tr>
         {% if sold_state %}
         <tr>
             <td>Sold</td>
             <td>{{ sold[0]['net'] }}</td>
             <td>{{ sold[0]['date'] }}</td>
-            <td>{{ sold[0]['location'] }}</td>
         </tr>
         <tr>
             <td>Profit</td>
             <td>{{ sold[0]['net'] - item[0]['price'] }}</td>
             <td>{{ sold[0]['date'] - item[0]['date'] }}</td>
-            <td>NA</td>
         </tr>
         {% endif %}
     </tbody>
@@ -61,8 +57,6 @@
     <thead>
         <tr>
             <th>Sold Price</th>    
-            <th>Ebay Fee</th>
-            <th>Paypal Fee</th>
             <th>Shipping Fee</th>
             <th>Net</th>
         </tr>
@@ -70,8 +64,6 @@
     <tbody>
         <tr>
             <td>{{ sold[0]['price'] }}</td>
-            <td>{{ sold[0]['ebay_fee'] }}</td>
-            <td>{{ sold[0]['paypal_fee'] }}</td>
             <td>{{ sold[0]['shipping_fee'] }}</td>
             <td>{{ sold[0]['net'] }}</td>
         </tr>
