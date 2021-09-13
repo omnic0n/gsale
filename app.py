@@ -71,7 +71,6 @@ def get_data_for_item_sold(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
                     sale.price, 
-                    sale.tax,
                     sale.date,
                     (sale.price - sale.shipping_fee) AS net
                     FROM sale sale
