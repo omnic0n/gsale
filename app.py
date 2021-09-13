@@ -50,7 +50,7 @@ def get_data_for_item_describe(item_id):
                     items.id,
                     items.group_id, 
                     purchase.price, 
-                    purchase.date, 
+                    purchase.date 
                     FROM items items
                     INNER JOIN purchase purchase ON purchase.id = items.id
                     WHERE items.id = %s""", (item_id, ))
