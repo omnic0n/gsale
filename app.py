@@ -218,30 +218,14 @@ def sold_items():
     form.name.choices = [(item['id'], item['name']) for item in items]
     if request.method == "POST":
         details = request.form
-        if 'ebay' in request.form:
-            ebay_fee = format((float(details['price']) + float(details['tax']) * float(details['ebay_percent']) + .3, '.2f')
-        else:
-            ebay_fee = 0
-       
-        if details['paypal'] == "1":
-            paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029) + .3, '.2f')
-        elif details['paypal'] == "2":
-            paypal_fee = format(((float(details['price']) + float(details['tax'])) * .029), '.2f')
-        else:
-            paypal_fee = 0
-
         cur = mysql.connection.cursor()
         cur.execute("UPDATE items SET sold = 1 WHERE id = %s", (details['name'], ))
         cur.execute("""INSERT INTO sale(
                     id, 
                     date, 
-                    price, 
-                    tax, 
-                    ebay_fee, 
-                    paypal_fee, 
-                    shipping_fee) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
-                    (details['name'], details['date'], details['price'],details['tax'], ebay_fee, paypal_fee, details['shipping_fee'], ))
+                    price) 
+                    VALUES (%s, %s, %s)""", 
+                    (details['name'], details['date'], details['price'],))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=details['name']))
