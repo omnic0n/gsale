@@ -18,7 +18,7 @@ CREATE TABLE groups (
 CREATE TABLE purchase (
      id MEDIUMINT NOT NULL,
      date DATE,
-     price  DECIMAL(6,2),
+     price  DECIMAL(6,2)
 );
 
 CREATE TABLE sale (
