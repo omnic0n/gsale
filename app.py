@@ -72,6 +72,7 @@ def get_data_for_item_sold(item_id):
     cur.execute(""" SELECT 
                     sale.price, 
                     sale.date,
+                    sale.shipping_fee,
                     (sale.price - sale.shipping_fee) AS net
                     FROM sale sale
                     WHERE sale.id = %s""", (item_id, ))
