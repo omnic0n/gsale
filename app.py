@@ -176,7 +176,7 @@ def bought_items():
         return redirect(url_for('describe_item',item=item_id))
     return render_template('items_purchased.html', form=form)
 
-@app.route('/items/bought_bulk',methods=["POST","GET"])
+@app.route('/items/bought',methods=["POST","GET"])
 def bought_items_bulk():
     groups = get_all_from_groups()
 
@@ -264,12 +264,6 @@ def sold_list():
 @app.route('/items/unsold_list')
 def unsold_list():
     items = get_list_of_items_purchased_by_date(sold=0)
-
-    return render_template('items_unsold_list.html', items=items)
-
-@app.route('/items/kept_list')
-def kept_list():
-    items = get_list_of_items_purchased_by_date(sold=2)
 
     return render_template('items_unsold_list.html', items=items)
 
