@@ -62,8 +62,8 @@ def get_data_from_group_describe(group_id):
                     groups.name, 
                     groups.price, 
                     groups.id,
-                    groups.date,
-                    FROM groups groups
+                    groups.date
+                    FROM groups
                     WHERE groups.id = %s""", (group_id, ))
     return list(cur.fetchall())
 
