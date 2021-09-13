@@ -72,11 +72,8 @@ def get_data_for_item_sold(item_id):
     cur.execute(""" SELECT 
                     sale.price, 
                     sale.tax,
-                    sale.date, 
-                    sale.ebay_fee,
-                    sale.paypal_fee,
-                    sale.shipping_fee,
-                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net,
+                    sale.date,
+                    (sale.price - sale.shipping_fee) AS net,
                     FROM sale sale
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
@@ -257,7 +254,7 @@ def sold_list():
     cur.execute("""SELECT
                     sale.id,
                     sale.date,
-                    (sale.price - sale.ebay_fee - sale.paypal_fee - sale.shipping_fee) AS net
+                    (sale.price - sale.shipping_fee) AS net
                     FROM sale
                     INNER JOIN items items ON items.id = sale.id
                     WHERE items.sold = 1""")
