@@ -259,6 +259,7 @@ def describe_item():
     item = get_data_for_item_describe(id)
     print bool(item)
     if not bool(item):
+        print "updating value"
         item = get_data_for_item_describe('1')
         item_sold = get_data_for_item_sold('1')
         sold_state = 1
