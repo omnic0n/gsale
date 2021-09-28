@@ -284,7 +284,7 @@ def describe_item():
 def describe_group():
     id = request.args.get('group_id', type = str)
     group_id = get_data_from_group_describe(id)
-    max_group_id = get_max_group_id
+    max_group_id = get_max_group_id()
     print max_group_id['id']
     items = get_data_from_item_groups(id)
     sold_price = get_group_profit(id)
