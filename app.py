@@ -37,10 +37,15 @@ def get_data_from_item_groups(group_id):
                     WHERE items.group_id = %s""", (group_id, ))
     return list(cur.fetchall())
 
-def get_all_items_not_sold():
+def get_max_item_id():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items WHERE sold = 0 ORDER BY name ASC")
     return list(cur.fetchall())
+
+def get_newest_item_id():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id FROM items ORDER BY id DESC LIMIT 0,1")
+    return list(cur.fetchone())
 
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
@@ -257,6 +262,7 @@ def unsold_list():
 def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
+    max_item = get_max_item_id()
     if int(item[0]['sold']) == 1:
         item_sold = get_data_for_item_sold(id)
         sold_state = 1
@@ -265,6 +271,7 @@ def describe_item():
         sold_state = 0
     return render_template('items_describe.html', 
                             item=item,
+                            max_item=max_item,
                             sold=item_sold,
                             sold_state=sold_state)
 

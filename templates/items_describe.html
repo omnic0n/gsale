@@ -4,8 +4,12 @@
 <table width=100%>
         <tr>
             <td>
-                <div style="float:left;width:50%;">{% if item[0]['id'] != 1 %}<a href = "/items/describe?item={{ item[0]['id'] - 1 }}">Previous Item</a>{% endif %}</div>
-                <div align="right" style="float:right;width:50%;"><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a></div>
+                <div style="float:left;width:50%;">
+                    {% if item[0]['id'] != 1 %}<a href = "/items/describe?item={{ item[0]['id'] - 1 }}">Previous Item</a>{% endif %}
+                </div>
+                <div align="right" style="float:right;width:50%;">
+                    {% if item[0]['id'] != max_item[0] %}<a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a>% endif %}
+                </div>
             </td>
         </tr>
 </table>
