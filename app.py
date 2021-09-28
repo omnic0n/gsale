@@ -268,7 +268,6 @@ def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     max_item = get_max_item_id()
-    print max_item['id']
     if int(item[0]['sold']) == 1:
         item_sold = get_data_for_item_sold(id)
         sold_state = 1
@@ -286,6 +285,7 @@ def describe_group():
     id = request.args.get('group_id', type = str)
     group_id = get_data_from_group_describe(id)
     max_group_id = get_max_group_id
+    print max_group_id['id']
     items = get_data_from_item_groups(id)
     sold_price = get_group_profit(id)
     if not sold_price:
