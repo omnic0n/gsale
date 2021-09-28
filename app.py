@@ -255,10 +255,11 @@ def unsold_list():
 #Describe Section
 @app.route('/items/describe')
 def describe_item():
-    id = request.args.get('item', type = str)
     try:
-        bool(id)
+        id = request.args.get('item', type = str)
     except:
+        print("id not found")
+    else:
         id = 1
     item = get_data_for_item_describe(id)
     if not bool(item):
