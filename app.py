@@ -257,6 +257,7 @@ def unsold_list():
 def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
+    print bool(item)
     if not item:
         item = get_data_for_item_describe(1)
         item_sold = get_data_for_item_sold(1)
