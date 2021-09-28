@@ -255,12 +255,7 @@ def unsold_list():
 #Describe Section
 @app.route('/items/describe')
 def describe_item():
-    try:
-        id = request.args.get('item', type = str)
-    except:
-        print("id not found")
-    else:
-        id = 1
+    id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     if not bool(item):
         return redirect(url_for('describe_item'))
