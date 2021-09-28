@@ -29,7 +29,7 @@
     <tbody>
         {% for sold_date in sold_dates %}
             {% for profit_date in profit_dates %}
-                {% if profit_date['date'] == sold_date['date']}
+                {% if profit_date['date'] == sold_date['date'] %}
         <tr>
             <td>{{ sold_date['date'] }}</td>
             <td>${{ sold_date['net'] - purchase_date['price'] }}</td>
