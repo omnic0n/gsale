@@ -1,6 +1,7 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
+<align right><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a></align>
 <h3>Item Info</h3>
 <table class="blueTable">
     <thead>
