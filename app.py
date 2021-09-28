@@ -37,12 +37,12 @@ def get_data_from_item_groups(group_id):
                     WHERE items.group_id = %s""", (group_id, ))
     return list(cur.fetchall())
 
-def get_max_item_id():
+def get_all_items_not_sold():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items WHERE sold = 0 ORDER BY name ASC")
     return list(cur.fetchall())
 
-def get_newest_item_id():
+def get_max_item_id():
     cur = mysql.connection.cursor()
     cur.execute("SELECT id FROM items ORDER BY id DESC LIMIT 0,1")
     return list(cur.fetchone())
