@@ -30,6 +30,7 @@
         {% for sold_date in sold_dates %}
             {% for profit_date in profit_dates %}
             <tr><td>
+              {{ sold_date['date'] }}
               {{ profit_date['date'] }}
             </td></tr>
                 {% if profit_date['date'] == sold_date['date'] %}
