@@ -44,16 +44,28 @@ def get_all_items_not_sold():
 
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
-    cur.execute(""" SELECT 
-                    items.name, 
-                    items.sold, 
-                    items.id,
-                    items.group_id, 
-                    purchase.price, 
-                    purchase.date 
-                    FROM items items
-                    INNER JOIN purchase purchase ON purchase.id = items.id
-                    WHERE items.id = %s""", (item_id, ))
+    try:
+        cur.execute(""" SELECT 
+                        items.name, 
+                        items.sold, 
+                        items.id,
+                        items.group_id, 
+                        purchase.price, 
+                        purchase.date 
+                        FROM items items
+                        INNER JOIN purchase purchase ON purchase.id = items.id
+                        WHERE items.id = %s""", (item_id, ))
+    except:
+        cur.execute(""" SELECT 
+                        items.name, 
+                        items.sold, 
+                        items.id,
+                        items.group_id, 
+                        purchase.price, 
+                        purchase.date 
+                        FROM items items
+                        INNER JOIN purchase purchase ON purchase.id = items.id
+                        WHERE items.id = %s""", (1, ))
     return list(cur.fetchall())
 
 def get_data_from_group_describe(group_id):
