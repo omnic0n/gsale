@@ -258,9 +258,9 @@ def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     print bool(item)
-    if not item:
-        item = get_data_for_item_describe(1)
-        item_sold = get_data_for_item_sold(1)
+    if not bool(item):
+        item = get_data_for_item_describe('1')
+        item_sold = get_data_for_item_sold('1')
         sold_state = 1
     elif int(item[0]['sold']) == 1:
         item_sold = get_data_for_item_sold(id)
