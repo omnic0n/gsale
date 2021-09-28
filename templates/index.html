@@ -27,9 +27,10 @@
         </tr>
     </thead>
     <tbody>
+        {% for item in sold_date %}
         <tr>
-            <td>{{ sold_date[0]['date'] }}</td>
-            <td>${{ sold_date[0]['net'] }}</td>
+            <td>{{ item['date'] }}</td>
+            <td>${{ item['net'] }}</td>
         </tr>
     </tbody>
 </table>
