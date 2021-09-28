@@ -255,14 +255,13 @@ def unsold_list():
 #Describe Section
 @app.route('/items/describe')
 def describe_item():
-    id = request.args.get('item', type = str)
+    try:
+        id = request.args.get('item', type = str)
+    except:
+        id = 1
     item = get_data_for_item_describe(id)
-    print bool(item)
     if not bool(item):
-        print "updating value"
-        item = get_data_for_item_describe('1')
-        item_sold = get_data_for_item_sold('1')
-        sold_state = 1
+        return redirect(url_for('describe_item'))
     elif int(item[0]['sold']) == 1:
         item_sold = get_data_for_item_sold(id)
         sold_state = 1
