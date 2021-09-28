@@ -112,7 +112,7 @@ def get_purchased_from_date():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT
                    date,
-                   SUM(price)
+                   SUM(price) as price
                    FROM groups
                    GROUP by date""")
     return list(cur.fetchall())
