@@ -97,6 +97,26 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
                     (start_date,end_date,sold,))
         return list(cur.fetchall())
 
+def get_sold_from_date():
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT 
+				    groups.date,
+                    SUM(sale.price - sale.shipping_fee) AS net
+                    FROM items items 
+                    INNER JOIN sale sale ON items.id = sale.id
+                    INNER JOIN groups groups ON items.group_id = groups.id
+					GROUP BY groups.date""")
+    return list(cur.fetchall())
+
+def get_purchased_from_date():
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT
+                   date,
+                   SUM(price)
+                   FROM groups
+                   GROUP by date""")
+    return list(cur.fetchall())
+
 def get_all_from_groups():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups ORDER BY name ASC")
@@ -127,7 +147,9 @@ def get_group_profit(group_id):
 @app.route('/')
 def index():
     profit = get_profit()
-    return render_template('index.html', profit=profit)
+    sold_date = get_sold_from_date()
+    purchased_date = get_purchased_from_date()
+    return render_template('index.html', profit=profit, sold_date = sold_date, purchased_date = purchased_date)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
