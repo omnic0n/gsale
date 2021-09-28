@@ -47,6 +47,11 @@ def get_max_item_id():
     cur.execute("SELECT id FROM items ORDER BY id DESC LIMIT 0,1")
     return cur.fetchone()
 
+def get_max_group_id():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id FROM groups ORDER BY id DESC LIMIT 0,1")
+    return cur.fetchone()
+
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
@@ -280,6 +285,7 @@ def describe_item():
 def describe_group():
     id = request.args.get('group_id', type = str)
     group_id = get_data_from_group_describe(id)
+    max_group_id = get_max_group_id
     items = get_data_from_item_groups(id)
     sold_price = get_group_profit(id)
     if not sold_price:
@@ -288,6 +294,7 @@ def describe_group():
     return render_template('groups_describe.html', 
                             group_id=group_id,
                             items=items,
+                            max_group_id = max_group_id,
                             sold_price=sold_price)
 
 if __name__ == '__main__':

@@ -1,7 +1,18 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
-<h3>Group Info</h3>
+<table width=100%>
+    <tr>
+        <td>
+            <div style="float:left;width:50%;">
+                {% if group_id[0]['id'] != 1 %}<a href = "/groups/describe?group_id={{ group_id[0]['id'] - 1 }}">Previous Group</a>{% endif %}
+            </div>
+            <div align="right" style="float:right;width:50%;">
+                {% if group_id[0]['id'] != max_group_id['id'] %}<a href = "/groups/describe?group_id={{ group_id[0]['id'] + 1 }}">Next Group</a>{% endif %}
+            </div>
+        </td>
+    </tr>
+</table>
 <table class="blueTable">
     <thead>
         <tr>
