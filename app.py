@@ -257,7 +257,7 @@ def unsold_list():
 def describe_item():
     try:
         id = request.args.get('item', type = str)
-    except:
+    else:
         id = 1
     item = get_data_for_item_describe(id)
     if not bool(item):
