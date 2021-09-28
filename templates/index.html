@@ -27,14 +27,15 @@
         </tr>
     </thead>
     <tbody>
-        {% for sold_date in purchase_dates %}
-            <tr><td>
-              {{ sold_date['date'] }}
-            </td></tr>
+        {% for sold_date in sold_dates %}
+            {% for purchased_date in purchased_dates %}
+                {% if purchased_date['date'] == sold_date['date'] %}
         <tr>
             <td>{{ sold_date['date'] }}</td>
-            <td>${{ sold_date['price'] }}</td>
+            <td>${{ sold_date['net'] - purchased_date['price'] }}</td>
         </tr>
+               {% endif %}
+            {% endfor %}
         {% endfor %}
     </tbody>
 </table>
