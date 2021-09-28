@@ -263,6 +263,7 @@ def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     max_item = get_max_item_id()
+    print max_item
     if int(item[0]['sold']) == 1:
         item_sold = get_data_for_item_sold(id)
         sold_state = 1
