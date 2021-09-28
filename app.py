@@ -257,7 +257,7 @@ def unsold_list():
 def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
-    elif int(item[0]['sold']) == 1:
+    if int(item[0]['sold']) == 1:
         item_sold = get_data_for_item_sold(id)
         sold_state = 1
     else:
