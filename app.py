@@ -259,6 +259,8 @@ def describe_item():
     item = get_data_for_item_describe(id)
     if not bool(item):
         item = get_data_for_item_describe(1)
+        item_sold = get_data_for_item_sold(1)
+        sold_state = 1
     elif int(item[0]['sold']) == 1:
         item_sold = get_data_for_item_sold(id)
         sold_state = 1
