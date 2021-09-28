@@ -272,7 +272,7 @@ def describe_item():
         sold_state = 0
     return render_template('items_describe.html', 
                             item=item,
-                            max_item=max_item[0]['id'],
+                            max_item=max_item,
                             sold=item_sold,
                             sold_state=sold_state)
 
