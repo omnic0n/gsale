@@ -1,11 +1,11 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
-<table border=1 width=100%>
+<table width=100%>
         <tr>
             <td>
                 <div style="float:left;width:50%;"><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Previous Item</a></div>
-                <div style="float:right;width:50%;"><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a></div>
+                <div align="right" style="float:right;width:50%;"><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a></div>
             </td>
         </tr>
 </table>
