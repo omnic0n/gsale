@@ -263,7 +263,7 @@ def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     max_item = get_max_item_id()
-    print max_item['id']
+    print max_item[0]['id']
     if int(item[0]['sold']) == 1:
         item_sold = get_data_for_item_sold(id)
         sold_state = 1
@@ -272,7 +272,7 @@ def describe_item():
         sold_state = 0
     return render_template('items_describe.html', 
                             item=item,
-                            max_item=max_item['id'],
+                            max_item=max_item[0]['id'],
                             sold=item_sold,
                             sold_state=sold_state)
 
