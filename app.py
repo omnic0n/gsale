@@ -45,7 +45,7 @@ def get_all_items_not_sold():
 def get_max_item_id():
     cur = mysql.connection.cursor()
     cur.execute("SELECT id FROM items ORDER BY id DESC LIMIT 0,1")
-    return list(cur.fetchone())
+    return cur.fetchone()
 
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
