@@ -2,10 +2,12 @@
 {% extends "layout.html" %}
 {% block content %}
 <table>
-    <tr>
-<td align="left"><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Previous Item</a></td>
-<td align="right"><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a></td>
-    </tr>
+    <thead>
+        <tr>
+            <td align="left"><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Previous Item</a></td>
+            <td align="right"><a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a></td>
+        </tr>
+    </thead>
 </table>
 <h3>Item Info</h3>
 <table class="blueTable">
