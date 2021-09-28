@@ -147,9 +147,9 @@ def get_group_profit(group_id):
 @app.route('/')
 def index():
     profit = get_profit()
-    sold_date = get_sold_from_date()
-    purchased_date = get_purchased_from_date()
-    return render_template('index.html', profit=profit, sold_date = sold_date, purchased_date = purchased_date)
+    sold_dates = get_sold_from_date()
+    purchased_dates = get_purchased_from_date()
+    return render_template('index.html', profit=profit, sold_dates=sold_dates, purchased_dates=purchased_dates)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
