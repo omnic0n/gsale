@@ -250,7 +250,7 @@ def modify_items():
                     (details['price'], details['shipping_fee'], details['date'], details['id']))
         mysql.connection.commit()
         cur.close()
-        return redirect(url_for('describe_item',item=item['id']))
+        return redirect(url_for('describe_item',item=id))
     return render_template('modify_item.html', form=form, item=item, sale=sale)
 
 @app.route('/items/sold',methods=["POST","GET"])
