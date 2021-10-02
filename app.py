@@ -211,7 +211,7 @@ def bought_items():
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/modify',methods=["POST","GET"])
-def bought_items():
+def modify_items():
     groups = get_all_from_groups()
 
     form = ItemForm()
