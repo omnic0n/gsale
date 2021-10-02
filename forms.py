@@ -29,7 +29,7 @@ class PurchaseForm(FlaskForm):
 class ItemForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired()])
-    group = SelectField('group', coerce=int)
+    group = SelectField('group')
     sold = BooleanField('sold')
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
