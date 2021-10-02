@@ -16,6 +16,9 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
+today = date.today()
+current_date = today.strftime("%Y-%m-%d")
+
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
@@ -218,8 +221,6 @@ def bought_items():
                         (item,details['group'],))
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
-            today = date.today()
-            current_date = today.strftime("%Y-%m-%d")
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0)",
                         (item_id,current_date,))
             mysql.connection.commit()
