@@ -35,6 +35,7 @@ class ItemForm(FlaskForm):
                            validators=[DataRequired()], format='%Y-%m-%d')
     price = StringField('price')
     shipping_fee = StringField('shipping_fee')
+    id = StringField('id')
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):
