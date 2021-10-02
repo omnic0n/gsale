@@ -45,6 +45,45 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
+                    {{ form.price.label(class="form-control-label") }}
+                    {% if form.price.errors %}
+                        {{ form.price(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.price.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.sold(class="form-control form-control-lg", value=sale_id[0]['price']) }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.shipping_fee.label(class="form-control-label") }}
+                    {% if form.shipping_fee.errors %}
+                        {{ form.shipping_fee(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.sold.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.shipping_fee(class="form-control form-control-lg", value=sale_id[0]['shipping_fee']) }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.date.label(class="form-control-label") }}
+                    {% if form.date.errors %}
+                        {{ form.date(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.sold.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.date(class="form-control form-control-lg", value=sale_id[0]['date']) }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
                     {{ form.id.label(class="form-control-label") }}
                     {% if form.id.errors %}
                         {{ form.id(class="form-control form-control-lg is-invalid") }}

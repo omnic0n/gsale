@@ -31,9 +31,7 @@ class ItemForm(FlaskForm):
                            validators=[DataRequired()])
     group = SelectField('group', coerce=int)
     sold = BooleanField('sold')
-    sold_date = DateField('sold_date',
-                           validators=[DataRequired()], format='%Y-%m-%d')
-    purchase_date = DateField('purchase_date',
+    date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
     price = StringField('price')
     shipping_fee = StringField('shipping_fee')
