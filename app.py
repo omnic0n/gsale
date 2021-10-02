@@ -55,15 +55,11 @@ def get_max_group_id():
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
-                    items.name, 
-                    items.sold, 
-                    items.id,
-                    items.group_id, 
-                    purchase.price, 
-                    purchase.date 
-                    FROM items items
-                    INNER JOIN purchase purchase ON purchase.id = items.id
-                    WHERE items.id = %s""", (item_id, ))
+                    name, 
+                    sold, 
+                    id,
+                    roup_id, 
+                    WHERE id = %s""", (item_id, ))
     return list(cur.fetchall())
 
 def get_data_from_group_describe(group_id):
@@ -100,10 +96,10 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
                     items.name, 
                     items.sold,
                     items.group_id,
-                    purchase.date
+                    groups.date
                     FROM items items 
-                    INNER JOIN purchase purchase ON items.id = purchase.id
-                    WHERE purchase.date > %s AND purchase.date < %s AND items.sold = %s""",
+                    INNER JOIN groups groups ON items.group_id = groups.id
+                    WHERE groups.date > %s AND groups.date < %s AND items.sold = %s""",
                     (start_date,end_date,sold,))
         return list(cur.fetchall())
 
@@ -135,9 +131,7 @@ def get_all_from_groups():
 def get_profit():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT SUM(tbl.price) AS price
-                FROM (SELECT price FROM purchase
-                UNION ALL
-                SELECT price FROM groups) tbl""")
+                FROM (SELECT price FROM groups) tbl""")
     purchase = list(cur.fetchall())
     cur.execute("SELECT sum((sale.price - sale.shipping_fee)) AS price FROM sale")
     sale = list(cur.fetchall())
@@ -212,9 +206,26 @@ def bought_items():
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
             group_data = get_all_from_group(details['group'])
-            cur.execute("INSERT INTO purchase(id,date) VALUES (%s,%s)", 
-                        (item_id,group_data['date'],))
+        cur.close()
+        return redirect(url_for('describe_group',group_id=group_data['id']))
+    return render_template('items_purchased.html', form=form)
+
+@app.route('/items/modify',methods=["POST","GET"])
+def bought_items():
+    groups = get_all_from_groups()
+
+    form = ItemForm()
+    form.group.choices = [(group['id'], group['name']) for group in groups]
+    if request.method == "POST":
+        details = request.form
+
+        cur = mysql.connection.cursor()
+        for item in details['name'].splitlines():
+            cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
+                        (item,details['group'],))
             mysql.connection.commit()
+            item_id = str(cur.lastrowid)
+            group_data = get_all_from_group(details['group'])
         cur.close()
         return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
