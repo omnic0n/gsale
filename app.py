@@ -237,11 +237,12 @@ def modify_items():
         details = request.form
 
         cur = mysql.connection.cursor()
-        for item in details['name'].splitlines():
-            cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
-                        (item,details['group'],))
-            mysql.connection.commit()
-            group_data = get_all_from_group(details['group'])
+        cur.execute("UPDATE items SET name = %s, group_id = %s where id = %s", 
+                    (details['name'], details['group'], details['id']))
+        mysql.connection.commit()
+        cur.execute("UPDATE sale SET price = %s, shipping_fee = %s, date = %s where id = %s", 
+                    (details['price'], details['shipping_fee'], details['date'], details['id']))
+        mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=item['id']))
     return render_template('modify_item.html', form=form, item=item, sale=sale)
