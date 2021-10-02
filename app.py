@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm
-from datetime import datetime
+from datetime import datetime, date
 
 
 app = Flask(__name__)
@@ -218,8 +218,10 @@ def bought_items():
                         (item,details['group'],))
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
-            cur.execute("INSERT INTO sale(id,price, shipping_fee) VALUES (%s, 0, 0)",
-                        (item_id,))
+            today = date.today()
+            current_date = today.strftime("%Y-%m-%d")
+            cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0)",
+                        (item_id,current_date,))
             mysql.connection.commit()
             group_data = get_all_from_group(details['group'])
         cur.close()
