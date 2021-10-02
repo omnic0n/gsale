@@ -178,6 +178,26 @@ def group_add():
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
 
+#Data Section
+@app.route('/groups/modify',methods=["POST","GET"])
+def modify_group():
+    id = request.args.get('group_id', type = str)
+    group_id = get_data_from_group_describe(id)
+
+    form = GroupForm()
+
+    if request.method == "POST":
+        details = request.form
+        cur = mysql.connection.cursor()
+        group_name = "%s-%s" % (details['date'],details['name'])
+        cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
+                    (group_name, details['date'], details['price']))
+        mysql.connection.commit()
+        group_id = str(cur.lastrowid)
+        cur.close()
+        return redirect(url_for('describe_group',group_id=group_id))
+    return render_template('modify_group.html', group_id=group_id)
+
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     groups = get_all_from_groups()
