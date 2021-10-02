@@ -58,7 +58,7 @@ def get_data_for_item_describe(item_id):
                     name, 
                     sold, 
                     id,
-                    roup_id, 
+                    group_id, 
                     WHERE id = %s""", (item_id, ))
     return list(cur.fetchall())
 
