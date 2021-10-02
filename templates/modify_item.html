@@ -31,19 +31,6 @@
                         {{ form.group(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
-                <div class="form-group">
-                    {{ form.sold.label(class="form-control-label") }}
-                    {% if form.sold.errors %}
-                        {{ form.sold(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.sold.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.sold(class="form-control form-control-lg", value=item[0]['sold']) }}
-                    {% endif %}
-                </div>
                 {% if item[0]['sold'] %}
                 <div class="form-group">
                     {{ form.price.label(class="form-control-label") }}
