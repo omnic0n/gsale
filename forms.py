@@ -26,6 +26,13 @@ class PurchaseForm(FlaskForm):
     date = DateField('date', format='%Y-%m-%d')
     submit = SubmitField('Submit')
 
+class ItemForm(FlaskForm):
+    name = StringField('name',
+                           validators=[DataRequired()])
+    group = SelectField('group', coerce=int)
+    sold = BooleanField('sold')
+    submit = SubmitField('Submit')
+
 class SaleForm(FlaskForm):
     name = SelectField('name', coerce=int)
     price = StringField('price')
