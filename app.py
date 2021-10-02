@@ -232,6 +232,7 @@ def modify_items():
 
     form = ItemForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
+    form.group.data = item[0]['group_id']
     if request.method == "POST":
         details = request.form
 
