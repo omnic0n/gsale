@@ -196,7 +196,7 @@ def modify_group():
         group_id = str(cur.lastrowid)
         cur.close()
         return redirect(url_for('describe_group',group_id=group_id))
-    return render_template('modify_group.html', group_id=group_id)
+    return render_template('modify_group.html', group_id=group_id, form=form)
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
