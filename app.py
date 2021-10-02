@@ -217,9 +217,10 @@ def bought_items():
             cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
                         (item,details['group'],))
             mysql.connection.commit()
-            cur.execute("INSERT INTO sale(price, shipping_fee) VALUES (0, 0)")
-            mysql.connection.commit()
             item_id = str(cur.lastrowid)
+            cur.execute("INSERT INTO sale(id,price, shipping_fee) VALUES (%s, 0, 0)",
+                        (item_id,))
+            mysql.connection.commit()
             group_data = get_all_from_group(details['group'])
         cur.close()
         return redirect(url_for('describe_group',group_id=group_data['id']))
