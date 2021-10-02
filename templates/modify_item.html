@@ -28,6 +28,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
+                        {{ form.group.process()}}
                         {{ form.group(class="form-control form-control-lg", value=item[0]['group_id']) }}
                     {% endif %}
                 </div>
