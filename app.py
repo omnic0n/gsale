@@ -214,6 +214,8 @@ def bought_items():
 @app.route('/items/modify',methods=["POST","GET"])
 def modify_items():
     groups = get_all_from_groups()
+    id = request.args.get('item', type = str)
+    item = get_data_for_item_describe(id)
 
     form = ItemForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
@@ -229,7 +231,7 @@ def modify_items():
             group_data = get_all_from_group(details['group'])
         cur.close()
         return redirect(url_for('describe_item',item=item['id']))
-    return render_template('modify_item.html', form=form)
+    return render_template('modify_item.html', form=form, item=item)
 
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
