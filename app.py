@@ -189,13 +189,11 @@ def modify_group():
     if request.method == "POST":
         details = request.form
         cur = mysql.connection.cursor()
-        group_name = "%s-%s" % (details['date'],details['name'])
-        cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
-                    (group_name, details['date'], details['price']))
+        cur.execute("UPDATE groups SET name = %s, date = %s, price = %s where id = %s", 
+                    (details['name'], details['date'], details['price'], details['id']))
         mysql.connection.commit()
-        group_id = str(cur.lastrowid)
         cur.close()
-        return redirect(url_for('describe_group',group_id=group_id))
+        return redirect(url_for('describe_group',group_id=details['id']))
     return render_template('modify_group.html', group_id=group_id, form=form)
 
 @app.route('/items/bought',methods=["POST","GET"])
