@@ -20,6 +20,7 @@
             <th>Name</th> 
             <th>Sold</th>
             {% if item[0]['group_id'] != 1 %}<td>Group</td>{% endif %}
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -28,8 +29,9 @@
             <td>{{ item[0]['name'] }}</td>
             <td>{% if sold_state %}True{% else %}False{% endif %}</td>
             {% if item[0]['group_id'] != 1 %}
-            <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</td>
+            <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</a></td>
             {% endif %}
+            <td><a href = "/items/modify?item={{ item[0]['id'] }}">Modify</a></td>
         </tr>
     </tbody>
 </table>
