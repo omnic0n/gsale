@@ -10,6 +10,7 @@ class GroupForm(FlaskForm):
     price = StringField('price')
     date = DateField('date',
                            validators=[DataRequired()], format='%Y-%m-%d')
+    id = StringField('id')
     submit = SubmitField('Submit')
 
 class ListForm(FlaskForm):
