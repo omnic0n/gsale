@@ -31,7 +31,6 @@
                         {{ form.group(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
-                {% if item[0]['sold'] %}
                 <div class="form-group">
                     {{ form.price.label(class="form-control-label") }}
                     {% if form.price.errors %}
@@ -71,7 +70,6 @@
                         {{ form.date(class="form-control form-control-lg", value=sale[0]['date']) }}
                     {% endif %}
                 </div>
-                {% endif %}
                 <div class="form-group">
                     {{ form.id.label(class="form-control-label") }}
                     {% if form.id.errors %}
