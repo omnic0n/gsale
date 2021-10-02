@@ -15,7 +15,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.name(class="form-control form-control-lg") }}
+                        {{ form.name(class="form-control form-control-lg", value=group_id[0]['name']) }}
                     {% endif %}
                 </div>
                 <div class="form-group">
@@ -41,7 +41,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.date(class="form-control form-control-lg") }}
+                        {{ form.date(class="form-control form-control-lg", value=group_id[0]['date']) }}
                     {% endif %}
                 </div>
             </fieldset>
