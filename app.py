@@ -55,12 +55,14 @@ def get_max_group_id():
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
-                    name, 
-                    sold, 
-                    id,
-                    group_id
-                    from items 
-                    WHERE id = %s""", (item_id, ))
+                    items.name, 
+                    items.sold, 
+                    items.id,
+                    items.group_id,
+                    groups.name AS group_name
+                    FROM items items
+                    INNER JOIN groups groups ON items.group_id = groups.id
+                    WHERE items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
 def get_data_from_sale(item_id):
@@ -238,7 +240,6 @@ def modify_items():
             cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
                         (item,details['group'],))
             mysql.connection.commit()
-            item_id = str(cur.lastrowid)
             group_data = get_all_from_group(details['group'])
         cur.close()
         return redirect(url_for('describe_item',item=item['id']))
