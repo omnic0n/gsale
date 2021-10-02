@@ -221,7 +221,7 @@ def bought_items():
                         (item,details['group'],))
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
-            cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0)",
+            cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
                         (item_id,current_date,))
             mysql.connection.commit()
             group_data = get_all_from_group(details['group'])
