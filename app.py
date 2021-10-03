@@ -263,13 +263,8 @@ def sold_items():
         details = request.form
         cur = mysql.connection.cursor()
         cur.execute("UPDATE items SET sold = 1 WHERE id = %s", (details['name'], ))
-        cur.execute("""INSERT INTO sale(
-                    id, 
-                    date, 
-                    price,
-                    shipping_fee) 
-                    VALUES (%s, %s, %s, %s)""", 
-                    (details['name'], details['date'], details['price'], details['shipping_fee'],))
+        cur.execute("UPDATE sale SET date = %s, price = %s, shipping_fee = %s WHERE id = %s", 
+                    (details['date'], details['price'], details['shipping_fee'], details['name'],))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_item',item=details['name']))
