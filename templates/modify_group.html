@@ -57,6 +57,19 @@
                         {{ form.id(class="form-control form-control-lg", readonly="readonly", value=group_id[0]['id']) }}
                     {% endif %}
                 </div>
+                <div class="form-group">
+                    {{ form.image.label(class="form-control-label") }}
+                    {% if form.image.errors %}
+                        {{ form.image(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.image.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.image(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}

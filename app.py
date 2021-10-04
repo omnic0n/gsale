@@ -221,16 +221,15 @@ def group_add():
     if request.method == "POST":
         details = request.form
         group_name = "%s-%s" % (details['date'],details['name'])
-        image = request.files['image']
-        if(image):
-            image_id = upload_image(image)
-            print(image_id)
+        if(request.files['image']):
+            image_id = upload_image(request.files['image'])
+        else:
+            image_id = 'NULL'
         cur = mysql.connection.cursor()
-        #cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
-        #           (group_name, details['date'], details['price']))
+        cur.execute("INSERT INTO groups(name, date, price,image) VALUES (%s, %s, %s, %s)", 
+                   (group_name, details['date'], details['price'], image_id))
         mysql.connection.commit()
-        #group_id = str(cur.lastrowid)
-        group_id = 5
+        group_id = str(cur.lastrowid)
         cur.close()
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
@@ -249,9 +248,13 @@ def modify_group():
 
     if request.method == "POST":
         details = request.form
+        if(request.files['image']):
+            image_id = upload_image(request.files['image'])
+        else:
+            image_id = 'NULL'
         cur = mysql.connection.cursor()
-        cur.execute("UPDATE groups SET name = %s, date = %s, price = %s where id = %s", 
-                    (details['name'], details['date'], details['price'], details['id']))
+        cur.execute("UPDATE groups SET name = %s, date = %s, price = %s, image = %s where id = %s", 
+                    (details['name'], details['date'], details['price'], image_id, details['id']))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_group',group_id=details['id']))
