@@ -43,19 +43,8 @@ def upload_file():
     '''           
 @app.route('/uploads/<name>')
 def download_file(name):
-    full_filename = os.path.join(app.config['UPLOAD_FOLDER'], name)
-    rendered_template = '''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Index</title>
-    </head>
-    <body>
-        <img src= %s >
-    </body>
-    </html>
-    '''
-    return rendered_template % (full_filename)
+    filename = os.path.join(app.config['UPLOAD_FOLDER'], name)
+    return render_template('images.html', filename=filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
