@@ -59,5 +59,10 @@
         {% endfor %}
     </tbody>
 </table>
+{% if group_id[0]['image'] %}
+	<div>
+		<img src="{{ url_for('display_image', filename=filename) }}" width=250 height=250>
+	</div>
+{% endif %}
 {% endblock content %}
 </html>
