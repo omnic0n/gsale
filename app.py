@@ -24,6 +24,21 @@ def get_all_from_group(group_id):
     cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
     return cur.fetchone()
 
+def get_all_from_group_and_items():
+    cur = mysql.connection.cursor()
+    cur.execute(""" SELECT 
+                    groups.name, 
+                    groups.price, 
+                    groups.id,
+                    groups.date,
+                    sum(sale.price - sale.shipping_fee) AS net 
+                    FROM groups groups
+                    RIGHT JOIN items items ON groups.id = items.group_id 
+                    LEFT JOIN sale sale ON sale.id = items.id
+                    GROUP by items.group_id
+                    ORDER by groups.id""")
+    return list(cur.fetchall())
+
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
@@ -43,6 +58,17 @@ def get_data_from_item_groups(group_id):
 def get_all_items_not_sold():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM items WHERE sold = 0 ORDER BY name ASC")
+    return list(cur.fetchall())
+
+def get_all_items_sold():
+    cur = mysql.connection.cursor()    
+    cur.execute("""SELECT
+                    sale.id,
+                    sale.date,
+                    (sale.price - sale.shipping_fee) AS net
+                    FROM sale
+                    INNER JOIN items items ON items.id = sale.id
+                    WHERE items.sold = 1""")
     return list(cur.fetchall())
 
 def get_max_item_id():
@@ -273,34 +299,13 @@ def sold_items():
 #List Section
 @app.route('/groups/list')
 def groups_list():
-    cur = mysql.connection.cursor()
-    cur.execute(""" SELECT 
-                    groups.name, 
-                    groups.price, 
-                    groups.id,
-                    groups.date,
-                    sum(sale.price - sale.shipping_fee) AS net 
-                    FROM groups groups
-                    RIGHT JOIN items items ON groups.id = items.group_id 
-                    LEFT JOIN sale sale ON sale.id = items.id
-                    GROUP by items.group_id
-                    ORDER by groups.id""")
-    groups = list(cur.fetchall())
+    groups = get_all_from_group_and_items()
     return render_template('groups_list.html', groups=groups)
 
 @app.route('/items/sold_list')
 def sold_list():
     items = get_list_of_items_purchased_by_date(sold=1)
-
-    cur = mysql.connection.cursor()    
-    cur.execute("""SELECT
-                    sale.id,
-                    sale.date,
-                    (sale.price - sale.shipping_fee) AS net
-                    FROM sale
-                    INNER JOIN items items ON items.id = sale.id
-                    WHERE items.sold = 1""")
-    sold = list(cur.fetchall())
+    sold = get_all_items_sold()
     return render_template('items_sold_list.html', items=items, sold=sold)
 
 @app.route('/items/unsold_list')
