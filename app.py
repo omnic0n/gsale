@@ -201,7 +201,7 @@ def get_group_profit(group_id):
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def upload_image():
+def upload_image(image):
 	if 'file' not in request.files:
 		flash('No file part')
 		return redirect(request.url)
@@ -231,6 +231,7 @@ def group_add():
         group_name = "%s-%s" % (details['date'],details['name'])
         if details['image']:
             print("file found - %s" % details['image'])
+            upload_image(details['image'])
         else:
             print ("no file")
         cur = mysql.connection.cursor()
