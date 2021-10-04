@@ -45,6 +45,7 @@ def upload_file():
 def download_file():
     file = request.args.get('filename', type = str)
     filename = os.path.join(app.config['UPLOAD_FOLDER'], file)
+    print(filename)
     return render_template('images.html', filename=filename)
 
 if __name__ == '__main__':
