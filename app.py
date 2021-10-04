@@ -229,8 +229,8 @@ def group_add():
     if request.method == "POST":
         details = request.form
         group_name = "%s-%s" % (details['date'],details['name'])
-        if details['file']:
-            print("file found")
+        if details['image']:
+            print("file found - %s" % details['image'])
         else:
             print ("no file")
         cur = mysql.connection.cursor()
