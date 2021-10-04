@@ -31,7 +31,7 @@ def upload_file():
             #filename = secure_filename(file.filename)
             filename = str(random.getrandbits(128)) + '.jpg'
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('download_file', name=filename))
+            return redirect(url_for('download_file', filename=filename))
     return '''
     <!doctype html>
     <title>Upload new File</title>
@@ -42,8 +42,9 @@ def upload_file():
     </form>
     '''           
 @app.route('/images/')
-def download_file(name):
-    filename = os.path.join(app.config['UPLOAD_FOLDER'], name)
+def download_file():
+    file = request.args.get('filename', type = str)
+    filename = os.path.join(app.config['UPLOAD_FOLDER'], file)
     return render_template('images.html', filename=filename)
 
 if __name__ == '__main__':
