@@ -60,9 +60,13 @@
     </tbody>
 </table>
 {% if group_id[0]['image'] %}
+<br>
+<br>
+<center>
 	<div>
-		<img src="{{ url_for('static', filename='uploads/' + group_id[0]['image']) }}" width=250 height=250>
+		<img src="{{ url_for('static', filename='uploads/' + group_id[0]['image']) }}" width=75% height=auto>
 	</div>
+</center>
 {% endif %}
 {% endblock content %}
 </html>
