@@ -31,7 +31,7 @@ def upload_file():
             #filename = secure_filename(file.filename)
             filename = str(random.getrandbits(128)) + '.jpg'
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('download_file', name=filename)
+            return redirect(url_for('download_file', name=filename))
     return '''
     <!doctype html>
     <title>Upload new File</title>
