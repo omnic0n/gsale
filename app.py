@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm
+from upload import upload_file
 from datetime import datetime, date
 
 
