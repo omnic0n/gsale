@@ -229,7 +229,8 @@ def group_add():
         #cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
         #           (group_name, details['date'], details['price']))
         mysql.connection.commit()
-        group_id = str(cur.lastrowid)
+        #group_id = str(cur.lastrowid)
+        group_id = 5
         cur.close()
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
