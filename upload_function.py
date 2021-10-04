@@ -27,10 +27,10 @@ def upload_file():
             flash('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            renamed_file = random.getrandbits(128)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], renamed_file))
-            return redirect(url_for('download_file', name=renamed_file))
+            #filename = secure_filename(file.filename)
+            filename = str(hash = random.getrandbits(128))
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('download_file', name=filename))
     return '''
     <!doctype html>
     <title>Upload new File</title>
