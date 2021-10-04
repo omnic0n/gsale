@@ -230,7 +230,7 @@ def group_add():
         details = request.form
         group_name = "%s-%s" % (details['date'],details['name'])
         if details['image']:
-            print("file found - %s" % details['image'])
+            print("file found - %s" % details['image'].data)
             upload_image(details['image'])
         else:
             print ("no file")
