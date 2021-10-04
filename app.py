@@ -203,7 +203,7 @@ def allowed_file(filename):
 
 def upload_image(file):
     filename = str(random.getrandbits(128)) + '.jpg'
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename)))
     return filename
 
 @app.route('/')
