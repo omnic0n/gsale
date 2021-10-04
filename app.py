@@ -233,6 +233,10 @@ def group_add():
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
 
+@app.route('/display/<filename>')
+def display_image(filename):
+	return redirect(url_for('static', filename='uploads/' + filename), code=301)
+
 #Data Section
 @app.route('/groups/modify',methods=["POST","GET"])
 def modify_group():
