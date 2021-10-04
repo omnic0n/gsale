@@ -202,18 +202,9 @@ def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def upload_image(file):
-	if 'file' not in request.files:
-		print('No file part')
-        return redirect(request.url)
-	file = request.files['file']
-    if file and allowed_file(file.filename):
-        print('Uploading file')
-        filename = str(random.getrandbits(128)) + '.jpg'
-		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-		return filename
-	else:
-		print('Allowed image types are -> png, jpg, jpeg, gif')
-		return redirect(request.url)
+    filename = str(random.getrandbits(128)) + '.jpg'
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    return filename
 
 @app.route('/')
 def index():
