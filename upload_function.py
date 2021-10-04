@@ -50,10 +50,10 @@ def download_file(name):
         <title>Index</title>
     </head>
     <body>
-        <img src="{{ full_filename }}" alt="User Image">
+        <img src= %s alt=User Image>
     </body>
     </html>
-"""
+""", name
 
 if __name__ == '__main__':
     app.run(debug=True)
