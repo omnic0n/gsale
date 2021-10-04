@@ -61,7 +61,7 @@
 </table>
 {% if group_id[0]['image'] %}
 	<div>
-		<img src="{{ url_for('static', filename=group_id[0]['image']) }}" width=250 height=250>
+		<img src="{{ url_for('static/uploads', filename=group_id[0]['image']) }}" width=250 height=250>
 	</div>
 {% endif %}
 {% endblock content %}
