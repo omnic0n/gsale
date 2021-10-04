@@ -205,9 +205,10 @@ def upload_image(file):
 	if 'file' not in request.files:
 		print('No file part')
         return redirect(request.url)
-	if file and allowed_file(file.filename):
+	
+    if file and allowed_file(file.filename):
         print('Uploading file')
-		filename = str(random.getrandbits(128)) + '.jpg'
+        filename = str(random.getrandbits(128)) + '.jpg'
 		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 		return filename
 	else:
