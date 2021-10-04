@@ -203,14 +203,14 @@ def allowed_file(filename):
 
 def upload_image(file):
 	if 'file' not in request.files:
-		flash('No file part')
-		return redirect(request.url)
+		print('No file part')
 	if file and allowed_file(file.filename):
+        print('Uploading file')
 		filename = str(random.getrandbits(128)) + '.jpg'
 		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 		return filename
 	else:
-		flash('Allowed image types are -> png, jpg, jpeg, gif')
+		print('Allowed image types are -> png, jpg, jpeg, gif')
 		return redirect(request.url)
 
 @app.route('/')
