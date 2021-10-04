@@ -3,9 +3,13 @@ from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm
 from upload_function import *
 from datetime import datetime, date
-
+from werkzeug.utils import secure_filename
+import random, os
 
 app = Flask(__name__)
+
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 app.secret_key = '4T3*%go^Gcn7TrYm'
 
@@ -14,6 +18,8 @@ app.config['MYSQL_USER'] = 'gsale'
 app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
 app.config['MYSQL_DB'] = 'gsale'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 mysql = MySQL(app)
 
@@ -191,6 +197,23 @@ def get_group_profit(group_id):
     sale = list(cur.fetchall())
     return sale[0]['price']
 
+
+def allowed_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def upload_image():
+	if 'file' not in request.files:
+		flash('No file part')
+		return redirect(request.url)
+	file = request.files['file']
+	if file and allowed_file(file.filename):
+		filename = str(random.getrandbits(128)) + '.jpg'
+		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+		return filename
+	else:
+		flash('Allowed image types are -> png, jpg, jpeg, gif')
+		return redirect(request.url)
+
 @app.route('/')
 def index():
     profit = get_profit()
@@ -205,10 +228,14 @@ def group_add():
 
     if request.method == "POST":
         details = request.form
-        cur = mysql.connection.cursor()
         group_name = "%s-%s" % (details['date'],details['name'])
-        cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
-                    (group_name, details['date'], details['price']))
+        if details['file']:
+            print("file found")
+        else:
+            print ("no file")
+        cur = mysql.connection.cursor()
+        #cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
+        #           (group_name, details['date'], details['price']))
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
         cur.close()

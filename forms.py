@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField
 from wtforms.fields.html5 import DateField
 from wtforms.validators import DataRequired, Length, EqualTo
 from datetime import datetime
@@ -12,6 +12,7 @@ class GroupForm(FlaskForm):
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')
     id = StringField('id')
+    image = FileField('image')
     submit = SubmitField('Submit')
 
 class ListForm(FlaskForm):
