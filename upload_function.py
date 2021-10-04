@@ -55,7 +55,7 @@ def download_file(name):
     </body>
     </html>
     '''
-    return rendered_template % (name)
+    return rendered_template % (full_filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
