@@ -41,7 +41,7 @@ def upload_file():
       <input type=submit value=Upload>
     </form>
     '''           
-@app.route('/images/')
+@app.route('/images')
 def download_file():
     file = request.args.get('filename', type = str)
     filename = os.path.join(app.config['UPLOAD_FOLDER'], file)
