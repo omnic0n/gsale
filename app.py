@@ -205,7 +205,7 @@ def upload_image(file):
 	if 'file' not in request.files:
 		print('No file part')
         return redirect(request.url)
-	
+	file = request.files['file']
     if file and allowed_file(file.filename):
         print('Uploading file')
         filename = str(random.getrandbits(128)) + '.jpg'
