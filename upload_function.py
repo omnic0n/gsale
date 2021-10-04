@@ -1,5 +1,6 @@
 import os
 from flask import Flask, flash, request, redirect, url_for, send_from_directory
+from flask.templating import render_template
 from werkzeug.utils import secure_filename
 import random
 
@@ -43,17 +44,18 @@ def upload_file():
 @app.route('/uploads/<name>')
 def download_file(name):
     full_filename = os.path.join(app.config['UPLOAD_FOLDER'], name)
-    return '''
+    rendered_template = '''
     <!DOCTYPE html>
     <html>
     <head>
         <title>Index</title>
     </head>
     <body>
-        <img src={{ full_filename }} alt=User Image>
+        <img src= %s >
     </body>
     </html>
     '''
+    return rendered_template % (name)
 
 if __name__ == '__main__':
     app.run(debug=True)
