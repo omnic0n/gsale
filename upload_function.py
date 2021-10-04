@@ -43,17 +43,17 @@ def upload_file():
 @app.route('/uploads/<name>')
 def download_file(name):
     full_filename = os.path.join(app.config['UPLOAD_FOLDER'], name)
-    return """
+    return '''
     <!DOCTYPE html>
     <html>
     <head>
         <title>Index</title>
     </head>
     <body>
-        <img src= %s alt=User Image>
+        <img src={{ full_filename }} alt=User Image>
     </body>
     </html>
-""", name
+    '''
 
 if __name__ == '__main__':
     app.run(debug=True)
