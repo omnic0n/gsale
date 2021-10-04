@@ -2,14 +2,15 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField
 from wtforms.fields.html5 import DateField
 from wtforms.validators import DataRequired, Length, EqualTo
-
+from datetime import datetime
 
 class GroupForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired()])
     price = StringField('price')
     date = DateField('date',
-                           validators=[DataRequired()], format='%Y-%m-%d')
+                        default=datetime.today,
+                        validators=[DataRequired()], format='%Y-%m-%d')
     id = StringField('id')
     submit = SubmitField('Submit')
 
@@ -23,7 +24,7 @@ class PurchaseForm(FlaskForm):
                            validators=[DataRequired()])
     group = SelectField('group', coerce=int, default=1)
     price = StringField('price')
-    date = DateField('date', format='%Y-%m-%d')
+    date = DateField('date', default=datetime.today, format='%Y-%m-%d')
     submit = SubmitField('Submit')
 
 class ItemForm(FlaskForm):
@@ -31,7 +32,8 @@ class ItemForm(FlaskForm):
                            validators=[DataRequired()])
     group = SelectField('group', coerce=int)
     date = DateField('date',
-                           validators=[DataRequired()], format='%Y-%m-%d')
+                        default=datetime.today,
+                        validators=[DataRequired()], format='%Y-%m-%d')
     price = StringField('price')
     shipping_fee = StringField('shipping_fee')
     id = StringField('id')
@@ -41,6 +43,7 @@ class SaleForm(FlaskForm):
     name = SelectField('name', coerce=int)
     price = StringField('price')
     date = DateField('date',
-                           validators=[DataRequired()], format='%Y-%m-%d')
+                        default=datetime.today,
+                        validators=[DataRequired()], format='%Y-%m-%d')
     shipping_fee = StringField('shipping_fee')
     submit = SubmitField('Submit')
