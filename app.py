@@ -222,8 +222,9 @@ def group_add():
         details = request.form
         group_name = "%s-%s" % (details['date'],details['name'])
         image = request.files['image']
-        print("file found - %s" % image)
-        upload_image(image)
+        if(image):
+            image_id = upload_image(image)
+            print(image_id)
         cur = mysql.connection.cursor()
         #cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
         #           (group_name, details['date'], details['price']))
