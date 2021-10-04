@@ -201,11 +201,10 @@ def get_group_profit(group_id):
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def upload_image(image):
+def upload_image(file):
 	if 'file' not in request.files:
 		flash('No file part')
 		return redirect(request.url)
-	file = request.files['file']
 	if file and allowed_file(file.filename):
 		filename = str(random.getrandbits(128)) + '.jpg'
 		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -229,10 +228,9 @@ def group_add():
     if request.method == "POST":
         details = request.form
         group_name = "%s-%s" % (details['date'],details['name'])
-        if form.validate_on_submit():
-            image = form.image.data
-            print("file found - %s" % image)
-            upload_image(image)
+        image = request.files['image']
+        print("file found - %s" % image)
+        upload_image(image)
         cur = mysql.connection.cursor()
         #cur.execute("INSERT INTO groups(name, date, price) VALUES (%s, %s, %s)", 
         #           (group_name, details['date'], details['price']))
