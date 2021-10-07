@@ -221,15 +221,10 @@ def reports():
 
     if request.method == "POST":
         details = request.form
-        if(details['type'] == "Month"):
-            print(details['month'])
-            print(details['year'])
-        else:
-            print(details['year'])
-
-    sold_dates = get_sold_from_date()
-    purchased_dates = get_purchased_from_date()
-    return render_template('reports.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
+        sold_dates = get_sold_from_date(details)
+        purchased_dates = get_purchased_from_date(details)
+        return render_template('reports.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
+    return render_template('reports.html', form=form)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
