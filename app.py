@@ -156,7 +156,7 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
                     (start_date,end_date,sold,))
         return list(cur.fetchall())
 
-def get_sold_from_date():
+def get_sold_from_date(details):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    groups.date,
@@ -167,7 +167,7 @@ def get_sold_from_date():
 					GROUP BY groups.date""")
     return list(cur.fetchall())
 
-def get_purchased_from_date():
+def get_purchased_from_date(details):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT
                    date,
