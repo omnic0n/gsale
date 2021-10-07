@@ -163,6 +163,9 @@ def set_dates(details):
             end_date = ("%s-01-01") % (year + 1)
         else:
             end_date = ("%s-%s-01") % (year + 1, month + 1)
+    
+    print(start_date)
+    print(end_date)
     return start_date, end_date
 
 def get_sold_from_date(start_date, end_date):
