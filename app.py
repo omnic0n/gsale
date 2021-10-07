@@ -217,7 +217,7 @@ def index():
     purchased_dates = get_purchased_from_date()
     return render_template('index.html', profit=profit, sold_dates=sold_dates, purchased_dates=purchased_dates)
 
-@app.route('/reports')
+@app.route('/reports',methods=["POST"])
 def reports():
     form = ReportsForm()
 
