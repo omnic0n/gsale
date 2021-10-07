@@ -66,6 +66,7 @@
                 {% if purchased_date['date'] == sold_date['date'] %}
                 {% set total = sold_date['net'] - purchased_date['price'] %}
                 {% set sum = sum + total %}
+                {{ sum }}
         <tr>
             <td>{{ sold_date['date'] }}</td>
             <td>${{ total }}</td>
