@@ -162,7 +162,7 @@ def set_dates(details):
         if details['month'] == 12:
             end_date = ("%s-01-01") % (year + 1)
         else:
-            end_date = ("%s-%s-01") % (year + 1, month + 1)
+            end_date = ("%s-%s-01") % (year, month + 1)
     
     print(start_date)
     print(end_date)
