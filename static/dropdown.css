@@ -1,14 +1,13 @@
 /* Dropdown Button */
 .dropbtn {
     background-color: #5f788a;
-    color: #5f788a;
+    color: white;
     border: none;
   }
   
   /* The container <div> - needed to position the dropdown content */
   .dropdown {
     display: inline-block;
-    color: white
   }
   
   /* Dropdown Content (Hidden by Default) */
