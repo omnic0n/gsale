@@ -92,27 +92,13 @@
       $("#type").change(function() {
         if ($(this).val() != "1") {
           $('#month').hide();
+          $('#month').removeAttr('required');
+          $('#month').removeAttr('data-error');
         } else {
           $('#month').show();
           $('#month').attr('required', '');
           $('#month').attr('data-error', 'This field is required.');
         }
-      });
-    </script>
-    <script>
-      $(document).ready(function(){
-
-        $('#ebay_percent').hide();
-
-        $("#ebay").click(function(e) {
-          if ($(this).prop('checked')) {
-            $('#ebay_percent').show();
-            $('#ebay_percent').attr('required', '');
-            $('#ebay_percent').attr('data-error', 'This field is required.');
-          } else {
-            $('#ebay_percent').hide();
-          }
-        });
       });
     </script>
   </body>
