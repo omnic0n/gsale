@@ -155,6 +155,7 @@ def set_dates(details):
     print(details['year'])
     print(details['month'])
     if(details['type'] == "Year"):
+        print type(details['year'])
         start_date = str(details['year'] + '-01' +'-01')
         end_date = str(int(details['year'] + 1), '-01', '-01')
         print(start_date)
