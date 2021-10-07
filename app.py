@@ -213,8 +213,6 @@ def upload_image(file):
 @app.route('/')
 def index():
     profit = get_profit()
-    sold_dates = get_sold_from_date()
-    purchased_dates = get_purchased_from_date()
     return render_template('index.html', profit=profit)
 
 @app.route('/reports',methods=["GET", "POST"])
