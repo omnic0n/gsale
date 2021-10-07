@@ -89,23 +89,13 @@
       })));
     </script>
     <script>
-      $("#group").change(function() {
+      $("#type").change(function() {
         if ($(this).val() != "1") {
-          $('#price').hide();
-          $('#location').hide();
-          $('#date').hide();
+          $('#month').hide();
         } else {
-          $('#price').show();
-          $('#price').attr('required', '');
-          $('#price').attr('data-error', 'This field is required.');
-
-          $('#location').show();
-          $('#location').attr('required', '');
-          $('#location').attr('data-error', 'This field is required.');
-
-          $('#date').show();
-          $('#date').attr('required', '');
-          $('#date').attr('data-error', 'This field is required.');
+          $('#month').show();
+          $('#month').attr('required', '');
+          $('#month').attr('data-error', 'This field is required.');
         }
       });
     </script>
