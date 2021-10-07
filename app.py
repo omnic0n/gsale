@@ -223,8 +223,11 @@ def reports():
 
     if request.method == "POST":
         details = request.form
-        print(details)
-        #if details['']
+        if(details['type'] == "Month"):
+            print(details['month'], details['year'])
+        else:
+            print(details['year'])
+            
     profit = get_profit()
     sold_dates = get_sold_from_date()
     purchased_dates = get_purchased_from_date()
