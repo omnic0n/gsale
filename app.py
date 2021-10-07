@@ -157,14 +157,12 @@ def set_dates(details):
     if(details['type'] == "Year"):
         start_date = ("%s-01-01") % (year)
         end_date = ("%s-01-01") % (year + 1)
-        print(start_date)
-        print(end_date)
     else:
-        start_date = ("%s-%s-%s") % (details['year'], details['month'], '01')
+        start_date = ("%s-%s-01") % (year, month)
         if details['month'] == 12:
-            end_date = ("%s-%s-%s") % (details['year']+1, '01', '01')
+            end_date = ("%s-01-01") % (year + 1)
         else:
-            end_date = ("%s-%s-%s") % (details['year']+1, details['month'] + 1, '01')
+            end_date = ("%s-%s-01") % (year + 1, month + 1)
     return start_date, end_date
 
 def get_sold_from_date(start_date, end_date):
