@@ -60,13 +60,12 @@
         </tr>
     </thead>
     <tbody>
-        {% set sum = 0 %}
+        {% set sum = [] %}
         {% for sold_date in sold_dates %}
             {% for purchased_date in purchased_dates %}
                 {% if purchased_date['date'] == sold_date['date'] %}
                 {% set total = sold_date['net'] - purchased_date['price'] %}
-                {% set sum = sum + total %}
-                {{ sum }}
+                {% do sum.append(total) %}
         <tr>
             <td>{{ sold_date['date'] }}</td>
             <td>${{ total }}</td>
