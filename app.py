@@ -223,6 +223,7 @@ def reports():
 
     if request.method == "POST":
         details = request.form
+        print(details)
         #if details['']
     profit = get_profit()
     sold_dates = get_sold_from_date()
