@@ -224,7 +224,8 @@ def reports():
     if request.method == "POST":
         details = request.form
         if(details['type'] == "Month"):
-            print(details[0]['month'], details[0]['year'])
+            print(details['month'])
+            print(details['year'])
         else:
             print(details['year'])
 
