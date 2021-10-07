@@ -22,20 +22,28 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="/groups/create">Add Group</a>
-              <a class="nav-item nav-link" href="/groups/list">List Group</a>
-              <a class="nav-item nav-link" href="/items/sold_list">Sold Items</a>
+              <a class="nav-item nav-link" href="/">Add Group</a>
               <div class="nav-item nav-link dropdown">
-                <button class="dropbtn">Dropdown</button>
+                <button class="dropbtn">Groups</button>
                 <div class="dropdown-content">
-                  <a href="#">Link 1</a>
-                  <a href="#">Link 2</a>
-                  <a href="#">Link 3</a>
+                  <a href="/groups/list">Describe</a>
+                  <a href="/groups/create">Create</a>
                 </div>
               </div>
-              <a class="nav-item nav-link" href="/items/unsold_list">Unsold Items</a>
-              <a class="nav-item nav-link" href="/items/bought">Add Items</a>
-              <a class="nav-item nav-link" href="/items/sold">Sell Item</a>
+              <div class="nav-item nav-link dropdown">
+                <button class="dropbtn">Items</button>
+                <div class="dropdown-content">
+                  <a href="/items/bought">Add</a>
+                  <a href="/items/sold">Sell</a>
+                </div>
+              </div>
+              <div class="nav-item nav-link dropdown">
+                <button class="dropbtn">Describe</button>
+                <div class="dropdown-content">
+                  <a href="/items/sold_list">Sold</a>
+                  <a href="/items/unsold_list">Unsold</a>
+                </div>
+              </div>
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
