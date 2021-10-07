@@ -152,9 +152,11 @@ def get_list_of_items_purchased_by_date(sold=0):
         return list(cur.fetchall())
 
 def set_dates(details):
+    print(details['year'])
+    print(details['month'])
     if(details['type'] == "Year"):
-        start_date = ("%s-%s-%s") % (details['year'], '01', '01')
-        end_date = ("%s-%s-%s") % (details['year']+1, '01', '01')
+        start_date = str("%s-%s-%s") % (details['year'], '01', '01')
+        end_date = str("%s-%s-%s") % (details['year']+1, '01', '01')
     else:
         start_date = ("%s-%s-%s") % (details['year'], details['month'], '01')
         if details['month'] == 12:
