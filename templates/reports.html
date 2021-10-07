@@ -60,6 +60,7 @@
         </tr>
     </thead>
     <tbody>
+        {% set sum = 0 %}
         {% for sold_date in sold_dates %}
             {% for purchased_date in purchased_dates %}
                 {% if purchased_date['date'] == sold_date['date'] %}
