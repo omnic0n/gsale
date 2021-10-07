@@ -48,3 +48,14 @@ class SaleForm(FlaskForm):
                         validators=[DataRequired()], format='%Y-%m-%d')
     shipping_fee = StringField('shipping_fee')
     submit = SubmitField('Submit')
+
+class ReportsForm(FlaskForm):
+    type = SelectField('name', choices=[
+        (1, "Month"), (2, "Year")
+    ] )
+    month = SelectField('month', choices=[
+        (1,"January"),(2, "February"),(3, "March"),(4, "April"),(5, "May"),(6, "June"),(7, "July"),(8, "August"),(9, "September"),(10, "October"),(11, "November"),(12, "December")
+    ])
+    year = SelectField('year', choices=[
+        (2021), (2022)
+    ])

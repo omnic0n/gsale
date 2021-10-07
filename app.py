@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm
 from upload_function import *
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
@@ -216,6 +216,15 @@ def index():
     sold_dates = get_sold_from_date()
     purchased_dates = get_purchased_from_date()
     return render_template('index.html', profit=profit, sold_dates=sold_dates, purchased_dates=purchased_dates)
+
+@app.route('/reports')
+def reports():
+    form = ReportsForm()
+
+    profit = get_profit()
+    sold_dates = get_sold_from_date()
+    purchased_dates = get_purchased_from_date()
+    return render_template('reports.html', form=form, profit=profit, sold_dates=sold_dates, purchased_dates=purchased_dates)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
