@@ -215,7 +215,7 @@ def index():
     profit = get_profit()
     sold_dates = get_sold_from_date()
     purchased_dates = get_purchased_from_date()
-    return render_template('index.html', profit=profit, sold_dates=sold_dates, purchased_dates=purchased_dates)
+    return render_template('index.html', profit=profit)
 
 @app.route('/reports',methods=["GET", "POST"])
 def reports():
@@ -229,10 +229,9 @@ def reports():
         else:
             print(details['year'])
 
-    profit = get_profit()
     sold_dates = get_sold_from_date()
     purchased_dates = get_purchased_from_date()
-    return render_template('reports.html', form=form, profit=profit, sold_dates=sold_dates, purchased_dates=purchased_dates)
+    return render_template('reports.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
