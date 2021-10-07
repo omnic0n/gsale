@@ -137,12 +137,7 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
-        if not start_date:
-            start_date = '1969-01-01'
-        if not end_date:
-            end_date = '3000-01-01'
-
+def get_list_of_items_purchased_by_date(sold=0):
         cur = mysql.connection.cursor()
         cur.execute("""SELECT 
                     items.id, 
@@ -152,11 +147,23 @@ def get_list_of_items_purchased_by_date(start_date='',end_date='',sold=0):
                     groups.date
                     FROM items items 
                     INNER JOIN groups groups ON items.group_id = groups.id
-                    WHERE groups.date > %s AND groups.date < %s AND items.sold = %s""",
-                    (start_date,end_date,sold,))
+                    WHERE items.sold = %s""",
+                    (sold,))
         return list(cur.fetchall())
 
-def get_sold_from_date(details):
+def set_dates(details):
+    if(details['Type'] == "Year"):
+        start_date = ("%s-%s-%s") % (details['year'], '01', '01')
+        end_date = ("%s-%s-%s") % (details['year']+1, '01', '01')
+    else:
+        start_date = ("%s-%s-%s") % (details['year'], details['month'], '01')
+        if details['month'] == 12:
+            end_date = ("%s-%s-%s") % (details['year']+1, '01', '01')
+        else:
+            end_date = ("%s-%s-%s") % (details['year']+1, details['month'] + 1, '01')
+    return start_date, end_date
+
+def get_sold_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    groups.date,
@@ -164,16 +171,20 @@ def get_sold_from_date(details):
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
                     INNER JOIN groups groups ON items.group_id = groups.id
-					GROUP BY groups.date""")
+                    WHERE groups.date >= %s AND groups.date < %s
+					GROUP BY groups.date""",
+                    (start_date, end_date,))
     return list(cur.fetchall())
 
-def get_purchased_from_date(details):
+def get_purchased_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT
                    date,
                    SUM(price) as price
                    FROM groups
-                   GROUP by date""")
+                   WHERE groups.date >= %s AND groups.date < %s
+                   GROUP by date""",
+                   (start_date, end_date,))
     return list(cur.fetchall())
 
 def get_all_from_groups():
@@ -221,8 +232,9 @@ def reports():
 
     if request.method == "POST":
         details = request.form
-        sold_dates = get_sold_from_date(details)
-        purchased_dates = get_purchased_from_date(details)
+        start_date, end_date = set_dates(details)
+        sold_dates = get_sold_from_date(start_date, end_date)
+        purchased_dates = get_purchased_from_date(start_date, end_date)
         return render_template('reports.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
     return render_template('reports.html', form=form)
 
