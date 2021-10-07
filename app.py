@@ -56,10 +56,13 @@ def get_data_from_item_groups(group_id):
     cur.execute(""" SELECT 
                     items.name, 
                     items.sold, 
-                    items.id 
+                    items.id,
+                    sum(sale.price - sale.shipping_fee) AS net 
                     FROM items items
-                    INNER JOIN groups groups ON items.group_id = groups.id 
-                    WHERE items.group_id = %s""", (group_id, ))
+                    INNER JOIN groups groups ON items.group_id = groups.id
+                    LEFT JOIN sale sale ON sale.id = items.id
+                    WHERE items.group_id = %s
+                    GROUP BY items.id""", (group_id, ))
     return list(cur.fetchall())
 
 def get_all_items_not_sold():
