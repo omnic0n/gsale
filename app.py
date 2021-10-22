@@ -290,6 +290,16 @@ def modify_group():
         return redirect(url_for('describe_group',group_id=details['id']))
     return render_template('modify_group.html', group_id=group_id, form=form)
 
+@app.route('/groups/mark_sold',methods=["POST","GET"])
+def modify_group():
+    id = request.args.get('item', type = str)
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE items SET sold = 1 where id = %s", 
+                (id))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('describe_item',item=id))
+
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     groups = get_all_from_groups()

@@ -33,7 +33,7 @@
             <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</a></td>
             {% endif %}
             <td><a href = "/items/modify?item={{ item[0]['id'] }}">Modify</a></td>
-            {% if not item[0]['sold'] %}<td><a href = "/items/modify?item={{ item[0]['id'] }}">Mark as Sold</a></td>{% endif %}
+            {% if not item[0]['sold'] %}<td><a href = "/items/mark_sold?item={{ item[0]['id'] }}">Mark as Sold</a></td>{% endif %}
         </tr>
     </tbody>
 </table>
