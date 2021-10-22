@@ -290,7 +290,7 @@ def modify_group():
         return redirect(url_for('describe_group',group_id=details['id']))
     return render_template('modify_group.html', group_id=group_id, form=form)
 
-@app.route('/groups/mark_sold',methods=["POST","GET"])
+@app.route('/items/mark_sold',methods=["POST","GET"])
 def modify_group():
     id = request.args.get('item', type = str)
     cur = mysql.connection.cursor()
