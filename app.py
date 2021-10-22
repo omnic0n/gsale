@@ -291,7 +291,7 @@ def modify_group():
     return render_template('modify_group.html', group_id=group_id, form=form)
 
 @app.route('/items/mark_sold',methods=["POST","GET"])
-def modify_group():
+def mark_sold():
     id = request.args.get('item', type = str)
     cur = mysql.connection.cursor()
     cur.execute("UPDATE items SET sold = 1 where id = %s", 
