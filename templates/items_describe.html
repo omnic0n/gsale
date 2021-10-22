@@ -7,7 +7,6 @@
                 <div style="float:left;width:25%;">
                     {% if item[0]['id'] != 1 %}<a href = "/items/describe?item={{ item[0]['id'] - 1 }}">Previous Item</a>{% endif %}
                 </div>
-                    <tab>{% if item[0]['id'] != max_item['id'] %}<a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Mark Sold</a>{% endif %}</tab>
                 <div align="right" style="float:right;width:25%;">
                     {% if item[0]['id'] != max_item['id'] %}<a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a>{% endif %}
                 </div>
@@ -33,6 +32,7 @@
             <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</a></td>
             {% endif %}
             <td><a href = "/items/modify?item={{ item[0]['id'] }}">Modify</a></td>
+            <td><a href = "/items/modify?item={{ item[0]['id'] }}">Mark as Sold</a></td>
         </tr>
     </tbody>
 </table>
