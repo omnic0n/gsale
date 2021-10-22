@@ -292,7 +292,7 @@ def modify_group():
 
 @app.route('/items/mark_sold',methods=["POST","GET"])
 def mark_sold():
-    id = request.args.get('item', type = str)
+    id = int(request.args.get('item', type = str))
     print(id)
     cur = mysql.connection.cursor()
     cur.execute("UPDATE items SET sold = 1 where id = %s", 
