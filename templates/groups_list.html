@@ -18,7 +18,7 @@
             {% else %}
                 {% set profit = group['net'] - group['price'] %}    
             {% endif %}
-            {{ all_groups[0][id] }}
+            {{ all_groups[0]['id'] }}
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['price'] }}</td>
