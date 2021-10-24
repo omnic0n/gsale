@@ -14,7 +14,7 @@
         {% set profit = [] %}
         {% for group in all_groups %}
         {% if group['name'] != 'None' %}
-            {% if profit.clear() %}{% endif %}
+            {% if profit.remove() %}{% endif %}
             {% for group_net in groups %}
                 {% if group_net['id'] == group['id'] %} 
                     {% set net = group_net['net'] - group_net['price'] %}
