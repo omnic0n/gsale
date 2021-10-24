@@ -24,7 +24,7 @@
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['price'] }}</td>
-                <td>{% if not profit %}{{ profit[0] }}{% else %}-{{ group['price'] }}{% endif %}</td>
+                <td>{% if profit %}{{ profit[0] }}{% else %}-{{ group['price'] }}{% endif %}</td>
                 <td>{{ group['date'] }}</td>
             </tr>
         {% endif %}
