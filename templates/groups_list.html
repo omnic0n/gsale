@@ -13,7 +13,7 @@
     <tbody>
         {% for group in groups %}
         {% for all_group in all_groups %}
-            {% if group['id'] in all_groups %}
+            {% if group['id'] in all_group %}
                 {{ group['id'] }}
             {% endif %}
         {% endfor %}
