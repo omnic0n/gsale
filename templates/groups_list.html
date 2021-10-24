@@ -15,7 +15,9 @@
         {% if group['name'] != 'None' %}
             {% set profit = 0 %}
             {% for group_net in groups %}
-                {% if group_net['id'] == group['id'] %}   
+                {% if group_net['id'] == group['id'] %} 
+                    {{ group_net['id'] }}
+                    {{ group['id'] }}  
                     {% set profit = group_net['net'] - group_net['price'] %}
                 {% endif %}
             {% endfor %}
