@@ -13,12 +13,10 @@
     <tbody>
         {% for group in all_groups %}
         {% if group['name'] != 'None' %}
+            {% set profit = 0 %}
             {% for group_net in groups %}
                 {% if group_net['id'] == group['id'] %}   
                     {% set profit = group_net['net'] - group_net['price'] %}
-                    {% break %}    
-                {% else %}
-                    {% set profit = 0 %}
                 {% endif %}
             {% endfor %}
             <tr>
