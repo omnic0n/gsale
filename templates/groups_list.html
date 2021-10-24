@@ -11,8 +11,8 @@
         </tr>
     </thead>
     <tbody>
-        {% set profit = ['0'] %}
         {% for group in all_groups %}
+        {% set profit = ['0'] %}
         {% if group['name'] != 'None' %}
             {% if profit.pop(0) %}{% endif %}
             {% for group_net in groups %}
