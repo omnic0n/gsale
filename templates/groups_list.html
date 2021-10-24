@@ -14,11 +14,11 @@
         {% set profit = [] %}
         {% for group in all_groups %}
         {% if group['name'] != 'None' %}
-            {% profit.remove() && profit.append('0') %}
+            {% if profit.remove() && profit.append('0') %}{% endif %}
             {% for group_net in groups %}
                 {% if group_net['id'] == group['id'] %} 
                     {% set net = group_net['net'] - group_net['price'] %}
-                    {% profit.remove() && profit.append(net)}
+                    {% if profit.remove() && profit.append(net)}{% endif %}
                 {% endif %}
             {% endfor %}
             <tr>
