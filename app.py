@@ -369,7 +369,8 @@ def sold_items():
 @app.route('/groups/list')
 def groups_list():
     groups = get_all_from_group_and_items()
-    return render_template('groups_list.html', groups=groups)
+    all_groups = get_all_from_groups()
+    return render_template('groups_list.html', groups=groups, all_groups=all_groups)
 
 @app.route('/items/sold_list')
 def sold_list():
