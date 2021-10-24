@@ -13,7 +13,7 @@
     <tbody>
         {% for group in all_groups %}
         {% set profit = ['0'] %}
-        {% if group['name'] != 'None' %}
+        {% if group['name'] != 'NULL' %}
             {% if profit.pop(0) %}{% endif %}
             {% for group_net in groups %}
                 {% if group_net['id'] == group['id'] %} 
