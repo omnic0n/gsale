@@ -12,7 +12,10 @@
     </thead>
     <tbody>
         {% for group in groups %}
-        {{ group }}
+        {% for all_group in all_groups %}
+            {% if group['id'] in all_groups %}
+                {{ group['id'] }}
+            {% endif %}
         {% if group['name'] != 'None' %}
             {% if not group['net'] %}
                 {% set profit = 0 - group['price'] %}
