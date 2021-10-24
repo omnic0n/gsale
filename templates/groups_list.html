@@ -16,6 +16,7 @@
             {% if group['id'] in all_groups %}
                 {{ group['id'] }}
             {% endif %}
+        {% endfor %}
         {% if group['name'] != 'None' %}
             {% if not group['net'] %}
                 {% set profit = 0 - group['price'] %}
