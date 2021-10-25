@@ -63,11 +63,13 @@
     <tbody>
         {% set ns = namespace() %}
         {% set ns.sum = 0 %}
+        {% set ns.purchase = 0 %}
         {% for sold_date in sold_dates %}
             {% for purchased_date in purchased_dates %}
                 {% if purchased_date['date'] == sold_date['date'] %}
                 {% set total = sold_date['net'] - purchased_date['price'] %}
                 {% set ns.sum = ns.sum + total %}
+                {% set ns.purchase = ns.purchase + purchased_date['price'] %}
         <tr>
             <td>{{ sold_date['date'] }}</td>
             <td>{{ purchased_date['price'] }}</td>
@@ -78,6 +80,7 @@
         {% endfor %}
         <tr>
             <td>Total</td>
+            <td>${{ ns.purchase }}</td>
             <td>${{ ns.sum }}</td>
         </tr>
     </tbody>
