@@ -55,7 +55,8 @@
 <table class="blueTable">
     <thead>
         <tr>
-            <th>Date</th> 
+            <th>Date</th>
+            <th>Purchase Price</th> 
             <th>Profit</th>
         </tr>
     </thead>
@@ -69,6 +70,7 @@
                 {% set ns.sum = ns.sum + total %}
         <tr>
             <td>{{ sold_date['date'] }}</td>
+            <td>{{ purchased_date['price'] }}</td>
             <td>${{ total }}</td>
         </tr>
                {% endif %}
