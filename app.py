@@ -307,7 +307,7 @@ def mark_sold():
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
-    groups = get_all_from_groups()
+    groups = get_all_from_groups(None)
 
     form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
