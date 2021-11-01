@@ -369,7 +369,7 @@ def sold_items():
 #List Section
 @app.route('/groups/list')
 def groups_list():
-    date = request.args.get('date', default = '%', type = str)
+    date = request.args.get('date', type = str)
     print(date)
     groups = get_all_from_group_and_items(date)
     all_groups = get_all_from_groups(date)
