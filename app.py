@@ -367,9 +367,9 @@ def sold_items():
     return render_template('items_sold.html', form=form)
 
 #List Section
-@app.route('/groups/list',methods=["GET"])
+@app.route('/groups/list')
 def groups_list():
-    date = request.args.get('date').strip()
+    date = request.args.get('date', default = '%', type = str)
     groups = get_all_from_group_and_items(date)
     all_groups = get_all_from_groups(date)
     return render_template('groups_list.html', groups=groups, all_groups=all_groups)
