@@ -19,19 +19,6 @@
                     {{ form.type(class="form-control form-control-lg") }}
                 {% endif %}
             </div>
-            <div class="form-group" id="yearType">
-                {{ form.year_type.label() }}
-                {% if form.year_type.errors %}
-                    {{ form.year_type(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.year_type.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ form.year_type(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
             <div class="form-group" id="divMonth">
                 {{ form.month.label() }}
                 {% if form.month.errors %}
