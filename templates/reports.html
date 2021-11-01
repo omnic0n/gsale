@@ -71,7 +71,7 @@
                 {% set ns.sum = ns.sum + total %}
                 {% set ns.purchase = ns.purchase + purchased_date['price'] %}
         <tr>
-            <td>{{ sold_date['date'] }}</td>
+            <td><a href = "/groups/list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
             <td>{{ purchased_date['price'] }}</td>
             <td>${{ total }}</td>
         </tr>
