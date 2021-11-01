@@ -370,6 +370,7 @@ def sold_items():
 @app.route('/groups/list')
 def groups_list():
     date = request.args.get('date', default = '%', type = str)
+    print(date)
     groups = get_all_from_group_and_items(date)
     all_groups = get_all_from_groups(date)
     return render_template('groups_list.html', groups=groups, all_groups=all_groups)
