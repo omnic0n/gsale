@@ -195,7 +195,7 @@ def get_purchased_from_date(start_date, end_date):
 
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM groups WHERE date LIKE %s ORDER BY name ASC", date)
+    cur.execute("SELECT * FROM groups WHERE date LIKE %s ORDER BY name ASC", (date, ))
     return list(cur.fetchall())
 
 def get_profit():
