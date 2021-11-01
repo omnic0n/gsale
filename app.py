@@ -31,7 +31,7 @@ def get_all_from_group(group_id):
     cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
     return cur.fetchone()
 
-def get_all_from_group_and_items():
+def get_all_from_group_and_items(date):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
                     groups.name, 
@@ -42,8 +42,9 @@ def get_all_from_group_and_items():
                     FROM groups groups
                     RIGHT JOIN items items ON groups.id = items.group_id 
                     LEFT JOIN sale sale ON sale.id = items.id
+                    WHERE groups.date LIKE '%s'
                     GROUP by items.group_id
-                    ORDER by groups.id""")
+                    ORDER by groups.id""", (date, ))
     return list(cur.fetchall())
 
 def get_all_from_items(item_id):
@@ -192,9 +193,9 @@ def get_purchased_from_date(start_date, end_date):
                    (start_date, end_date,))
     return list(cur.fetchall())
 
-def get_all_from_groups():
+def get_all_from_groups(date):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM groups ORDER BY name ASC")
+    cur.execute("SELECT * FROM groups WHERE date LIKE '%s' ORDER BY name ASC", date)
     return list(cur.fetchall())
 
 def get_profit():
@@ -366,10 +367,11 @@ def sold_items():
     return render_template('items_sold.html', form=form)
 
 #List Section
-@app.route('/groups/list')
+@app.route('/groups/list',methods=["GET"])
 def groups_list():
-    groups = get_all_from_group_and_items()
-    all_groups = get_all_from_groups()
+    date = request.args.get('date')
+    groups = get_all_from_group_and_items(date)
+    all_groups = get_all_from_groups(date)
     return render_template('groups_list.html', groups=groups, all_groups=all_groups)
 
 @app.route('/items/sold_list')
