@@ -59,4 +59,7 @@ class ReportsForm(FlaskForm):
     year = SelectField('Year', choices=[
         (2021), (2022)
     ])
+    year_type = SelectField('Year_type', choices=[
+        ("Day"), ("Month")
+    ])
     submit = SubmitField('Submit')
