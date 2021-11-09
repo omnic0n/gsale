@@ -75,7 +75,7 @@
             <td><a href = "/items/sold_list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
             <td>${{ sold_date['price'] }}</td>
             <td>${{ sold_date['shipping_fee'] }}</td>
-            <td>${{ sold_date['price'] / sold_date['shipping']}}</td>
+            <td>${{ sold_date['price'] / sold_date['shipping_fee']}}</td>
             <td>${{ sold_date['net'] }}</td>
         </tr>
         {% endfor %}
