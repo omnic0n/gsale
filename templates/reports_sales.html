@@ -76,7 +76,7 @@
             <td>${{ sold_date['price'] }}</td>
             <td>${{ sold_date['shipping_fee'] }}</td>
             {% if sold_date['shipping_fee'] != 0 %}
-                <td>{{ '%0.2f'| format(sold_date['price'] / sold_date['shipping_fee']) }}</td>
+                <td>{{ '%0.2f'| format(sold_date['shipping'] / sold_date['price']) }}</td>
             {% else %}
                 <td>0</td>
             {% endif %}
@@ -87,7 +87,7 @@
             <td>Total</td>
             <td>${{ ns.price }}</td>
             <td>${{ ns.shipping_fee }}</td>
-            <td>{{ '%0.2f'| format(ns.price / ns.shipping_fee) }}</td>
+            <td>{{ '%0.2f'| format(ns.shipping / ns.price) }}</td>
             <td>${{ ns.net }}</td>
         </tr>
     </tbody>
