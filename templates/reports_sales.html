@@ -87,7 +87,7 @@
             <td>Total</td>
             <td>${{ ns.price }}</td>
             <td>${{ ns.shipping_fee }}</td>
-            <td>{{ '%0.2f'| format(ns.shipping / ns.price) }}</td>
+            <td>{{ '%0.2f'| format(ns.shipping_fee / ns.price) }}</td>
             <td>${{ ns.net }}</td>
         </tr>
     </tbody>
