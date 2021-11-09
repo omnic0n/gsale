@@ -56,22 +56,32 @@
     <thead>
         <tr>
             <th>Date</th>
-            <th>Total Sales</th>
+            <th>Sold Price</th>
+            <th>Shipping Fee</th>
+            <th>Net</th>
         </tr>
     </thead>
     <tbody>
         {% set ns = namespace() %}
-        {% set ns.sum = 0 %}
+        {% set ns.price = 0 %}
+        {% set ns.shipping_fee = 0 %}
+        {% set ns.net = 0 %}
         {% for sold_date in sold_dates %}
-            {% set ns.sum = ns.sum + sold_date['net'] %}
+                {% set ns.net = ns.net + sold_date['net'] %}
+                {% set ns.price = ns.price + sold_date['price'] %}
+                {% set ns.shipping_fee = ns.shipping_fee + sold_date['shipping_fee'] %}
         <tr>
-            <td><a href = "/groups/list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
-            <td>{{ sold_date['net'] }}</td>
+            <td><a href = "/items/sold_list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
+            <td>${{ sold_date['price'] }}</td>
+            <td>${{ sold_date['shipping_fee'] }}</td>
+            <td>${{ sold_date['net'] }}</td>
         </tr>
         {% endfor %}
         <tr>
             <td>Total</td>
-            <td>${{ ns.sum }}</td>
+            <td>${{ ns.price }}</td>
+            <td>${{ ns.shipping_fee }}</td>
+            <td>${{ ns.net }}</td>
         </tr>
     </tbody>
 </table>

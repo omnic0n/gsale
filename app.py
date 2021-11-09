@@ -199,6 +199,8 @@ def get_sold_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    sale.date,
+                    sale.price,
+                    sale.shipping_fee,
                     SUM(sale.price - sale.shipping_fee) AS net
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
