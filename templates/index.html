@@ -15,7 +15,7 @@
             <td>${{ profit[1] }}</td>
             <td>${{ profit[0] }}</td>
             <td>${{ profit[0] - profit[1]}}</td>
-            <td>{{ '%0.2f'| format((profit[0] / profit[1])*100) }}%</td>
+            <td>{{ '%0.2f'| format(((profit[0] - profit[1]) / profit[1])*100) }}%</td>
         </tr>
     </tbody>
 </table>
