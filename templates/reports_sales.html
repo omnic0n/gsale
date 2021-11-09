@@ -58,6 +58,7 @@
             <th>Date</th>
             <th>Sold Price</th>
             <th>Shipping Fee</th>
+            <th>Percentage Fee</th>
             <th>Net</th>
         </tr>
     </thead>
@@ -74,6 +75,7 @@
             <td><a href = "/items/sold_list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
             <td>${{ sold_date['price'] }}</td>
             <td>${{ sold_date['shipping_fee'] }}</td>
+            <td>${{ sold_date['price'] / sold_date['shipping']}}</td>
             <td>${{ sold_date['net'] }}</td>
         </tr>
         {% endfor %}
@@ -81,6 +83,7 @@
             <td>Total</td>
             <td>${{ ns.price }}</td>
             <td>${{ ns.shipping_fee }}</td>
+            <td>${{ ns.price / ns.shipping_fee }}</td>
             <td>${{ ns.net }}</td>
         </tr>
     </tbody>
