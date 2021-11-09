@@ -182,7 +182,7 @@ def set_dates(details):
     print(end_date)
     return start_date, end_date
 
-def get_sold_from_date(start_date, end_date):
+def get_group_sold_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    groups.date,
@@ -192,6 +192,18 @@ def get_sold_from_date(start_date, end_date):
                     INNER JOIN groups groups ON items.group_id = groups.id
                     WHERE groups.date >= %s AND groups.date < %s
 					GROUP BY groups.date""",
+                    (start_date, end_date,))
+    return list(cur.fetchall())
+
+def get_sold_from_date(start_date, end_date):
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT 
+				    sale.date,
+                    SUM(sale.price - sale.shipping_fee) AS net
+                    FROM items items 
+                    INNER JOIN sale sale ON items.id = sale.id
+                    WHERE sale.date >= %s AND sale.date < %s
+					GROUP BY sale.date""",
                     (start_date, end_date,))
     return list(cur.fetchall())
 
@@ -248,17 +260,30 @@ def index():
     profit = get_profit()
     return render_template('index.html', profit=profit)
 
-@app.route('/reports',methods=["GET", "POST"])
-def reports():
+@app.route('/reports/profit',methods=["GET", "POST"])
+def reports_profit():
+    form = ReportsForm()
+
+    if request.method == "POST":
+        details = request.form
+        start_date, end_date = set_dates(details)
+        sold_dates = get_group_sold_from_date(start_date, end_date)
+        purchased_dates = get_purchased_from_date(start_date, end_date)
+        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
+    return render_template('reports_profit.html', form=form)
+
+
+@app.route('/reports/sales',methods=["GET", "POST"])
+def reports_sale():
     form = ReportsForm()
 
     if request.method == "POST":
         details = request.form
         start_date, end_date = set_dates(details)
         sold_dates = get_sold_from_date(start_date, end_date)
-        purchased_dates = get_purchased_from_date(start_date, end_date)
-        return render_template('reports.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
-    return render_template('reports.html', form=form)
+        return render_template('reports_sale.html', form=form, sold_dates=sold_dates)
+    return render_template('reports_sale.html', form=form)
+
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
