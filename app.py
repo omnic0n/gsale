@@ -281,8 +281,8 @@ def reports_sale():
         details = request.form
         start_date, end_date = set_dates(details)
         sold_dates = get_sold_from_date(start_date, end_date)
-        return render_template('reports_sale.html', form=form, sold_dates=sold_dates)
-    return render_template('reports_sale.html', form=form)
+        return render_template('reports_sales.html', form=form, sold_dates=sold_dates)
+    return render_template('reports_sales.html', form=form)
 
 
 #Data Section
