@@ -118,6 +118,18 @@ def get_data_for_item_describe(item_id):
                     WHERE items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
+def get_data_for_expense_describe(id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" SELECT 
+                    * FROM expense
+                    WHERE id = %s""", (id, ))
+    return list(cur.fetchall())
+
+def get_max_expense_id():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id FROM expense ORDER BY id DESC LIMIT 0,1")
+    return cur.fetchone()
+
 def get_data_from_sale(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
@@ -493,6 +505,15 @@ def describe_item():
                             item=item,
                             max_item=max_item,
                             sold=item_sold)
+
+@app.route('/expense/describe')
+def describe_item():
+    id = request.args.get('item', type = str)
+    expense = get_data_for_expense_describe(id)
+    max_expense = get_max_expense_id()
+    return render_template('expense_describe.html', 
+                            expense=expense,
+                            max_expense=max_expense)
 
 @app.route('/groups/describe')
 def describe_group():
