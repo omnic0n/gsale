@@ -312,14 +312,23 @@ def group_add():
 def display_image(filename):
 	return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
-@app.route('/expense/add',methods=["POST","GET"])
+@app.route('/expense/gas',methods=["POST","GET"])
 def add_expense():
     form = ExpenseForm()
 
     if request.method == "POST":
         details = request.form
         return redirect(url_for('list_expense'))
-    return render_template('expense_add.html', form=form)
+    return render_template('expense_gas.html', form=form)
+
+@app.route('/expense/item',methods=["POST","GET"])
+def add_expense():
+    form = ExpenseForm()
+
+    if request.method == "POST":
+        details = request.form
+        return redirect(url_for('list_expense'))
+    return render_template('expense_item.html', form=form)
 
 @app.route('/groups/modify',methods=["POST","GET"])
 def modify_group():

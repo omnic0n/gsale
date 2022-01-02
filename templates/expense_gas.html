@@ -18,19 +18,6 @@
                         {{ form.name(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
-                <div class="form-group">
-                    {{ form.type.label(class="form-control-label") }}
-                    {% if form.type.errors %}
-                        {{ form.type(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.type.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.type(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
                 <div class="form-group" id='divMilage'>
                     {{ form.milage.label(class="form-control-label") }}
                     {% if form.milage.errors %}
@@ -42,19 +29,6 @@
                         </div>
                     {% else %}
                         {{ form.milage(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="form-group" id='divPrice'>
-                    {{ form.price.label(class="form-control-label") }}
-                    {% if form.price.errors %}
-                        {{ form.price(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.price.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.price(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
                 <div class="form-group">
