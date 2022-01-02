@@ -15,6 +15,20 @@ class GroupForm(FlaskForm):
     image = FileField('image')
     submit = SubmitField('Submit')
 
+class ExpenseForm(FlaskForm):
+    name = StringField('name',
+                           validators=[DataRequired()])
+    price = StringField('price')
+    date = DateField('date',
+                        default=datetime.today,
+                        validators=[DataRequired()], format='%Y-%m-%d')
+    id = StringField('id')
+    type = SelectField('Type', choices=[
+        (1,"Item"),(2, "Milage"),(3, "Other")])
+    milage = StringField('milage')
+    image = FileField('image')
+    submit = SubmitField('Submit')
+
 class ListForm(FlaskForm):
     start = DateField('start', format='%Y-%m-%d')
     end = DateField('end', format='%Y-%m-%d')

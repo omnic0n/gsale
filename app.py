@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm
 from upload_function import *
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
@@ -314,7 +314,12 @@ def display_image(filename):
 
 @app.route('/expense/add',methods=["POST","GET"])
 def add_expense():
-    id = request.args.get('group_id', type = str)
+    form = ExpenseForm()
+
+    if request.method == "POST":
+        details = request.form
+        return redirect(url_for('list_expense'))
+    return render_template('expense_add.html', form=form)
 
 @app.route('/groups/modify',methods=["POST","GET"])
 def modify_group():
