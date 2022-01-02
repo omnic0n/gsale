@@ -228,6 +228,14 @@ def get_all_from_groups(date):
         cur.execute("SELECT * FROM groups WHERE date LIKE %s ORDER BY name ASC", (date, ))
     return list(cur.fetchall())
 
+def get_all_from_expenses(date):
+    cur = mysql.connection.cursor()
+    if not date:
+        cur.execute("SELECT * FROM expenses ORDER BY name ASC")
+    else:
+        cur.execute("SELECT * FROM expenses WHERE date LIKE %s ORDER BY name ASC", (date, ))
+    return list(cur.fetchall())
+
 def get_profit():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT SUM(tbl.price) AS price
@@ -318,6 +326,17 @@ def expense_gas():
 
     if request.method == "POST":
         details = request.form
+        name = "%s-gas" % (details['date'])
+        if(request.files['image']):
+            image_id = upload_image(request.files['image'])
+        else:
+            image_id = 'NULL'
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO expenses(name, date, milage, image, type) VALUES (%s, %s, %s, %s, %s)", 
+                   (name, details['date'], details['milage'], image_id, 1))
+        mysql.connection.commit()
+        id = str(cur.lastrowid)
+        cur.close()
         return redirect(url_for('list_expense'))
     return render_template('expense_gas.html', form=form)
 
@@ -430,6 +449,8 @@ def sold_items():
 @app.route('/expense/list',methods=["POST","GET"])
 def list_expense():
     date = request.args.get('date', type = str)
+    expenses = get_all_from_expenses(date)
+    return render_template('expenses_list.html', expenses=expenses)
 
 @app.route('/groups/list')
 def groups_list():

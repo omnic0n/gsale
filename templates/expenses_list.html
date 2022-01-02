@@ -1,0 +1,27 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Type</th>
+            <th>Date</th>
+            <th>Price</th>
+            <th>Milage</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for expense in expenses %}
+            <tr>
+                <td><a href = "/expenses/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
+                <td>{{ expense['type'] }}</td>
+                <td>{{ expense['date'] }}</td>
+                <td>{{ expense['price'] }}</td>
+                <td>{{ expense['milage'] }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+</html>
