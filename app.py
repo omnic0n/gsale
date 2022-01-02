@@ -121,13 +121,13 @@ def get_data_for_item_describe(item_id):
 def get_data_for_expense_describe(id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
-                    * FROM expense
+                    * FROM expenses
                     WHERE id = %s""", (id, ))
     return list(cur.fetchall())
 
 def get_max_expense_id():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id FROM expense ORDER BY id DESC LIMIT 0,1")
+    cur.execute("SELECT id FROM expenses ORDER BY id DESC LIMIT 0,1")
     return cur.fetchone()
 
 def get_data_from_sale(item_id):
