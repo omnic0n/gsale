@@ -5,10 +5,10 @@
         <tr>
             <td>
                 <div style="float:left;width:25%;">
-                    {% if expense[0]['id'] != 1 %}<a href = "/expense/describe?expense={{ expense[0]['id'] - 1 }}">Previous expense</a>{% endif %}
+                    {% if expense[0]['id'] != 1 %}<a href = "/expense/describe?id={{ expense[0]['id'] - 1 }}">Previous expense</a>{% endif %}
                 </div>
                 <div align="right" style="float:right;width:25%;">
-                    {% if expense[0]['id'] != max_expense['id'] %}<a href = "/expense/describe?expense={{ expense[0]['id'] + 1 }}">Next expense</a>{% endif %}
+                    {% if expense[0]['id'] != max_expense['id'] %}<a href = "/expense/describe?id={{ expense[0]['id'] + 1 }}">Next expense</a>{% endif %}
                 </div>
             </td>
         </tr>
