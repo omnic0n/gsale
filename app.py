@@ -510,6 +510,7 @@ def describe_item():
 def describe_expense():
     id = request.args.get('item', type = str)
     expense = get_data_for_expense_describe(id)
+    print(expense)
     max_expense = get_max_expense_id()
     return render_template('expense_describe.html', 
                             expense=expense,
