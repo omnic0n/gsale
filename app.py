@@ -313,7 +313,7 @@ def display_image(filename):
 	return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
 @app.route('/expense/gas',methods=["POST","GET"])
-def add_expense():
+def expense_gas():
     form = ExpenseForm()
 
     if request.method == "POST":
@@ -322,7 +322,7 @@ def add_expense():
     return render_template('expense_gas.html', form=form)
 
 @app.route('/expense/item',methods=["POST","GET"])
-def add_expense():
+def expense_item():
     form = ExpenseForm()
 
     if request.method == "POST":
