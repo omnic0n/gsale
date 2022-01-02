@@ -312,7 +312,9 @@ def group_add():
 def display_image(filename):
 	return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
-#Data Section
+@app.route('/expense/add',methods=["POST","GET"])
+def add_expense():
+
 @app.route('/groups/modify',methods=["POST","GET"])
 def modify_group():
     id = request.args.get('group_id', type = str)
@@ -410,6 +412,9 @@ def sold_items():
     return render_template('items_sold.html', form=form)
 
 #List Section
+@app.route('/expense/list',methods=["POST","GET"])
+def list_expense():
+
 @app.route('/groups/list')
 def groups_list():
     date = request.args.get('date', type = str)
