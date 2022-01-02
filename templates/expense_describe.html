@@ -5,10 +5,10 @@
         <tr>
             <td>
                 <div style="float:left;width:25%;">
-                    {% if expense[0]['id'] != 1 %}<a href = "/expense/describe?expense={{ expense[0]['id'] - 1 }}">Previous expense</a>{% endif %}
+                    {% if expense['id'] != 1 %}<a href = "/expense/describe?expense={{ expense['id'] - 1 }}">Previous expense</a>{% endif %}
                 </div>
                 <div align="right" style="float:right;width:25%;">
-                    {% if expense[0]['id'] != max_expense['id'] %}<a href = "/expense/describe?expense={{ expense[0]['id'] + 1 }}">Next expense</a>{% endif %}
+                    {% if expense['id'] != max_expense['id'] %}<a href = "/expense/describe?expense={{ expense['id'] + 1 }}">Next expense</a>{% endif %}
                 </div>
             </td>
         </tr>
@@ -19,22 +19,22 @@
             <th>ID</th> 
             <th>Name</th>
             <th>Date</th> 
-            {% if expense[0]['type'] == 1 %}<th>Milage</th>{% endif %}
-            {% if expense[0]['type'] == 2 %}<th>Price</th>{% endif %}
+            {% if expense['type'] == 1 %}<th>Milage</th>{% endif %}
+            {% if expense['type'] == 2 %}<th>Price</th>{% endif %}
             <th>Type</th>
             <th>Image</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td>{{ expense[0]['id'] }}</td>
-            <td>{{ expense[0]['name'] }}</td>
-            <td>{{ expense[0]['date'] }}</td>
-            {% if expense[0]['type'] == 1 %}<th>{{ expense[0]['milage'] }}</th>{% endif %}
-            {% if expense[0]['type'] == 2 %}<th>{{ expense[0]['price'] }}</th>{% endif %}
-            <td>{{ expense[0]['type'] }}</td>
-            <td>{{ expense[0]['image'] }}</td>
-            <td><a href = "/expense/modify?expense={{ expense[0]['id'] }}">Modify</a></td>
+            <td>{{ expense['id'] }}</td>
+            <td>{{ expense['name'] }}</td>
+            <td>{{ expense['date'] }}</td>
+            {% if expense['type'] == 1 %}<th>{{ expense['milage'] }}</th>{% endif %}
+            {% if expense['type'] == 2 %}<th>{{ expense['price'] }}</th>{% endif %}
+            <td>{{ expense['type'] }}</td>
+            <td>{{ expense['image'] }}</td>
+            <td><a href = "/expense/modify?expense={{ expense['id'] }}">Modify</a></td>
         </tr>
     </tbody>
 </table>
