@@ -1,25 +1,45 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
+Milage
 <table class="blueTable">
     <thead>
         <tr>
             <th>Name</th> 
-            <th>Type</th>
             <th>Date</th>
-            <th>Price</th>
             <th>Milage</th>
         </tr>
     </thead>
     <tbody>
         {% for expense in expenses %}
+            {% if expense['type'] == 1 %}
             <tr>
                 <td><a href = "/expenses/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
-                <td>{{ expense['type'] }}</td>
                 <td>{{ expense['date'] }}</td>
-                <td>{{ expense['price'] }}</td>
                 <td>{{ expense['milage'] }}</td>
             </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+Items
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Date</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for expense in expenses %}
+            {% if expense['type'] == 2 %}
+            <tr>
+                <td><a href = "/expenses/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
+                <td>{{ expense['date'] }}</td>
+                <td>{{ expense['price'] }}</td>
+            </tr>
+            {% endif %}
         {% endfor %}
     </tbody>
 </table>
