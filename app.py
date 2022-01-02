@@ -314,6 +314,7 @@ def display_image(filename):
 
 @app.route('/expense/add',methods=["POST","GET"])
 def add_expense():
+    id = request.args.get('group_id', type = str)
 
 @app.route('/groups/modify',methods=["POST","GET"])
 def modify_group():
@@ -414,11 +415,11 @@ def sold_items():
 #List Section
 @app.route('/expense/list',methods=["POST","GET"])
 def list_expense():
+    date = request.args.get('date', type = str)
 
 @app.route('/groups/list')
 def groups_list():
     date = request.args.get('date', type = str)
-    print(date)
     groups = get_all_from_group_and_items(date)
     all_groups = get_all_from_groups(date)
     return render_template('groups_list.html', groups=groups, all_groups=all_groups)
