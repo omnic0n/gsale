@@ -508,7 +508,7 @@ def describe_item():
 
 @app.route('/expense/describe')
 def describe_expense():
-    id = request.args.get('item', type = str)
+    id = request.args.get('id', type = str)
     expense = get_data_for_expense_describe(id)
     print(expense)
     max_expense = get_max_expense_id()
