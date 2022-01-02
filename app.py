@@ -346,6 +346,17 @@ def expense_item():
 
     if request.method == "POST":
         details = request.form
+        name = "%s-%s" % (details['date'], details['name'])
+        if(request.files['image']):
+            image_id = upload_image(request.files['image'])
+        else:
+            image_id = 'NULL'
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
+                   (name, details['date'], details['price'], image_id, 2))
+        mysql.connection.commit()
+        id = str(cur.lastrowid)
+        cur.close()
         return redirect(url_for('list_expense'))
     return render_template('expense_item.html', form=form)
 
