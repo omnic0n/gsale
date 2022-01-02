@@ -123,10 +123,16 @@
               $('#milage').hide();
               $('#milage').removeAttr('required');
               $('#milage').removeAttr('data-error');
+              $('#divMilage').hide();
+              $('#divMilage').removeAttr('required');
+              $('#divMilage').removeAttr('data-error');
             } else {
               $('#milage').show();
               $('#milage').attr('required', '');
               $('#milage').attr('data-error', 'This field is required.');
+              $('#divMilage').show();
+              $('#divMilage').attr('required', '');
+              $('#divMilage').attr('data-error', 'This field is required.');
             }
           });
           $("#type").trigger("change");
