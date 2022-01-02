@@ -14,7 +14,7 @@ Milage
         {% for expense in expenses %}
             {% if expense['type'] == 1 %}
             <tr>
-                <td><a href = "/expenses/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
+                <td><a href = "/expense/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
                 <td>{{ expense['date'] }}</td>
                 <td>{{ expense['milage'] }}</td>
             </tr>
@@ -35,7 +35,7 @@ Items
         {% for expense in expenses %}
             {% if expense['type'] == 2 %}
             <tr>
-                <td><a href = "/expenses/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
+                <td><a href = "/expense/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
                 <td>{{ expense['date'] }}</td>
                 <td>{{ expense['price'] }}</td>
             </tr>
