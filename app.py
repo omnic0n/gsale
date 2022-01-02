@@ -507,7 +507,7 @@ def describe_item():
                             sold=item_sold)
 
 @app.route('/expense/describe')
-def describe_item():
+def describe_expense():
     id = request.args.get('item', type = str)
     expense = get_data_for_expense_describe(id)
     max_expense = get_max_expense_id()
