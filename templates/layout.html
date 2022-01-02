@@ -99,35 +99,20 @@
     </script>
     <script>
       $("#type").change(function() {
-        if ($(this).val() == "Month") {
-          $('#month').show();
-          $('#month').attr('required', '');
-          $('#month').attr('data-error', 'This field is required.');
-          $('#divMonth').show();
-          $('#divMonth').attr('required', '');
-          $('#divMonth').attr('data-error', 'This field is required.');
-        } 
-        elif ($(this).val() == "Milage") {
-          $('#milage').show();
-          $('#milage').attr('required', '');
-          $('#milage').attr('data-error', 'This field is required.');
-          $('#divMilage').show();
-          $('#divMilage').attr('required', '');
-          $('#divMilage').attr('data-error', 'This field is required.');
-      }
-      else {
+        if ($(this).val() != "Month") {
           $('#month').hide();
           $('#month').removeAttr('required');
           $('#month').removeAttr('data-error');
           $('#divMonth').hide();
           $('#divMonth').removeAttr('required');
           $('#divMonth').removeAttr('data-error');
-          $('#milage').hide();
-          $('#milage').removeAttr('required');
-          $('#milage').removeAttr('data-error');
-          $('#divMilage').hide();
-          $('#divMilage').removeAttr('required');
-          $('#divMilage').removeAttr('data-error');
+        } else {
+          $('#month').show();
+          $('#month').attr('required', '');
+          $('#month').attr('data-error', 'This field is required.');
+          $('#divMonth').show();
+          $('#divMonth').attr('required', '');
+          $('#divMonth').attr('data-error', 'This field is required.');
         }
       });
       $("#type").trigger("change");
