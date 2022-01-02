@@ -114,11 +114,6 @@
           $('#divMonth').attr('required', '');
           $('#divMonth').attr('data-error', 'This field is required.');
         }
-      });
-      $("#type").trigger("change");
-    </script>
-    <script>
-      $("#type").change(function() {
         if ($(this).val() != "Milage") {
           $('#milage').hide();
           $('#milage').removeAttr('required');
