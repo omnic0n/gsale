@@ -396,7 +396,7 @@ def modify_expense():
 
         cur = mysql.connection.cursor()
         cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
-                    (details['name'], details['date'], price, milage, details['type'], image_id, details['id']))
+                    (details['name'], details['date'], str(price), str(milage), details['type'], image_id, details['id']))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_expense',id=details['id']))
