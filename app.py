@@ -389,14 +389,14 @@ def modify_expense():
         
         if(expense[0]['type'] == 1):
             price = 0
-            milage = details[0]['milage']
+            milage = details['milage']
         else:
-            price = details[0]['price']
+            price = details['price']
             milage = 0
 
         cur = mysql.connection.cursor()
         cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
-                    (details['name'], details['date'], str(price), str(milage), details['type'], image_id, details['id']))
+                    (details['name'], details['date'], price, milage, details['type'], image_id, details['id']))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_expense',id=details['id']))
