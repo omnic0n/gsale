@@ -385,12 +385,6 @@ def modify_expense():
             image_id = upload_image(request.files['image'])
         else:
             image_id = 'NULL'
-        if(details['type'] == 1):
-            details['price'] = 0
-        elif(details['type'] == 2):
-            details['milage'] = 0
-        else:
-            print("Unknown value")
         cur = mysql.connection.cursor()
         cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
                     (details['name'], details['date'], details['price'], details['milage'], details['type'], image_id, details['id']))
