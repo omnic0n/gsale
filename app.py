@@ -373,7 +373,7 @@ def expense_item():
     return render_template('expense_item.html', form=form)
 
 @app.route('/expense/modify',methods=["POST","GET"])
-def modify_group():
+def modify_expense():
     id = request.args.get('id', type = str)
     expense = get_data_for_expense_describe(id)
 
