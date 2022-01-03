@@ -393,7 +393,8 @@ def modify_expense():
         else:
             price = expense[0]['price']
             milage = 0
-            
+
+        print(expense[0])
         cur = mysql.connection.cursor()
         cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
                     (details['name'], details['date'], price, milage, details['type'], image_id, details['id']))
