@@ -389,9 +389,9 @@ def modify_expense():
         
         if(expense[0]['type'] == 1):
             price = 0
-            milage = expense[0]['milage']
+            milage = details[0]['milage']
         else:
-            price = expense[0]['price']
+            price = details[0]['price']
             milage = 0
 
         cur = mysql.connection.cursor()
