@@ -31,8 +31,8 @@
             <td>{{ expense[0]['id'] }}</td>
             <td>{{ expense[0]['name'] }}</td>
             <td>{{ expense[0]['date'] }}</td>
-            {% if expense[0]['type'] == 1 %}<th>{{ expense[0]['milage'] }}</th>{% endif %}
-            {% if expense[0]['type'] == 2 %}<th>{{ expense[0]['price'] }}</th>{% endif %}
+            {% if expense[0]['type'] == 1 %}<td>{{ expense[0]['milage'] }}</td>{% endif %}
+            {% if expense[0]['type'] == 2 %}<td>{{ expense[0]['price'] }}</td>{% endif %}
             <td>{{ expense[0]['type'] }}</td>
             <td>{{ expense[0]['image'] }}</td>
             <td><a href = "/expense/modify?id={{ expense[0]['id'] }}">Modify</a></td>
