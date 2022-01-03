@@ -372,6 +372,27 @@ def expense_item():
         return redirect(url_for('list_expense'))
     return render_template('expense_item.html', form=form)
 
+@app.route('/expense/modify',methods=["POST","GET"])
+def modify_group():
+    id = request.args.get('id', type = str)
+    expense = get_data_for_expense_describe(id)
+
+    form = ExpenseForm()
+
+    if request.method == "POST":
+        details = request.form
+        if(request.files['image']):
+            image_id = upload_image(request.files['image'])
+        else:
+            image_id = 'NULL'
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
+                    (details['name'], details['date'], details['price'], details['milage'], details['type'], image_id, details['id']))
+        mysql.connection.commit()
+        cur.close()
+        return redirect(url_for('describe_expense',id=details['id']))
+    return render_template('modify_expense.html', expense=expense, form=form)
+
 @app.route('/groups/modify',methods=["POST","GET"])
 def modify_group():
     id = request.args.get('group_id', type = str)

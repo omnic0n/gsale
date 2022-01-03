@@ -35,7 +35,7 @@
             {% if expense[0]['type'] == 2 %}<th>{{ expense[0]['price'] }}</th>{% endif %}
             <td>{{ expense[0]['type'] }}</td>
             <td>{{ expense[0]['image'] }}</td>
-            <td><a href = "/expense/modify?expense={{ expense[0]['id'] }}">Modify</a></td>
+            <td><a href = "/expense/modify?id={{ expense[0]['id'] }}">Modify</a></td>
         </tr>
     </tbody>
 </table>
