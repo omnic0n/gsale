@@ -323,8 +323,9 @@ def reports_expenses():
     if request.method == "POST":
         details = request.form
         start_date, end_date = set_dates(details)
-        expenses_dates = get_expenses_from_date(start_date, end_date, details['expense_type'])
-        return render_template('reports_expenses.html', form=form, expenses_dates=expenses_dates, expense_type=details['expense_type'])
+        expense_type = int(details['expense_type'])
+        expenses_dates = get_expenses_from_date(start_date, end_date, expense_type)
+        return render_template('reports_expenses.html', form=form, expenses_dates=expenses_dates, expense_type=expense_type)
     return render_template('reports_expenses.html', form=form)
 
 #Data Section
