@@ -46,16 +46,16 @@
                 {% endif %}
             </div>
             <div class="form-group">
-                {{ form.type.label(class="form-control-label") }}
-                {% if form.type.errors %}
-                    {{ form.type(class="form-control form-control-lg is-invalid") }}
+                {{ form.expense_type.label(class="form-control-label") }}
+                {% if form.expense_type.errors %}
+                    {{ form.expense_type(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                        {% for error in form.type.errors %}
+                        {% for error in form.expense_type.errors %}
                             <span>{{ error }}</span>
                         {% endfor %}
                     </div>
                 {% else %}
-                    {{ form.type(class="form-control form-control-lg") }}
+                    {{ form.expense_type(class="form-control form-control-lg") }}
                 {% endif %}
             </div>
     </fieldset>
@@ -70,8 +70,8 @@
         <tr>
             <th>Date</th>
             <th>Expense Name</th>
-            {% if type == 1 %}<th>Expense Milage</th>{% endif %}
-            {% if type == 2 %}<th>Expense Price</th>{% endif %}
+            {% if expense_type == 1 %}<th>Expense Milage</th>{% endif %}
+            {% if expense_type == 2 %}<th>Expense Price</th>{% endif %}
         </tr>
     </thead>
     <tbody>
@@ -83,14 +83,14 @@
                 {% set ns.price = ns.price + expense_date['price'] %}
         <tr>
             <td><a href = "/expense/list?date={{ expense_date['date'] }}">{{ expense_date['date'] }}</a></td>
-            {% if type == 1 %}<td>${{ expense_date['milage'] }}</td>{% endif %}
-            {% if type == 2 %}<td>${{ expense_date['price'] }}</td>{% endif %}
+            {% if expense_type == 1 %}<td>${{ expense_date['milage'] }}</td>{% endif %}
+            {% if expense_type == 2 %}<td>${{ expense_date['price'] }}</td>{% endif %}
         </tr>
         {% endfor %}
         <tr>
             <td>Total</td>
-            {% if type == 1 %}<td>${{ ns.milage }}</td>{% endif %}
-            {% if type == 2 %}<td>${{ ns.price }}</td>{% endif %}
+            {% if expense_type == 1 %}<td>${{ ns.milage }}</td>{% endif %}
+            {% if expense_type == 2 %}<td>${{ ns.price }}</td>{% endif %}
         </tr>
     </tbody>
 </table>
