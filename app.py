@@ -325,7 +325,7 @@ def reports_expenses():
         start_date, end_date = set_dates(details)
         print(details['type'])
         expenses_dates = get_expenses_from_date(start_date, end_date, details['expense_type'])
-        return render_template('reports_expenses.html', form=form, expenses_dates=expenses_dates, type=details['expense_type'])
+        return render_template('reports_expenses.html', form=form, expenses_dates=expenses_dates, expense_type=details['expense_type'])
     return render_template('reports_expenses.html', form=form)
 
 #Data Section
