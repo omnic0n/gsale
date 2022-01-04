@@ -22,7 +22,6 @@
             {% if expense[0]['type'] == 1 %}<th>Milage</th>{% endif %}
             {% if expense[0]['type'] == 2 %}<th>Price</th>{% endif %}
             <th>Type</th>
-            <th>Image</th>
             <th></th>
         </tr>
     </thead>
@@ -34,11 +33,18 @@
             {% if expense[0]['type'] == 1 %}<td>{{ expense[0]['milage'] }}</td>{% endif %}
             {% if expense[0]['type'] == 2 %}<td>{{ expense[0]['price'] }}</td>{% endif %}
             <td>{{ expense[0]['type'] }}</td>
-            <td>{{ expense[0]['image'] }}</td>
             <td><a href = "/expense/modify?id={{ expense[0]['id'] }}">Modify</a></td>
         </tr>
     </tbody>
 </table>
 <br>
+{% if expense[0]['image'] %}
+<br>
+<center>
+	<div>
+		<img src="{{ url_for('static', filename='uploads/' + expense[0]['image']) }}" width=75% height=auto>
+	</div>
+</center>
+{% endif %}
 {% endblock content %}
 </html>
