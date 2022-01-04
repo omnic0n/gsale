@@ -306,6 +306,17 @@ def reports_sale():
         return render_template('reports_sales.html', form=form, sold_dates=sold_dates)
     return render_template('reports_sales.html', form=form)
 
+@app.route('/reports/expenses',methods=["GET", "POST"])
+def reports_expenses():
+    form = ReportsForm()
+
+    if request.method == "POST":
+        details = request.form
+        start_date, end_date = set_dates(details)
+        sold_dates = get_group_sold_from_date(start_date, end_date)
+        purchased_dates = get_purchased_from_date(start_date, end_date)
+        return render_template('reports_expenses.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
+    return render_template('reports_expenses.html', form=form)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
