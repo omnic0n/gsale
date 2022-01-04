@@ -232,6 +232,16 @@ def get_purchased_from_date(start_date, end_date):
                    (start_date, end_date,))
     return list(cur.fetchall())
 
+def get_expenses_from_date(start_date, end_date, type):
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT 
+				    * FROM expenses
+                    WHERE date >= %s AND date < %s
+                    AND type = %s
+					GROUP BY date""",
+                    (start_date, end_date, type,))
+    return list(cur.fetchall())
+
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     if not date:
@@ -313,9 +323,8 @@ def reports_expenses():
     if request.method == "POST":
         details = request.form
         start_date, end_date = set_dates(details)
-        sold_dates = get_group_sold_from_date(start_date, end_date)
-        purchased_dates = get_purchased_from_date(start_date, end_date)
-        return render_template('reports_expenses.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
+        expenses_dates = get_expenses_from_date(start_date, end_date, details['type'])
+        return render_template('reports_expenses.html', form=form, expenses_dates=expenses_dates, type=details['type'])
     return render_template('reports_expenses.html', form=form)
 
 #Data Section
