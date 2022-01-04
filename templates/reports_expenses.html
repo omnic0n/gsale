@@ -83,6 +83,7 @@
                 {% set ns.price = ns.price + expense_date['price'] %}
         <tr>
             <td><a href = "/expense/list?date={{ expense_date['date'] }}">{{ expense_date['date'] }}</a></td>
+            <td>{{ expense_date['name'] }}</td>
             {% if expense_type == 1 %}<td>${{ expense_date['milage'] }}</td>{% endif %}
             {% if expense_type == 2 %}<td>${{ expense_date['price'] }}</td>{% endif %}
         </tr>
