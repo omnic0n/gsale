@@ -238,7 +238,7 @@ def get_expenses_from_date(start_date, end_date, type):
 				    * FROM expenses
                     WHERE date >= %s AND date < %s
                     AND type = %s
-					GROUP BY date""",
+					ORDER BY date""",
                     (start_date, end_date, type,))
     return list(cur.fetchall())
 
