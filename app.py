@@ -84,15 +84,24 @@ def get_all_items_not_sold():
     cur.execute("SELECT * FROM items WHERE sold = 0 ORDER BY name ASC")
     return list(cur.fetchall())
 
-def get_all_items_sold():
+def get_all_items_sold(date):
     cur = mysql.connection.cursor()    
-    cur.execute("""SELECT
-                    sale.id,
-                    sale.date,
-                    (sale.price - sale.shipping_fee) AS net
-                    FROM sale
-                    INNER JOIN items items ON items.id = sale.id
-                    WHERE items.sold = 1""")
+    if date:
+        cur.execute("""SELECT
+                        sale.id,
+                        sale.date,
+                        (sale.price - sale.shipping_fee) AS net
+                        FROM sale
+                        INNER JOIN items items ON items.id = sale.id
+                        WHERE items.sold = 1 AND date = %s""", (date, ))
+    else:
+        cur.execute("""SELECT
+                        sale.id,
+                        sale.date,
+                        (sale.price - sale.shipping_fee) AS net
+                        FROM sale
+                        INNER JOIN items items ON items.id = sale.id
+                        WHERE items.sold = 1""")
     return list(cur.fetchall())
 
 def get_max_item_id():
@@ -535,8 +544,9 @@ def groups_list():
 
 @app.route('/items/sold_list')
 def sold_list():
+    date = request.args.get('date', type = str)
     items = get_list_of_items_purchased_by_date(sold=1)
-    sold = get_all_items_sold()
+    sold = get_all_items_sold(date)
     return render_template('items_sold_list.html', items=items, sold=sold)
 
 @app.route('/items/unsold_list')
