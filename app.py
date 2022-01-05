@@ -183,7 +183,7 @@ def get_list_of_items_purchased_by_date(sold=0):
                     groups.date
                     FROM items items 
                     INNER JOIN groups groups ON items.group_id = groups.id
-                    INNER JOIN sales sales on items.id = sales.id
+                    INNER JOIN sale sale on items.id = sales.id
                     WHERE items.sold = %s""",
                     (sold,))
         return list(cur.fetchall())
