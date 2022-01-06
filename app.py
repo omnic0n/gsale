@@ -566,8 +566,8 @@ def sold_list():
 
 @app.route('/items/unsold_list')
 def unsold_list():
-    items = get_list_of_items_purchased_by_date(sold=0)
-
+    date = request.args.get('date', type = str)
+    items = get_list_of_items_purchased_by_date(date, sold=0)
     return render_template('items_unsold_list.html', items=items)
 
 #Describe Section
