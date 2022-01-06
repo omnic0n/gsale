@@ -176,7 +176,7 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                         FROM items items 
                         INNER JOIN groups groups ON items.group_id = groups.id
                         INNER JOIN sale sale on items.id = sale.id
-                        WHERE items.sold = %s AND sale.date = %s""", (date, sold,))
+                        WHERE sale.date = %s""", (date,))
         else:    
             cur.execute("""SELECT 
                         items.id, 
