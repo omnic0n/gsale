@@ -88,6 +88,19 @@
             {% if expense_type == 2 %}<td>{{ expense_date['price'] }}</td>{% endif %}
         </tr>
         {% endfor %}
+    </tbody>
+</table>
+
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Total</th>
+            <th>Expense Name</th>
+            {% if expense_type == 1 %}<th>Expense Milage</th>{% endif %}
+            {% if expense_type == 2 %}<th>Expense Price</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
         <tr>
             <td>Total</td>
             <td></td>
