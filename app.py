@@ -172,7 +172,7 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(sold=0, date):
+def get_list_of_items_purchased_by_date(date, sold=0):
         cur = mysql.connection.cursor()
         if date:
              cur.execute("""SELECT 
@@ -560,7 +560,7 @@ def groups_list():
 @app.route('/items/sold_list')
 def sold_list():
     date = request.args.get('date', type = str)
-    items = get_list_of_items_purchased_by_date(sold=1, date)
+    items = get_list_of_items_purchased_by_date(date, sold=1)
     sold = get_all_items_sold(date)
     return render_template('items_sold_list.html', items=items, sold=sold)
 
