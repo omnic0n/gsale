@@ -552,7 +552,9 @@ def groups_list():
 def sold_list():
     date = request.args.get('date', type = str)
     items = get_list_of_items_purchased_by_date(date, sold=1)
+    print(items)
     sold = get_all_items_sold()
+    print(sold)
     return render_template('items_sold_list.html', items=items, sold=sold)
 
 @app.route('/items/unsold_list')

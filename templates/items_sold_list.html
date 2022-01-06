@@ -13,12 +13,10 @@
     </thead>
     <tbody>
         {% for item in items %}
-        {{ item['id']}}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{{ item['date'] }}</td>
             {% for sold_item in sold %}
-                {{ item['id']}} - {{sold_item['id']}}
                 {% if item['id'] == sold_item['id'] %}
                     <td>{{ sold_item['date']}}</td>
                     <td>{{ sold_item['net']}}</td>
