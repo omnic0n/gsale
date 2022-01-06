@@ -172,20 +172,33 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(sold=0):
+def get_list_of_items_purchased_by_date(sold=0, date):
         cur = mysql.connection.cursor()
-        cur.execute("""SELECT 
-                    items.id, 
-                    items.name, 
-                    items.sold,
-                    items.group_id,
-                    sale.date as sales_date,
-                    groups.date
-                    FROM items items 
-                    INNER JOIN groups groups ON items.group_id = groups.id
-                    INNER JOIN sale sale on items.id = sale.id
-                    WHERE items.sold = %s""",
-                    (sold,))
+        if date:
+             cur.execute("""SELECT 
+                        items.id, 
+                        items.name, 
+                        items.sold,
+                        items.group_id,
+                        sale.date as sales_date,
+                        groups.date
+                        FROM items items 
+                        INNER JOIN groups groups ON items.group_id = groups.id
+                        INNER JOIN sale sale on items.id = sale.id
+                        WHERE items.sold = %s AND sale.date = %s""", (date, sold,))
+        else:    
+            cur.execute("""SELECT 
+                        items.id, 
+                        items.name, 
+                        items.sold,
+                        items.group_id,
+                        sale.date as sales_date,
+                        groups.date
+                        FROM items items 
+                        INNER JOIN groups groups ON items.group_id = groups.id
+                        INNER JOIN sale sale on items.id = sale.id
+                        WHERE items.sold = %s""",
+                        (sold,))
         return list(cur.fetchall())
 
 def set_dates(details):
@@ -547,7 +560,7 @@ def groups_list():
 @app.route('/items/sold_list')
 def sold_list():
     date = request.args.get('date', type = str)
-    items = get_list_of_items_purchased_by_date(sold=1)
+    items = get_list_of_items_purchased_by_date(sold=1, date)
     sold = get_all_items_sold(date)
     return render_template('items_sold_list.html', items=items, sold=sold)
 
