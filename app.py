@@ -190,7 +190,7 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                         INNER JOIN sale sale on items.id = sale.id
                         WHERE items.sold = %s""",
                         (sold,))
-        print(list(cur.fetchall()))
+        print(cur.fetchall())
         return list(cur.fetchall())
 
 def set_dates(details):
