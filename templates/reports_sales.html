@@ -73,14 +73,14 @@
                 {% set ns.shipping_fee = ns.shipping_fee + sold_date['shipping_fee'] %}
         <tr>
             <td><a href = "/items/sold_list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
-            <td>${{ sold_date['price'] }}</td>
-            <td>${{ sold_date['shipping_fee'] }}</td>
+            <td>{{ sold_date['price'] }}</td>
+            <td>{{ sold_date['shipping_fee'] }}</td>
             {% if sold_date['price'] != 0 %}
                 <td>{{ '%0.2f'| format((sold_date['shipping_fee'] / sold_date['price'])*100) }}%</td>
             {% else %}
                 <td>0</td>
             {% endif %}
-            <td>${{ sold_date['net'] }}</td>
+            <td>{{ sold_date['net'] }}</td>
         </tr>
         {% endfor %}
         <tr>
