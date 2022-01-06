@@ -166,8 +166,6 @@ def get_data_for_item_sold(item_id):
 def get_list_of_items_purchased_by_date(date, sold=0):
         cur = mysql.connection.cursor()
         if date:
-            print(date)
-            print(sold)
             cur.execute("""SELECT 
                         items.id, 
                         items.name, 
@@ -192,6 +190,7 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                         INNER JOIN sale sale on items.id = sale.id
                         WHERE items.sold = %s""",
                         (sold,))
+        print(list(cur.fetchall()))
         return list(cur.fetchall())
 
 def set_dates(details):
