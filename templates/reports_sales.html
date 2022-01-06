@@ -83,8 +83,21 @@
             <td>{{ sold_date['net'] }}</td>
         </tr>
         {% endfor %}
+    </tbody>
+</table>
+<table class="blueTable">
+    <thead>
         <tr>
-            <td>Total</td>
+            <th>Total</th>
+            <th>Sold Price</th>
+            <th>Shipping Fee</th>
+            <th>Shipping Percentage Fee</th>
+            <th>Net</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td></td>
             <td>${{ ns.price }}</td>
             <td>${{ ns.shipping_fee }}</td>
             {% if ns.price != 0 %}
