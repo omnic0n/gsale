@@ -96,7 +96,6 @@
     <thead>
         <tr>
             <th>Total</th>
-            <th>Expense Name</th>
             {% if expense_type == 1 %}<th>Expense Milage</th>{% endif %}
             {% if expense_type == 2 %}<th>Expense Price</th>{% endif %}
         </tr>
@@ -104,7 +103,6 @@
     <tbody>
         <tr>
             <td>Total</td>
-            <td></td>
             {% if expense_type == 1 %}<td>{{ ns.milage }}</td>{% endif %}
             {% if expense_type == 2 %}<td>${{ ns.price }}</td>{% endif %}
         </tr>
