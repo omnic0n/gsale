@@ -101,38 +101,40 @@
       })));
     </script>
     <script>
-      $('#type').change(function() {
-        if ($('#type').val() == "Month") {
-          document.write($('#type').val())
-          $('#month').hide();
-          $('#month').removeAttr('required');
-          $('#month').removeAttr('data-error');
-          $('#divMonth').hide();
-          $('#divMonth').removeAttr('required');
-          $('#divMonth').removeAttr('data-error');
-        } else if (('#type').val() == "Year") {
-          document.write($('#type').val())
-          $('#month').show();
-          $('#month').attr('required', '');
-          $('#month').attr('data-error', 'This field is required.');
-          $('#divMonth').show();
-          $('#divMonth').attr('required', '');
-          $('#divMonth').attr('data-error', 'This field is required.');
-        }
-        else {
-          $('#month').hide();
-          $('#month').removeAttr('required');
-          $('#month').removeAttr('data-error');
-          $('#divMonth').hide();
-          $('#divMonth').removeAttr('required');
-          $('#divMonth').removeAttr('data-error');
-          $('#year').hide();
-          $('#year').removeAttr('required');
-          $('#year').removeAttr('data-error');
-          $('#divYear').hide();
-          $('#divYear').removeAttr('required');
-          $('#divYear').removeAttr('data-error');
-        }
+      $(document).ready(function() {
+        $('#type').change(function() {
+          if ($('#type').val() == "Month") {
+            document.write($('#type').val())
+            $('#month').hide();
+            $('#month').removeAttr('required');
+            $('#month').removeAttr('data-error');
+            $('#divMonth').hide();
+            $('#divMonth').removeAttr('required');
+            $('#divMonth').removeAttr('data-error');
+          } else if (('#type').val() == "Year") {
+            document.write($('#type').val())
+            $('#month').show();
+            $('#month').attr('required', '');
+            $('#month').attr('data-error', 'This field is required.');
+            $('#divMonth').show();
+            $('#divMonth').attr('required', '');
+            $('#divMonth').attr('data-error', 'This field is required.');
+          }
+          else {
+            $('#month').hide();
+            $('#month').removeAttr('required');
+            $('#month').removeAttr('data-error');
+            $('#divMonth').hide();
+            $('#divMonth').removeAttr('required');
+            $('#divMonth').removeAttr('data-error');
+            $('#year').hide();
+            $('#year').removeAttr('required');
+            $('#year').removeAttr('data-error');
+            $('#divYear').hide();
+            $('#divYear').removeAttr('required');
+            $('#divYear').removeAttr('data-error');
+          }
+        });
       });
       $("#type").trigger("change");
     </script>
