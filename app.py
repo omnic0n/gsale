@@ -200,11 +200,11 @@ def set_dates(details):
     if(details['type'] == "Year"):
         print("year")
         start_date = ("%s-01-01") % (year)
-        end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d\n').date() - timedelta(days=1)
+        end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
     elif(details['type'] == "Month"):
         print("month")
         start_date = ("%s-%s-01") % (year, month)
-        end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d\n').date() + relativedelta(months=1) - timedelta(days=1)
+        end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
     else:
         start_date = date
         end_date = date
