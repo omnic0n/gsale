@@ -102,6 +102,8 @@
     </script>
     <script>
       $(document).ready(function() {
+        $('#month').hide();
+        $('#year').hide();
         $('#type').change(function() {
           if ($('#type').val() == "Month") {
             document.write($('#type').val())
