@@ -103,7 +103,7 @@
     <script>
       $('#type').change(function() {
         if ($('#type').val() == "Year") {
-          document.write($('#type'))
+          document.write($('#type').val())
           $('#month').hide();
           $('#month').removeAttr('required');
           $('#month').removeAttr('data-error');
