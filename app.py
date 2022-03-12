@@ -211,6 +211,7 @@ def set_dates(details):
 
     print(details)
     print(start_date)
+    print(end_date)
     return start_date, end_date
 
 def get_group_sold_from_date(start_date, end_date):
