@@ -102,15 +102,15 @@
     </script>
     <script>
       $(document).ready(function() {
-        $('#type').on('change', 'input', function() {
-          if ($('#type').val() == "Year") {
+        $('#type').on('change', function() {
+          if (this.val() == "Year") {
             $('#month').hide();
             $('#month').removeAttr('required');
             $('#month').removeAttr('data-error');
             $('#divMonth').hide();
             $('#divMonth').removeAttr('required');
             $('#divMonth').removeAttr('data-error');
-          } else if (('#type').val() == "Month") {
+          } else if (this.val() == "Month") {
             $('#month').show();
             $('#month').attr('required', '');
             $('#month').attr('data-error', 'This field is required.');
