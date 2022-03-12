@@ -209,6 +209,7 @@ def set_dates(details):
         start_date = date
         end_date = date
 
+    print(details)
     print(start_date)
     print(end_date)
     return start_date, end_date
@@ -222,7 +223,7 @@ def get_group_sold_from_date(start_date, end_date):
                     INNER JOIN sale sale ON items.id = sale.id
                     INNER JOIN groups groups ON items.group_id = groups.id
                     WHERE groups.date >= %s AND groups.date =< %s
-					GROUP BY groups.date""",
+                    GROUP BY groups.date""",
                     (start_date, end_date,))
     return list(cur.fetchall())
 
@@ -236,7 +237,7 @@ def get_sold_from_date(start_date, end_date):
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
                     WHERE sale.date >= %s AND sale.date =< %s
-					GROUP BY sale.date""",
+                    GROUP BY sale.date""",
                     (start_date, end_date,))
     return list(cur.fetchall())
 
