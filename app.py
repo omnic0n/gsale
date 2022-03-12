@@ -5,7 +5,6 @@ from upload_function import *
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
-import re
 import random, os
 
 app = Flask(__name__)
@@ -200,17 +199,16 @@ def set_dates(details):
     date = details['date']
     if(details['type'] == "Year"):
         start_date = ("%s-01-01") % (year)
-        end_date = re.sub('\s+', "", str(datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)))
+        end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
     elif(details['type'] == "Month"):
         start_date = ("%s-%s-01") % (year, month)
-        end_date = re.sub('\s+', "", str(datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)))
+        end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
     else:
         start_date = date
         end_date = date
 
     print(details)
     print(start_date)
-    print(end_date)
     return start_date, end_date
 
 def get_group_sold_from_date(start_date, end_date):
