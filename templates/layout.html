@@ -101,15 +101,15 @@
       })));
     </script>
     <script>
-      $("#type").change(function() {
-        if (this.val() == "Year") {
+      $('#type').change(function() {
+        if ($('#type').val() == "Year") {
           $('#month').hide();
           $('#month').removeAttr('required');
           $('#month').removeAttr('data-error');
           $('#divMonth').hide();
           $('#divMonth').removeAttr('required');
           $('#divMonth').removeAttr('data-error');
-        } else if (this.val() == "Month") {
+        } else if (('#type').val() == "Month") {
           $('#month').show();
           $('#month').attr('required', '');
           $('#month').attr('data-error', 'This field is required.');
