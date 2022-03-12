@@ -331,6 +331,17 @@ def reports_sale():
         return render_template('reports_sales.html', form=form, sold_dates=sold_dates)
     return render_template('reports_sales.html', form=form)
 
+@app.route('/reports/purchases',methods=["GET", "POST"])
+def reports_purchases():
+    form = ReportsForm()
+
+    if request.method == "POST":
+        details = request.form
+        start_date, end_date = set_dates(details)
+        sold_dates = get_sold_from_date(start_date, end_date)
+        return render_template('reports_purchases.html', form=form, sold_dates=sold_dates)
+    return render_template('reports_purchases.html', form=form)
+
 @app.route('/reports/expenses',methods=["GET", "POST"])
 def reports_expenses():
     form = ReportsForm()
