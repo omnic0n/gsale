@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm
 from upload_function import *
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, relativedelta
 from werkzeug.utils import secure_filename
 import random, os
 
@@ -201,7 +201,7 @@ def set_dates(details):
         end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
     elif(details['type'] == "Month"):
         start_date = ("%s-%s-01") % (year, month)
-        end_date = datetime.strptime(("%s-01-01") % (year + 1),'%Y-%m-%d').date() +timedelta(months=12) - timedelta(days=1)
+        end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
     else:
         start_date = date
         end_date = date
