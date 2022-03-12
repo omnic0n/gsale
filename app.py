@@ -237,8 +237,7 @@ def get_sold_from_date(start_date, end_date):
                     SUM(sale.price - sale.shipping_fee) AS net
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
-                    WHERE sale.date >= %s AND sale.date <= %s 
-                    GROUP BY sale.date""",
+                    WHERE sale.date >= %s AND sale.date <= %s GROUP BY sale.date""",
                     (start_date, end_date,))
     return list(cur.fetchall())
 
