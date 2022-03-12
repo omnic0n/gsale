@@ -228,6 +228,8 @@ def get_group_sold_from_date(start_date, end_date):
     return list(cur.fetchall())
 
 def get_sold_from_date(start_date, end_date):
+    print(start_date)
+    print(end_date)
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    sale.date,
