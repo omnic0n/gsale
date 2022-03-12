@@ -111,6 +111,7 @@
           $('#divMonth').removeAttr('required');
           $('#divMonth').removeAttr('data-error');
         } else if (('#type').val() == "Month") {
+          document.write($('#type').val())
           $('#month').show();
           $('#month').attr('required', '');
           $('#month').attr('data-error', 'This field is required.');
