@@ -222,7 +222,7 @@ def get_group_sold_from_date(start_date, end_date):
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
                     INNER JOIN groups groups ON items.group_id = groups.id
-                    WHERE groups.date >= %s AND groups.date =< %s GROUP BY groups.date""",
+                    WHERE groups.date >= %s AND groups.date <= %s GROUP BY groups.date""",
                     (start_date, end_date,))
     return list(cur.fetchall())
 
@@ -237,8 +237,7 @@ def get_sold_from_date(start_date, end_date):
                     SUM(sale.price - sale.shipping_fee) AS net
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
-                    WHERE sale.date >= %s AND sale.date =< %s
-                    GROUP BY sale.date""",
+                    WHERE sale.date >= %s AND sale.date <= %s GROUP BY sale.date""",
                     (start_date, end_date,))
     return list(cur.fetchall())
 
