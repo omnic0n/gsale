@@ -102,7 +102,7 @@
     </script>
     <script>
       $('#type').change(function() {
-        if ($('#type').val() == "Year") {
+        if ($('#type').val() == "Month") {
           document.write($('#type').val())
           $('#month').hide();
           $('#month').removeAttr('required');
@@ -110,8 +110,7 @@
           $('#divMonth').hide();
           $('#divMonth').removeAttr('required');
           $('#divMonth').removeAttr('data-error');
-        } 
-        if (('#type').val() == "Month") {
+        } else if (('#type').val() == "Year") {
           document.write($('#type').val())
           $('#month').show();
           $('#month').attr('required', '');
