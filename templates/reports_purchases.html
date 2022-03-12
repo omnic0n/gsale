@@ -74,13 +74,12 @@
     </thead>
     <tbody>
         {% set ns = namespace() %}
-        {% set ns.sum = 0 %}
         {% set ns.purchase = 0 %}
         {% for purchased_date in purchased_dates %}
                 {% set ns.purchase = ns.purchase + purchased_date['price'] %}
         <tr>
+            <td>{{ purchased_date['date']</td>
             <td>{{ purchased_date['price'] }}</td>
-            <td>{{ total }}</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -91,7 +90,6 @@
     <thead>
         <tr>
             <th>Total</th>
-            <th>Purchase Price</th> 
         </tr>
         </thead>
         <tbody>
