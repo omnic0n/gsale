@@ -69,31 +69,18 @@
     <thead>
         <tr>
             <th>Date</th>
-            <th>Sold Price</th>
-            <th>Shipping Fee</th>
-            <th>Shipping Percentage Fee</th>
-            <th>Net</th>
+            <th>Purchase Price</th> 
         </tr>
     </thead>
     <tbody>
         {% set ns = namespace() %}
-        {% set ns.price = 0 %}
-        {% set ns.shipping_fee = 0 %}
-        {% set ns.net = 0 %}
-        {% for sold_date in sold_dates %}
-                {% set ns.net = ns.net + sold_date['net'] %}
-                {% set ns.price = ns.price + sold_date['price'] %}
-                {% set ns.shipping_fee = ns.shipping_fee + sold_date['shipping_fee'] %}
+        {% set ns.sum = 0 %}
+        {% set ns.purchase = 0 %}
+        {% for purchased_date in purchased_dates %}
+                {% set ns.purchase = ns.purchase + purchased_date['price'] %}
         <tr>
-            <td><a href = "/items/sold_list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
-            <td>{{ sold_date['price'] }}</td>
-            <td>{{ sold_date['shipping_fee'] }}</td>
-            {% if sold_date['price'] != 0 %}
-                <td>{{ '%0.2f'| format((sold_date['shipping_fee'] / sold_date['price'])*100) }}%</td>
-            {% else %}
-                <td>0</td>
-            {% endif %}
-            <td>{{ sold_date['net'] }}</td>
+            <td>{{ purchased_date['price'] }}</td>
+            <td>{{ total }}</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -104,23 +91,13 @@
     <thead>
         <tr>
             <th>Total</th>
-            <th>Sold Price</th>
-            <th>Shipping Fee</th>
-            <th>Shipping Percentage Fee</th>
-            <th>Net</th>
+            <th>Purchase Price</th> 
         </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
         <tr>
             <td>Total</td>
-            <td>${{ ns.price }}</td>
-            <td>${{ ns.shipping_fee }}</td>
-            {% if ns.price != 0 %}
-                <td>{{ '%0.2f'| format((ns.shipping_fee / ns.price)*100) }}%</td>
-            {% else %}
-                <td>0</td>
-            {% endif %}
-            <td>${{ ns.net }}</td>
+            <td>${{ ns.purchase }}</td>
         </tr>
     </tbody>
 </table>

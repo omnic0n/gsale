@@ -342,8 +342,8 @@ def reports_purchases():
     if request.method == "POST":
         details = request.form
         start_date, end_date = set_dates(details)
-        sold_dates = get_sold_from_date(start_date, end_date)
-        return render_template('reports_purchases.html', form=form, sold_dates=sold_dates)
+        purchased_dates = get_purchased_from_date(start_date, end_date)
+        return render_template('reports_purchases.html', form=form, purchased_dates=purchased_dates)
     return render_template('reports_purchases.html', form=form)
 
 @app.route('/reports/expenses',methods=["GET", "POST"])
