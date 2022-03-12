@@ -110,7 +110,8 @@
           $('#divMonth').hide();
           $('#divMonth').removeAttr('required');
           $('#divMonth').removeAttr('data-error');
-        } else if (('#type').val() == "Month") {
+        } 
+        if (('#type').val() == "Month") {
           document.write($('#type').val())
           $('#month').show();
           $('#month').attr('required', '');
