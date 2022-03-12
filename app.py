@@ -247,8 +247,7 @@ def get_purchased_from_date(start_date, end_date):
                    date,
                    SUM(price) as price
                    FROM groups
-                   WHERE groups.date >= %s AND groups.date =< %s
-                   GROUP by date""",
+                   WHERE groups.date >= %s AND groups.date <= %s GROUP by date""",
                    (start_date, end_date,))
     return list(cur.fetchall())
 
@@ -256,7 +255,7 @@ def get_expenses_from_date(start_date, end_date, type):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    * FROM expenses
-                    WHERE date >= %s AND date =< %s
+                    WHERE date >= %s AND date <= %s
                     AND type = %s
 					ORDER BY date""",
                     (start_date, end_date, type,))
