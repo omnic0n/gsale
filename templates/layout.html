@@ -110,6 +110,18 @@
             $('#divMonth').hide();
             $('#divMonth').removeAttr('required');
             $('#divMonth').removeAttr('data-error');
+            $('#year').show();
+            $('#year').attr('required', '');
+            $('#year').attr('data-error', 'This field is required.');
+            $('#divYear').show();
+            $('#divYear').attr('required', '');
+            $('#divYear').attr('data-error', 'This field is required.');
+            $('#date').hide();
+            $('#date').removeAttr('required');
+            $('#date').removeAttr('data-error');
+            $('#divDate').hide();
+            $('#divDate').removeAttr('required');
+            $('#divDate').removeAttr('data-error');
           } else if (this.value == "Month") {
             $('#month').show();
             $('#month').attr('required', '');
@@ -117,6 +129,37 @@
             $('#divMonth').show();
             $('#divMonth').attr('required', '');
             $('#divMonth').attr('data-error', 'This field is required.');
+            $('#year').show();
+            $('#year').attr('required', '');
+            $('#year').attr('data-error', 'This field is required.');
+            $('#divYear').show();
+            $('#divYear').attr('required', '');
+            $('#divYear').attr('data-error', 'This field is required.');
+            $('#date').hide();
+            $('#date').removeAttr('required');
+            $('#date').removeAttr('data-error');
+            $('#divDate').hide();
+            $('#divDate').removeAttr('required');
+            $('#divDate').removeAttr('data-error');
+          } else {
+            $('#date').show();
+            $('#date').attr('required');
+            $('#date').attr('data-error');
+            $('#divDate').show();
+            $('#divDate').attr('required');
+            $('#divDate').attr('data-error');
+            $('#month').hide();
+            $('#month').removeAttr('required');
+            $('#month').removeAttr('data-error');
+            $('#divMonth').hide();
+            $('#divMonth').removeAttr('required');
+            $('#divMonth').removeAttr('data-error');
+            $('#year').hide();
+            $('#year').removeAttr('required');
+            $('#year').removeAttr('data-error');
+            $('#divYear').hide();
+            $('#divYear').removeAttr('required');
+            $('#divYear').removeAttr('data-error');
           }
         });
       });
