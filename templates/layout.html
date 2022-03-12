@@ -103,14 +103,14 @@
     <script>
       $(document).ready(function() {
         $('#type').on('change', function() {
-          if (this.val() == "Year") {
+          if (this.value == "Year") {
             $('#month').hide();
             $('#month').removeAttr('required');
             $('#month').removeAttr('data-error');
             $('#divMonth').hide();
             $('#divMonth').removeAttr('required');
             $('#divMonth').removeAttr('data-error');
-          } else if (this.val() == "Month") {
+          } else if (this.value == "Month") {
             $('#month').show();
             $('#month').attr('required', '');
             $('#month').attr('data-error', 'This field is required.');
