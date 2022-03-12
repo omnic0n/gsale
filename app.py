@@ -2,7 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm
 from upload_function import *
-from datetime import datetime, date, timedelta, relativedelta
+from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
 import random, os
 
