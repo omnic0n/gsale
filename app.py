@@ -198,7 +198,7 @@ def set_dates(details):
     date = details['date']
     if(details['type'] == "Year"):
         start_date = ("%s-01-01") % (year)
-        end_date = date(("%s-01-01") % (year + 1)) - timedelta(days=1)
+        end_date = datetime.strptime(("%s-01-01") % (year + 1), '%y-%m-%d') - timedelta(days=1)
     elif(details['type'] == "Month"):
         start_date = ("%s-%s-01") % (year, month)
         if details['month'] == 12:
