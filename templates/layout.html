@@ -102,6 +102,24 @@
     </script>
     <script>
       $(document).ready(function() {
+        $('#month').hide();
+        $('#month').removeAttr('required');
+        $('#month').removeAttr('data-error');
+        $('#divMonth').hide();
+        $('#divMonth').removeAttr('required');
+        $('#divMonth').removeAttr('data-error');
+        $('#year').hide();
+        $('#year').removeAttr('required', '');
+        $('#year').removeAttr('data-error', 'This field is required.');
+        $('#divYear').hide();
+        $('#divYear').removeAttr('required', '');
+        $('#divYear').removeAttr('data-error', 'This field is required.');
+        $('#date').hide();
+        $('#date').removeAttr('required');
+        $('#date').removeAttr('data-error');
+        $('#divDate').hide();
+        $('#divDate').removeAttr('required');
+        $('#divDate').removeAttr('data-error');
         $('#type').on('change', function() {
           if (this.value == "Year") {
             $('#month').hide();
