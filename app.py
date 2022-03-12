@@ -205,6 +205,9 @@ def set_dates(details):
             end_date = ("%s-01-01") % (year + 1)
         else:
             end_date = ("%s-%s-01") % (year, month + 1)
+    else:
+        start_date = '2022-01-01'
+        end_date = '2022-01-01'
 
     print (details)    
     print(start_date)
