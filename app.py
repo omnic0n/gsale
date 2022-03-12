@@ -195,7 +195,7 @@ def get_list_of_items_purchased_by_date(date, sold=0):
 def set_dates(details):
     year = int(details['year'])
     month = int(details['month'])
-    date = int(details['date'])
+    date = details['date']
     if(details['type'] == "Year"):
         start_date = ("%s-01-01") % (year)
         end_date = ("%s-01-01") % (year + 1)
