@@ -56,7 +56,8 @@
                 <td>{{ item_category['date'] }}</td>
                 {% if item_category['sold'] %}
                 <td>{{ item_category['sales_date'] }}</td>
-                <td>{{ item_category['sales_date'].strptime('%Y-%m-%d') }}</td>
+                {% sold_diff = item_category['sales_date'] - item_category['date'] %}
+                <td>{{ sold_diff }}</td>
                 {% set ns.sold = ns.sold + 1 %}
                 {% else %}
                 <td>Unsold</td>
