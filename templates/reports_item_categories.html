@@ -7,30 +7,28 @@
 
 {% for item_category in item_categories %}
 
-{% if item_category['category_id'] != ns.category_id %}
-</tbody>
-</table>
-<table class="blueTable">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th> 
-        </tr>
-    </thead>
-    <tbody>
-{% set ns.category_id = item_category['category_id'] %}
-{% end if %}
+    {% if item_category['category_id'] != ns.category_id %}
+        </tbody>
+        </table>
+        <table class="blueTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th> 
+                </tr>
+            </thead>
+            <tbody>
+        {% set ns.category_id = item_category['category_id'] %}
+    {% endif %}
 
-{% if item_category['category_id'] == ns.category_id %}
-        <tr>
-            <td>{{ item_category['name'] }}</td>
-            <td>{{ item_category['type'] }}</td>
-        </tr>
-        {% endfor %}
+    {% if item_category['category_id'] == ns.category_id %}
+            <tr>
+                <td>{{ item_category['name'] }}</td>
+                <td>{{ item_category['type'] }}</td>
+            </tr>
+    {% endif %}
 
-{% end if %}
-
-{% end for %}
+{% endfor %}
     </tbody>
 </table>
 {% endblock content %}
