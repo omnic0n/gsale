@@ -12,6 +12,9 @@ table.blueTable {
   table.blueTable tbody td {
     font-size: 13px;
   }
+  table.blueTable tr.unsold {
+    background: #FF0000;
+  }
   table.blueTable tr:nth-child(even) {
     background: #D0E4F5;
   }
@@ -54,8 +57,4 @@ table.blueTable {
     color: #FFFFFF;
     padding: 2px 8px;
     border-radius: 5px;
-  }
-
-  .unsold {
-    background: #FF0000;
   }
