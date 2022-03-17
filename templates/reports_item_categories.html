@@ -18,7 +18,7 @@
         </tr>
     </thead>
     <tbody>
-{% ns.category_id = item_category['category_id'] %}
+{% set ns.category_id = item_category['category_id'] %}
 {% end if %}
 
 {% if item_category['category_id'] == ns.category_id %}
