@@ -525,6 +525,9 @@ def modify_items():
     form.group.choices = [(group['id'], group['name']) for group in groups]
     form.group.data = item[0]['group_id']
 
+    form.category.choices = [(category['id'], category['type']) for category in categories]
+    form.category.data = item[0]['id']
+
     if request.method == "POST":
         details = request.form
 
