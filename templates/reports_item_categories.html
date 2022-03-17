@@ -51,7 +51,7 @@
         {% else %}
             <tr class="unsold">
         {% endif %}
-                <td><a href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
+                <td><a style = color:black href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
                 <td>{{ item_category['type'] }}</td>
                 <td>{{ item_category['date'] }}</td>
                 {% if item_category['sold'] %}
