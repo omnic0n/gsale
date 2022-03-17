@@ -29,7 +29,7 @@
         <tr>
             <td>{{ item[0]['id'] }}</td>
             <td>{{ item[0]['name'] }}</td>
-            <td>{{ category }}</td>
+            <td>{{ category['type'] }}</td>
             <td>{% if item[0]['sold'] %}True{% else %}False{% endif %}</td>
             {% if item[0]['group_id'] != 1 %}
             <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</a></td>
