@@ -46,12 +46,12 @@
     </thead>
     <tbody>
     {% for item_category in item_categories %}
+        {% if item_category['sold'] %}
             <tr>
-                {% if item_category['sold'] %}
-                <td><a style = color:green href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
-                {% else %}
-                <td><a style = color:black href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
-                {% endif %}
+        {% else %}
+            <tr class="unsold">
+        {% endif %>
+                <td><a href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
                 <td>{{ item_category['type'] }}</td>
                 <td>{{ item_category['date'] }}</td>
                 {% if item_category['sold'] %}
@@ -60,7 +60,7 @@
                 {% set ns.sold = ns.sold + 1 %}
                 {% else %}
                 <td>Unsold</td>
-                <td><font color='red' >{{ (now - item_category['date']).days }}</font></td>
+                <td>{{ (now - item_category['date']).days }}</td>
                 {% set ns.unsold = ns.unsold + 1 %}
                 {% endif %}
                 <td><a href = "/groups/describe?item={{ item_category['group_id'] }}">{{ item_category['group_id'] }}</td>
