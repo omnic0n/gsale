@@ -15,9 +15,7 @@ table.blueTable {
   table.blueTable tr.unsold {
     background: #FF0000;
   }
-  table.blueTable tr:nth-child(even) {
-    background: #D0E4F5;
-  }
+
   table.blueTable thead {
     background: #1C6EA4;
     background: -moz-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
