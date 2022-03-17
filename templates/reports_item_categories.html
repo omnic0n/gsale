@@ -63,6 +63,7 @@
     </tbody>
 </table>
 <BR>
+{% if ns.total != 0 %}
 <table class="blueTable">
     <thead>
         <tr>
@@ -80,20 +81,17 @@
         <tr>
             <td>Sold</td>
             <td>{{ ns.sold }}</td>
-            {% if ns.total != 0 %}
-                <td>{{ '%0.2f'| format((ns.sold / ns.total)*100) }}%</td>
-            {% endif %}
+            <td>{{ '%0.2f'| format((ns.sold / ns.total)*100) }}%</td>
         </tr> 
         <tr>
             <td>Unsold</td>
             <td>{{ ns.unsold }}</td>
-            {% if ns.total != 0 %}
-                <td>{{ '%0.2f'| format((ns.unsold / ns.total)*100) }}%</td>
-            {% endif %}
+            <td>{{ '%0.2f'| format((ns.unsold / ns.total)*100) }}%</td>
         </tr>     
     </tbody>
 </table>
 <BR>
 <BR>
+{% endif %}
 {% endblock content %}
 </HTML>
