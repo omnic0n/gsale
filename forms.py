@@ -76,4 +76,5 @@ class ReportsForm(FlaskForm):
         (2021), (2022), (2023)
     ])
     expense_type = SelectField('type', choices=[(1,"milage"),(2, "item")],coerce=int)
+    category = SelectField('category', coerce=int)
     submit = SubmitField('Submit')
