@@ -5,7 +5,6 @@
 {% set ns = namespace() %}
 {% set ns.category_id = '' %}
 
-{% for item_category in item_categories %}
         <table class="blueTable">
             <thead>
                 <tr>
@@ -14,10 +13,12 @@
                 </tr>
             </thead>
             <tbody>
+            {% for item_category in item_categories %}
             <tr>
                 <td>{{ item_category['name'] }}</td>
                 <td>{{ item_category['type'] }}</td>
             </tr>
+            {% endfor %}
     </tbody>
 </table>
 {% endblock content %}
