@@ -29,7 +29,9 @@
 
 {% set ns = namespace() %}
 {% set ns.category_id = '' %}
-{% set ns.count = 0 %}
+{% set ns.total = 0 %}
+{% set ns.unsold = 0 %}
+{% set ns.sold = 0 %}
 
 <table class="blueTable">
     <thead>
@@ -49,20 +51,42 @@
                 <td>{{ item_category['date'] }}</td>
                 {% if item_category['sold'] %}
                 <td>{{ item_category['sales_date'] }}</td>
+                {% set ns.sold = ns.sold + 1 %}
                 {% else %}
                 <td>Unsold</td>
+                {% set ns.unsold = ns.unsold + 1 %}
                 {% endif %}
                 <td><a href = "/groups/describe?item={{ item_category['group_id'] }}">{{ item_category['group_id'] }}</td>
             </tr>
-            {% set ns.count = ns.count + 1 %}
+            {% set ns.total = ns.total + 1 %}
     {% endfor %}
+    </tbody>
+</table>
+<table class="blueTable">
     <thead>
         <tr>
+            <th>Description</th>
             <th>Count</th>
-            <th>{{ ns.count }}</th> 
+            <th>Percent</th> 
         </tr>
     </thead>
-</tbody>
+    <tbody>
+        <tr>
+            <td>Total</td>
+            <td>{{ ns.total }}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Sold</td>
+            <td>{{ ns.sold }}</td>
+            <td>{{ '%0.2f'| format((ns.sold / ns.total)*100) }}%</td>
+        </tr> 
+        <tr>
+            <td>Unsold</td>
+            <td>{{ ns.unsold }}</td>
+            <td>{{ '%0.2f'| format((ns.unsold / ns.total)*100) }}%</td>
+        </tr>     
+    </tbody>
 </table>
 {% endblock content %}
 </HTML>
