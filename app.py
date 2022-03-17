@@ -275,6 +275,11 @@ def get_all_from_categories():
     cur.execute("SELECT * FROM categories")
     return list(cur.fetchall())
 
+def get_category(category_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT type FROM categories where id = %s", (category_id, ))
+    return cur.fetchone()
+
 def get_all_from_expenses(date):
     cur = mysql.connection.cursor()
     if not date:
@@ -540,7 +545,7 @@ def modify_items():
                     (details['price'], details['shipping_fee'], details['date'], details['id']))
         mysql.connection.commit()
         cur.close()
-        return redirect(url_for('describe_item',item=id, categories=categories))
+        return redirect(url_for('describe_item',item=id))
     return render_template('modify_item.html', form=form, item=item, sale=sale)
 
 @app.route('/items/sold',methods=["POST","GET"])
@@ -593,10 +598,12 @@ def unsold_list():
 def describe_item():
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
+    category = get_category(item[0]['category_id'])
     max_item = get_max_item_id()
     item_sold = get_data_for_item_sold(id)
     return render_template('items_describe.html', 
                             item=item,
+                            category=category,
                             max_item=max_item,
                             sold=item_sold)
 
