@@ -51,6 +51,7 @@ class ItemForm(FlaskForm):
     price = StringField('price')
     shipping_fee = StringField('shipping_fee')
     id = StringField('id')
+    category = SelectField('category', coerce=int)
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):
