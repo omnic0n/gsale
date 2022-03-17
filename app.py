@@ -516,7 +516,7 @@ def bought_items():
 @app.route('/items/modify',methods=["POST","GET"])
 def modify_items():
     groups = get_all_from_groups(None)
-    categories = get_all_from_categories(None)
+    categories = get_all_from_categories()
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     sale = get_data_from_sale(id)
