@@ -46,7 +46,11 @@
     <tbody>
     {% for item_category in item_categories %}
             <tr>
-                <td><a href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
+                {% if item_category['sold'] %}
+                <td><a style = color:green href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
+                {% else %}
+                <td><a style = color:red href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
+                {% endif %}
                 <td>{{ item_category['type'] }}</td>
                 <td>{{ item_category['date'] }}</td>
                 {% if item_category['sold'] %}
