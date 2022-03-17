@@ -533,8 +533,8 @@ def modify_items():
         details = request.form
 
         cur = mysql.connection.cursor()
-        cur.execute("UPDATE items SET name = %s, group_id = %s where id = %s", 
-                    (details['name'], details['group'], details['id']))
+        cur.execute("UPDATE items SET name = %s, group_id = %s, category_id =%s where id = %s", 
+                    (details['name'], details['group'], details['category'], details['id']))
         mysql.connection.commit()
         cur.execute("UPDATE sale SET price = %s, shipping_fee = %s, date = %s where id = %s", 
                     (details['price'], details['shipping_fee'], details['date'], details['id']))
