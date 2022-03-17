@@ -202,6 +202,7 @@ def get_list_of_items_with_categories():
                     items.sold,
                     items.group_id,
                     categories.type,
+                    catogories.id AS category_id,
                     sale.date as sales_date,
                     groups.date
                     FROM items items 

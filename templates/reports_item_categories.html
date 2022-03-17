@@ -1,6 +1,15 @@
 <HTML>
 {% extends "layout.html" %}
 {% block content %}
+
+{% set ns = namespace() %}
+{% set ns.category_id = '' %}
+
+{% for item_category in item_categories %}
+
+{% if item_category['category_id'] != ns.category_id %}
+</tbody>
+</table>
 <table class="blueTable">
     <thead>
         <tr>
@@ -9,14 +18,19 @@
         </tr>
     </thead>
     <tbody>
-        {% set ns = namespace() %}
-        {% set ns.purchase = 0 %}
-        {% for item_category in item_categories %}
+{% ns.category_id = item_category['category_id'] %}
+{% end if %}
+
+{% if item_category['category_id'] == ns.category_id %}
         <tr>
             <td>{{ item_category['name'] }}</td>
             <td>{{ item_category['type'] }}</td>
         </tr>
         {% endfor %}
+
+{% end if %}
+
+{% end for %}
     </tbody>
 </table>
 {% endblock content %}
