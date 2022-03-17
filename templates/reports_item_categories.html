@@ -63,7 +63,7 @@
                 <td>{{ (now - item_category['date']).days }}</td>
                 {% set ns.unsold = ns.unsold + 1 %}
                 {% endif %}
-                <td><a href = "/groups/describe?item={{ item_category['group_id'] }}">{{ item_category['group_id'] }}</td>
+                <td><a style = color:black href = "/groups/describe?item={{ item_category['group_id'] }}">{{ item_category['group_id'] }}</td>
             </tr>
             {% set ns.total = ns.total + 1 %}
     {% endfor %}
