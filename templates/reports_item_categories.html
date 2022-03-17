@@ -50,7 +50,7 @@
                 {% if item_category['sold'] %}
                 <td><a style = color:green href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
                 {% else %}
-                <td><a style = color:red href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
+                <td><a style = color:black href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
                 {% endif %}
                 <td>{{ item_category['type'] }}</td>
                 <td>{{ item_category['date'] }}</td>
