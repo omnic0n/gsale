@@ -4,6 +4,7 @@
 
 {% set ns = namespace() %}
 {% set ns.category_id = '' %}
+{% set ns.count = 0}
 
 {% for item_category in item_categories %}
 
@@ -11,7 +12,7 @@
         <thead>
             <tr>
                 <th>Count</th>
-                <th>Number</th> 
+                <th>{{ ns.count }}</th> 
             </tr>
         </thead>
         </tbody>
@@ -27,6 +28,7 @@
             </thead>
             <tbody>
         {% set ns.category_id = item_category['category_id'] %}
+        {% set ns.count = 0 %}
     {% endif %}
 
     {% if item_category['category_id'] == ns.category_id %}
@@ -34,6 +36,7 @@
                 <td>{{ item_category['name'] }}</td>
                 <td>{{ item_category['type'] }}</td>
             </tr>
+            {% set ns.count = ns.count + 1 %}
     {% endif %}
 
 {% endfor %}
