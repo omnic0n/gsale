@@ -113,7 +113,7 @@ def get_data_for_item_describe(item_id):
                     items.sold, 
                     items.id,
                     items.group_id,
-                    items.category_id
+                    items.category_id,
                     groups.name AS group_name
                     FROM items items
                     INNER JOIN groups groups ON items.group_id = groups.id
