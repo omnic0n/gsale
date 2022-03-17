@@ -60,7 +60,7 @@
                 {% set ns.sold = ns.sold + 1 %}
                 {% else %}
                 <td>Unsold</td>
-                <td>{{ (datetime.now() - item_category['date']).days }}</td>
+                <td>{{ (now - item_category['date']).days }}</td>
                 {% set ns.unsold = ns.unsold + 1 %}
                 {% endif %}
                 <td><a href = "/groups/describe?item={{ item_category['group_id'] }}">{{ item_category['group_id'] }}</td>
