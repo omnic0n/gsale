@@ -387,7 +387,7 @@ def reports_categories():
     if request.method == "POST":
         details = request.form
         item_categories = get_list_of_items_with_categories(details['category'])
-        return render_template('reports_item_categories.html', form=form, item_categories=item_categories, now=datetime.utcnow())
+        return render_template('reports_item_categories.html', form=form, item_categories=item_categories, now=datetime.now())
     return render_template('reports_item_categories.html', form=form)
 
 @app.route('/reports/expenses',methods=["GET", "POST"])
