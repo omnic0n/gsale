@@ -16,7 +16,7 @@ table.blueTable {
   table.blueTable tr:nth-child(even) {
     background: #D0E4F5;
   }
-  table.blueTable tr:nth-child(even) tr.unsold {
+  table.blueTable tr:nth-child(even) .unsold {
     background: #FF0000;
   }
   table.blueTable thead {
