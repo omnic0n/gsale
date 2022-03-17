@@ -80,12 +80,16 @@
         <tr>
             <td>Sold</td>
             <td>{{ ns.sold }}</td>
-            <td>{{ '%0.2f'| format((ns.sold / ns.total)*100) }}%</td>
+            {% if ns.total != 0 %}
+                <td>{{ '%0.2f'| format((ns.sold / ns.total)*100) }}%</td>
+            {% endif %}
         </tr> 
         <tr>
             <td>Unsold</td>
             <td>{{ ns.unsold }}</td>
-            <td>{{ '%0.2f'| format((ns.unsold / ns.total)*100) }}%</td>
+            {% if ns.total != 0 %}
+                <td>{{ '%0.2f'| format((ns.unsold / ns.total)*100) }}%</td>
+            {% endif %}
         </tr>     
     </tbody>
 </table>
