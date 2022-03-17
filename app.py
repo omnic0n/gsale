@@ -113,6 +113,7 @@ def get_data_for_item_describe(item_id):
                     items.sold, 
                     items.id,
                     items.group_id,
+                    items.category_id
                     groups.name AS group_name
                     FROM items items
                     INNER JOIN groups groups ON items.group_id = groups.id
@@ -526,7 +527,7 @@ def modify_items():
     form.group.data = item[0]['group_id']
 
     form.category.choices = [(category['id'], category['type']) for category in categories]
-    form.category.data = item[0]['id']
+    form.category.data = item[0]['category_id']
 
     if request.method == "POST":
         details = request.form
