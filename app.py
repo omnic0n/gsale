@@ -269,6 +269,11 @@ def get_all_from_groups(date):
         cur.execute("SELECT * FROM groups WHERE date LIKE %s ORDER BY name ASC", (date, ))
     return list(cur.fetchall())
 
+def get_all_from_categories():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM categories ORDER BY name ASC")
+    return list(cur.fetchall())
+
 def get_all_from_expenses(date):
     cur = mysql.connection.cursor()
     if not date:
@@ -511,6 +516,7 @@ def bought_items():
 @app.route('/items/modify',methods=["POST","GET"])
 def modify_items():
     groups = get_all_from_groups(None)
+    categories = get_all_from_categories(None)
     id = request.args.get('item', type = str)
     item = get_data_for_item_describe(id)
     sale = get_data_from_sale(id)
@@ -518,6 +524,7 @@ def modify_items():
     form = ItemForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
     form.group.data = item[0]['group_id']
+
     if request.method == "POST":
         details = request.form
 
