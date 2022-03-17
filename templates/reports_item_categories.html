@@ -40,6 +40,7 @@
             <th>Type</th>
             <th>Purchase Date</th>
             <th>Sold Date</th>
+            <th>Days to sell</th>
             <th>Group ID</th>
         </tr>
     </thead>
@@ -55,9 +56,11 @@
                 <td>{{ item_category['date'] }}</td>
                 {% if item_category['sold'] %}
                 <td>{{ item_category['sales_date'] }}</td>
+                <td>{{ item_category['date'] - item_category['sales_date'] }}</td>
                 {% set ns.sold = ns.sold + 1 %}
                 {% else %}
                 <td>Unsold</td>
+                <td>Undefined</td>
                 {% set ns.unsold = ns.unsold + 1 %}
                 {% endif %}
                 <td><a href = "/groups/describe?item={{ item_category['group_id'] }}">{{ item_category['group_id'] }}</td>
