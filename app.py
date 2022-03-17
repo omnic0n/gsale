@@ -194,6 +194,23 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                         (sold,))
         return list(cur.fetchall())
 
+def get_list_of_items_with_categories():
+        cur = mysql.connection.cursor()
+        cur.execute("""SELECT 
+                    items.id, 
+                    items.name, 
+                    items.sold,
+                    items.group_id,
+                    categories.type,
+                    sale.date as sales_date,
+                    groups.date
+                    FROM items items 
+                    INNER JOIN groups groups ON items.group_id = groups.id
+                    INNER JOIN sale sale ON items.id = sale.id
+                    INNER JOIN categories categories ON items.category_id = categories.id
+                    ORDER BY categories.id""")
+        return list(cur.fetchall())
+
 def set_dates(details):
     year = int(details['year'])
     month = int(details['month'])
@@ -356,6 +373,18 @@ def reports_purchases():
         purchased_dates = get_purchased_from_date(start_date, end_date)
         return render_template('reports_purchases.html', form=form, purchased_dates=purchased_dates)
     return render_template('reports_purchases.html', form=form)
+
+@app.route('/reports/categories',methods=["GET", "POST"])
+def reports_categories():
+    form = ReportsForm()
+
+    #if request.method == "POST":
+       # details = request.form
+       # start_date, end_date = set_dates(details)
+       # purchased_dates = get_purchased_from_date(start_date, end_date)
+    item_categories = get_list_of_items_with_categories()
+    return render_template('reports_item_categories.html', form=form, item_categories=item_categories)
+    #return render_template('reports_purchases.html', form=form)
 
 @app.route('/reports/expenses',methods=["GET", "POST"])
 def reports_expenses():
