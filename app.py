@@ -271,7 +271,7 @@ def get_all_from_groups(date):
 
 def get_all_from_categories():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM categories ORDER BY name ASC")
+    cur.execute("SELECT * FROM categories")
     return list(cur.fetchall())
 
 def get_all_from_expenses(date):
