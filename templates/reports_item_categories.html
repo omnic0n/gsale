@@ -5,6 +5,13 @@
 {% set ns = namespace() %}
 {% set ns.category_id = '' %}
 
+{% for item_category in item_categories %}
+
+    {% if item_category['category_id'] != ns.category_id %}
+        </tbody>
+        </table>
+        <BR>
+        <BR>
         <table class="blueTable">
             <thead>
                 <tr>
@@ -13,12 +20,17 @@
                 </tr>
             </thead>
             <tbody>
-            {% for item_category in item_categories %}
+        {% set ns.category_id = item_category['category_id'] %}
+    {% endif %}
+
+    {% if item_category['category_id'] == ns.category_id %}
             <tr>
                 <td>{{ item_category['name'] }}</td>
                 <td>{{ item_category['type'] }}</td>
             </tr>
-            {% endfor %}
+    {% endif %}
+
+{% endfor %}
     </tbody>
 </table>
 {% endblock content %}
