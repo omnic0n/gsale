@@ -544,7 +544,7 @@ def bought_items():
         cur = mysql.connection.cursor()
         for item in details['name'].splitlines():
             cur.execute("INSERT INTO items(name, group_id, category_id) VALUES (%s, %s, %s)", 
-                        (item,details['group'],details['category_id'],))
+                        (item,details['group'],details['category'],))
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
