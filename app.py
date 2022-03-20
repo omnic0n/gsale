@@ -532,16 +532,19 @@ def mark_sold():
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     groups = get_all_from_groups(None)
+    categories = get_all_from_categories()
 
     form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
+    form.category.choices = [(category['id'], category['type']) for category in categories]
+
     if request.method == "POST":
         details = request.form
 
         cur = mysql.connection.cursor()
         for item in details['name'].splitlines():
-            cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
-                        (item,details['group'],))
+            cur.execute("INSERT INTO items(name, group_id, category_id) VALUES (%s, %s, %s)", 
+                        (item,details['group'],details['category_id'],))
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
