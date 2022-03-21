@@ -57,7 +57,7 @@
             <td>Sold</td>
             <td>{{ sold[0]['net'] }}</td>
             <td>{{ sold[0]['date'] }}</td>
-            <td>{{ (item[0]['date'] - item[0]['purchase_date']).days }}</td>
+            <td>{{ (sold[0]['date'] - item[0]['purchase_date']).days }}</td>
         </tr>
         {% endif %}
     </tbody>
