@@ -5,14 +5,15 @@
     <thead>
         <tr>
             <th>Name</th> 
-            <th>Group ID</th>
             <th>Days in stock</th> 
+            <th>Group ID</th>
         </tr>
     </thead>
     <tbody>
         {% for item in items %}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
+            <td>{{ item['date'] - current_date }}</td>
             <td>{% if item['group_id'] == 1%}
                 None
                 {% elif item['group_id'] %}
@@ -21,7 +22,6 @@
                 </a>
                 {% endif %}
             </td>
-            <td>{{ (item['date'] - current_date).days }}</td>
             </tr>
         {% endfor %}
     </tbody>
