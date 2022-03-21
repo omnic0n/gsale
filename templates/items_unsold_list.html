@@ -13,7 +13,7 @@
         {% for item in items %}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{{ item['date'] - current_date }}</td>
+            <td>{{ current_date }}</td>
             <td>{% if item['group_id'] == 1%}
                 None
                 {% elif item['group_id'] %}
