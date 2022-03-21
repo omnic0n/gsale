@@ -628,7 +628,7 @@ def sold_list():
 def unsold_list():
     date = request.args.get('date', type = str)
     items = get_list_of_items_purchased_by_date(date, sold=0)
-    return render_template('items_unsold_list.html', items=items, current_date=current_date)
+    return render_template('items_unsold_list.html', items=items, current_date=datetime.now().date())
 
 #Describe Section
 @app.route('/items/describe')
