@@ -5,7 +5,8 @@
     <thead>
         <tr>
             <th>Name</th> 
-            <th>Group ID</th> 
+            <th>Group ID</th>
+            <th>Days in stock</th> 
         </tr>
     </thead>
     <tbody>
@@ -20,6 +21,7 @@
                 </a>
                 {% endif %}
             </td>
+            <td>{{ (item['date'] - current_date).days }}</td>
             </tr>
         {% endfor %}
     </tbody>
