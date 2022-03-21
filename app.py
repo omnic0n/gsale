@@ -114,7 +114,8 @@ def get_data_for_item_describe(item_id):
                     items.id,
                     items.group_id,
                     items.category_id,
-                    groups.name AS group_name
+                    groups.name AS group_name,
+                    groups.date AS purchase_date
                     FROM items items
                     INNER JOIN groups groups ON items.group_id = groups.id
                     WHERE items.id = %s""", (item_id, ))
