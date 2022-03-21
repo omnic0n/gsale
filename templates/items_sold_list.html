@@ -7,6 +7,7 @@
             <th>Name</th> 
             <th>Purchase Date</th>
             <th>Sold Date</th>
+            <th>Days to Sell</th>
             <th>Sold Net</th>
             <th>Group ID</th> 
         </tr>
@@ -19,6 +20,7 @@
             {% for sold_item in sold %}
                 {% if item['id'] == sold_item['id'] %}
                     <td>{{ sold_item['date']}}</td>
+                    <td>{{ (sold_item['date'] - item['date']).days }}</td>
                     <td>{{ sold_item['net']}}</td>
                 {% endif %}
             {% endfor %}
