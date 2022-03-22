@@ -10,6 +10,7 @@ import random, os
 
 import get_data
 import files
+import function
 
 app = Flask(__name__)
 
@@ -30,23 +31,6 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 mysql = MySQL(app)
 
-def set_dates(details):
-    year = int(details['year'])
-    month = int(details['month'])
-    date = details['date']
-    if(details['type'] == "Year"):
-        print("year")
-        start_date = ("%s-01-01") % (year)
-        end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
-    elif(details['type'] == "Month"):
-        print("month")
-        start_date = ("%s-%s-01") % (year, month)
-        end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
-    else:
-        start_date = date
-        end_date = date
-    return start_date, end_date
-
 @app.route('/')
 def index():
     profit = get_data.get_profit()
@@ -58,7 +42,7 @@ def reports_profit():
 
     if request.method == "POST":
         details = request.form
-        start_date, end_date = set_dates(details)
+        start_date, end_date = function.set_dates(details)
         sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
         purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
         return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
@@ -71,7 +55,7 @@ def reports_sale():
 
     if request.method == "POST":
         details = request.form
-        start_date, end_date = set_dates(details)
+        start_date, end_date = function.set_dates(details)
         sold_dates = get_data.get_sold_from_date(start_date, end_date)
         return render_template('reports_sales.html', form=form, sold_dates=sold_dates)
     return render_template('reports_sales.html', form=form)
@@ -82,7 +66,7 @@ def reports_purchases():
 
     if request.method == "POST":
         details = request.form
-        start_date, end_date = set_dates(details)
+        start_date, end_date = function.set_dates(details)
         purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
         return render_template('reports_purchases.html', form=form, purchased_dates=purchased_dates)
     return render_template('reports_purchases.html', form=form)
@@ -106,7 +90,7 @@ def reports_expenses():
 
     if request.method == "POST":
         details = request.form
-        start_date, end_date = set_dates(details)
+        start_date, end_date = function.set_dates(details)
         expense_type = int(details['expense_type'])
         expenses_dates = get_data.get_expenses_from_date(start_date, end_date, expense_type)
         return render_template('reports_expenses.html', form=form, expenses_dates=expenses_dates, expense_type=expense_type)
