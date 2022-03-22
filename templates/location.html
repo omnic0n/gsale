@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
 {% if location['latitude'] or location['longitude'] %}
-    <center>{{ googlemap("map", lat=location['latitude'], lng=location['longitude'], markers=[(location['latitude'], location['longitude'])], zoom=9 )}}</center>
+    <center>{{ googlemap("map", lat=location['latitude'], lng=location['longitude'], markers=[(location['latitude'], location['longitude'])], zoom=9, style="height:600px;width:600px")}}</center>
 {% endif %}
 {% endblock content %}
