@@ -2,29 +2,28 @@
 <html>
 <body>
 
+<p>Click the button to get your coordinates.</p>
+
+<button onclick="getLocation()">Try It</button>
+
+<p id="demo"></p>
+
 <script>
+var x = document.getElementById("demo");
 
 function getLocation() {
-  console.log("Getting Location")
   if (navigator.geolocation) {
-    console.log("navigator");
-    console.log(navigator.geolocation.getCurrentPosition(showPosition));
+    navigator.geolocation.getCurrentPosition(showPosition);
   } else { 
-    console.log("Geolocation is not supported by this browser.");
+    x.innerHTML = "Geolocation is not supported by this browser.";
   }
-  console.log("Got Location");
 }
 
 function showPosition(position) {
-    console.log("Showing Location")
-    console.log("Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
+  x.innerHTML = "Latitude: " + position.coords.latitude + 
+  "<br>Longitude: " + position.coords.longitude;
 }
-
-window.onload = function() {
-    console.log("Running function");
-    getLocation();
-};
 </script>
+
 </body>
 </html>
-
