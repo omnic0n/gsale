@@ -343,7 +343,7 @@ def get_location(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT longitude, latitude FROM location WHERE group_id = %s", (group_id, ))
     location = list(cur.fetchall())
-    return location[0]['longitude'],location[0]['latitude']
+    return location['longitude'],location['latitude']
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
