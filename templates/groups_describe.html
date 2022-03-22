@@ -66,6 +66,9 @@
 	<div>
 		<img src="{{ url_for('static', filename='uploads/' + group_id[0]['image']) }}" width=75% height=auto>
 	</div>
+    {% if group_id[0]['latitude'] or group_id[0]['longitude'] %}
+        {{ googlemap("map", lat=group_id[0]['latitude'], lng=group_id[0]['longitude'], markers=[(group_id[0]['latitude'], group_id[0]['longitude'])]) }}
+    {% endif %}
 </center>
 {% endif %}
 {% endblock content %}
