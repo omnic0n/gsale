@@ -347,7 +347,6 @@ def groups_list():
 @app.route('/items/sold_list')
 def sold_list():
     date = request.args.get('date', type = str)
-    print('date')
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
     print(items)
     sold = get_data.get_all_items_sold()
