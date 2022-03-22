@@ -8,6 +8,7 @@ var x = document.getElementById("demo");
 function getLocation() {
   console.log("Getting Location")
   if (navigator.geolocation) {
+    console.log("navigator");
     navigator.geolocation.getCurrentPosition(showPosition);
   } else { 
     console.log("Geolocation is not supported by this browser.");
