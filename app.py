@@ -19,9 +19,6 @@ app.config['GOOGLEMAPS_KEY'] = os.environ.get('GOOGLE_KEY')
 # Initialize the extension
 GoogleMaps(app)
 
-UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-
 app.secret_key = '4T3*%go^Gcn7TrYm'
 
 app.config['MYSQL_HOST'] = 'localhost'
@@ -29,13 +26,11 @@ app.config['MYSQL_USER'] = 'gsale'
 app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
 app.config['MYSQL_DB'] = 'gsale'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 mysql = MySQL(app)
 
-today = date.today()
-current_date = today.strftime("%Y-%m-%d")
+current_date = date.today().strftime("%Y-%m-%d")
 
 def set_dates(details):
     year = int(details['year'])
