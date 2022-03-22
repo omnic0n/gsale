@@ -670,5 +670,9 @@ def describe_group():
                             max_group_id = max_group_id,
                             sold_price=sold_price)
 
+@app.route('/location')
+def location():
+    return render_template('location.html')
+    
 if __name__ == '__main__':
     app.run(debug=True)
