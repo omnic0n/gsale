@@ -305,11 +305,3 @@ def get_location(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT longitude, latitude FROM location WHERE group_id = %s", (group_id, ))
     return cur.fetchone()
-
-def allowed_file(filename):
-	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def upload_image(file):
-    filename = str(random.getrandbits(128)) + '.jpg'
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename)))
-    return filename
