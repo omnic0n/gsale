@@ -158,7 +158,7 @@ def get_list_of_items_purchased_by_date(date='%', sold=0):
                     FROM items items 
                     INNER JOIN groups groups ON items.group_id = groups.id
                     INNER JOIN sale sale on items.id = sale.id
-                    WHERE sale.date = %s""", (date,))
+                    WHERE sale.date LIKE %s""", (date,))
         return list(cur.fetchall())
 
 def get_list_of_items_with_categories(category_id):
