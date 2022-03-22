@@ -146,33 +146,19 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(date, sold=0):
+def get_list_of_items_purchased_by_date(date='%', sold=0):
         cur = mysql.connection.cursor()
-        if date:
-            cur.execute("""SELECT 
-                        items.id, 
-                        items.name, 
-                        items.sold,
-                        items.group_id,
-                        sale.date as sales_date,
-                        groups.date
-                        FROM items items 
-                        INNER JOIN groups groups ON items.group_id = groups.id
-                        INNER JOIN sale sale on items.id = sale.id
-                        WHERE sale.date = %s""", (date,))
-        else:    
-            cur.execute("""SELECT 
-                        items.id, 
-                        items.name, 
-                        items.sold,
-                        items.group_id,
-                        sale.date as sales_date,
-                        groups.date
-                        FROM items items 
-                        INNER JOIN groups groups ON items.group_id = groups.id
-                        INNER JOIN sale sale on items.id = sale.id
-                        WHERE items.sold = %s""",
-                        (sold,))
+        cur.execute("""SELECT 
+                    items.id, 
+                    items.name, 
+                    items.sold,
+                    items.group_id,
+                    sale.date as sales_date,
+                    groups.date
+                    FROM items items 
+                    INNER JOIN groups groups ON items.group_id = groups.id
+                    INNER JOIN sale sale on items.id = sale.id
+                    WHERE sale.date = %s""", (date,))
         return list(cur.fetchall())
 
 def get_list_of_items_with_categories(category_id):
