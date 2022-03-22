@@ -674,6 +674,11 @@ def describe_group():
 def location():
     form = GroupForm()
 
+    if request.method == "POST":
+        details = request.form
+        print(details['longitude'])
+        print(details['latitude'])
+
     return render_template('location.html', form=form)
 
 if __name__ == '__main__':
