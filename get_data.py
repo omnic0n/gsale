@@ -1,3 +1,5 @@
+from flask_mysqldb import MySQL
+
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
