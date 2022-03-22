@@ -37,8 +37,6 @@
             </div>
         </form>
     </div>
-<p id="demo"></p>
-
 <script>
 var x = document.getElementById("demo");
 
@@ -51,8 +49,8 @@ function getLocation() {
 }
 
 function showPosition(position) {
-  x.innerHTML = "Latitude: " + position.coords.latitude + 
-  "<br>Longitude: " + position.coords.longitude;
+   document.getElementById("longitude").value = position.coords.longitude.toString();
+   document.getElementById("latitude").value = position.coords.latitude.toString();
 }
 
 window.onload = getLocation;
