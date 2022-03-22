@@ -22,7 +22,9 @@ def get_all_from_group(group_id):
     cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
     return cur.fetchone()
 
-def get_all_from_group_and_items(date='%'):
+def get_all_from_group_and_items(date):
+    if not date:
+        date="%"
     print(date)
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
