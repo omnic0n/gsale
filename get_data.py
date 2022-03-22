@@ -22,33 +22,20 @@ def get_all_from_group(group_id):
     cur.execute("SELECT * FROM groups WHERE id = %s", (group_id,))
     return cur.fetchone()
 
-def get_all_from_group_and_items(date):
+def get_all_from_group_and_items(date='%'):
     cur = mysql.connection.cursor()
-    if date:
-        cur.execute(""" SELECT 
-                groups.name, 
-                groups.price, 
-                groups.id,
-                groups.date,
-                sum(sale.price - sale.shipping_fee) AS net 
-                FROM groups groups
-                RIGHT JOIN items items ON groups.id = items.group_id 
-                LEFT JOIN sale sale ON sale.id = items.id
-                WHERE groups.date LIKE %s
-                GROUP by items.group_id
-                ORDER by groups.id""", (date, ))
-    else:
-        cur.execute(""" SELECT 
-                groups.name, 
-                groups.price, 
-                groups.id,
-                groups.date,
-                sum(sale.price - sale.shipping_fee) AS net 
-                FROM groups groups
-                RIGHT JOIN items items ON groups.id = items.group_id 
-                LEFT JOIN sale sale ON sale.id = items.id
-                GROUP by items.group_id
-                ORDER by groups.id""")
+    cur.execute(""" SELECT 
+            groups.name, 
+            groups.price, 
+            groups.id,
+            groups.date,
+            sum(sale.price - sale.shipping_fee) AS net 
+            FROM groups groups
+            RIGHT JOIN items items ON groups.id = items.group_id 
+            LEFT JOIN sale sale ON sale.id = items.id
+            WHERE groups.date LIKE %s
+            GROUP by items.group_id
+            ORDER by groups.id""", (date, ))
     return list(cur.fetchall())
 
 def get_all_from_items(item_id):
