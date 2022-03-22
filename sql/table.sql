@@ -60,9 +60,7 @@ CREATE TABLE `groups` (
   `date` date NOT NULL,
   `price` decimal(6,2) NOT NULL,
   `name` char(120) NOT NULL,
-  `image` char(75) DEFAULT NULL,
-  `longitude` float DEFAULT NULL,
-  `latitude` float DEFAULT NULL,
+  `image` char(75) DEFAULT NULL
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=latin1;
