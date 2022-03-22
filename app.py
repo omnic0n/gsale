@@ -10,8 +10,6 @@ import random, os
 
 app = Flask(__name__)
 
-AIzaSyA4OFVBbnm5cRZgCD8fQvP_xs9g4XPU3P4
-
 # you can set key as config
 app.config['GOOGLEMAPS_KEY'] = os.environ.get('GOOGLE_KEY')
 
