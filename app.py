@@ -672,7 +672,9 @@ def describe_group():
 
 @app.route('/location')
 def location():
-    return render_template('location.html')
-    
+    form = GroupForm()
+
+    return render_template('location.html', form=form)
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -13,6 +13,8 @@ class GroupForm(FlaskForm):
                         validators=[DataRequired()], format='%Y-%m-%d')
     id = StringField('id')
     image = FileField('image')
+    latitude = StringField('latitude')
+    longitude = StringField('longitude')
     submit = SubmitField('Submit')
 
 class ExpenseForm(FlaskForm):
