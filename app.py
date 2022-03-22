@@ -9,6 +9,7 @@ from flask_googlemaps import GoogleMaps
 import random, os
 
 import get_data
+import files
 
 app = Flask(__name__)
 
@@ -52,14 +53,6 @@ def set_dates(details):
         start_date = date
         end_date = date
     return start_date, end_date
-
-def allowed_file(filename):
-	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def upload_image(file):
-    filename = str(random.getrandbits(128)) + '.jpg'
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename)))
-    return filename
 
 @app.route('/')
 def index():
@@ -135,7 +128,7 @@ def group_add():
         details = request.form
         group_name = "%s-%s" % (details['date'],details['name'])
         if(request.files['image']):
-            image_id = upload_image(request.files['image'])
+            image_id = files.upload_image(request.files['image'])
         else:
             image_id = 'NULL'
         cur = mysql.connection.cursor()
@@ -162,7 +155,7 @@ def expense_gas():
         details = request.form
         name = "%s-gas" % (details['date'])
         if(request.files['image']):
-            image_id = upload_image(request.files['image'])
+            image_id = files.upload_image(request.files['image'])
         else:
             image_id = 'NULL'
         cur = mysql.connection.cursor()
@@ -182,7 +175,7 @@ def expense_item():
         details = request.form
         name = "%s-%s" % (details['date'], details['name'])
         if(request.files['image']):
-            image_id = upload_image(request.files['image'])
+            image_id = files.upload_image(request.files['image'])
         else:
             image_id = 'NULL'
         cur = mysql.connection.cursor()
@@ -205,9 +198,9 @@ def modify_expense():
     if request.method == "POST":
         details = request.form
         if(request.files['image']):
-            image_id = upload_image(request.files['image'])
+            image_id = files.upload_image(request.files['image'])
         else:
-            image_id = 'NULL'
+            image_id = expense[0]['image']
         
         if(expense[0]['type'] == 1):
             price = 0
@@ -234,7 +227,7 @@ def modify_group():
     if request.method == "POST":
         details = request.form
         if(request.files['image']):
-            image_id = upload_image(request.files['image'])
+            image_id = files.upload_image(request.files['image'])
         else:
             image_id = group_id[0]['image']
         cur = mysql.connection.cursor()
