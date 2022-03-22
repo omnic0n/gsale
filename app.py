@@ -5,9 +5,18 @@ from upload_function import *
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
+from flask_googlemaps import GoogleMaps
 import random, os
 
 app = Flask(__name__)
+
+AIzaSyA4OFVBbnm5cRZgCD8fQvP_xs9g4XPU3P4
+
+# you can set key as config
+app.config['GOOGLEMAPS_KEY'] = os.environ.get('GOOGLE_KEY')
+
+# Initialize the extension
+GoogleMaps(app)
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -678,7 +687,7 @@ def location():
         details = request.form
         print(details['longitude'])
         print(details['latitude'])
-        return redirect(url_for('location'))
+        return redirect(url_for('location'), longitude=details['longitude'], latitude=details['latitude'])
     return render_template('location.html', form=form)
 
 if __name__ == '__main__':
