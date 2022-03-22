@@ -157,8 +157,11 @@ def get_data_from_group_describe(group_id):
                     groups.price, 
                     groups.id,
                     groups.date,
-                    groups.image
-                    FROM groups
+                    groups.image,
+                    longitude,
+                    latitude
+                    FROM groups groups
+                    INNER JOIN location location ON location.group_id = groups.id
                     WHERE groups.id = %s""", (group_id, ))
     return list(cur.fetchall())
 
@@ -427,6 +430,9 @@ def group_add():
                    (group_name, details['date'], details['price'], image_id))
         mysql.connection.commit()
         group_id = str(cur.lastrowid)
+        cur.execute("INSERT INTO location(group_id, longitude, latitude) VALUES (%s, %s, %s)", 
+                   (group_id, details['longitude'], details['latitude']))
+        mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
@@ -521,6 +527,8 @@ def modify_group():
         cur = mysql.connection.cursor()
         cur.execute("UPDATE groups SET name = %s, date = %s, price = %s, image = %s where id = %s", 
                     (details['name'], details['date'], details['price'], image_id, details['id']))
+        cur.execute("UPDATE location set longitude = %s, latitude =%s where group_id =%s", 
+        (details['longitude'], details['latitude'], details['id']))
         mysql.connection.commit()
         cur.close()
         return redirect(url_for('describe_group',group_id=details['id']))
