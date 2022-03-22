@@ -692,7 +692,7 @@ def describe_group():
 @app.route('/location', methods=["GET"])
 def location():
     id = request.args.get('group_id', type = str)
-    location = get_location('id')
+    location = get_location(id)
     print(location)
     return render_template('location.html', location=location)
 
