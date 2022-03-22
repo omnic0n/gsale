@@ -343,7 +343,6 @@ def groups_list():
     groups = get_data.get_all_from_group_and_items(date)
     print(groups)
     all_groups = get_data.get_all_from_groups(date)
-    print(all_groups)
     return render_template('groups_list.html', groups=groups, all_groups=all_groups)
 
 @app.route('/items/sold_list')
