@@ -689,17 +689,11 @@ def describe_group():
                             max_group_id = max_group_id,
                             sold_price=sold_price)
 
-@app.route('/location', methods=["POST","GET"])
+@app.route('/location', methods=["GET"])
 def location():
     id = request.args.get('group_id', type = str)
-    print(id)
     location = get_location('id')
-    print(location)
-
-    if request.method == "POST":
-        details = request.form
-        return render_template('location.html', location=location)
-    return render_template('location.html')
+    return render_template('location.html', location=location)
 
 if __name__ == '__main__':
     app.run(debug=True)
