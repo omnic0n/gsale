@@ -693,6 +693,7 @@ def describe_group():
 def location():
     id = request.args.get('group_id', type = str)
     location = get_location('id')
+    print(location)
     return render_template('location.html', location=location)
 
 if __name__ == '__main__':
