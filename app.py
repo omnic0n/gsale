@@ -342,7 +342,7 @@ def get_group_profit(group_id):
 def get_location(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT longitude, latitude FROM location WHERE group_id = %s", (group_id, ))
-    return list(cur.fetchall())
+    return cur.fetchone()
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -693,7 +693,7 @@ def describe_group():
 def location():
     id = request.args.get('group_id', type = str)
     location = get_location('id')
-    print(location[0])
+    print(location)
     return render_template('location.html', location=location)
 
 if __name__ == '__main__':
