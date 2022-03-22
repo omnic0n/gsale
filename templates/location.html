@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-{% if details %}
-    {{ googlemap("map", lat=details['latitude'], lng=details['longitude'], markers=[(details['latitude'], details['longitude'])]) }}
+{% if latitude or longitude %}
+    {{ googlemap("map", lat=latitude, lng=longitude, markers=[(latitude, longitude)]) }}
 {% endif %}
 {% endblock content %}
