@@ -11,7 +11,6 @@ app.config['MYSQL_USER'] = 'gsale'
 app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
 app.config['MYSQL_DB'] = 'gsale'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 mysql = MySQL(app)
