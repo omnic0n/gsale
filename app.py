@@ -670,7 +670,7 @@ def describe_group():
                             max_group_id = max_group_id,
                             sold_price=sold_price)
 
-@app.route('/location')
+@app.route('/location', methods=["POST","GET"])
 def location():
     form = GroupForm()
 
