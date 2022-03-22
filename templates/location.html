@@ -12,6 +12,7 @@ function getLocation() {
   } else { 
     console.log("Geolocation is not supported by this browser.");
   }
+  console.log("Got Location");
 }
 
 function showPosition(position) {
@@ -20,7 +21,7 @@ function showPosition(position) {
 }
 
 window.onload = function() {
-    console.log("Running function")
+    console.log("Running function");
     getLocation();
 };
 </script>
