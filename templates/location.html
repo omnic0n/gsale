@@ -55,6 +55,5 @@ function showPosition(position) {
 
 window.onload = getLocation;
 </script>
-{% details %}
-{{ googlemap("map", lat=details['latitude'], lng=details['longitude']) }}
+{{ details }}
 {% endblock content %}
