@@ -8,6 +8,8 @@ from werkzeug.utils import secure_filename
 from flask_googlemaps import GoogleMaps
 import random, os
 
+import get_data
+
 app = Flask(__name__)
 
 # you can set key as config
@@ -338,11 +340,6 @@ def get_group_profit(group_id):
                      AND group_id = %s)""", (group_id, ))
     sale = list(cur.fetchall())
     return sale[0]['price']
-
-def get_location(group_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT longitude, latitude FROM location WHERE group_id = %s", (group_id, ))
-    return cur.fetchone()
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -692,7 +689,7 @@ def describe_group():
 @app.route('/location', methods=["GET"])
 def location():
     id = request.args.get('group_id', type = str)
-    location = get_location(id)
+    location = get_data.get_location(id)
     print(location)
     return render_template('location.html', location=location)
 
