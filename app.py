@@ -11,7 +11,7 @@ import random, os
 app = Flask(__name__)
 
 # you can set key as config
-app.config['GOOGLEMAPS_KEY'] = os.environ.get('GOOGLE_KEY')
+app.config['GOOGLEMAPS_KEY'] = 'AIzaSyA4OFVBbnm5cRZgCD8fQvP_xs9g4XPU3P4'
 
 # Initialize the extension
 GoogleMaps(app)
