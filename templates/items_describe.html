@@ -56,7 +56,7 @@
         <tr>
             <td>Sold</td>
             <td>{{ sold[0]['net'] }}</td>
-            <td>{{ sold[0]['date'] }}</td>
+            <td><a href = "/items/sold_list?date={{ sold[0]['date'] }}">{{ sold[0]['date'] }}</a></td>
             <td>{{ (sold[0]['date'] - item[0]['purchase_date']).days }}</td>
         </tr>
         {% endif %}
