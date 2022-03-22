@@ -694,6 +694,7 @@ def location():
     id = request.args.get('group_id', type = str)
     location = get_location('id')
 
+    print(location)
     if request.method == "POST":
         details = request.form
         return render_template('location.html', location=location)
