@@ -15,6 +15,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 mysql = MySQL(app)
 
+#Group Data
 def set_group_add(group_name, details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO groups(name, date, price,image) VALUES (%s, %s, %s, %s)", 
@@ -26,3 +27,12 @@ def set_group_add(group_name, details, image_id):
     mysql.connection.commit()
     cur.close()
     return group_id
+
+
+#Expense Data
+def set_expense_gas(name, details, image_id):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO expenses(name, date, milage, image, type) VALUES (%s, %s, %s, %s, %s)", 
+                   (name, details['date'], details['milage'], image_id, 1))
+    mysql.connection.commit()
+    cur.close()

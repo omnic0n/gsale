@@ -119,20 +119,11 @@ def display_image(filename):
 @app.route('/expense/gas',methods=["POST","GET"])
 def expense_gas():
     form = ExpenseForm()
-
     if request.method == "POST":
         details = request.form
         name = "%s-gas" % (details['date'])
-        if(request.files['image']):
-            image_id = files.upload_image(request.files['image'])
-        else:
-            image_id = 'NULL'
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO expenses(name, date, milage, image, type) VALUES (%s, %s, %s, %s, %s)", 
-                   (name, details['date'], details['milage'], image_id, 1))
-        mysql.connection.commit()
-        id = str(cur.lastrowid)
-        cur.close()
+        image_id = files.upload_image(request.files['image'])
+        set_data.set_expense_gas(name, details, image_id)
         return redirect(url_for('list_expense'))
     return render_template('expense_gas.html', form=form)
 
