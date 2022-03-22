@@ -30,8 +30,6 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 mysql = MySQL(app)
 
-current_date = date.today().strftime("%Y-%m-%d")
-
 def set_dates(details):
     year = int(details['year'])
     month = int(details['month'])
@@ -265,7 +263,7 @@ def bought_items():
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
-                        (item_id,current_date,))
+                        (item_id,date.today().strftime("%Y-%m-%d"),))
             mysql.connection.commit()
             group_data = get_data.get_all_from_group(details['group'])
         cur.close()
