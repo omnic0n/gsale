@@ -28,11 +28,33 @@ def set_group_add(group_name, details, image_id):
     cur.close()
     return group_id
 
+def set_group_modify(details, image_id):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE groups SET name = %s, date = %s, price = %s, image = %s where id = %s", 
+                (details['name'], details['date'], details['price'], image_id, details['id']))
+    cur.execute("UPDATE location set longitude = %s, latitude =%s where group_id =%s", 
+    (details['longitude'], details['latitude'], details['id']))
+    mysql.connection.commit()
+    cur.close()
 
 #Expense Data
 def set_expense_gas(name, details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO expenses(name, date, milage, image, type) VALUES (%s, %s, %s, %s, %s)", 
                    (name, details['date'], details['milage'], image_id, 1))
+    mysql.connection.commit()
+    cur.close()
+
+def set_expense_item(name, details, image_id):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
+                (name, details['date'], details['price'], image_id, 2))
+    mysql.connection.commit()
+    cur.close()
+
+def set_modify_expense(details, price, milage, image_id):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
+                (details['name'], details['date'], price, milage, details['type'], image_id, details['id']))
     mysql.connection.commit()
     cur.close()

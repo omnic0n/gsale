@@ -104,10 +104,7 @@ def group_add():
     if request.method == "POST":
         details = request.form
         group_name = "%s-%s" % (details['date'],details['name'])
-        if(request.files['image']):
-            image_id = files.upload_image(request.files['image'])
-        else:
-            image_id = 'NULL'
+        image_id = files.upload_image(request.files['image'])
         group_id = set_data.set_group_add(group_name, details, image_id)
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
@@ -134,16 +131,8 @@ def expense_item():
     if request.method == "POST":
         details = request.form
         name = "%s-%s" % (details['date'], details['name'])
-        if(request.files['image']):
-            image_id = files.upload_image(request.files['image'])
-        else:
-            image_id = 'NULL'
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
-                   (name, details['date'], details['price'], image_id, 2))
-        mysql.connection.commit()
-        id = str(cur.lastrowid)
-        cur.close()
+        image_id = files.upload_image(request.files['image'])
+        set_data.set_expense_item(name, details, image_id)
         return redirect(url_for('list_expense'))
     return render_template('expense_item.html', form=form)
 
@@ -161,19 +150,14 @@ def modify_expense():
             image_id = files.upload_image(request.files['image'])
         else:
             image_id = expense[0]['image']
-        
+
         if(expense[0]['type'] == 1):
             price = 0
             milage = details['milage']
         else:
             price = details['price']
             milage = 0
-
-        cur = mysql.connection.cursor()
-        cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
-                    (details['name'], details['date'], price, milage, details['type'], image_id, details['id']))
-        mysql.connection.commit()
-        cur.close()
+        set_data.set_modify_expense(details,  price, milage, image_id)
         return redirect(url_for('describe_expense',id=details['id']))
     return render_template('modify_expense.html', expense=expense, form=form)
 
@@ -190,13 +174,7 @@ def modify_group():
             image_id = files.upload_image(request.files['image'])
         else:
             image_id = group_id[0]['image']
-        cur = mysql.connection.cursor()
-        cur.execute("UPDATE groups SET name = %s, date = %s, price = %s, image = %s where id = %s", 
-                    (details['name'], details['date'], details['price'], image_id, details['id']))
-        cur.execute("UPDATE location set longitude = %s, latitude =%s where group_id =%s", 
-        (details['longitude'], details['latitude'], details['id']))
-        mysql.connection.commit()
-        cur.close()
+        set_data.set_group_modify(details, image_id)
         return redirect(url_for('describe_group',group_id=details['id']))
     return render_template('modify_group.html', group_id=group_id, form=form)
 
