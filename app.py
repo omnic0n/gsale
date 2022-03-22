@@ -692,9 +692,10 @@ def describe_group():
 @app.route('/location', methods=["POST","GET"])
 def location():
     id = request.args.get('group_id', type = str)
+    print(id)
     location = get_location('id')
-
     print(location)
+
     if request.method == "POST":
         details = request.form
         return render_template('location.html', location=location)
