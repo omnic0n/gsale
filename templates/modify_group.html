@@ -67,7 +67,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.image(class="form-control form-control-lg") }}
+                        {{ form.image(class="form-control form-control-lg", value=group_id[0]['image']) }}
                     {% endif %}
                 </div>
                 <div class="form-group">
@@ -80,7 +80,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.latitude(class="form-control form-control-lg") }}
+                        {{ form.latitude(class="form-control form-control-lg", value=group_id[0]['latitude']) }}
                     {% endif %}
                 </div>
                 <div class="form-group">
@@ -93,7 +93,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.longitude(class="form-control form-control-lg") }}
+                        {{ form.longitude(class="form-control form-control-lg", value=group_id[0]['longitude']) }}
                     {% endif %}
                 </div>
             </fieldset>
