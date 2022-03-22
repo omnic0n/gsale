@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from flask_googlemaps import GoogleMaps
 import random, os
 
-import get_data
+import get_data, set_data
 import files
 import function
 
@@ -108,15 +108,7 @@ def group_add():
             image_id = files.upload_image(request.files['image'])
         else:
             image_id = 'NULL'
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO groups(name, date, price,image) VALUES (%s, %s, %s, %s)", 
-                   (group_name, details['date'], details['price'], image_id))
-        mysql.connection.commit()
-        group_id = str(cur.lastrowid)
-        cur.execute("INSERT INTO location(group_id, longitude, latitude) VALUES (%s, %s, %s)", 
-                   (group_id, details['longitude'], details['latitude']))
-        mysql.connection.commit()
-        cur.close()
+        group_id = set_data.set_group_add(group_name, details, image_id)
         return redirect(url_for('describe_group',group_id=group_id))
     return render_template('groups_add.html', form=form)
 
