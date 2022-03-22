@@ -23,6 +23,7 @@ def get_all_from_group(group_id):
     return cur.fetchone()
 
 def get_all_from_group_and_items(date='%'):
+    print(date)
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
             groups.name, 
@@ -147,8 +148,6 @@ def get_data_for_item_sold(item_id):
     return list(cur.fetchall())
 
 def get_list_of_items_purchased_by_date(date="%", sold=0):
-        date=date
-        print(date)
         cur = mysql.connection.cursor()
         cur.execute("""SELECT 
                     items.id, 
