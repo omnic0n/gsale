@@ -56,6 +56,6 @@ function showPosition(position) {
 window.onload = getLocation;
 </script>
 {% if details %}
-    {{ googlemap("map", lat=details['latitude'], lng=details['longitude']) }}
+    {{ googlemap("map", lat=details['latitude'], lng=details['longitude'], markers=[(details['latitude'], details['longitude'])]) }}
 {% endif %}
 {% endblock content %}
