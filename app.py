@@ -523,7 +523,7 @@ def modify_group():
         if(request.files['image']):
             image_id = upload_image(request.files['image'])
         else:
-            image_id = 'NULL'
+            image_id = group_id[0]['image']
         cur = mysql.connection.cursor()
         cur.execute("UPDATE groups SET name = %s, date = %s, price = %s, image = %s where id = %s", 
                     (details['name'], details['date'], details['price'], image_id, details['id']))
