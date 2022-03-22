@@ -146,7 +146,8 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(date="\%", sold=0):
+def get_list_of_items_purchased_by_date(date="%", sold=0):
+        date=date
         print(date)
         cur = mysql.connection.cursor()
         cur.execute("""SELECT 
