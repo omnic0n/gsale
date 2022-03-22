@@ -685,7 +685,7 @@ def location():
         details = request.form
         print(details['longitude'])
         print(details['latitude'])
-        return redirect(url_for('location'), longitude=details['longitude'], latitude=details['latitude'])
+        return redirect(url_for('location'), details=details)
     return render_template('location.html', form=form)
 
 if __name__ == '__main__':
