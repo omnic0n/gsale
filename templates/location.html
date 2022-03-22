@@ -6,6 +6,7 @@
 var x = document.getElementById("demo");
 
 function getLocation() {
+  console.log("Getting Location")
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(showPosition);
   } else { 
