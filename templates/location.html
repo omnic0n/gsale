@@ -55,5 +55,7 @@ function showPosition(position) {
 
 window.onload = getLocation;
 </script>
-{{ details['latitude'] }}
+{% if details %}
+    {{ details['latitude'] }}
+{% endif %}
 {% endblock content %}
