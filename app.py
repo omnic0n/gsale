@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm
 from upload_function import *
 from datetime import datetime, date, timedelta
@@ -21,15 +20,6 @@ app.config['GOOGLEMAPS_KEY'] = os.environ.get('GOOGLE_KEY')
 GoogleMaps(app)
 
 app.secret_key = '4T3*%go^Gcn7TrYm'
-
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'gsale'
-app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
-app.config['MYSQL_DB'] = 'gsale'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
-mysql = MySQL(app)
 
 @app.route('/')
 def index():
