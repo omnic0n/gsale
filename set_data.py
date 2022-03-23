@@ -6,7 +6,7 @@ import get_data
 
 #Mysql Config
 app = Flask(__name__)
-app.secret_key = '4T3*%go^Gcn7TrYm'
+
 mysql = MySQL(app)
 
 #Item Data

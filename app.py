@@ -14,22 +14,11 @@ import function
 
 app = Flask(__name__)
 
-# you can set key as config
-app.config['GOOGLEMAPS_KEY'] = os.environ.get('GOOGLE_KEY')
-
 # Initialize the extension
+app.config.from_object("config.ProductionConfig")
+
 GoogleMaps(app)
-
-app.secret_key = '4T3*%go^Gcn7TrYm'
-
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'gsale'
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
-app.config['MYSQL_DB'] = 'gsale'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
-mysql = MySQL(app)
+MySQL(app)
 
 @app.route('/')
 def index():

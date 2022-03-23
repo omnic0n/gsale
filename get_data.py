@@ -3,7 +3,7 @@ from flask_mysqldb import MySQL
 
 #Mysql Config
 app = Flask(__name__)
-app.secret_key = '4T3*%go^Gcn7TrYm'
+
 mysql = MySQL(app)
 
 #Group Data
