@@ -1,6 +1,8 @@
 from flask import Flask
 from flask_mysqldb import MySQL
+from datetime import datetime, date, timedelta
 
+import get_data
 #Mysql Config
 app = Flask(__name__)
 
@@ -15,7 +17,43 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 mysql = MySQL(app)
 
+#Item Data
+
+def set_mark_sold(id):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE items SET sold = 1 where id = %s", (id,))
+    mysql.connection.commit()
+    cur.close()
+
+def set_bought_items(details):
+    cur = mysql.connection.cursor()
+    for item in details['name'].splitlines():
+        cur.execute("INSERT INTO items(name, group_id, category_id) VALUES (%s, %s, %s)", 
+                    (item,details['group'],details['category'],))
+        mysql.connection.commit()
+        item_id = str(cur.lastrowid)
+        cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
+                    (item_id,date.today().strftime("%Y-%m-%d"),))
+        mysql.connection.commit()
+    cur.close()
+
+def set_sale_data(details):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE sale SET date = %s, price = %s, shipping_fee = %s WHERE id = %s", 
+                (details['date'], details['price'], details['shipping_fee'], details['id'],))
+    mysql.connection.commit()
+    cur.close()
+
+
+def set_items_modify(details):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE items SET name = %s, group_id = %s, category_id =%s where id = %s", 
+                (details['name'], details['group'], details['category'], details['id']))
+    mysql.connection.commit()
+    cur.close()
+
 #Group Data
+
 def set_group_add(group_name, details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO groups(name, date, price,image) VALUES (%s, %s, %s, %s)", 

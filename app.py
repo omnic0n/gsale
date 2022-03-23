@@ -181,12 +181,7 @@ def modify_group():
 @app.route('/items/mark_sold',methods=["POST","GET"])
 def mark_sold():
     id = request.args.get('item', type = str)
-    print(id)
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE items SET sold = 1 where id = %s", 
-                (id,))
-    mysql.connection.commit()
-    cur.close()
+    set_data.set_mark_sold(id)    
     return redirect(url_for('describe_item',item=id))
 
 @app.route('/items/bought',methods=["POST","GET"])
@@ -200,18 +195,8 @@ def bought_items():
 
     if request.method == "POST":
         details = request.form
-
-        cur = mysql.connection.cursor()
-        for item in details['name'].splitlines():
-            cur.execute("INSERT INTO items(name, group_id, category_id) VALUES (%s, %s, %s)", 
-                        (item,details['group'],details['category'],))
-            mysql.connection.commit()
-            item_id = str(cur.lastrowid)
-            cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
-                        (item_id,date.today().strftime("%Y-%m-%d"),))
-            mysql.connection.commit()
-            group_data = get_data.get_all_from_group(details['group'])
-        cur.close()
+        set_data.set_bought_items(details)
+        group_data = get_data.get_all_from_group(details['group'])
         return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
 
@@ -232,15 +217,8 @@ def modify_items():
 
     if request.method == "POST":
         details = request.form
-
-        cur = mysql.connection.cursor()
-        cur.execute("UPDATE items SET name = %s, group_id = %s, category_id =%s where id = %s", 
-                    (details['name'], details['group'], details['category'], details['id']))
-        mysql.connection.commit()
-        cur.execute("UPDATE sale SET price = %s, shipping_fee = %s, date = %s where id = %s", 
-                    (details['price'], details['shipping_fee'], details['date'], details['id']))
-        mysql.connection.commit()
-        cur.close()
+        set_data.set_items_modify(details)
+        set_data.set_sale_data(details)
         return redirect(url_for('describe_item',item=id))
     return render_template('modify_item.html', form=form, item=item, sale=sale)
 
@@ -252,13 +230,9 @@ def sold_items():
     form.name.choices = [(item['id'], item['name']) for item in items]
     if request.method == "POST":
         details = request.form
-        cur = mysql.connection.cursor()
-        cur.execute("UPDATE items SET sold = 1 WHERE id = %s", (details['name'], ))
-        cur.execute("UPDATE sale SET date = %s, price = %s, shipping_fee = %s WHERE id = %s", 
-                    (details['date'], details['price'], details['shipping_fee'], details['name'],))
-        mysql.connection.commit()
-        cur.close()
-        return redirect(url_for('describe_item',item=details['name']))
+        set_data.set_mark_sold(details['id'])
+        set_data.set_sale_data(details)
+        return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
 
 #List Section
