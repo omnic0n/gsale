@@ -30,7 +30,7 @@
     <tbody>
         <tr>
             <td>{{ group_id[0]['name'] }}</td>
-            <td>{{ group_id[0]['date'] }}</td>
+            <td><a href = "/groups/list?date={{ group_id[0]['date'] }}">{{ group_id[0]['date'] }}</a></td>
             <td>${{ group_id[0]['price'] }}</td>
             <td>${{ sold_price }}</td>
             <td>${{ sold_price - group_id[0]['price']}}</td>
