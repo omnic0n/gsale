@@ -24,7 +24,7 @@ app.secret_key = '4T3*%go^Gcn7TrYm'
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'gsale'
-app.config['MYSQL_PASSWORD'] = 'DR1wZcjTF7858gnu'
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = 'gsale'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
