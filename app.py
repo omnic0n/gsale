@@ -227,7 +227,7 @@ def sold_items():
     items = get_data.get_all_items_not_sold()
 
     form = SaleForm()
-    form.name.choices = [(item['id'], item['name']) for item in items]
+    form.id.choices = [(item['id'], item['name']) for item in items]
     if request.method == "POST":
         details = request.form
         set_data.set_mark_sold(details['id'])
