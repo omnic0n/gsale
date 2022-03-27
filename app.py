@@ -93,6 +93,7 @@ def reports_locations():
         details = request.form
         start_date, end_date = function.set_dates(details)
         locations = get_data.get_location_from_date(start_date, end_date)
+        print(locations)
         map = Map(
             identifier="test",
             lat=locations[0]['latitude'],
