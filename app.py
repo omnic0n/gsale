@@ -86,7 +86,7 @@ def reports_expenses():
     return render_template('reports_expenses.html', form=form)
 
 @app.route('/reports/locations',methods=["GET", "POST"])
-def reports_purchases():
+def reports_locations():
     form = ReportsForm()
 
     if request.method == "POST":
