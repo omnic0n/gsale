@@ -98,7 +98,7 @@ def reports_locations():
             identifier="test",
             lat=locations[0]['latitude'],
             lng=locations[0]['longitude'],
-            markers=[(loc['latitude'], loc['longitude'], "<a href=/groups/describe?group_id=%s>Group</a>" % loc['id']) for loc in locations],
+            markers=[(loc['latitude'], loc['longitude'], "<a href=/groups/describe?group_id=%s>%s</a>" % (loc['id'], loc['name'])) for loc in locations],
             style="height:800px;width:800px"
         )
         return render_template('reports_locations.html', form=form, map=map)

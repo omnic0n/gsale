@@ -282,6 +282,7 @@ def get_location_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT
                    groups.id,
+                   groups.name,
                    location.latitude,
                    location.longitude
                    FROM location
