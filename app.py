@@ -94,8 +94,10 @@ def reports_locations():
         start_date, end_date = function.set_dates(details)
         locations = get_data.get_location_from_date(start_date, end_date)
         map = Map(
+            identifier="test",
             lat=locations[0]['latitude'],
-            lng=locations[0]['longitude']
+            lng=locations[0]['longitude'],
+            markers=[(locations[0]['latitude'], locations[0]['longitude'])]
            # markers=[(loc['latitude'], loc['longitude']) for loc in locations]
         )
         print(map)
