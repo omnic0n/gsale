@@ -98,7 +98,7 @@ def reports_locations():
             identifier="test",
             lat=locations[0]['latitude'],
             lng=locations[0]['longitude'],
-            markers=[(loc['latitude'], loc['longitude'], '', '',loc['id']) for loc in locations],
+            markers=[(loc['latitude'], loc['longitude'], loc['id'], loc['id'],loc['id']) for loc in locations],
             style="height:800px;width:800px"
         )
         return render_template('reports_locations.html', form=form, map=map)
