@@ -99,7 +99,6 @@ def reports_locations():
             lng=locations[0]['longitude'],
             markers=[(loc['latitude'], loc['longitude']) for loc in locations]
         )
-        print(map)
         return render_template('reports_locations.html', form=form, map=map)
     return render_template('reports_locations.html', form=form)
 
