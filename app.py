@@ -296,7 +296,7 @@ def location():
     id = request.args.get('group_id', type = str)
     location = get_data.get_location(id)
     print(location)
-    return render_template('location.html', location=location)
+    return render_template('location.html', location=location, id=id)
 
 if __name__ == '__main__':
     app.run(debug=True)
