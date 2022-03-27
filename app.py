@@ -5,7 +5,7 @@ from upload_function import *
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
-from flask_googlemaps import GoogleMaps
+from flask_googlemaps import GoogleMaps, Map
 import random, os
 
 import get_data, set_data
@@ -84,6 +84,23 @@ def reports_expenses():
         expenses_dates = get_data.get_expenses_from_date(start_date, end_date, expense_type)
         return render_template('reports_expenses.html', form=form, expenses_dates=expenses_dates, expense_type=expense_type)
     return render_template('reports_expenses.html', form=form)
+
+@app.route('/reports/locations',methods=["GET", "POST"])
+def reports_purchases():
+    form = ReportsForm()
+
+    if request.method == "POST":
+        details = request.form
+        start_date, end_date = function.set_dates(details)
+        locations = get_data.get_location_from_date(start_date, end_date)
+        map = Map(
+            lat=locations[0].latitude,
+            lng=locations[0].longitude,
+            markers=[(loc.latitude, loc.longitude) for loc in locations],
+            fit_markers_to_bounds = True
+        )
+        return render_template('reports_locations.html', form=form, map=map)
+    return render_template('reports_locations.html', form=form)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
