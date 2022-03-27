@@ -1,4 +1,9 @@
 <HTML>
+<HEAD>
+    {% if map %}
+        {{mymap.js}}
+    {% end if %}
+</HEAD>
 {% extends "layout.html" %}
 {% block content %}
 <div class="content-section">
