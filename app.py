@@ -93,12 +93,10 @@ def reports_locations():
         details = request.form
         start_date, end_date = function.set_dates(details)
         locations = get_data.get_location_from_date(start_date, end_date)
-        print(locations[0]['latitude'])
         map = Map(
             lat=locations[0]['latitude'],
             lng=locations[0]['longitude'],
-            markers=[(loc['latitude'], loc['longitude']) for loc in locations],
-            fit_markers_to_bounds = True
+            markers=[(loc['latitude'], loc['longitude']) for loc in locations]
         )
         return render_template('reports_locations.html', form=form, map=map)
     return render_template('reports_locations.html', form=form)
