@@ -277,3 +277,15 @@ def get_location(group_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT longitude, latitude FROM location WHERE group_id = %s", (group_id, ))
     return cur.fetchone()
+
+def get_location_from_date(start_date, end_date):
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT
+                   groups.id,
+                   location.latitude,
+                   location.longitude
+                   FROM location
+                   INNER join groups groups on location.group_id = groups.id
+                   WHERE groups.date >= %s AND groups.date <= %s GROUP by date""",
+                   (start_date, end_date,))
+    return list(cur.fetchall())
