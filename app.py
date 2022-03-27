@@ -94,6 +94,9 @@ def reports_locations():
         start_date, end_date = function.set_dates(details)
         locations = get_data.get_location_from_date(start_date, end_date)
         print(locations)
+        for loc in locations:
+            print(loc['latitude'])
+            print(loc['longitude'])
         map = Map(
             lat=locations.latitude,
             lng=locations.longitude,
