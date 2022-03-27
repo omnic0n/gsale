@@ -286,6 +286,6 @@ def get_location_from_date(start_date, end_date):
                    location.longitude
                    FROM location
                    INNER join groups groups on location.group_id = groups.id
-                   WHERE groups.date >= %s AND groups.date <= %s GROUP by date""",
+                   WHERE groups.date >= %s AND groups.date <= %s""",
                    (start_date, end_date,))
     return list(cur.fetchall())
