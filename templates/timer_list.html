@@ -7,6 +7,7 @@
         <tr>
             <th>Item</th> 
             <th>Start Time</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -14,6 +15,7 @@
         <tr>
             <td><a href = "/items/describe?item={{ active_timer['id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
+            <td><a href = "/timer/end?item={{ active_timer['id'] }}">Stop Timer</a></td>
         </tr>
         {% endfor %}
     </tbody>
@@ -25,6 +27,7 @@
         <tr>
             <th>Group</th>
             <th>Start Time</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -32,6 +35,7 @@
         <tr>
             <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
+            <td><a href = "/timer/end?group={{ active_timer['group_id'] }}">Stop Timer</a></td>
         </tr>
         {% endfor %}
     </tbody>
