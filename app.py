@@ -219,6 +219,7 @@ def modify_items():
     form = ItemForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
     form.group.data = item[0]['group_id']
+    print(form.group.data)
 
     form.category.choices = [(category['id'], category['type']) for category in categories]
     form.category.data = item[0]['category_id']
@@ -239,7 +240,6 @@ def sold_items():
     form = SaleForm()
     form.id.choices = [(item['id'], item['name']) for item in items]
     form.id.data = item_id
-    print(form.id.data)
     if request.method == "POST":
         details = request.form
         set_data.set_mark_sold(details['id'])
