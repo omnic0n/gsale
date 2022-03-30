@@ -367,7 +367,6 @@ def timer_start():
 def timer_end():
     item = request.args.get('item', type = int)
     group = request.args.get('group', type = int)
-    active = request.args.get('active', type = str)
 
     if(item):
         set_data.end_timer_packing(item, datetime.now().replace(microsecond=0))
