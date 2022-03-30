@@ -285,7 +285,7 @@ def describe_item():
 
     if request.method == "POST":
         details = request.form
-        set_data.start_timer_packing(details['id'], details['time'])
+        #set_data.start_timer_packing(details['id'], details['time'])
         return redirect(url_for('sold_items',item=details['id']))
 
     item = get_data.get_data_for_item_describe(id)
