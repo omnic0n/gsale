@@ -278,7 +278,7 @@ def describe_item():
     form = TimerForm()
     form.button.label.text = "Sell Item"
     form.id.data = id
-    form.time.data = datetime.now()
+    form.time.data = datetime.now().replace(microsecond=0)
 
     if request.method == "POST":
         details = request.form
