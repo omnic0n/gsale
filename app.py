@@ -351,6 +351,7 @@ def location():
 @app.route('/timer/list', methods=["GET"])
 def timer_list():
     active_timers = get_data.get_active_timers()
+    print(active_timers)
     return render_template('timer_list.html', active_timers=active_timers)
 
 #@app.route('/timer/start', methods=["GET"])
