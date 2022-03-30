@@ -353,9 +353,9 @@ def timer_list():
     active_timers = get_data.get_active_timers()
     return render_template('timer_list.html', active_timers=active_timers)
 
-@app.route('/timer/start', methods=["GET"])
-def timer_start():
-    return render_template('location.html', location=location, id=id)
+#@app.route('/timer/start', methods=["GET"])
+#def timer_start():
+#    return render_template('location.html', location=location, id=id)
 
 if __name__ == '__main__':
     app.run(debug=True)

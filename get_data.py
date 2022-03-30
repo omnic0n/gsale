@@ -297,3 +297,8 @@ def get_timer_data_for_item(id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM timer WHERE id = %s", (id, ))
     return cur.fetchone()
+
+def get_active_timers():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM timer WHERE end_timer IS NULL")
+    return list(cur.fetchall())
