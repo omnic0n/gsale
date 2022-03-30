@@ -334,7 +334,8 @@ def describe_group():
                             group_id=group_id,
                             items=items,
                             max_group_id = max_group_id,
-                            sold_price=sold_price)
+                            sold_price=sold_price,
+                            form=form)
 
 @app.route('/location', methods=["GET"])
 def location():
