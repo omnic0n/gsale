@@ -279,6 +279,10 @@ def describe_item():
     form.button.label.text = "Sell Item"
     form.id.data = id
 
+    if request.method == "POST":
+        details = request.form
+        print(details)
+
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
     max_item = get_data.get_max_item_id()
