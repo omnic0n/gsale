@@ -92,13 +92,22 @@ def set_modify_expense(details, price, milage, image_id):
 #Timer
 def start_timer_packing(id, time):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT start_time FROM timer where id = %s", (id, ))
-    if cur.fetchone():
-        cur.execute("UPDATE timer SET start_time = %s WHERE id = %s", 
-                    (time, id))
-    else:
-        cur.execute("INSERT INTO timer(id, start_time, type) VALUES (%s, %s, %s)", 
-                    (id, time, 'packing'))
+    cur.execute("INSERT INTO timer(id, start_time, type) VALUES (%s, %s, %s)", 
+            (id, time, 'packing'))
+    mysql.connection.commit()
+    cur.close()
+
+def start_timer_listing(id, time):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO timer(group_id, start_time, type) VALUES (%s, %s, %s)", 
+            (id, time, 'listing'))
+    mysql.connection.commit()
+    cur.close()
+
+def start_timer_saling(date, time):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO timer(date, start_time, type, active) VALUES (%s, %s, %s, %s)", 
+            (date, time, 'saling', 'TRUE'))
     mysql.connection.commit()
     cur.close()
 
@@ -113,5 +122,12 @@ def end_timer_listing(id, time):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE timer SET end_time = %s WHERE group_id = %s", 
                 (time, id))
+    mysql.connection.commit()
+    cur.close()
+
+def end_timer_saling(date, time):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE timer SET end_time = %s WHERE date = %s", 
+                (time, date))
     mysql.connection.commit()
     cur.close()

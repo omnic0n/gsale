@@ -354,21 +354,26 @@ def timer_list():
     active_timers_listing = get_data.get_active_timers_listing()
     return render_template('timer_list.html', active_timers_listing=active_timers_listing, active_timers_packing=active_timers_packing)
 
-#@app.route('/timer/start', methods=["GET"])
-#def timer_start():
-#    return render_template('location.html', location=location, id=id)
+@app.route('/timer/start')
+def timer_start():
+    active = get_data.get_active_timers_garage_sales()
+    if not active:
+        set_data.start_timer_saling(datetime.now().date(), datetime.now().replace(microsecond=0))
+    return redirect(url_for('timer_list'))
+    
 
 @app.route('/timer/end', methods=["GET"])
 def timer_end():
     item = request.args.get('item', type = int)
     group = request.args.get('group', type = int)
+    date = request.args.get('date', type = int)
 
     if(item):
         set_data.end_timer_packing(item, datetime.now().replace(microsecond=0))
     elif(group):
         set_data.end_timer_listing(group, datetime.now().replace(microsecond=0))
     else:
-        print("nothing")
+        set_data.end_timer_listing(date, datetime.now().replace(microsecond=0))
     return redirect(url_for('timer_list'))
 
 if __name__ == '__main__':

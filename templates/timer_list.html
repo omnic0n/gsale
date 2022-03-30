@@ -40,5 +40,22 @@
         {% endfor %}
     </tbody>
 </table>
+<h3>Garage Sales</h3>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Start Time</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for active_timer in active_timers_garage_sales %}
+        <tr>
+            <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
+            <td><a href = "/timer/end?date={{ active_timer['date'] }}">Stop Timer</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock content %}
 </html>
