@@ -380,3 +380,4 @@ def timer_end():
 if __name__ == '__main__':
     app.run(debug=True)
     app.jinja_env.globals.update(is_timer_running=get_data.get_active_timers_garage_sales())
+    print(get_data.get_active_timers_garage_sales())
