@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField
-from wtforms.fields.html5 import DateField
+from wtforms.fields.html5 import DateField, DateTimeField
 from wtforms.validators import DataRequired, Length, EqualTo
 from datetime import datetime
 
@@ -83,9 +83,8 @@ class ReportsForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class TimerForm(FlaskForm):
-    packing_start_timer = SubmitField('Start Packing Timer')
-    packing_end_timer = SubmitField('End Packing Timer')
-    listing_start_timer = SubmitField('Start Listing Timer')
-    listing_end_timer = SubmitField('End Listing Timer')
-    garage_sale_start_timer = SubmitField('Start Garage Sale Timer')
-    garage_sale_end_timer = SubmitField('End Garage Sale Timer')
+    button = SubmitField()
+    time = DateField('time',
+                        default=datetime.now,
+                        validators=[DataRequired()], format='%Y-%m-%d %H:%M:%S')
+    id = StringField('id')

@@ -274,6 +274,7 @@ def unsold_list():
 @app.route('/items/describe',methods=["POST","GET"])
 def describe_item():
     form = TimerForm()
+    form.submit.label.text = "Sell Item"
 
     id = request.args.get('item', type = str)
     item = get_data.get_data_for_item_describe(id)
