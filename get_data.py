@@ -295,5 +295,5 @@ def get_location_from_date(start_date, end_date):
 #Timer Data
 def get_timer_data_for_item(id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT EXISTS(SELECT * FROM timer WHERE id = %s", (id, ))
-    return cur.fetchone()
+    cur.execute("SELECT * FROM timer WHERE id = %s", (id, ))
+    return cur.rowcount()
