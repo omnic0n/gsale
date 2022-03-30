@@ -93,8 +93,11 @@ def set_modify_expense(details, price, milage, image_id):
 def start_timer_packing(id, time):
     cur = mysql.connection.cursor()
     cur.execute("SELECT start_time FROM timer where id = %s", (id, ))
-    if not cur.fetchone():
+    if cur.fetchone():
+        cur.execute("UPDATE timer SET start_time = %s WHERE id = %s", 
+                    (time, id))
+    else:
         cur.execute("INSERT INTO timer(id, start_time, type) VALUES (%s, %s, %s)", 
                     (id, time, 'packing'))
-        mysql.connection.commit()
+    mysql.connection.commit()
     cur.close()
