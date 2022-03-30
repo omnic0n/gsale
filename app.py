@@ -250,7 +250,7 @@ def sold_items():
     return render_template('items_sold.html', form=form)
 
 #List Section
-@app.route('/expense/list',methods=["POST","GET"])
+@app.route('/expense/list', methods=["POST","GET"])
 def list_expense():
     date = request.args.get('date', type = str)
     expenses = get_data.get_all_from_expenses(date)
@@ -311,7 +311,7 @@ def describe_expense():
                             expense=expense,
                             max_expense=max_expense)
 
-@app.route('/groups/describe')
+@app.route('/groups/describe', methods=["POST","GET"])
 def describe_group():
     id = request.args.get('group_id', type = str)
     group_id = get_data.get_data_from_group_describe(id)
