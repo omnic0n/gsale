@@ -21,8 +21,8 @@
             {% if active_timer['id'] %}
             <td><a href = "/items/describe?id={{ active_timer['id'] }}">{{ active_timer['id'] }}</a></td>
             {% else %}<td></td>
-            <td>{{ active_timer['start_time'].strftime('%d-%m-%Y %H:%M:%S') }}</td>
             {% endif %}
+            <td>{{ active_timer['start_time'].strftime('%d-%m-%Y %H:%M:%S') }}</td>
         </tr>
         {% endfor %}
     </tbody>
