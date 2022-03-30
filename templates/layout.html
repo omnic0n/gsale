@@ -72,10 +72,10 @@
         </div>
       </nav>
     </header>
-    {% if is_timer_running %}
-    <Center><font color='red'>Timer Running</font></Center>
-    {% endif %}
     <main role="main" class="container">
+      {% if is_timer_running %}
+      <Center><font color='red'>Timer Running</font></Center>
+      {% endif %}
       <div class="row">
         <div class="col-md-8">
           {% with messages = get_flashed_messages(with_categories=true) %}
