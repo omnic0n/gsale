@@ -17,6 +17,10 @@ app = Flask(__name__)
 # Initialize the extension
 app.config.from_object("config.ProductionConfig")
 
+@app.context_processor
+def example():
+    return dict(is_timer_running=get_data.get_active_timers_garage_sales())
+  
 GoogleMaps(app)
 MySQL(app)
 
@@ -379,5 +383,3 @@ def timer_end():
 
 if __name__ == '__main__':
     app.run(debug=True)
-    app.jinja_env.globals.update(is_timer_running=get_data.get_active_timers_garage_sales())
-    print(get_data.get_active_timers_garage_sales())
