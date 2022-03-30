@@ -233,6 +233,7 @@ def modify_items():
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
     item_id = request.args.get('item', type = str)
+    print(item_id)
     items = get_data.get_all_items_not_sold()
 
     form = SaleForm()
