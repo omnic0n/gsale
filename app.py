@@ -232,10 +232,12 @@ def modify_items():
 
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
+    item_id = request.args.get('item', type = str)
     items = get_data.get_all_items_not_sold()
 
     form = SaleForm()
     form.id.choices = [(item['id'], item['name']) for item in items]
+    form.id.data = item_id
     if request.method == "POST":
         details = request.form
         set_data.set_mark_sold(details['id'])
@@ -283,6 +285,7 @@ def describe_item():
     if request.method == "POST":
         details = request.form
         print(details)
+        return redirect(url_for('sold_items',item=details['id']))
 
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
