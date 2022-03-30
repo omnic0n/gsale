@@ -374,7 +374,7 @@ def timer_end():
     elif(group):
         set_data.end_timer_listing(group, datetime.now().replace(microsecond=0))
     else:
-        set_data.end_timer_saling(active, datetime.now().replace(microsecond=0))
+        set_data.end_timer_saling(datetime.now().replace(microsecond=0))
     return redirect(url_for('timer_list'))
 
 if __name__ == '__main__':
