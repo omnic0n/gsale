@@ -291,3 +291,9 @@ def get_location_from_date(start_date, end_date):
                    AND latitude != '' AND longitude != '' """,
                    (start_date, end_date,))
     return list(cur.fetchall())
+
+#Timer Data
+def get_timer_data_for_item(id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT EXISTS(SELECT * FROM timer WHERE id = %s", (id, ))
+    return cur.fetchone()

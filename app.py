@@ -294,12 +294,15 @@ def describe_item():
     category = get_data.get_category(item[0]['category_id'])
     max_item = get_data.get_max_item_id()
     item_sold = get_data.get_data_for_item_sold(id)
+    timer = get_data.get_timer_data_for_item(id)
+    print(timer)
     return render_template('items_describe.html', 
                             item=item,
                             category=category,
                             max_item=max_item,
                             sold=item_sold,
-                            form=form)
+                            form=form,
+                            timer=timer)
 
 @app.route('/expense/describe')
 def describe_expense():
