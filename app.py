@@ -243,6 +243,7 @@ def sold_items():
         details = request.form
         set_data.set_mark_sold(details['id'])
         set_data.set_sale_data(details)
+        set_data.end_timer_packing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
 
