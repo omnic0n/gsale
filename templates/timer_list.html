@@ -13,15 +13,15 @@
     <tbody>
         {% for active_timer in active_timers %}
         <tr>
-            <td>{{ active_timer[0]['type'] }}</td>
-            {% if active_timer[0]['group_id'] %}
-            <td><a href = "/groups/describe?group_id={{ active_timer[0]['group_id'] }}">{{ active_timer[0]['group_id'] }}</a></td>
+            <td>{{ active_timer['type'] }}</td>
+            {% if active_timer['group_id'] %}
+            <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['group_id'] }}</a></td>
             {% else %}<td></td>
             {% endif %}
-            {% if active_timer[0]['id'] %}
-            <td><a href = "/items/describe?id={{ active_timer[0]['id'] }}">{{ active_timer[0]['id'] }}</a></td>
+            {% if active_timer['id'] %}
+            <td><a href = "/items/describe?id={{ active_timer['id'] }}">{{ active_timer['id'] }}</a></td>
             {% else %}<td></td>
-            <td>{{ active_timer[0]['start_time'] }}</td>
+            <td>{{ active_timer['start_time'] }}</td>
             {% endif %}
         </tr>
         {% endfor %}
