@@ -324,7 +324,6 @@ def get_active_timers_garage_sales():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
         start_time,
-        sale_date
         FROM timer 
         WHERE active = 'TRUE'""")
     return list(cur.fetchall())

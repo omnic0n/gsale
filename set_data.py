@@ -106,8 +106,8 @@ def start_timer_listing(id, time):
 
 def start_timer_saling(date, time):
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO timer(sale_date, start_time, type, active) VALUES (%s, %s, %s, %s)", 
-            (date, time, 'saling', 'TRUE'))
+    cur.execute("INSERT INTO timer(start_time, type, active) VALUES (%s, %s, %s)", 
+            (time, 'saling', 'TRUE'))
     mysql.connection.commit()
     cur.close()
 

@@ -358,7 +358,7 @@ def timer_list():
 def timer_start():
     active = get_data.get_active_timers_garage_sales()
     if not active:
-        set_data.start_timer_saling(datetime.now().date(), datetime.now().replace(microsecond=0))
+        set_data.start_timer_saling(datetime.now().replace(microsecond=0))
     return redirect(url_for('timer_list'))
     
 
