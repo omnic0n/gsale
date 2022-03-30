@@ -82,7 +82,7 @@
 </table>
 {% endif %}
 
-{% if not item[0]['sold'] %}
+{% if not item[0]['sold'] and not timer %}
     <form method="POST" action="">
         {{ form.hidden_tag() }}
     <div class="form-group">

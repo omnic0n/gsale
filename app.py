@@ -295,7 +295,6 @@ def describe_item():
     max_item = get_data.get_max_item_id()
     item_sold = get_data.get_data_for_item_sold(id)
     timer = get_data.get_timer_data_for_item(id)
-    print(timer)
     return render_template('items_describe.html', 
                             item=item,
                             category=category,
