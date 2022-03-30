@@ -84,5 +84,4 @@ class ReportsForm(FlaskForm):
 
 class TimerForm(FlaskForm):
     button = SubmitField()
-    time = HiddenField()
     id = HiddenField()

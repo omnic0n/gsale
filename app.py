@@ -273,10 +273,12 @@ def unsold_list():
 #Describe Section
 @app.route('/items/describe',methods=["POST","GET"])
 def describe_item():
+    id = request.args.get('item', type = str)
+
     form = TimerForm()
     form.button.label.text = "Sell Item"
+    form.item.data = id
 
-    id = request.args.get('item', type = str)
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
     max_item = get_data.get_max_item_id()

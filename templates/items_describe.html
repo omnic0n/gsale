@@ -87,15 +87,15 @@
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
             <div class="form-group">
-                {% if form.time.errors %}
-                    {{ form.time(class="form-control form-control-lg is-invalid") }}
+                {% if form.id.errors %}
+                    {{ form.id(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                        {% for error in form.time.errors %}
+                        {% for error in form.id.errors %}
                             <span>{{ error }}</span>
                         {% endfor %}
                     </div>
                 {% else %}
-                    {{ form.time(class="form-control form-control-lg") }}
+                    {{ form.id(class="form-control form-control-lg") }}
                 {% endif %}
             </div>
         </fieldset>
