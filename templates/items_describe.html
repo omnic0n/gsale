@@ -85,6 +85,22 @@
 {% if not item[0]['sold'] %}
     <form method="POST" action="">
         {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Selection</legend>
+            <div class="form-group">
+                {{ form.time.label(class="form-control-label") }}
+                {% if form.time.errors %}
+                    {{ form.time(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.time.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.time(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+        </fieldset>
     <div class="form-group">
         {{ form.button(class="btn btn-outline-info") }}
     </div>
