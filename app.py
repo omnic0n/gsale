@@ -271,7 +271,7 @@ def unsold_list():
     return render_template('items_unsold_list.html', items=items, current_date=datetime.now().date())
 
 #Describe Section
-@app.route('/items/describe')
+@app.route('/items/describe',methods=["POST","GET"])
 def describe_item():
     form = TimerForm()
 

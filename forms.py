@@ -83,5 +83,9 @@ class ReportsForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class TimerForm(FlaskForm):
-    start_timer = SubmitField('Start Timer')
-    end_timer = SubmitField('End Timer')
+    packing_start_timer = SubmitField('Start Packing Timer')
+    packing_end_timer = SubmitField('End Packing Timer')
+    listing_start_timer = SubmitField('Start Listing Timer')
+    listing_end_timer = SubmitField('End Listing Timer')
+    garage_sale_start_timer = SubmitField('Start Garage Sale Timer')
+    garage_sale_end_timer = SubmitField('End Garage Sale Timer')
