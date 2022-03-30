@@ -20,6 +20,9 @@ app.config.from_object("config.ProductionConfig")
 GoogleMaps(app)
 MySQL(app)
 
+is_timer_running = get_data.get_active_timers_garage_sales()
+print(is_timer_running)
+
 @app.route('/')
 def index():
     profit = get_data.get_profit()
