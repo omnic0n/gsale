@@ -20,8 +20,7 @@ app.config.from_object("config.ProductionConfig")
 GoogleMaps(app)
 MySQL(app)
 
-#is_timer_running = get_data.get_active_timers_garage_sales()
-#print(is_timer_running)
+app.jinja_env.globals.update(is_timer_running=get_data.get_active_timers_garage_sales())
 
 @app.route('/')
 def index():
