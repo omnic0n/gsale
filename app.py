@@ -194,11 +194,13 @@ def mark_sold():
 
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
+    group_id = request.args.get('group', type = int)
     groups = get_data.get_all_from_groups(None)
     categories = get_data.get_all_from_categories()
 
     form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
+    form.group.data = group_id
     form.category.choices = [(category['id'], category['type']) for category in categories]
 
     if request.method == "POST":
@@ -318,6 +320,15 @@ def describe_group():
     sold_price = get_data.get_group_profit(id)
     if not sold_price:
         sold_price = 0
+
+    form = TimerForm()
+    form.button.label.text = "List Items"
+    form.id.data = id
+
+    if request.method == "POST":
+        details = request.form
+        #set_data.start_timer_listing(details['id'], datetime.now().replace(microsecond=0))
+        return redirect(url_for('bought_items',group=details['id']))
 
     return render_template('groups_describe.html', 
                             group_id=group_id,

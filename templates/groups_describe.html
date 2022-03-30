@@ -74,5 +74,12 @@
 	</div>
 </center>
 {% endif %}
+
+<form method="POST" action="">
+    {{ form.hidden_tag() }}
+<div class="form-group">
+    {{ form.button(class="btn btn-outline-info") }}
+</div>
+</form>
 {% endblock content %}
 </html>
