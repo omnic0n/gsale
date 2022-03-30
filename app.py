@@ -239,6 +239,7 @@ def sold_items():
     form = SaleForm()
     form.id.choices = [(item['id'], item['name']) for item in items]
     form.id.data = item_id
+    print(form.id.data)
     if request.method == "POST":
         details = request.form
         set_data.set_mark_sold(details['id'])
