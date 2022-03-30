@@ -277,7 +277,7 @@ def describe_item():
 
     form = TimerForm()
     form.button.label.text = "Sell Item"
-    form.item.data = id
+    form.id.data = id
 
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
