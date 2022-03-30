@@ -85,20 +85,6 @@
 {% if not item[0]['sold'] %}
     <form method="POST" action="">
         {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <div class="form-group">
-                {% if form.id.errors %}
-                    {{ form.id(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.id.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ form.id(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
-        </fieldset>
     <div class="form-group">
         {{ form.button(class="btn btn-outline-info") }}
     </div>
