@@ -273,6 +273,8 @@ def unsold_list():
 #Describe Section
 @app.route('/items/describe')
 def describe_item():
+    form = TimerForm()
+
     id = request.args.get('item', type = str)
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
@@ -282,7 +284,8 @@ def describe_item():
                             item=item,
                             category=category,
                             max_item=max_item,
-                            sold=item_sold)
+                            sold=item_sold,
+                            form=form)
 
 @app.route('/expense/describe')
 def describe_expense():
