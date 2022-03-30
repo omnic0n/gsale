@@ -1,0 +1,30 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Group ID</th>
+            <th>Item ID</th> 
+            <th>Start Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for active_timer in active_timers %}
+        <tr>
+            <td>{{ active_timer[0]['type'] }}</td>
+            {% if active_timer[0]['group_id'] %}
+            <td><a href = "/groups/describe?group_id={{ active_timer[0]['group_id'] }}">{{ active_timer[0]['group_id'] }}</a></td>
+            {% else %}<td></td>
+            {% endif %}
+            {% if active_timer[0]['id'] %}
+            <td><a href = "/items/describe?id={{ active_timer[0]['id'] }}">{{ active_timer[0]['id'] }}</a></td>
+            {% else %}<td></td>
+            <td>{{ active_timer[0]['start_time'] }}</td>
+            {% endif %}
+        </tr>
+    </tbody>
+</table>
+{% endblock content %}
+</html>
