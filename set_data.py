@@ -108,3 +108,10 @@ def end_timer_packing(id, time):
                 (time, id))
     mysql.connection.commit()
     cur.close()
+
+def end_timer_listing(id, time):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE timer SET end_time = %s WHERE group_id = %s", 
+                (time, id))
+    mysql.connection.commit()
+    cur.close()

@@ -358,5 +358,18 @@ def timer_list():
 #def timer_start():
 #    return render_template('location.html', location=location, id=id)
 
+@app.route('/timer/end', methods=["GET"])
+def timer_end():
+    item = request.args.get('item', type = int)
+    group = request.args.get('group', type = int)
+
+    if(item):
+        set_data.end_timer_packing(item, datetime.now().replace(microsecond=0))
+    elif(group):
+        set_data.end_timer_listing(group, datetime.now().replace(microsecond=0))
+    else:
+        print("nothing")
+    return redirect(url_for('timer_list'))
+
 if __name__ == '__main__':
     app.run(debug=True)
