@@ -81,5 +81,17 @@
     </tbody>
 </table>
 {% endif %}
+
+{% if not item[0]['sold'] %}
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+    <div class="form-group">
+        {{ form.start_timer(class="btn btn-outline-info") }}
+    </div>
+    </form>
+</div>
+{% endif %}
+
 {% endblock content %}
 </html>

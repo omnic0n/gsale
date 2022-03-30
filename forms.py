@@ -81,3 +81,7 @@ class ReportsForm(FlaskForm):
     expense_type = SelectField('type', choices=[(1,"milage"),(2, "item")],coerce=int)
     category = SelectField('category', coerce=int)
     submit = SubmitField('Submit')
+
+class TimerForm(FlaskForm):
+    start_timer = SubmitField('Start Timer')
+    end_timer = SubmitField('End Timer')
