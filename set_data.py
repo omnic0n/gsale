@@ -88,3 +88,11 @@ def set_modify_expense(details, price, milage, image_id):
                 (details['name'], details['date'], price, milage, details['type'], image_id, details['id']))
     mysql.connection.commit()
     cur.close()
+
+#Timer
+def start_timer_packing(id, time):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO timer(id, time, type) VALUES (%s, %s, %s)", 
+                (id, time, 'packing'))
+    mysql.connection.commit()
+    cur.close()
