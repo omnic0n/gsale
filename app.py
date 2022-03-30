@@ -367,13 +367,14 @@ def timer_start():
 def timer_end():
     item = request.args.get('item', type = int)
     group = request.args.get('group', type = int)
+    time = request.args.get('time')
 
     if(item):
         set_data.end_timer_packing(item, datetime.now().replace(microsecond=0))
     elif(group):
         set_data.end_timer_listing(group, datetime.now().replace(microsecond=0))
     else:
-        set_data.end_timer_saling('saling', datetime.now().replace(microsecond=0))
+        set_data.end_timer_saling(time, datetime.now().replace(microsecond=0))
     return redirect(url_for('timer_list'))
 
 if __name__ == '__main__':

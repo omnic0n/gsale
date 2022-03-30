@@ -125,9 +125,9 @@ def end_timer_listing(id, time):
     mysql.connection.commit()
     cur.close()
 
-def end_timer_saling(type, time):
+def end_timer_saling(start_time, time):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE timer SET end_time = %s, active = 'FALSE' where type=%s", 
-                (time, type))
+    cur.execute("UPDATE timer SET end_time = %s, active = 'FALSE' where type='saling' AND start_time = %s", 
+                (time, start_time))
     mysql.connection.commit()
     cur.close()
