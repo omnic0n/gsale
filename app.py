@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.config.from_object("config.ProductionConfig")
 
 @app.context_processor
-def example():
+def update_layout_with_timer():
     return dict(is_timer_running=get_data.get_active_timers_garage_sales())
   
 GoogleMaps(app)
