@@ -281,11 +281,10 @@ def describe_item():
     form = TimerForm()
     form.button.label.text = "Sell Item"
     form.id.data = id
-    form.time.data = datetime.now().replace(microsecond=0)
 
     if request.method == "POST":
         details = request.form
-        set_data.start_timer_packing(details['id'], details['time'])
+        set_data.start_timer_packing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('sold_items',item=details['id']))
 
     item = get_data.get_data_for_item_describe(id)
