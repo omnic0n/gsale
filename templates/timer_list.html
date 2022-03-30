@@ -1,10 +1,10 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
+<h2>Packing Items</h2>
 <table class="blueTable">
     <thead>
         <tr>
-            <th>Type</th>
             <th>Item</th> 
             <th>Start Time</th>
         </tr>
@@ -12,7 +12,6 @@
     <tbody>
         {% for active_timer in active_timers_packing %}
         <tr>
-            <td>{{ active_timer['type'] }}</td>
             <td><a href = "/items/describe?item={{ active_timer['id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
         </tr>
@@ -20,10 +19,10 @@
     </tbody>
 </table>
 <br>
+<h2>Listing Groups</h2>
 <table class="blueTable">
     <thead>
         <tr>
-            <th>Type</th>
             <th>Group</th>
             <th>Start Time</th>
         </tr>
@@ -31,7 +30,6 @@
     <tbody>
         {% for active_timer in active_timers_listing %}
         <tr>
-            <td>{{ active_timer['type'] }}</td>
             <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
         </tr>
