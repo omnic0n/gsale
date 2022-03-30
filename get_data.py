@@ -323,7 +323,7 @@ def get_active_timers_packing():
 def get_active_timers_garage_sales():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
-        start_time,
+        start_time
         FROM timer 
         WHERE active = 'TRUE'""")
     return list(cur.fetchall())
