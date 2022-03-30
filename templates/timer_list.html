@@ -53,7 +53,7 @@
         {% for active_timer in active_timers_garage_sales %}
         <tr>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
-            <td><a href = "/timer/end?sales=1">Stop Timer</a></td>
+            <td><a href = "/timer/end?active=TRUE">Stop Timer</a></td>
         </tr>
         {% endfor %}
     </tbody>
