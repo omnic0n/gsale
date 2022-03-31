@@ -192,7 +192,6 @@
     <script>
       $(document).ready(function() {
           var addCount = 1;
-          newInput.append(AddDefaultTextBox("", addCount));
           $("#addNewField").click(function() {
               var newInput = $("#itemList");
               newInput.append(GetDynamicTextBox("", addCount));
@@ -200,13 +199,6 @@
               addCount += 1;
           });
       });
-
-      function AddDefaultTextBox(value, addCount){
-          var newInput = $("#itemList");
-          newInput.append(GetDynamicTextBox("", addCount));
-          $("#itemList").append(newInput);
-          addCount += 1;   
-      }
 
       function GetDynamicTextBox(value, addCount) {
           return '<div class="form-group">' + '<input name = "item' + addCount + '"type="text" value = "' + value + '" />&nbsp;' +
