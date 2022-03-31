@@ -18,6 +18,7 @@
                         {{ form.name(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
+                <script>
                 $(document).ready(function() {
                     var max_fields = 10;
                     var wrapper = $(".container1");
@@ -40,6 +41,7 @@
                         x--;
                     })
                 });
+                </script>
                 <div class="form-group">
                     {{ form.group.label(class="form-control-label") }}
                     {% if form.group.errors %}
