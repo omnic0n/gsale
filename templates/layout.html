@@ -215,7 +215,7 @@
 
           });
 
-          $("body").on("click", ".remove", function () {
+          $("removeNewField").click(function() {
               $("#itemList").append(GetDynamicTextBox("", addCount));                
               addCount -= 1;
           });
