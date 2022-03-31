@@ -7,11 +7,9 @@
                 <legend class="border-bottom mb-4">Add Item</legend>
                 <div class="form-group">
                     <button type="button" id="addNewField">Add Item</button>
-                </div>
-                {{ form.itemList }}
-                <div class="form-group">
                     <button type="button" id="removeNewField" class="remove">Remove Item</button>
                 </div>
+                {{ form.itemList }}
                 <div class="form-group">
                     {{ form.group.label(class="form-control-label") }}
                     {% if form.group.errors %}
