@@ -200,7 +200,7 @@
           });
           $("#removeNewField").click(function() {
               var newInput = $("#itemList");
-              newInput.append(GetDynamicTextBox("", addCount));
+              newInput.remove(GetDynamicTextBox("", addCount));
               $("#itemList").remove(newInput);
               addCount -= 1;
           });
