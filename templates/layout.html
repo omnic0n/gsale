@@ -193,21 +193,21 @@
       $(document).ready(function() {
           var addCount = 1;            
           $("#addNewField").click(function() {
-              var newInput = $("#subDirList");
+              var newInput = $("#itemList");
               newInput.append(GetDynamicTextBox("", addCount));
-              $("#subDirList").append(newInput);
+              $("#itemList").append(newInput);
               addCount += 1;
           });
       });
 
       function GetDynamicTextBox(value, addCount) {
-          return '<div class="form-group">' + '<input name = "subdir' + addCount + '"type="text" value = "' + value + '" />&nbsp;' +
+          return '<div class="form-group">' + '<input name = "item' + addCount + '"type="text" value = "' + value + '" />&nbsp;' +
           '<input type="button" value="Remove" class="remove" />' + '</div>' ;
       }
 
       $(function () {
           $("#addNewField").click(function() {
-              $("#subDirList").append(GetDynamicTextBox("", addCount));                
+              $("#itemList").append(GetDynamicTextBox("", addCount));                
 
           });
 

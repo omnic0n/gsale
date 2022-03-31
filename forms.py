@@ -35,13 +35,13 @@ class ListForm(FlaskForm):
     end = DateField('end', format='%Y-%m-%d')
     submit = SubmitField('Submit')
 
-class SubDirForm(FlaskForm):
-    subDirName = TextField(validators=[DataRequired()])
+class ItemFormName(FlaskForm):
+    ItemFormName = TextField(validators=[DataRequired()])
 
 class PurchaseForm(FlaskForm):
     name = TextAreaField('name',
                            validators=[DataRequired()])
-    subDirList = FieldList(FormField(SubDirForm), min_entries=0)
+    itemList = FieldList(FormField(ItemFormName), min_entries=0)
     group = SelectField('group', coerce=int, default=1)
     category = SelectField('category', coerce=int)
     price = StringField('price')
