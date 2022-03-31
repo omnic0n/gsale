@@ -199,7 +199,9 @@
               addCount += 1;
           });
           $("#removeNewField").click(function() {
-              console.log("test")
+              var newInput = $("#itemList");
+              $("#itemList").remove(newInput);
+              addCount += 1;
           });
       });
 
