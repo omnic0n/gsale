@@ -41,7 +41,7 @@ class ItemFormName(FlaskForm):
 class PurchaseForm(FlaskForm):
     name = TextAreaField('name',
                            validators=[DataRequired()])
-    itemList = FieldList(FormField(ItemFormName), min_entries=0)
+    itemList = FieldList(FormField(ItemFormName), min_entries=1)
     group = SelectField('group', coerce=int, default=1)
     category = SelectField('category', coerce=int)
     price = StringField('price')
