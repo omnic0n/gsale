@@ -19,14 +19,15 @@ def set_mark_sold(id):
 
 def set_bought_items(details):
     cur = mysql.connection.cursor()
-    for item in details['name'].splitlines():
-        cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
-                    (item,details['group'],))
-        mysql.connection.commit()
-        item_id = str(cur.lastrowid)
-        cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
-                    (item_id,date.today().strftime("%Y-%m-%d"),))
-        mysql.connection.commit()
+    for item in details:
+        if item.startswith("item"):
+            cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
+                        (details[item],details['group'],))
+            mysql.connection.commit()
+            item_id = str(cur.lastrowid)
+            cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
+                        (item_id,date.today().strftime("%Y-%m-%d"),))
+            mysql.connection.commit()
     cur.close()
 
 def set_sale_data(details):

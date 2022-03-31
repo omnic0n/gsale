@@ -208,13 +208,9 @@ def bought_items():
 
     if request.method == "POST":
         details = request.form
-        print(details)
-        for item in details:
-            if item.startswith("item"):
-                print(details[item])
-        #set_data.set_bought_items(details)
-        #group_data = get_data.get_all_from_group(details['group'])
-        #return redirect(url_for('describe_group',group_id=group_data['id']))
+        set_data.set_bought_items(details)
+        group_data = get_data.get_all_from_group(details['group'])
+        return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/modify',methods=["POST","GET"])
