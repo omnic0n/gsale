@@ -190,22 +190,25 @@
       });
     </script>
     <script language="javascript">
-      function add(type) {
-      
-          //Create an input type dynamically.
-          var element = document.createElement("input");
-      
-          //Assign different attributes to the element.
-          element.setAttribute("type", type);
-          element.setAttribute("value", type);
-          element.setAttribute("name", type);
-      
-      
-          var foo = document.getElementById("fooBar");
-      
-          //Append the element in page (in span).
-          foo.appendChild(element);
-      
+      var survey_options = document.getElementById('survey_options');
+      var add_more_fields = document.getElementById('add_more_fields');
+      var remove_fields = document.getElementById('remove_fields');
+
+      add_more_fields.onclick = function(){
+        var newField = document.createElement('input');
+        newField.setAttribute('type','text');
+        newField.setAttribute('name','survey_options[]');
+        newField.setAttribute('class','survey_options');
+        newField.setAttribute('siz',50);
+        newField.setAttribute('placeholder','Another Field');
+        survey_options.appendChild(newField);
+      }
+
+      remove_fields.onclick = function(){
+        var input_tags = survey_options.getElementsByTagName('input');
+        if(input_tags.length > 2) {
+          survey_options.removeChild(input_tags[(input_tags.length) - 1]);
+        }
       }
     </script>
   </body>

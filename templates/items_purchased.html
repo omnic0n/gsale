@@ -19,16 +19,18 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                <FORM>
-                    <H2>Dynamically add element in form.</H2>
-                    Select the element and hit Add to add it in form.
-                    <BR/>
-                    <SELECT name="element">
-                        <OPTION value="text">Textbox</OPTION>
-                    </SELECT>
-                    <INPUT type="button" value="Add" onclick="add(document.forms[0].element.value)"/>
-                    <span id="fooBar" display=block><br></span>
-                    </FORM>
+                <h1>Dynamic Fields Javascript</h1>
+                    <div class="wrapper">
+                      <div id="survey_options">
+                        <input type="text" name="survey_options[]" class="survey_options" size="50" placeholder="Name">
+                        <input type="text" name="survey_options[]" class="survey_options" size="50" placeholder="Email">
+                        <input type="text" name="survey_options[]" class="survey_options" size="50" placeholder="Another Field">
+                      </div>
+                      <div class="controls">
+                        <a href="#" id="add_more_fields"><i class="fa fa-plus"></i>Add More</a>
+                        <a href="#" id="remove_fields"><i class="fa fa-plus"></i>Remove Field</a>
+                      </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     {{ form.group.label(class="form-control-label") }}
