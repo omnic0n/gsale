@@ -35,14 +35,15 @@ class ListForm(FlaskForm):
     end = DateField('end', format='%Y-%m-%d')
     submit = SubmitField('Submit')
 
-class ItemFormName(FlaskForm):
-    ItemFormName = TextField(validators=[DataRequired()])
+class ListOfFields(FlaskForm):
+    itemFormName = TextField(validators=[DataRequired()])
+    categoryFormName = SelectField('category', coerce=int)
+
 
 class PurchaseForm(FlaskForm):
-    name = TextAreaField('name',
-                           validators=[DataRequired()])
-    itemList = FieldList(FormField(ItemFormName), min_entries=0)
+    itemList = FieldList(FormField(ListOfFields), min_entries=0)
     group = SelectField('group', coerce=int, default=1)
+    categoryList = FieldList(FormField(ListOfFields), min_entries=0)
     category = SelectField('category', coerce=int)
     price = StringField('price')
     date = DateField('date', default=datetime.today, format='%Y-%m-%d')
