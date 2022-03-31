@@ -208,7 +208,7 @@ def bought_items():
 
     if request.method == "POST":
         details = request.form
-        next(v for k,v in details.items() if 'item' in k)
+        print(next(v for k,v in details.items() if 'item' in k))
         #set_data.set_bought_items(details)
         #group_data = get_data.get_all_from_group(details['group'])
         #return redirect(url_for('describe_group',group_id=group_data['id']))
