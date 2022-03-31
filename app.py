@@ -239,6 +239,7 @@ def modify_items():
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
     item_id = request.args.get('item', type = int)
+    timer = request.args.get('timer')
     items = get_data.get_all_items_not_sold()
 
     form = SaleForm()
@@ -249,7 +250,8 @@ def sold_items():
         details = request.form
         set_data.set_mark_sold(details['id'])
         set_data.set_sale_data(details)
-        set_data.end_timer_packing(details['id'], datetime.now().replace(microsecond=0))
+        if timer:
+            set_data.end_timer_packing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
 
