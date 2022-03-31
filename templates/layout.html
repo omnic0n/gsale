@@ -216,8 +216,8 @@
 
           });
 
-          $("#removeNewField").on("click", ".remove", function () {
-              $(this).closest("div").remove();
+          $("#removeNewField").click(function () {
+              $("#itemList").remove();
               addCount -= 1;
           });
       });
