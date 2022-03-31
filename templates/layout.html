@@ -217,7 +217,7 @@
           });
 
           $("#removeNewField").click(function () {
-              $("#itemList").remove();
+              $("#itemList").closest("div").remove();
               addCount -= 1;
           });
       });
