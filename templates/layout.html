@@ -201,8 +201,8 @@
       });
 
       function GetDynamicTextBox(value, addCount) {
-          return '<input name = "subdir' + addCount + '"type="text" value = "' + value + '" />&nbsp;' +
-          '<input type="button" value="Remove" class="remove" />';
+          return '<div>' + '<input name = "subdir' + addCount + '"type="text" value = "' + value + '" />&nbsp;' +
+          '<input type="button" value="Remove" class="remove" />' + '</div>' ;
       }
 
       $(function () {
