@@ -200,6 +200,7 @@
           });
           $("#removeNewField").click(function() {
               console.log(addCount)
+              $('#item-'+addCount).remove()
               addCount -= 1;
           });
       });
