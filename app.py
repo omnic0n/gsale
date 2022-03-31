@@ -209,7 +209,7 @@ def bought_items():
     if request.method == "POST":
         details = request.form
         print(details)
-        any(item.startswith('item') for item in details)
+        print(any(item.startswith('item') for item in details))
 
         #set_data.set_bought_items(details)
         #group_data = get_data.get_all_from_group(details['group'])
