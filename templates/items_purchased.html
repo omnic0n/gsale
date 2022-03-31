@@ -1,4 +1,23 @@
 {% extends "layout.html" %}
+<SCRIPT language="javascript">
+    function add(type) {
+    
+        //Create an input type dynamically.
+        var element = document.createElement("input");
+    
+        //Assign different attributes to the element.
+        element.setAttribute("type", type);
+        element.setAttribute("value", type);
+        element.setAttribute("name", type);
+    
+    
+        var foo = document.getElementById("fooBar");
+    
+        //Append the element in page (in span).
+        foo.appendChild(element);
+    
+    }
+</SCRIPT>
 {% block content %}
     <div class="content-section">
         <form method="POST" action="">
@@ -18,30 +37,9 @@
                         {{ form.name(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
-                <script>
-                $(document).ready(function() {
-                    var max_fields = 10;
-                    var wrapper = $(".container1");
-                    var add_button = $(".add_form_field");
-                
-                    var x = 1;
-                    $(add_button).click(function(e) {
-                        e.preventDefault();
-                        if (x < max_fields) {
-                            x++;
-                            $(wrapper).append('<div><input type="text" name="mytext[]"/><a href="#" class="delete">Delete</a></div>'); //add input box
-                        } else {
-                            alert('You Reached the limits')
-                        }
-                    });
-                
-                    $(wrapper).on("click", ".delete", function(e) {
-                        e.preventDefault();
-                        $(this).parent('div').remove();
-                        x--;
-                    })
-                });
-                </script>
+                <div class="form-group">
+                <INPUT type="button" value="Add" onclick="add(document.forms[0].element.value)"/>
+                </div>
                 <div class="form-group">
                     {{ form.group.label(class="form-control-label") }}
                     {% if form.group.errors %}
