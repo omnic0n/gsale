@@ -194,29 +194,18 @@
           var addCount = 1;
           $("#addNewField").click(function() {
               var newInput = $("#itemList");
-              var newSelect = $("#categoryList");
               newInput.append(GetDynamicTextBox("", addCount));
-              newSelect.append(GetDynamicSelectBox("", addCount));
               $("#itemList").append(newInput);
-              $("#categoryList").append(newSelect);
               addCount += 1;
           });
           $("#removeNewField").click(function() {
               addCount -= 1;
               $('#item_'+ addCount).remove();
-              $('#category_'+ addCount).remove();
           });
       });
 
       function GetDynamicTextBox(value, addCount) {
-          return '<div class="form-group" id="item_' + addCount + '">' + 
-            '<input name = "item' + addCount + '"type="text" value = "' + value + '" />' +
-          '</div>' ;
-      }
-      
-      function GetDynamicSelectBox(value, addCount) {
-          return '<div class="form-group" id="category_' + addCount + '">' + 
-            '<input name = "category' + addCount + '"type="select" />' +
+          return '<div class="form-group" id="item_' + addCount + '">' + '<input name = "item' + addCount + '"type="text" value = "' + value + '" />' +
           '</div>' ;
       }
     </script>
