@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField, HiddenField, FieldList, TextField
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField, HiddenField
+from wtforms import FormField, SubDirForm, FieldList
 from wtforms.fields.html5 import DateField
 from wtforms.validators import DataRequired, Length, EqualTo
 from datetime import datetime
@@ -38,7 +39,7 @@ class ListForm(FlaskForm):
 class PurchaseForm(FlaskForm):
     name = TextAreaField('name',
                            validators=[DataRequired()])
-    flist = FieldList(TextField())
+    subDirList = FieldList(FormField(SubDirForm), min_entries=0)
     group = SelectField('group', coerce=int, default=1)
     category = SelectField('category', coerce=int)
     price = StringField('price')

@@ -191,12 +191,32 @@
     </script>
     <script>
       $(document).ready(function() {
-        $("#addNewField").click(function() {
-            var newInput = $("<input required type='text' value=''></input>")
-                .attr("id", "newInput")
-                .attr("name", "newInput")
-            $("#flist").append(newInput);
-        });
+          var addCount = 1;            
+          $("#addNewField").click(function() {
+              var newInput = $("#subDirList");
+              newInput.append(GetDynamicTextBox("", addCount));
+              $("#subDirList").append(newInput);
+              addCount += 1;
+          });
+      });
+
+      function GetDynamicTextBox(value, addCount) {
+          return '<div>' + 'Subdirectory&nbsp' + addCount + ':&nbsp' +
+          '<input name = "subdir' + addCount + '"type="text" value = "' + value + '" />&nbsp;' +
+          '<input type="button" value="Remove" class="remove" />' + '</div>' ;
+      }
+
+      $(function () {
+          $("#addNewField").click(function() {
+              $("#subDirList").append(GetDynamicTextBox("", addCount));                
+
+          });
+
+          $("body").on("click", ".remove", function () {
+              $(this).closest("div").remove();
+              addCount -= 1;
+          });
+      });
     </script>
   </body>
 </html>
