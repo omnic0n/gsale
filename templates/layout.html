@@ -198,17 +198,16 @@
               $("#itemList").append(newInput);
               addCount += 1;
           });
+          $("#removeNewField").click(function() {
+              $('#item_'+ addCount).remove();
+              addCount -= 1;
+          });
       });
 
       function GetDynamicTextBox(value, addCount) {
-          return '<div class="form-group" id="item-' + addCount + '">' + '<input name = "item' + addCount + '"type="text" value = "' + value + '" />&nbsp;' +
+          return '<div class="form-group" id="item_' + addCount + '">' + '<input name = "item' + addCount + '"type="text" value = "' + value + '" />&nbsp;' +
           '</div>' ;
       }
-      
-      $(document).on('click','#removeNewField',function() {
-            console.log(addCount)
-            addCount -= 1;
-          });
     </script>
   </body>
 </html>
