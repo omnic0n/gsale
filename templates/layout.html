@@ -198,6 +198,11 @@
               $("#itemList").append(newInput);
               addCount += 1;
           });
+          $("#removeNewField").click(function() {
+              var newInput = $("#itemList");
+              $("#itemList").remove(newInput);
+              addCount -= 1;
+          });
       });
 
       function GetDynamicTextBox(value, addCount) {
@@ -211,7 +216,7 @@
           });
 
           $("body").on("click", ".remove", function () {
-              $(this).closest("div").remove();
+              $("#itemList").append(GetDynamicTextBox("", addCount));                
               addCount -= 1;
           });
       });
