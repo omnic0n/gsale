@@ -38,7 +38,15 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                <INPUT type="button" value="Add" onclick="add(document.forms[0].element.value)"/>
+                <FORM>
+                    <H2>Dynamically add element in form.</H2>
+                    Select the element and hit Add to add it in form.
+                    <BR/>
+                    <SELECT name="element">
+                        <OPTION value="text">Textbox</OPTION>
+                    </SELECT>
+                    <INPUT type="button" value="Add" onclick="add(document.forms[0].element.value)"/>
+                    </FORM>
                 </div>
                 <div class="form-group">
                     {{ form.group.label(class="form-control-label") }}
