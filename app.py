@@ -211,7 +211,7 @@ def bought_items():
         print(details)
         for item in details:
             if item.startswith("item"):
-                print(item)
+                print(details[item])
         #set_data.set_bought_items(details)
         #group_data = get_data.get_all_from_group(details['group'])
         #return redirect(url_for('describe_group',group_id=group_data['id']))
