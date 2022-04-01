@@ -30,7 +30,6 @@
             <th>Item</th> 
             <th>Start Time</th>
             <th>End Time</th>
-            <th>Total Time</th>
         </tr>
     </thead>
     <tbody>
@@ -40,7 +39,6 @@
             <td><a href = "/items/describe?item={{ active_timer['id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
             <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
-            <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') - active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
         </tr>
         {% endif %}
         {% endfor %}
@@ -76,7 +74,6 @@
             <th>Group</th> 
             <th>Start Time</th>
             <th>End Time</th>
-            <th>Total Time</th>
         </tr>
     </thead>
     <tbody>
@@ -86,7 +83,6 @@
             <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
             <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
-            <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') - active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
         </tr>
         {% endif %}
         {% endfor %}
