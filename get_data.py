@@ -341,5 +341,6 @@ def get_timers_garage_sales():
     cur.execute("""SELECT 
         start_time,
         end_time
-        FROM timer""")
+        FROM timer
+        WHERE type = 'saling'""")
     return list(cur.fetchall())
