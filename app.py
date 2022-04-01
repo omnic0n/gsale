@@ -209,6 +209,8 @@ def bought_items():
     if request.method == "POST":
         details = request.form
         set_data.set_bought_items(details)
+        if not get_data.get_timer_data_for_groups(details['id']):
+            set_data.end_timer_listing(details['id'], datetime.now().replace(microsecond=0))
         group_data = get_data.get_all_from_group(details['group'])
         return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
