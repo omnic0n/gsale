@@ -336,11 +336,10 @@ def get_active_timers_garage_sales():
         WHERE active = 'TRUE'""")
     return list(cur.fetchall())
 
-def get_completed_timers_garage_sales():
+def get_timers_garage_sales():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
         start_time,
         end_time
-        FROM timer 
-        WHERE active = 'FALSE'""")
+        FROM timer""")
     return list(cur.fetchall())

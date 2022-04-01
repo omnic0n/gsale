@@ -360,11 +360,11 @@ def location():
 def timer_list():
     timers_packing = get_data.get_timers_packing()
     timers_listing = get_data.get_timers_listing()
-    active_timers_garage_sales = get_data.get_active_timers_garage_sales()
+    timers_garage_sales = get_data.get_timers_garage_sales()
     completed_timers_garagae_sales = get_data.get_completed_timers_garage_sales()
     return render_template('timer_list.html', 
                             timers_listing=timers_listing, timers_packing=timers_packing,
-                            active_timers_garage_sales=active_timers_garage_sales, completed_timers_garagae_sales=completed_timers_garagae_sales)
+                            timers_garage_sales=timers_garage_sales, completed_timers_garagae_sales=completed_timers_garagae_sales)
 
 @app.route('/timer/start')
 def timer_start():

@@ -98,7 +98,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for active_timer in active_timers_garage_sales %}
+        {% for active_timer in timers_garage_sales %}
         <tr>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
             {% if active_timer['end_time'] %}
