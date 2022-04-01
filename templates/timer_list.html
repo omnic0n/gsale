@@ -77,7 +77,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for active_timer in timers_packing %}
+        {% for active_timer in timers_listing %}
         {% if active_timer['end_time'] %}
         <tr>
             <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['name'] }}</a></td>
