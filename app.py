@@ -334,7 +334,7 @@ def describe_group():
 
     if request.method == "POST":
         details = request.form
-        if get_data.get_timer_data_for_groups(details['id']):
+        if not get_data.get_timer_data_for_groups(details['id']):
             set_data.start_timer_listing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('bought_items',group=details['id']))
 
