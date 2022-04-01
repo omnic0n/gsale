@@ -104,7 +104,7 @@
             {% if active_timer['end_time'] %}
             <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
             {% else %}
-            <td></td>
+            <td><a href = "/timer/end?time={{ active_timer['start_time'] }}">Stop Timer</a></td>
             {% endif %}
         </tr>
         {% endfor %}
