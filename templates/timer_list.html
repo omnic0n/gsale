@@ -1,7 +1,7 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
-<h3>Packing Items</h3>
+<h3>Running Packing Items</h3>
 <table class="blueTable">
     <thead>
         <tr>
@@ -11,17 +11,43 @@
         </tr>
     </thead>
     <tbody>
-        {% for active_timer in active_timers_packing %}
+        {% for active_timer in timers_packing %}
+        {% if not active_timer['end_time']} %}
         <tr>
             <td><a href = "/items/describe?item={{ active_timer['id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
             <td><a href = "/timer/end?item={{ active_timer['id'] }}">Stop Timer</a></td>
         </tr>
+        {% endif %}
         {% endfor %}
     </tbody>
 </table>
 <br>
-<h3>Listing Groups</h3>
+<h3>Completed Packing Items</h3>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Item</th> 
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Total Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for active_timer in timers_packing %}
+        {% if active_timer['end_time']} %}
+        <tr>
+            <td><a href = "/items/describe?item={{ active_timer['id'] }}">{{ active_timer['name'] }}</a></td>
+            <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
+            <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
+            <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') - active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S')</a></td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+<br>
+<h3>Running Listing Groups</h3>
 <table class="blueTable">
     <thead>
         <tr>
@@ -31,16 +57,41 @@
         </tr>
     </thead>
     <tbody>
-        {% for active_timer in active_timers_listing %}
+        {% for active_timer in timers_listing %}
+        {% if not active_timer['end_time']} %}
         <tr>
             <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
             <td><a href = "/timer/end?group={{ active_timer['group_id'] }}">Stop Timer</a></td>
         </tr>
+        {% if not active_timer['end_time']} %}
         {% endfor %}
     </tbody>
 </table>
 <br>
+<h3>Completed Listing Groups</h3>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Group</th> 
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Total Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for active_timer in timers_packing %}
+        {% if active_timer['end_time']} %}
+        <tr>
+            <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['name'] }}</a></td>
+            <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
+            <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
+            <td>{{ active_timer['end_time'].strftime('%m-%d-%Y %H:%M:%S') - active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S')</a></td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
 <h3>Garage Sales</h3>
 <table class="blueTable">
     <thead>

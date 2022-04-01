@@ -298,26 +298,28 @@ def get_timer_data_for_item(id):
     cur.execute("SELECT * FROM timer WHERE id = %s", (id, ))
     return cur.fetchone()
 
-def get_active_timers_listing():
+def get_timers_listing():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
         timer.start_time,
+        timer.end_time,
         timer.group_id,
         groups.name
         FROM timer 
         INNER JOIN groups groups ON groups.id = timer.group_id
-        WHERE end_time IS NULL AND timer.type = 'listing'""")
+        WHERE timer.type = 'listing'""")
     return list(cur.fetchall())
 
-def get_active_timers_packing():
+def get_timers_packing():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
         timer.start_time,
+        timer.end_time,
         timer.id,
         items.name
         FROM timer 
         INNER JOIN items items ON items.id = timer.id
-        WHERE end_time IS NULL AND timer.type = 'packing'""")
+        WHERE timer.type = 'packing'""")
     return list(cur.fetchall())
 
 def get_active_timers_garage_sales():
@@ -326,4 +328,12 @@ def get_active_timers_garage_sales():
         start_time
         FROM timer 
         WHERE active = 'TRUE'""")
+    return list(cur.fetchall())
+
+def get_completed_timers_garage_sales():
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT 
+        start_time
+        FROM timer 
+        WHERE active = 'FALSE'""")
     return list(cur.fetchall())
