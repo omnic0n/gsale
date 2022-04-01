@@ -12,7 +12,7 @@
     </thead>
     <tbody>
         {% for active_timer in timers_packing %}
-        {% if not active_timer['end_time']} %}
+        {% if not active_timer['end_time'] %}
         <tr>
             <td><a href = "/items/describe?item={{ active_timer['id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
@@ -35,7 +35,7 @@
     </thead>
     <tbody>
         {% for active_timer in timers_packing %}
-        {% if active_timer['end_time']} %}
+        {% if active_timer['end_time'] %}
         <tr>
             <td><a href = "/items/describe?item={{ active_timer['id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
@@ -58,7 +58,7 @@
     </thead>
     <tbody>
         {% for active_timer in timers_listing %}
-        {% if not active_timer['end_time']} %}
+        {% if not active_timer['end_time'] %}
         <tr>
             <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
@@ -81,7 +81,7 @@
     </thead>
     <tbody>
         {% for active_timer in timers_packing %}
-        {% if active_timer['end_time']} %}
+        {% if active_timer['end_time'] %}
         <tr>
             <td><a href = "/groups/describe?group_id={{ active_timer['group_id'] }}">{{ active_timer['name'] }}</a></td>
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
