@@ -298,6 +298,11 @@ def get_timer_data_for_item(id):
     cur.execute("SELECT * FROM timer WHERE id = %s", (id, ))
     return cur.fetchone()
 
+def get_timer_data_for_groups(id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM timer WHERE group_id = %s", (id, ))
+    return cur.fetchone()
+
 def get_timers_listing():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
