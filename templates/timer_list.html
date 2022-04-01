@@ -64,7 +64,7 @@
             <td>{{ active_timer['start_time'].strftime('%m-%d-%Y %H:%M:%S') }}</td>
             <td><a href = "/timer/end?group={{ active_timer['group_id'] }}">Stop Timer</a></td>
         </tr>
-        {% if not active_timer['end_time']} %}
+        {% endif %}
         {% endfor %}
     </tbody>
 </table>
