@@ -82,8 +82,9 @@ def get_group_sold_from_date(start_date, end_date):
 				    groups.date,
 				    0 AS net,
 				    SUM(groups.price) AS sum
-                    FROM groups""",
-                    (start_date, end_date,))
+                    FROM groups
+                    WHERE groups.date >= %s AND groups.date <= %s GROUP BY groups.date""",
+                    (start_date, end_date, start_date, end_date,))
     return list(cur.fetchall())
 
 #Item Data
