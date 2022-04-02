@@ -72,19 +72,12 @@ def get_group_sold_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    groups.date,
-                    SUM(sale.price - sale.shipping_fee) AS net,
-                    0 as sum
+                    SUM(sale.price - sale.shipping_fee) AS net
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
                     INNER JOIN groups groups ON items.group_id = groups.id
-                    WHERE groups.date >= %s AND groups.date <= %s GROUP BY groups.date
-                    UNION SELECT
-				    groups.date,
-				    0 AS net,
-				    SUM(groups.price) AS sum
-                    FROM groups
                     WHERE groups.date >= %s AND groups.date <= %s GROUP BY groups.date""",
-                    (start_date, end_date, start_date, end_date,))
+                    (start_date, end_date,))
     return list(cur.fetchall())
 
 #Item Data
