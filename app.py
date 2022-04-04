@@ -167,7 +167,7 @@ def modify_expense():
     expense = get_data.get_data_for_expense_describe(id)
 
     form = ExpenseForm()
-    form.type.default = expense[0]['type']
+    form.type.data = expense[0]['type']
     form.process()
 
     print(expense[0]['type'])
