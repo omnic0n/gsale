@@ -77,7 +77,7 @@ class ReportsForm(FlaskForm):
     year = SelectField('Year', choices=[
         (2021), (2022), (2023)
     ])
-    expense_type = SelectField('type',coerce=int)
+    expense_type = SelectField('type', coerce=int)
     category = SelectField('category', coerce=int)
     submit = SubmitField('Submit')
 
