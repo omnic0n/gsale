@@ -105,7 +105,7 @@ Expenses
     <tbody>
         {% set ns.expense = 0 %}
         {% for expense in expenses %}
-                {% set ns.price = ns.expense + expense['price'] %}
+                {% set ns.expense = ns.expense + expense['price'] %}
         {% endfor %}
         <tr>
             <td>{{ ns.expense }}</td>
