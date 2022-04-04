@@ -212,7 +212,7 @@ def get_list_of_items_with_categories(category_id):
 #Expense Data
 def get_expenses_choices():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM expenses_choices")
+    cur.execute("SELECT id,type FROM expenses_choices")
     return list(cur.fetchall())
 
 def get_expenses_from_date(start_date, end_date, type):
