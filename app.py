@@ -79,8 +79,11 @@ def reports_categories():
 
 @app.route('/reports/expenses',methods=["GET", "POST"])
 def reports_expenses():
-    form = ReportsForm()
+    expense_choices = get_data.get_expenses_choices()
 
+    form = ReportsForm()
+    form.expense_type.choices = [(expense_choice['id'], expense_choice['type']) for expense_choice in expense_choices]
+   
     if request.method == "POST":
         details = request.form
         start_date, end_date = function.set_dates(details)
