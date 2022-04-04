@@ -25,7 +25,7 @@ class ExpenseForm(FlaskForm):
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')
     id = StringField('id')
-    type = SelectField('type', coerce=int)
+    type = SelectField('type', coerce=int, default=1)
     milage = StringField('milage')
     image = FileField('image')
     submit = SubmitField('Submit')
@@ -77,7 +77,7 @@ class ReportsForm(FlaskForm):
     year = SelectField('Year', choices=[
         (2021), (2022), (2023)
     ])
-    expense_type = SelectField('type', coerce=int)
+    expense_type = SelectField('type', coerce=int, default=1)
     category = SelectField('category', coerce=int)
     submit = SubmitField('Submit')
 
