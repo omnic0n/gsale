@@ -168,7 +168,7 @@ def modify_expense():
 
     form = ExpenseForm()
     form.type.data = expense[0]['type']
-
+    print(expense[0]['type'])
     if request.method == "POST":
         details = request.form
         if(request.files['image']):
