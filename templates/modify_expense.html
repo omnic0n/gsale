@@ -19,16 +19,16 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.type.label(class="form-control-label") }}
+                    {{ form.expense_type.label(class="form-control-label") }}
                     {% if form.price.errors %}
-                        {{ form.type(class="form-control form-control-lg is-invalid") }}
+                        {{ form.expense_type(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.type.errors %}
+                            {% for error in form.expense_type.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.type(class="form-control form-control-lg", value=expense[0]['type']) }}
+                        {{ form.expense_type(class="form-control form-control-lg", value=expense[0]['type']) }}
                     {% endif %}
                 </div>
                 {% if expense[0]['type'] == 1 %}

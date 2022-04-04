@@ -25,7 +25,7 @@ class ExpenseForm(FlaskForm):
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')
     id = StringField('id')
-    type = SelectField('type', coerce=int)
+    expense_type = SelectField('expense_type', coerce=int)
     milage = StringField('milage')
     image = FileField('image')
     submit = SubmitField('Submit')
