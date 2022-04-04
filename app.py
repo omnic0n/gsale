@@ -165,8 +165,10 @@ def expense_store():
 def modify_expense():
     id = request.args.get('id', type = str)
     expense = get_data.get_data_for_expense_describe(id)
+    expense_choices = get_data.get_all_from_expenses_choices()
 
     form = ExpenseForm()
+    form.type.choices = [(expense_choices['id'], expense_choices['type']) for expense_choice in expense_choices]
     form.type.data = expense[0]['type']
     form.process()
 
