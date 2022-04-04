@@ -225,6 +225,15 @@ def get_expenses_from_date(start_date, end_date, type):
                     (start_date, end_date, type,))
     return list(cur.fetchall())
 
+def get_all_from_expenses_date(start_date, end_date):
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT 
+				    * FROM expenses
+                    WHERE date >= %s AND date <= %s
+					ORDER BY date""",
+                    (start_date, end_date, ))
+    return list(cur.fetchall())
+
 def get_all_from_expenses(date):
     cur = mysql.connection.cursor()
     if not date:

@@ -38,7 +38,8 @@ def reports_profit():
         start_date, end_date = function.set_dates(details)
         sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
         purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
-        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
+        expenses= get_data.get_all_from_expenses_date(start_date, end_date)
+        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates, expenses=expenses)
     return render_template('reports_profit.html', form=form)
 
 
