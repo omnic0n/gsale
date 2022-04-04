@@ -170,6 +170,7 @@ def modify_expense():
     form = ExpenseForm()
     form.type.choices = [(expense_choice['id'], expense_choice['type']) for expense_choice in expense_choices]
     form.type.data = expense[0]['type']
+    print(expense_choices[expense[0]['type']])
 
     if request.method == "POST":
         details = request.form
