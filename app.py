@@ -171,6 +171,8 @@ def modify_expense():
     form.type.choices = [(expense_choice['id'], expense_choice['type']) for expense_choice in expense_choices]
     form.type.data = expense[0]['id']
 
+    print(expense[0]['id'])
+
     if request.method == "POST":
         details = request.form
         if(request.files['image']):
