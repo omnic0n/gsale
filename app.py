@@ -168,6 +168,8 @@ def modify_expense():
 
     form = ExpenseForm()
     form.type.default = expense[0]['type']
+    form.process()
+
     print(expense[0]['type'])
     if request.method == "POST":
         details = request.form
