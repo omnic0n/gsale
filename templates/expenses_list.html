@@ -22,6 +22,7 @@ Milage
         {% endfor %}
     </tbody>
 </table>
+<br>
 Items
 <table class="blueTable">
     <thead>
@@ -34,6 +35,28 @@ Items
     <tbody>
         {% for expense in expenses %}
             {% if expense['type'] == 2 %}
+            <tr>
+                <td><a href = "/expense/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
+                <td>{{ expense['date'] }}</td>
+                <td>{{ expense['price'] }}</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+<br>
+Store Fee
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Date</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for expense in expenses %}
+            {% if expense['type'] == 3 %}
             <tr>
                 <td><a href = "/expense/describe?id={{ expense['id'] }}">{{ expense['name'] }}</td>
                 <td>{{ expense['date'] }}</td>

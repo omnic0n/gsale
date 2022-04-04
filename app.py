@@ -148,6 +148,19 @@ def expense_item():
         return redirect(url_for('list_expense'))
     return render_template('expense_item.html', form=form)
 
+@app.route('/expense/store',methods=["POST","GET"])
+def expense_store():
+    form = ExpenseForm()
+
+    if request.method == "POST":
+        details = request.form
+        name = "%s-ebay-store" % (details['date'])
+        image_id = files.upload_image(request.files['image'])
+        set_data.set_expense_store(name, details, image_id)
+        return redirect(url_for('list_expense'))
+    return render_template('expense_store.html', form=form)
+
+
 @app.route('/expense/modify',methods=["POST","GET"])
 def modify_expense():
     id = request.args.get('id', type = str)

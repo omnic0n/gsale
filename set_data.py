@@ -76,6 +76,13 @@ def set_expense_gas(name, details, image_id):
     mysql.connection.commit()
     cur.close()
 
+def set_expense_store(name, details, image_id):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
+                   (name, details['date'], details['price'], image_id, 3))
+    mysql.connection.commit()
+    cur.close()
+
 def set_expense_item(name, details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
