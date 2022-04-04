@@ -45,7 +45,7 @@
                         {{ form.milage(class="form-control form-control-lg", value=expense[0]['milage']) }}
                     {% endif %}
                 </div>
-                {% else if expense[0]['type'] == 2 %}
+                {% elif expense[0]['type'] == 2 %}
                 <div class="form-group">
                     {{ form.price.label(class="form-control-label") }}
                     {% if form.price.errors %}
