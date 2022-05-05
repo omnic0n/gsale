@@ -189,7 +189,7 @@ def modify_expense():
         else:
             price = details['price']
             milage = 0
-        set_data.set_modify_expense(details, price, milage, image_id)
+        #set_data.set_modify_expense(details, price, milage, image_id)
         return redirect(url_for('describe_expense',id=details['id']))
     return render_template('modify_expense.html', expense=expense, form=form)
 
