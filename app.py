@@ -177,6 +177,7 @@ def modify_expense():
 
     if request.method == "POST":
         details = request.form
+        print(details)
         if(request.files['image']):
             image_id = files.upload_image(request.files['image'])
         else:
