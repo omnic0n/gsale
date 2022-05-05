@@ -93,7 +93,7 @@ def set_expense_item(name, details, image_id):
 def set_modify_expense(details, price, milage, image_id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
-                (details['name'], details['date'], price, milage, details['type'], image_id, details['id']))
+                (details['name'], details['date'], price, milage, details['expense_type'], image_id, details['id']))
     mysql.connection.commit()
     cur.close()
 
