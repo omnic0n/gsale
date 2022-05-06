@@ -38,7 +38,8 @@ def reports_profit():
         start_date, end_date = function.set_dates(details)
         sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
         purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
-        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates)
+        expenses= get_data.get_all_from_expenses_date(start_date, end_date)
+        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates, expenses=expenses)
     return render_template('reports_profit.html', form=form)
 
 
@@ -79,8 +80,11 @@ def reports_categories():
 
 @app.route('/reports/expenses',methods=["GET", "POST"])
 def reports_expenses():
-    form = ReportsForm()
+    expense_choices = get_data.get_expenses_choices()
 
+    form = ReportsForm()
+    form.expense_type.choices = [(expense_choice['id'], expense_choice['type']) for expense_choice in expense_choices]
+   
     if request.method == "POST":
         details = request.form
         start_date, end_date = function.set_dates(details)
@@ -148,16 +152,32 @@ def expense_item():
         return redirect(url_for('list_expense'))
     return render_template('expense_item.html', form=form)
 
+@app.route('/expense/store',methods=["POST","GET"])
+def expense_store():
+    form = ExpenseForm()
+
+    if request.method == "POST":
+        details = request.form
+        name = "%s-ebay-store" % (details['date'])
+        image_id = files.upload_image(request.files['image'])
+        set_data.set_expense_store(name, details, image_id)
+        return redirect(url_for('list_expense'))
+    return render_template('expense_store.html', form=form)
+
+
 @app.route('/expense/modify',methods=["POST","GET"])
 def modify_expense():
     id = request.args.get('id', type = str)
     expense = get_data.get_data_for_expense_describe(id)
-
+    expense_choices = get_data.get_expenses_choices()
+ 
     form = ExpenseForm()
-    form.type.data = expense[0]['type']
+    form.expense_type.choices = [(expense_choice['id'], expense_choice['type']) for expense_choice in expense_choices]
+    form.expense_type.data = expense[0]['type']
 
     if request.method == "POST":
         details = request.form
+        print(details)
         if(request.files['image']):
             image_id = files.upload_image(request.files['image'])
         else:
@@ -169,7 +189,7 @@ def modify_expense():
         else:
             price = details['price']
             milage = 0
-        set_data.set_modify_expense(details,  price, milage, image_id)
+        set_data.set_modify_expense(details, price, milage, image_id)
         return redirect(url_for('describe_expense',id=details['id']))
     return render_template('modify_expense.html', expense=expense, form=form)
 
@@ -205,11 +225,12 @@ def bought_items():
     form = PurchaseForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
     form.group.data = group_id
-    form.category.choices = [(category['id'], category['type']) for category in categories]
 
     if request.method == "POST":
         details = request.form
         set_data.set_bought_items(details)
+        if get_data.get_timer_data_for_groups(group_id):
+            set_data.end_timer_listing(group_id, datetime.now().replace(microsecond=0))
         group_data = get_data.get_all_from_group(details['group'])
         return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
@@ -335,7 +356,8 @@ def describe_group():
 
     if request.method == "POST":
         details = request.form
-        #set_data.start_timer_listing(details['id'], datetime.now().replace(microsecond=0))
+        if not get_data.get_timer_data_for_groups(details['id']):
+            set_data.start_timer_listing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('bought_items',group=details['id']))
 
     return render_template('groups_describe.html', 
@@ -356,10 +378,12 @@ def location():
 #Timers
 @app.route('/timer/list', methods=["GET"])
 def timer_list():
-    active_timers_packing = get_data.get_active_timers_packing()
-    active_timers_listing = get_data.get_active_timers_listing()
-    active_timers_garage_sales = get_data.get_active_timers_garage_sales()
-    return render_template('timer_list.html', active_timers_listing=active_timers_listing, active_timers_packing=active_timers_packing,active_timers_garage_sales=active_timers_garage_sales)
+    timers_packing = get_data.get_timers_packing()
+    timers_listing = get_data.get_timers_listing()
+    timers_garage_sales = get_data.get_timers_garage_sales()
+    return render_template('timer_list.html', 
+                            timers_listing=timers_listing, timers_packing=timers_packing,
+                            timers_garage_sales=timers_garage_sales)
 
 @app.route('/timer/start')
 def timer_start():

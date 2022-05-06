@@ -85,6 +85,7 @@
             <th>Expense Name</th>
             {% if expense_type == 1 %}<th>Expense Milage</th>{% endif %}
             {% if expense_type == 2 %}<th>Expense Price</th>{% endif %}
+            {% if expense_type == 3 %}<th>Store Price</th>{% endif %}
         </tr>
     </thead>
     <tbody>
@@ -97,8 +98,8 @@
         <tr>
             <td><a href = "/expense/list?date={{ expense_date['date'] }}">{{ expense_date['date'] }}</a></td>
             <td>{{ expense_date['name'] }}</td>
-            {% if expense_type == 1 %}<td>{{ expense_date['milage'] }}</td>{% endif %}
-            {% if expense_type == 2 %}<td>{{ expense_date['price'] }}</td>{% endif %}
+            {% if expense_type == 1 %}<td>{{ expense_date['milage'] }}</td>
+            {% else %}<td>{{ expense_date['price'] }}</td>{% endif %}
         </tr>
         {% endfor %}
     </tbody>
@@ -111,13 +112,14 @@
             <th>Total</th>
             {% if expense_type == 1 %}<th>Expense Milage</th>{% endif %}
             {% if expense_type == 2 %}<th>Expense Price</th>{% endif %}
+            {% if expense_type == 3 %}<th>Store Price</th>{% endif %}
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>Total</td>
-            {% if expense_type == 1 %}<td>{{ ns.milage }}</td>{% endif %}
-            {% if expense_type == 2 %}<td>${{ ns.price }}</td>{% endif %}
+            {% if expense_type == 1 %}<td>{{ ns.milage }}</td>
+            {% else %}<td>${{ ns.price }}</td>{% endif %}
         </tr>
     </tbody>
 </table>

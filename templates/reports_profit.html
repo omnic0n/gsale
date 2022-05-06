@@ -65,6 +65,7 @@
     </form>
 </div>
 
+Sales
 <table class="blueTable">
     <thead>
         <tr>
@@ -94,7 +95,29 @@
     </tbody>
 </table>
 <br>
+Expenses
+<table class="blueTable">
+    <thead>
+        <tr>
+            <td>Expenses</td>
+            <td>Amount</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% set ns.expense = 0 %}
+        {% for expense in expenses %}
+                {% if expense['price'] %}
+                {% set ns.expense = ns.expense + expense['price'] %}
+                {% endif %}
+        {% endfor %}
+        <tr>
+            <td>Total</td>
+            <td>${{ ns.expense }}</td>
+        </tr>
+    </tbody>
+</table>
 <br>
+Total
 <table class="blueTable">
     <thead>
         <tr>
@@ -107,7 +130,7 @@
         <tr>
             <td>Total</td>
             <td>${{ ns.purchase }}</td>
-            <td>${{ ns.sum }}</td>
+            <td>${{ ns.sum - ns.expense }}</td>
         </tr>
     </tbody>
 </table>

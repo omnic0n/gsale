@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField, HiddenField
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField, HiddenField, FormField, FieldList, TextField
 from wtforms.fields.html5 import DateField
 from wtforms.validators import DataRequired, Length, EqualTo
 from datetime import datetime
@@ -25,7 +25,7 @@ class ExpenseForm(FlaskForm):
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')
     id = StringField('id')
-    type = SelectField('type', choices=[(1,"milage"),(2, "item")],coerce=int)
+    expense_type = SelectField('expense_type', coerce=int)
     milage = StringField('milage')
     image = FileField('image')
     submit = SubmitField('Submit')
@@ -35,11 +35,10 @@ class ListForm(FlaskForm):
     end = DateField('end', format='%Y-%m-%d')
     submit = SubmitField('Submit')
 
+
 class PurchaseForm(FlaskForm):
-    name = TextAreaField('name',
-                           validators=[DataRequired()])
+    itemList = FieldList(TextField(validators=[DataRequired()]), min_entries=0)
     group = SelectField('group', coerce=int, default=1)
-    category = SelectField('category', coerce=int)
     price = StringField('price')
     date = DateField('date', default=datetime.today, format='%Y-%m-%d')
     submit = SubmitField('Submit')
@@ -78,7 +77,7 @@ class ReportsForm(FlaskForm):
     year = SelectField('Year', choices=[
         (2021), (2022), (2023)
     ])
-    expense_type = SelectField('type', choices=[(1,"milage"),(2, "item")],coerce=int)
+    expense_type = SelectField('type', coerce=int)
     category = SelectField('category', coerce=int)
     submit = SubmitField('Submit')
 

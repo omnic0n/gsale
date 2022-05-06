@@ -19,14 +19,15 @@ def set_mark_sold(id):
 
 def set_bought_items(details):
     cur = mysql.connection.cursor()
-    for item in details['name'].splitlines():
-        cur.execute("INSERT INTO items(name, group_id, category_id) VALUES (%s, %s, %s)", 
-                    (item,details['group'],details['category'],))
-        mysql.connection.commit()
-        item_id = str(cur.lastrowid)
-        cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
-                    (item_id,date.today().strftime("%Y-%m-%d"),))
-        mysql.connection.commit()
+    for item in details:
+        if item.startswith("item"):
+            cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
+                        (details[item],details['group'],))
+            mysql.connection.commit()
+            item_id = str(cur.lastrowid)
+            cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
+                        (item_id,date.today().strftime("%Y-%m-%d"),))
+            mysql.connection.commit()
     cur.close()
 
 def set_sale_data(details):
@@ -75,6 +76,13 @@ def set_expense_gas(name, details, image_id):
     mysql.connection.commit()
     cur.close()
 
+def set_expense_store(name, details, image_id):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
+                   (name, details['date'], details['price'], image_id, 3))
+    mysql.connection.commit()
+    cur.close()
+
 def set_expense_item(name, details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
@@ -85,7 +93,7 @@ def set_expense_item(name, details, image_id):
 def set_modify_expense(details, price, milage, image_id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
-                (details['name'], details['date'], price, milage, details['type'], image_id, details['id']))
+                (details['name'], details['date'], price, milage, details['expense_type'], image_id, details['id']))
     mysql.connection.commit()
     cur.close()
 

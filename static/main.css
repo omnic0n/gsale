@@ -89,3 +89,11 @@
     flex: 80%;
     max-width: 80%;
   }
+
+  #itemList {
+    padding-left: 0px;
+  }
+  
+  #categoryList {
+    padding-left: 0px;
+  }

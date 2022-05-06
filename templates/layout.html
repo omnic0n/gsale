@@ -43,6 +43,7 @@
                 <div class="dropdown-content">
                   <a href="/expense/item">Item</a>
                   <a href="/expense/gas">Gas</a>
+                  <a href="/expense/store">Store</a>
                   <a href="/expense/list">List</a>
                 </div>
               </div>
@@ -61,7 +62,7 @@
                   <button class="dropbtn">Timer</button>
                   <div class="dropdown-content">
                     <a href="/timer/list">List</a>
-                    <a href="/timer/start">Start</a>
+                    <a href="/timer/start">Start Sales</a>
                   </div>
               </div>
             </div>
@@ -188,6 +189,26 @@
           }
         });
       });
+    </script>
+    <script>
+      $(document).ready(function() {
+          var addCount = 1;
+          $("#addNewField").click(function() {
+              var newInput = $("#itemList");
+              newInput.append(GetDynamicTextBox("", addCount));
+              $("#itemList").append(newInput);
+              addCount += 1;
+          });
+          $("#removeNewField").click(function() {
+              addCount -= 1;
+              $('#item_'+ addCount).remove();
+          });
+      });
+
+      function GetDynamicTextBox(value, addCount) {
+          return '<div class="form-group" id="item_' + addCount + '">' + '<input name = "item' + addCount + '"type="text" value = "' + value + '" />' +
+          '</div>' ;
+      }
     </script>
   </body>
 </html>

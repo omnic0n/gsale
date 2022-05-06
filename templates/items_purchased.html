@@ -6,18 +6,10 @@
             <fieldset class="form-group">
                 <legend class="border-bottom mb-4">Add Item</legend>
                 <div class="form-group">
-                    {{ form.name.label(class="form-control-label") }}
-                    {% if form.name.errors %}
-                        {{ form.name(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.name.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.name(class="form-control form-control-lg") }}
-                    {% endif %}
+                    <button type="button" id="addNewField">Add Item</button>
+                    <button type="button" id="removeNewField" class="remove">Remove Item</button>
                 </div>
+                {{ form.itemList }}
                 <div class="form-group">
                     {{ form.group.label(class="form-control-label") }}
                     {% if form.group.errors %}
@@ -29,19 +21,6 @@
                         </div>
                     {% else %}
                         {{ form.group(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    {{ form.category.label(class="form-control-label") }}
-                    {% if form.category.errors %}
-                        {{ form.category(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.category.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.category(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
             </fieldset>
