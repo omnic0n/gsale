@@ -11,6 +11,7 @@ import random, os
 import get_data, set_data
 import files
 import function
+import config
 
 app = Flask(__name__)
 
@@ -408,4 +409,4 @@ def timer_end():
     return redirect(url_for('timer_list'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=config.PORT)
