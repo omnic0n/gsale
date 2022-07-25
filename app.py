@@ -17,6 +17,7 @@ app = Flask(__name__)
 
 # Initialize the extension
 app.config.from_object("config.ProductionConfig")
+print(app.config)
 
 @app.context_processor
 def update_layout_with_timer():
@@ -409,4 +410,4 @@ def timer_end():
     return redirect(url_for('timer_list'))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=config.PORT)
+    app.run(debug=True)
