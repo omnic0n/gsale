@@ -61,10 +61,7 @@ def get_data_from_group_describe(group_id):
                     groups.id,
                     groups.date,
                     groups.image,
-                    longitude,
-                    latitude
                     FROM groups groups
-                    INNER JOIN location location ON location.group_id = groups.id
                     WHERE groups.id = %s""", (group_id, ))
     return list(cur.fetchall())
 
