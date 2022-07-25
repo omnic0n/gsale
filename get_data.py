@@ -60,7 +60,7 @@ def get_data_from_group_describe(group_id):
                     groups.price, 
                     groups.id,
                     groups.date,
-                    groups.image,
+                    groups.image
                     FROM groups groups
                     WHERE groups.id = %s""", (group_id, ))
     return list(cur.fetchall())
