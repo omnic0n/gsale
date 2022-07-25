@@ -21,9 +21,6 @@
             <th>Purchase</th>
             <th>Sale</th>
             <th>Profit</th>
-            {% if group_id[0]['latitude'] or group_id[0]['longitude'] %}
-            <th>Location</th>
-            {% endif %}
             <th>Modify</th>
         </tr>
     </thead>
@@ -34,9 +31,6 @@
             <td>${{ group_id[0]['price'] }}</td>
             <td>${{ sold_price }}</td>
             <td>${{ sold_price - group_id[0]['price']}}</td>
-            {% if group_id[0]['latitude'] or group_id[0]['longitude'] %}
-            <td><a href = "/location?group_id={{ group_id[0]['id'] }}">Location</a></td>
-            {% endif %}
             <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}">Modify Group</a></td>
         </tr>
     </tbody>
