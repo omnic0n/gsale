@@ -56,54 +56,11 @@
                     {% else %}
                         {{ form.image(class="form-control form-control-lg") }}
                     {% endif %}
-                <div class="form-group">
-                    {{ form.latitude.label(class="form-control-label") }}
-                    {% if form.latitude.errors %}
-                        {{ form.latitude(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.latitude.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.latitude(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    {{ form.longitude.label(class="form-control-label") }}
-                    {% if form.longitude.errors %}
-                        {{ form.longitude(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.longitude.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.longitude(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
     </div>
-<script>
-var x = document.getElementById("demo");
-
-function getLocation() {
-    if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(showPosition);
-    } else { 
-    x.innerHTML = "Geolocation is not supported by this browser.";
-    }
-}
-
-function showPosition(position) {
-    document.getElementById("longitude").value = position.coords.longitude.toString();
-    document.getElementById("latitude").value = position.coords.latitude.toString();
-}
-
-window.onload = getLocation;
 </script>
 {% endblock content %}

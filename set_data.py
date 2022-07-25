@@ -53,8 +53,8 @@ def set_group_add(group_name, details, image_id):
                 (group_name, details['date'], details['price'], image_id))
     mysql.connection.commit()
     group_id = str(cur.lastrowid)
-    cur.execute("INSERT INTO location(group_id, longitude, latitude) VALUES (%s, %s, %s)", 
-                (group_id, details['longitude'], details['latitude']))
+    #cur.execute("INSERT INTO location(group_id, longitude, latitude) VALUES (%s, %s, %s)", 
+    #            (group_id, details['longitude'], details['latitude']))
     mysql.connection.commit()
     cur.close()
     return group_id
@@ -63,8 +63,8 @@ def set_group_modify(details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE groups SET name = %s, date = %s, price = %s, image = %s where id = %s", 
                 (details['name'], details['date'], details['price'], image_id, details['id']))
-    cur.execute("UPDATE location set longitude = %s, latitude =%s where group_id =%s", 
-    (details['longitude'], details['latitude'], details['id']))
+    #cur.execute("UPDATE location set longitude = %s, latitude =%s where group_id =%s", 
+    #            (details['longitude'], details['latitude'], details['id']))
     mysql.connection.commit()
     cur.close()
 
