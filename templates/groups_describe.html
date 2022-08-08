@@ -53,6 +53,7 @@
         </tr>
     </thead>
     <tbody>
+        {% set ns = namespace() %}
         {% set ns.count = 1 %}
         {% for item in items %}
         <tr>
