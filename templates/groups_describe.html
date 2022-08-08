@@ -46,14 +46,17 @@
 <table class="blueTable">
     <thead>
         <tr>
+            <th></th>
             <th>Name</th> 
             <th>Sold</th>
             <th>Net</th>
         </tr>
     </thead>
     <tbody>
+        {% set count = 1 %}
         {% for item in items %}
         <tr>
+            <td>{{ count }}</td>
             {% if item['sold'] == 0 %}
                 {% set color = 'black' %}
             {% else %}
@@ -62,6 +65,7 @@
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% elif item['sold'] == 2 %}Not Selling{% else %}True{% endif %}</td>
             <td>{{ item['net'] }}</td>
+        {% count = count + 1 %}
         </tr>
         {% endfor %}
     </tbody>
