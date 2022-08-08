@@ -53,10 +53,10 @@
         </tr>
     </thead>
     <tbody>
-        {% set count = 1 %}
+        {% set ns.count = 1 %}
         {% for item in items %}
         <tr>
-            <td>{{ count }}</td>
+            <td>{{ ns.count }}</td>
             {% if item['sold'] == 0 %}
                 {% set color = 'black' %}
             {% else %}
@@ -65,7 +65,7 @@
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% elif item['sold'] == 2 %}Not Selling{% else %}True{% endif %}</td>
             <td>{{ item['net'] }}</td>
-        {% set count = count + 1 %}
+        {% set ns.count = ns.count + 1 %}
         </tr>
         {% endfor %}
     </tbody>
