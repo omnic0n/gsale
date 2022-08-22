@@ -7,6 +7,7 @@
             <th>Name</th> 
             <th>Price</th>
             <th>Profit</th>
+            <th>ROI</th>
             <th>Date</th>
             <th>ID</th>
         </tr>
@@ -26,6 +27,7 @@
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['price'] }}</td>
                 <td>{% if profit %}{{ profit[0] }}{% else %}-{{ group['price'] }}{% endif %}</td>
+                <td>{{ ((profit[0] + group['price'])/group['price']) * 100)| round }}%</td>
                 <td>{{ group['date'] }}</td>
                 <td>{{ group['id'] }}</td>
             </tr>
