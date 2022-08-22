@@ -88,7 +88,7 @@
             <td><a href = "/groups/list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
             <td>{{ purchased_date['price'] }}</td>
             <td>{{ total }}</td>
-            <td>{% if total < 0 %}<font color: red>{% else %}<font color: black>{% endif %}{{ (((total + purchased_date['price'])/purchased_date['price']) * 100)| round }}%</font></td>
+            <td>{% if total < 0 %}<font color:'red'>{% else %}<font color:'black'>{% endif %}{{ (((total + purchased_date['price'])/purchased_date['price']) * 100)| round }}%</font></td>
         </tr>
                {% endif %}
             {% endfor %}
