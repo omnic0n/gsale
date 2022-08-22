@@ -32,7 +32,7 @@
             <td>${{ group_id[0]['price'] }}</td>
             <td>${{ sold_price }}</td>
             <td>${{ sold_price - group_id[0]['price']}}</td>
-            <td>${{ (1 - (group_id[0]['price']/sold_price)) * 100 }}</td>
+            <td>${{ (1 - (sold_price/group_id[0]['price'])) * 100 }}</td>
             <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}">Modify Group</a></td>
         </tr>
     </tbody>
