@@ -30,7 +30,7 @@ def get_all_from_group_and_items(date):
             ORDER by collection.id""", (date, ))
     return list(cur.fetchall())
 
-def get_all_from_collection(date):
+def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     if not date:
         cur.execute("SELECT * FROM collection ORDER BY name ASC")
@@ -83,7 +83,7 @@ def get_all_from_items(item_id):
     cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
     return list(cur.fetchall())
 
-def get_data_from_item_collection(group_id):
+def get_data_from_item_groups(group_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
                     items.name, 
@@ -309,7 +309,7 @@ def get_timer_data_for_item(id):
     cur.execute("SELECT * FROM timer WHERE id = %s", (id, ))
     return cur.fetchone()
 
-def get_timer_data_for_collection(id):
+def get_timer_data_for_groups(id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM timer WHERE group_id = %s", (id, ))
     return cur.fetchone()
