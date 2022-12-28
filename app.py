@@ -288,7 +288,7 @@ def groups_list():
 
     if request.method == "POST":
         details = request.form
-        date = details['ListYear'] + "-%-%"
+        date = details['listYear'] + "-%-%"
         print(date)
         groups = get_data.get_all_from_group_and_items(date)
         all_groups = get_data.get_all_from_groups(date)
