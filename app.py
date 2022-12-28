@@ -288,10 +288,14 @@ def groups_list():
 
     if request.method == "POST":
         details = request.form
-        print(details['listYear'])
-    date = request.args.get('date', type = str)
-    groups = get_data.get_all_from_group_and_items(date)
-    all_groups = get_data.get_all_from_groups(date)
+        date = details['ListYear'] + "-%-%"
+        print(date)
+        groups = get_data.get_all_from_group_and_items(date)
+        all_groups = get_data.get_all_from_groups(date)
+    else:
+        date = request.args.get('date', type = str)
+        groups = get_data.get_all_from_group_and_items(date)
+        all_groups = get_data.get_all_from_groups(date)
     return render_template('groups_list.html', groups=groups, all_groups=all_groups, form=form)
 
 @app.route('/items/sold_list')
