@@ -16,8 +16,6 @@ class GroupForm(FlaskForm):
     year = SelectField('Year', choices=[
         (2021), (2022), (2023)
     ])
-#   latitude = StringField('latitude')
-#   longitude = StringField('longitude')
     submit = SubmitField('Submit')
 
 class ExpenseForm(FlaskForm):
