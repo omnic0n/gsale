@@ -284,12 +284,14 @@ def list_expense():
     expenses = get_data.get_all_from_expenses(date)
     return render_template('expenses_list.html', expenses=expenses)
 
-@app.route('/groups/list')
+@app.route('/groups/list', methods=["POST","GET"])
 def groups_list():
+    form = GroupForm()
+
     date = request.args.get('date', type = str)
     groups = get_data.get_all_from_group_and_items(date)
     all_groups = get_data.get_all_from_groups(date)
-    return render_template('groups_list.html', groups=groups, all_groups=all_groups)
+    return render_template('groups_list.html', groups=groups, all_groups=all_groups, form=form)
 
 @app.route('/items/sold_list')
 def sold_list():
