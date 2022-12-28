@@ -5,7 +5,6 @@ from upload_function import *
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
-from flask_googlemaps import GoogleMaps, Map
 import random, os
 
 import get_data, set_data
@@ -22,7 +21,6 @@ app.config.from_object("config.ProductionConfig")
 def update_layout_with_timer():
     return dict(is_timer_running=get_data.get_active_timers_garage_sales())
   
-GoogleMaps(app)
 MySQL(app)
 
 @app.route('/')
