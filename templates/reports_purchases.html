@@ -106,7 +106,10 @@
         </tr>
         <tr>
             <td>Average Spent per Day</td>
+            {% if ns.dates > 0 %}
             <td>${{ "%.2f"|format(ns.purchase/ns.dates) }}</td>
+            {% else %}
+            <td></td>
         </tr>
     </tbody>
 </table>
