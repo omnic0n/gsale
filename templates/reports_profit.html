@@ -125,6 +125,7 @@ Total
             <th>Total</th>
             <th>Purchase Price</th> 
             <th>Profit</th>
+            <th>ROI</th>
         </tr>
         </thead>
         <tbody>
@@ -132,6 +133,9 @@ Total
             <td>Total</td>
             <td>${{ ns.purchase }}</td>
             <td>${{ ns.sum }}</td>
+            <td>
+                {{ (ns.sum/ns.purchase) * 100)| round }}%
+            </td>
         </tr>
     </tbody>
 </table>
