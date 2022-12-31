@@ -104,6 +104,10 @@
             <td>Purchase Days</td>
             <td>{{ ns.dates }}</td>
         </tr>
+        <tr>
+            <td>Average Spent per Day</td>
+            <td>{{ ns.purchase/ns.dates }}</td>
+        </tr>
     </tbody>
 </table>
 {% endblock content %}
