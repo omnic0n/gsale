@@ -134,7 +134,9 @@ Total
             <td>${{ ns.purchase }}</td>
             <td>${{ ns.sum }}</td>
             <td>
+                {% if ns.purchases > 0 %}
                 {{ ((ns.sum/ns.purchase) * 100)| round }}%
+                {% endif %}
             </td>
         </tr>
     </tbody>
