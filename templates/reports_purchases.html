@@ -75,8 +75,10 @@
     <tbody>
         {% set ns = namespace() %}
         {% set ns.purchase = 0 %}
+        {% set ns.dates = 0 %}
         {% for purchased_date in purchased_dates %}
                 {% set ns.purchase = ns.purchase + purchased_date['price'] %}
+                {% set ns.dates++ }
         <tr>
             <td><a href = "/groups/list?date={{ purchased_date['date'] }}">{{ purchased_date['date'] }}</a></td>
             <td>{{ purchased_date['price'] }}</td>
@@ -95,8 +97,12 @@
         </thead>
         <tbody>
         <tr>
-            <td>Total</td>
+            <td>Spent</td>
             <td>${{ ns.purchase }}</td>
+        </tr>
+        <tr>
+            <td>Sales</td>
+            <td>${{ ns.dates }}</td>
         </tr>
     </tbody>
 </table>
