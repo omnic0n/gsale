@@ -40,6 +40,7 @@ class ListForm(FlaskForm):
 class PurchaseForm(FlaskForm):
     itemList = FieldList(TextField(validators=[DataRequired()]), min_entries=0)
     group = SelectField('group', coerce=int, default=1)
+    category = SelectField('category', coerce=int)
     price = StringField('price')
     date = DateField('date', default=datetime.today, format='%Y-%m-%d')
     submit = SubmitField('Submit')

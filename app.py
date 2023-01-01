@@ -225,6 +225,8 @@ def bought_items():
     form.group.choices = [(group['id'], group['name']) for group in groups]
     form.group.data = group_id
 
+    form.category.choices = [(category['id'], category['type']) for category in categories]
+
     if request.method == "POST":
         details = request.form
         set_data.set_bought_items(details)
