@@ -21,8 +21,8 @@ def set_bought_items(details):
     cur = mysql.connection.cursor()
     for item in details:
         if item.startswith("item"):
-            cur.execute("INSERT INTO items(name, group_id) VALUES (%s, %s)", 
-                        (details[item],details['group'],))
+            cur.execute("INSERT INTO items(name, group_id, category_id) VALUES (%s, %s, %s)", 
+                        (details[item],details['group'],details['category'],))
             mysql.connection.commit()
             item_id = str(cur.lastrowid)
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
