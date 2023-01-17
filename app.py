@@ -258,6 +258,24 @@ def modify_items():
         return redirect(url_for('describe_item',item=id))
     return render_template('modify_item.html', form=form, item=item, sale=sale)
 
+@app.route('/items/quick_sell',methods=["POST","GET"])
+def quick_sell():
+    groups = get_data.get_all_from_groups(None)
+    categories = get_data.get_all_from_categories()
+
+    form = ItemForm()
+    form.group.choices = [(group['id'], group['name']) for group in groups]
+
+    form.category.choices = [(category['id'], category['type']) for category in categories]
+
+    if request.method == "POST":
+        details = request.form
+        set_data.set_items_modify(details)
+        set_data.set_sale_data(details)
+        return redirect(url_for('describe_item',item=id))
+    return render_template('quick_sell.html', form=form)
+
+
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
     item_id = request.args.get('item', type = int)
