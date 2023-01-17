@@ -30,6 +30,18 @@ def set_bought_items(details):
             mysql.connection.commit()
     cur.close()
 
+def set_quick_sale(details):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO items(name, group_id, category_id, sold) VALUES (%s, %s, %s, 1)", 
+                (details['name'],details['group'],details['category'],))
+    mysql.connection.commit()
+    item_id = str(cur.lastrowid)
+    cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, %s, %s, %s)",
+                (item_id,details['price'],details['shipping_fee'],date.today().strftime("%Y-%m-%d"),))
+    mysql.connection.commit()
+    cur.close()
+    return item_id
+
 def set_sale_data(details):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE sale SET date = %s, price = %s, shipping_fee = %s WHERE id = %s", 

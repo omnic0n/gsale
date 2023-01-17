@@ -271,9 +271,8 @@ def quick_sell():
     if request.method == "POST":
         details = request.form
         print(details)
-       # set_data.set_items_modify(details)
-       # set_data.set_sale_data(details)
-       # return redirect(url_for('describe_item'))
+        id = set_data.set_quick_sale(details)
+        return redirect(url_for('describe_item',item=id))
     return render_template('quick_sell.html', form=form)
 
 
