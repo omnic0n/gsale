@@ -21,7 +21,8 @@
             <th>Category</th>
             <th>Purchase Date</th> 
             <th>Sold</th>
-            {% if item[0]['group_id'] != 1 %}<td>Group</td>{% endif %}
+            <th>Returned</th>
+            {% if item[0]['group_id'] != 1 %}<th>Group</th>{% endif %}
             <th></th>
             {% if not item[0]['sold'] %}<th></th>{% endif %}
         </tr>
@@ -33,6 +34,7 @@
             <td>{{ category['type'] }}</td>
             <td><a href = "/groups/list?date={{ item[0]['purchase_date'] }}">{{ item[0]['purchase_date'] }}</a></td>
             <td>{% if item[0]['sold'] %}True{% else %}False{% endif %}</td>
+            <td>{% if item[0]['returned'] %}True{% else %}False{% endif %}</td>
             {% if item[0]['group_id'] != 1 %}
             <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</a></td>
             {% endif %}
