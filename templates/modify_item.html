@@ -93,7 +93,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.returned(class="form-control form-control-lg") }}
+                        {{ form.returned(class="form-control form-control-lg", value=item[0]['returned']) }}
                     {% endif %}
                 </div>
                 <div class="form-group">

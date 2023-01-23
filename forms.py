@@ -57,7 +57,7 @@ class ItemForm(FlaskForm):
     id = StringField('id')
     category = SelectField('category', coerce=int)
     returned = SelectField('returned', 
-                        choices=[("0"), ("1")])
+                        choices=[(1, "True"), (0, "False")])
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):
