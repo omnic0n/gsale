@@ -244,6 +244,8 @@ def modify_items():
     item = get_data.get_data_for_item_describe(id)
     sale = get_data.get_data_from_sale(id)
 
+    print(item)
+
     form = ItemForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
     form.group.data = item[0]['group_id']
