@@ -253,6 +253,7 @@ def modify_items():
     form.category.choices = [(category['id'], category['type']) for category in categories]
     form.category.data = item[0]['category_id']
 
+    form.returned.choices = [(0, 'False'), (1, "True")]
     form.returned.data = item[0]['returned']
 
     if request.method == "POST":
