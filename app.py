@@ -253,8 +253,6 @@ def modify_items():
     form.category.choices = [(category['id'], category['type']) for category in categories]
     form.category.data = item[0]['category_id']
 
-    form.returned.data = item[0]['returned']
-
     if request.method == "POST":
         details = request.form
         set_data.set_items_modify(details)
