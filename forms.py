@@ -56,7 +56,7 @@ class ItemForm(FlaskForm):
     shipping_fee = StringField('shipping_fee')
     id = StringField('id')
     category = SelectField('category', coerce=int)
-    returned = SelectField('returned', choices=[("True"), ("False")])
+    returned = SelectField('returned', choices=[(1, "True"), (0, "False")])
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):
