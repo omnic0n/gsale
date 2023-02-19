@@ -13,6 +13,15 @@
         </tr>
     </thead>
     <tbody>
+        {% if page == '1' %}
+            {% min_list = 0 %}
+            {% max_list = 249 %}
+        {% elif page > 1 and ((page * 250) < (len(items)+250)) %}
+            {% min_list = page * 250 %}
+            {% max_list = (page * 250) + 249 %}
+        {% else %}
+            {% page = 0 %}
+        {% endif %}
         {% for item in items[min_list:max_list] %}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
