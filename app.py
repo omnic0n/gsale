@@ -337,9 +337,9 @@ def sold_list():
         max_list = min_list + 249
     
     if (page * 250) < (len(items)):
-        max_reached = true
+        max_reached = 1
     else:
-        max_reached = false
+        max_reached = 0
 
     return render_template('items_sold_list.html', items=items, sold=sold, page=page, min_list=min_list, max_list=max_list, max_reached=max_reached)
 
