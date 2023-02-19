@@ -332,6 +332,9 @@ def sold_list():
     min_list = 0
     max_list = 249
 
+    pages = (len(items)/250)
+    print(pages)
+    
     if page >= 1:
         min_list = (page - 1) * 250
         max_list = min_list + 249
