@@ -325,12 +325,13 @@ def groups_list():
 
 @app.route('/items/sold_list', methods=["POST","GET"])
 def sold_list():
-    page = request.args.get('page', type = str)
+    page = request.args.get('page', type = str, default = 1)
     date = request.args.get('date', type = str)
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
     sold = get_data.get_all_items_sold()
     print(page)
-    return render_template('items_sold_list.html', items=items, sold=sold)
+    print(len(items))
+    return render_template('items_sold_list.html', items=items, sold=sold, page=page)
 
 @app.route('/items/unsold_list')
 def unsold_list():
