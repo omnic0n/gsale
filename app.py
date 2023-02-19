@@ -325,10 +325,15 @@ def groups_list():
 
 @app.route('/items/sold_list', methods=["POST","GET"])
 def sold_list():
-    page = request.args.get('page', type = str, default = 1)
     date = request.args.get('date', type = str)
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
     sold = get_data.get_all_items_sold()
+    
+    if request.method == 'POST':
+        page = request.args.get('page', type = str, default = 1)
+    else:
+        page = 1
+
     if page == '1':
         min_list = 0
         max_list = 249
