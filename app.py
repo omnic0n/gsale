@@ -328,7 +328,7 @@ def sold_list():
     date = request.args.get('date', type = str)
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
     sold = get_data.get_all_items_sold()
-    page = request.args.get('page', type = str, default = 1)
+    page = request.args.get('page', type = int, default = 1)
     min_list = 0
     max_list = 249
 
