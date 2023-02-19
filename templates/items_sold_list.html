@@ -1,14 +1,14 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
-<table width=100% border="1">
+<table width=100%>
     <tr>
         <td align="left">
             {% if page != 1 %}<a href = "/items/sold_list?page={{ page - 1 }}">Previous Page</a>{% endif %}
         </td>
         <td align="center">
             {% for number in range(pages) %}
-                {{ number }}
+                <a href = "/items/sold_list?page={{ number + 1 }}">{{ number +1 }}</a>
             {% endfor %}
         </td>
         <td align="right">
