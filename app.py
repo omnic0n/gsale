@@ -5,7 +5,7 @@ from upload_function import *
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
-import random, os
+import random, os, math
 
 import get_data, set_data
 import files
@@ -332,7 +332,7 @@ def sold_list():
     min_list = 0
     max_list = 249
 
-    pages = ceil(len(items)/250)
+    pages = math.ceil(len(items)/250)
     print(pages)
 
     if page >= 1:
