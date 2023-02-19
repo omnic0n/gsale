@@ -13,7 +13,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for item in items %}
+        {% for item in items[0:100] %}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{{ item['date'] }}</td>
