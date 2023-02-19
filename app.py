@@ -333,7 +333,7 @@ def sold_list():
     sold = get_data.get_all_items_sold()
     page = request.args.get('page', type = int, default = 1)
 
-    pages = math.ceil(float(len(items))/250)
+    pages = int(math.ceil(float(len(items))/250))
 
     if page >= 1:
         min_list = (page - 1) * 250
