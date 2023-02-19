@@ -349,6 +349,16 @@ def unsold_list():
     items = get_data.get_list_of_items_purchased_by_date(date, sold=0)
     return render_template('items_unsold_list.html', items=items, current_date=datetime.now().date())
 
+#Search Section
+@app.route('/items/search', methods=["POST","GET"])
+def items_search():
+    form = ItemsForm()
+
+    if request.method == "POST":
+        details = request.form
+        return render_template('items_search.html', form=form)
+    return render_template('items_search.html', form=form)
+    
 #Describe Section
 @app.route('/items/describe',methods=["POST","GET"])
 def describe_item():

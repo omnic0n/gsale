@@ -1,0 +1,78 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Search</legend>
+            <div class="form-group">
+                {{ form.name.label(class="form-control-label") }}
+                {% if form.name.errors %}
+                    {{ form.name(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.name(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+    </fieldset>
+    <div class="form-group">
+        {{ form.submit(class="btn btn-outline-info") }}
+    </div>
+    </form>
+</div>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Sold</th>
+            <th>Purchase Date</th>
+            <th>Sold Date</th>
+            <th>Sold Net</th>
+            <th>Group ID</th> 
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            {% if item['sold'] == 0 %}
+                {% set color = 'black' %}
+            {% elif item['sold'] == 2 %}
+                {% set color = 'green' %}
+            {% else %}
+                {% set color = 'red' %}
+            {% endif %}
+            <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
+            <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
+            <td>{{ item['date'] }}</td>
+            {% for sold_item in sold %}
+                {% if item['id'] == sold_item['id'] %}
+                    <td>{{ sold_item['date']}}</td>
+                    <td>{{ sold_item['net']}}</td>
+                {% endif %}
+            {% endfor %}
+            {% if item['sold'] == 0 %}
+            <td></td>
+            <td></td>
+            {% elif item['sold'] == 2 %}
+            <td>NA</td>
+            <td></td>
+            {% endif %}
+            <td>{% if item['group_id'] == 1%}
+                None
+                {% elif item['group_id'] %}
+                <a href = "/groups/describe?group_id={{ item['group_id'] }}">
+                {{ item['group_id'] }}
+                </a>
+                {% endif %}
+            </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+</html>
