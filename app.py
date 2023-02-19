@@ -332,7 +332,7 @@ def sold_list():
     min_list = 0
     max_list = 249
 
-    pages = (float(len(items))/250.0)
+    pages = math.ciel(float(len(items))/250)
     print(pages)
 
     if page >= 1:
