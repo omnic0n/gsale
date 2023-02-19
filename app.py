@@ -323,11 +323,13 @@ def groups_list():
         all_groups = get_data.get_all_from_groups(date)
     return render_template('groups_list.html', groups=groups, all_groups=all_groups, form=form)
 
-@app.route('/items/sold_list')
+@app.route('/items/sold_list', methods=["POST","GET"])
 def sold_list():
+    page = rquest.args.get('page', type = str)
     date = request.args.get('date', type = str)
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
     sold = get_data.get_all_items_sold()
+    print(page)
     return render_template('items_sold_list.html', items=items, sold=sold)
 
 @app.route('/items/unsold_list')
