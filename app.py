@@ -328,9 +328,10 @@ def sold_list():
     date = request.args.get('date', type = str)
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
     sold = get_data.get_all_items_sold()
-    
+
     if request.method == 'POST':
         page = request.args.get('page', type = str, default = 1)
+        print('post')
     else:
         page = 1
 
