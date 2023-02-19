@@ -352,13 +352,13 @@ def unsold_list():
 #Search Section
 @app.route('/items/search', methods=["POST","GET"])
 def items_search():
-    form = ItemsForm()
+    form = ItemForm()
 
     if request.method == "POST":
         details = request.form
         return render_template('items_search.html', form=form)
     return render_template('items_search.html', form=form)
-    
+
 #Describe Section
 @app.route('/items/describe',methods=["POST","GET"])
 def describe_item():
