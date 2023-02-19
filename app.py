@@ -332,13 +332,16 @@ def sold_list():
     min_list = 0
     max_list = 249
 
-    if page >= 1 and ((page * 250) < (len(items)+250)):
+    if page >= 1:
         min_list = (page - 1) * 250
         max_list = min_list + 249
-    else:
-        print('max reached')
+    
+    if (page * 250) < (len(items)):
+        max_reached = true
+    else
+        max_reached = false
 
-    return render_template('items_sold_list.html', items=items, sold=sold, page=page, min_list=min_list, max_list=max_list)
+    return render_template('items_sold_list.html', items=items, sold=sold, page=page, min_list=min_list, max_list=max_list, max_reached=max_reached)
 
 @app.route('/items/unsold_list')
 def unsold_list():

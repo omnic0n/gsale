@@ -8,7 +8,7 @@
                 {% if page != 1 %}<a href = "/items/sold_list?page={{ page - 1 }}">Previous Page</a>{% endif %}
             </div>
             <div align="right" style="float:right;width:25%;">
-                {% if page != 0 %}<a href = "/items/sold_list?page={{ page + 1 }}">Next Page</a>{% endif %}
+                {% if max_reached %}<a href = "/items/sold_list?page={{ page + 1 }}">Next Page</a>{% endif %}
             </div>
         </td>
     </tr>
