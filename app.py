@@ -329,8 +329,10 @@ def sold_list():
     date = request.args.get('date', type = str)
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
     sold = get_data.get_all_items_sold()
-    print(page)
-    print(len(items))
+    if page == '1':
+        min = 0
+        max = 250
+        
     return render_template('items_sold_list.html', items=items, sold=sold, page=page)
 
 @app.route('/items/unsold_list')
