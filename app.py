@@ -325,15 +325,15 @@ def groups_list():
 
 @app.route('/items/sold_list', methods=["POST","GET"])
 def sold_list():
+    min_list = 0
+    max_list = 249
+    
     date = request.args.get('date', type = str)
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
     sold = get_data.get_all_items_sold()
     page = request.args.get('page', type = int, default = 1)
-    min_list = 0
-    max_list = 249
 
     pages = math.ceil(float(len(items))/250)
-    print(pages)
 
     if page >= 1:
         min_list = (page - 1) * 250
@@ -344,7 +344,8 @@ def sold_list():
     else:
         max_reached = 0
 
-    return render_template('items_sold_list.html', items=items, sold=sold, page=page, min_list=min_list, max_list=max_list, max_reached=max_reached)
+    return render_template('items_sold_list.html', 
+                            items=items, sold=sold, page=page, min_list=min_list, max_list=max_list, max_reached=max_reached, pages=pages)
 
 @app.route('/items/unsold_list')
 def unsold_list():
