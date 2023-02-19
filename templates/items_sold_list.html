@@ -4,21 +4,18 @@
 <table width=100% border="1">
     <tr>
         <td>
-            <tr>
-                {% if page != 1 %}<a href = "/items/sold_list?page={{ page - 1 }}">Previous Page</a>{% endif %}
-            </tr>
-            <tr>
-                {% for number in range(pages) %}
-                    {{ number }}
-                {% endfor %}
-            </tr>
-            <tr>
+            {% if page != 1 %}<a href = "/items/sold_list?page={{ page - 1 }}">Previous Page</a>{% endif %}
+        </td>
+        <td>
+            {% for number in range(pages) %}
+                {{ number }}
+            {% endfor %}
+        </td>
+        <td>
                 {% if max_reached %}<a href = "/items/sold_list?page={{ page + 1 }}">Next Page</a>{% endif %}
-            </tr>
         </td>
     </tr>
 </table>
-
 
 <table class="blueTable">
     <thead>
