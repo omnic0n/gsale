@@ -4,17 +4,17 @@
 <table width=100%>
     <tr>
         <td>
-            <div style="float:left;width:25%;">
+            <tr>
                 {% if page != 1 %}<a href = "/items/sold_list?page={{ page - 1 }}">Previous Page</a>{% endif %}
-            </div>
-            <div align="center">
+            </tr>
+            <tr>
                 {% for number in range(pages) %}
                     {{ number }}
                 {% endfor %}
-            </div>
-            <div align="right" style="float:right;width:25%;">
+            </tr>
+            <tr>
                 {% if max_reached %}<a href = "/items/sold_list?page={{ page + 1 }}">Next Page</a>{% endif %}
-            </div>
+            </tr>
         </td>
     </tr>
 </table>
