@@ -333,7 +333,7 @@ def sold_list():
     max_list = 249
 
     print(len(items))
-    pages = float(len(items)/250)
+    pages = long(len(items)/250)
     print(pages)
 
     if page >= 1:
