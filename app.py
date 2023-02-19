@@ -327,8 +327,11 @@ def groups_list():
 def sold_list():
     page = request.args.get('page', type = str)
     date = request.args.get('date', type = str)
+    print('starting')
     items = get_data.get_list_of_items_purchased_by_date(date, sold=1)
+    print('got items')
     sold = get_data.get_all_items_sold()
+    print('got sold')
     print(page)
     return render_template('items_sold_list.html', items=items, sold=sold)
 
