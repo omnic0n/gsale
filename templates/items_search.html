@@ -30,9 +30,6 @@
         <tr>
             <th>Name</th> 
             <th>Sold</th>
-            <th>Purchase Date</th>
-            <th>Sold Date</th>
-            <th>Sold Net</th>
             <th>Group ID</th> 
         </tr>
     </thead>
@@ -48,20 +45,6 @@
             {% endif %}
             <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
-            <td>{{ item['date'] }}</td>
-            {% for sold_item in sold %}
-                {% if item['id'] == sold_item['id'] %}
-                    <td>{{ sold_item['date']}}</td>
-                    <td>{{ sold_item['net']}}</td>
-                {% endif %}
-            {% endfor %}
-            {% if item['sold'] == 0 %}
-            <td></td>
-            <td></td>
-            {% elif item['sold'] == 2 %}
-            <td>NA</td>
-            <td></td>
-            {% endif %}
             <td>{% if item['group_id'] == 1%}
                 None
                 {% elif item['group_id'] %}

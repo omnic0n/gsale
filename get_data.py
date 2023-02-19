@@ -83,6 +83,11 @@ def get_all_from_items(item_id):
     cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
     return list(cur.fetchall())
 
+def get_list_of_items_with_name(name):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM items WHERE name like = %s", (name, ))
+    return list(cur.fetchall())
+
 def get_data_from_item_groups(group_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 

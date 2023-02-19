@@ -356,7 +356,8 @@ def items_search():
 
     if request.method == "POST":
         details = request.form
-        return render_template('items_search.html', form=form)
+        items = get_data.get_list_of_items_with_name(details['name'])
+        return render_template('items_search.html', form=form, items=items)
     return render_template('items_search.html', form=form)
 
 #Describe Section
