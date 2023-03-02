@@ -19,7 +19,3 @@ def set_dates(details):
         start_date = date
         end_date = date
     return start_date, end_date
-
-def login(session):
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))

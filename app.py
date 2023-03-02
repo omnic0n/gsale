@@ -53,7 +53,8 @@ def logout():
 
 @app.route('/')
 def index():
-    function.login(session)
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))
     profit = get_data.get_profit()
     return render_template('index.html', profit=profit)
 
