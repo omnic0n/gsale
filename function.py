@@ -22,6 +22,7 @@ def set_dates(details):
 
 def login(session):
     if 'loggedin' in session:
-        return True
+        print(session['username'])
     else:
+        print("not logged in")
         return redirect(url_for('login'))
