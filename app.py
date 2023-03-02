@@ -37,8 +37,7 @@ def login():
         password = request.form['password']
         # Check if account exists using MySQL
         msg = get_data.login_data(username=username, password=password)
-        print(session)
-        if 'loggedin' in session:
+        if(session['loggedin']):
             return redirect(url_for('index'))    
     return render_template('login.html', msg=msg)
 
@@ -53,6 +52,8 @@ def logout():
 
 @app.route('/')
 def index():
+    if not session.get("name"):
+        return redirect(url_for('login'))    
     profit = get_data.get_profit()
     return render_template('index.html', profit=profit)
 
