@@ -71,7 +71,7 @@ def reports(name):
                 return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates, expenses=expenses)
             return render_template('reports_profit.html', form=form)
 
-    return True
+    return redirect(url_for('index'))    
 
 
 @app.route('/reports/sales',methods=["GET", "POST"])
