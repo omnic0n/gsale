@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm, TimerForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
+from flask_session import Session
 import random, os, math
 
 import get_data, set_data
@@ -13,6 +14,9 @@ import function
 import config
 
 app = Flask(__name__)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
 # Initialize the extension
 app.config.from_object("config.ProductionConfig")
