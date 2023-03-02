@@ -6,6 +6,23 @@ app = Flask(__name__)
 
 mysql = MySQL(app)
 
+def login_data(username, password):
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM accounts WHERE username = %s AND password = %s', (username, password,))
+        # Fetch one record and return result
+        account = cursor.fetchone()
+        # If account exists in accounts table in out database
+        if account:
+            # Create session data, we can access this data in other routes
+            session['loggedin'] = True
+            session['id'] = account['id']
+            session['username'] = account['username']
+            # Redirect to home page
+            return 'Logged in successfully!'
+        else:
+            # Account doesnt exist or username/password incorrect
+            return 'Incorrect username/password!'
+
 #Group Data
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
