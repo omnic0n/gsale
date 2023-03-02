@@ -21,6 +21,10 @@ Session(app)
 # Initialize the extension
 app.config.from_object("config.ProductionConfig")
 
+def check_login():
+    if not 'loggedin' in session:
+        return redirect(url_for('login')) 
+
 @app.context_processor
 def update_layout_with_timer():
     return dict(is_timer_running=get_data.get_active_timers_garage_sales())
@@ -52,13 +56,14 @@ def logout():
 
 @app.route('/')
 def index():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))    
+    check_login()
+    
     profit = get_data.get_profit()
     return render_template('index.html', profit=profit)
 
 @app.route('/reports/profit',methods=["GET", "POST"])
 def reports_profit():
+
     form = ReportsForm()
 
     if request.method == "POST":
