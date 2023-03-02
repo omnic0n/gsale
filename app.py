@@ -32,7 +32,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         # Check if account exists using MySQL
-        results = get_data.login_data(username=username, password=password)
+        msg = get_data.login_data(username=username, password=password)
     return render_template('login.html', msg=msg)
 
 @app.route('/')
