@@ -59,7 +59,7 @@ def index():
 @app.route('/reports/<name>',methods=["GET", "POST"])
 def reports(name):
     print(str(name))
-    if name == "profit":
+    if str(name) == "profit":
         def reports_profit():
             form = ReportsForm()
 
