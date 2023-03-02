@@ -32,7 +32,7 @@ def set_dates(details):
 
 def login_data(username, password):
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM accounts WHERE username = %", (username, ))
+        cursor.execute("SELECT * FROM accounts WHERE username = %s", (username, ))
         account = cursor.fetchone()
 
         if bcrypt.checkpw(password, account['password']):
