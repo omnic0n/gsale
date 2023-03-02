@@ -34,15 +34,14 @@ def login_data(username, password):
         cursor = mysql.connection.cursor()
         cursor.execute("SELECT * FROM accounts WHERE username = %s", (username, ))
         account = cursor.fetchone()
-        print(account['password'])
 
-        if bcrypt.checkpw(password.encode('utf8'), account['password'].encode('UTF_8')):
+        if account and bcrypt.checkpw(password.encode('utf8'), account['password'].encode('UTF_8')):
             print("Yaay, It Matches!")
-            # Create session data, we can access this data in other routes
+
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account['username']
-            # Redirect to home page
+
             return 'Logged in successfully!'
         else:
             f = open("users.log", "a")
