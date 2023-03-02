@@ -21,7 +21,7 @@ Session(app)
 # Initialize the extension
 app.config.from_object("config.ProductionConfig")
 
-def check_login(session):
+def check_login():
     print(session)
     if not 'loggedin' in session:
         return redirect(url_for('login')) 
