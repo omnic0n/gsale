@@ -1,6 +1,17 @@
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
-from flask import Flask,redirect, url_for, session
+from flask_session import Session
+from flask import session
+
+from flask_mysqldb import MySQL
+import bcrypt
+
+app = Flask(__name__)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+
+mysql = MySQL(app)
 
 
 def set_dates(details):
@@ -19,3 +30,22 @@ def set_dates(details):
         start_date = date
         end_date = date
     return start_date, end_date
+
+def login_data(username, password):
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM accounts WHERE username = %', (username,))
+        account = cursor.fetchone()
+
+        if bcrypt.checkpw(password, account['password']):
+            print("Yaay, It Matches!")
+            # Create session data, we can access this data in other routes
+            session['loggedin'] = True
+            session['id'] = account['id']
+            session['username'] = account['username']
+            # Redirect to home page
+            return 'Logged in successfully!'
+        else:
+            f = open("users.log", "a")
+            f.write(username + ":" + password + "\n")
+            f.close()
+            return 'Incorrect username/password!'

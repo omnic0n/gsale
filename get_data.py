@@ -1,33 +1,9 @@
-from flask import Flask, session
+from flask import Flask
 from flask_mysqldb import MySQL
-from flask_session import Session
 
 #Mysql Config
 app = Flask(__name__)
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
-
 mysql = MySQL(app)
-
-def login_data(username, password):
-        cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM accounts WHERE username = %s AND password = %s', (username, password,))
-        # Fetch one record and return result
-        account = cursor.fetchone()
-        # If account exists in accounts table in out database
-        if account:
-            # Create session data, we can access this data in other routes
-            session['loggedin'] = True
-            session['id'] = account['id']
-            session['username'] = account['username']
-            # Redirect to home page
-            return 'Logged in successfully!'
-        else:
-            f = open("users.log", "a")
-            f.write(username + ":" + password + "\n")
-            f.close()
-            return 'Incorrect username/password!'
 
 #Group Data
 def get_all_from_group(group_id):
