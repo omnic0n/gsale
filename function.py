@@ -1,5 +1,7 @@
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
+from flask import Flask,redirect, url_for, session
+
 
 def set_dates(details):
     year = int(details['year'])
@@ -17,3 +19,9 @@ def set_dates(details):
         start_date = date
         end_date = date
     return start_date, end_date
+
+def login(session):
+    if 'loggedin' in session:
+        return True
+    else:
+        return redirect(url_for('login'))
