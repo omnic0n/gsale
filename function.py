@@ -36,7 +36,7 @@ def login_data(username, password):
         account = cursor.fetchone()
         print(account['password'])
 
-        if bcrypt.checkpw(password.encode('utf8'), account['password']):
+        if bcrypt.checkpw(password.encode('utf8'), account['password'].encode('UTF_8')):
             print("Yaay, It Matches!")
             # Create session data, we can access this data in other routes
             session['loggedin'] = True
