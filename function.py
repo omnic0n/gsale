@@ -25,4 +25,4 @@ def login(session):
         print(session['username'])
     else:
         print("not logged in")
-        return redirect(url_for('login'))
+        redirect(url_for('login'))
