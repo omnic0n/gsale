@@ -41,6 +41,15 @@ def login():
             return redirect(url_for('index'))    
     return render_template('login.html', msg=msg)
 
+@app.route('/logout')
+def logout():
+    # Remove session data, this will log the user out
+   session.pop('loggedin', None)
+   session.pop('id', None)
+   session.pop('username', None)
+   # Redirect to login page
+   return redirect(url_for('login'))
+
 @app.route('/')
 def index():
     profit = get_data.get_profit()
