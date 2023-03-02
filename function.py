@@ -13,7 +13,6 @@ Session(app)
 
 mysql = MySQL(app)
 
-
 def set_dates(details):
     year = int(details['year'])
     month = int(details['month'])
@@ -33,7 +32,7 @@ def set_dates(details):
 
 def login_data(username, password):
         cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM accounts WHERE username = %', (username,))
+        cursor.execute("SELECT * FROM accounts WHERE username = %", (username, ))
         account = cursor.fetchone()
 
         if bcrypt.checkpw(password, account['password']):
