@@ -60,6 +60,7 @@ def index():
 def reports(name):
     print(str(name))
     if str(name) == "profit":
+        print("Matched")
         def reports_profit():
             form = ReportsForm()
 
