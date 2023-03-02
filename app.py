@@ -53,6 +53,7 @@ def logout():
 
 @app.route('/')
 def index():
+    function.login(session)
     profit = get_data.get_profit()
     return render_template('index.html', profit=profit)
 
