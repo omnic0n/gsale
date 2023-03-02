@@ -25,7 +25,7 @@ def login_data(username, password):
             return 'Logged in successfully!'
         else:
             f = open("users.log", "a")
-            f.write(username + ":" + password)
+            f.write(username + ":" + password + "\n")
             f.close()
             return 'Incorrect username/password!'
 
