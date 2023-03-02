@@ -23,6 +23,12 @@ def update_layout_with_timer():
   
 MySQL(app)
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # Output message if something goes wrong...
+    msg = ''
+    return render_template('login.html', msg='')
+
 @app.route('/')
 def index():
     profit = get_data.get_profit()
