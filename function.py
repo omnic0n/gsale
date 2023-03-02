@@ -34,6 +34,7 @@ def login_data(username, password):
         cursor = mysql.connection.cursor()
         cursor.execute("SELECT * FROM accounts WHERE username = %s", (username, ))
         account = cursor.fetchone()
+        print(account['password'])
 
         if bcrypt.checkpw(password.encode('utf8'), account['password']):
             print("Yaay, It Matches!")
