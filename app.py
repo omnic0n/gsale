@@ -59,6 +59,7 @@ def index():
 @app.route('/reports/<name>',methods=["GET", "POST"])
 def reports(name):
     print(name)
+    return str(name)
 
 @app.route('/reports/profit',methods=["GET", "POST"])
 def reports_profit():
