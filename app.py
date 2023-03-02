@@ -51,15 +51,14 @@ def logout():
    # Redirect to login page
    return redirect(url_for('login'))
 
-def login_check():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))
-
 @app.route('/')
 def index():
-    login_check()
     profit = get_data.get_profit()
     return render_template('index.html', profit=profit)
+
+@app.route('/reports/<name>',methods=["GET", "POST"])
+def reports(name):
+    print(name)
 
 @app.route('/reports/profit',methods=["GET", "POST"])
 def reports_profit():
