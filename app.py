@@ -52,7 +52,7 @@ def index():
         return redirect(url_for('login'))  
 
     profits = []
-    years = get_data.years()
+    years = get_data.get_years()
     for year in years:
         profit = get_data.get_profit(year)
         profits.append[profit]
