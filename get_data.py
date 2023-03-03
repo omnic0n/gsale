@@ -61,7 +61,7 @@ def get_data_from_group_describe(group_id):
                     collection.date,
                     collection.image
                     FROM collection collection
-                    WHERE collection.group_id = %s""", (group_id, ))
+                    WHERE collection.id = %s""", (group_id, ))
     return list(cur.fetchall())
 
 def get_group_sold_from_date(start_date, end_date):
