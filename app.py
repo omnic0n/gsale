@@ -54,7 +54,8 @@ def index():
     profits = []
     years = get_data.get_years()
     for year in years:
-        profit = get_data.get_profit(year[0])
+        print(year)
+        profit = get_data.get_profit(year)
         profits.append[profit]
     print(profits)
     #return render_template('index.html', profit=profits)
