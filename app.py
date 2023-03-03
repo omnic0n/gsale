@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm, ButtonForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
@@ -466,6 +466,10 @@ def describe_item():
      
     id = request.args.get('item', type = str)
 
+    form = ButtonForm()
+    form.button.label.text = "Sell Item"
+    form.id.data = id
+
     if request.method == "POST":
         details = request.form
         return redirect(url_for('sold_items',item=details['id']))
@@ -473,13 +477,11 @@ def describe_item():
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
     item_sold = get_data.get_data_for_item_sold(id)
-    timer = get_data.get_timer_data_for_item(id)
     return render_template('items_describe.html', 
                             item=item,
                             category=category,
                             sold=item_sold,
-                            form=form,
-                            timer=timer)
+                            form=form)
 
 @app.route('/expense/describe')
 def describe_expense():
@@ -506,14 +508,21 @@ def describe_group():
     if not sold_price:
         sold_price = 0
 
+    form = TimerForm()
+    form.button.label.text = "List Items"
+    form.id.data = id
+
     if request.method == "POST":
         details = request.form
+        if not get_data.get_timer_data_for_groups(details['id']):
+            set_data.start_timer_listing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('bought_items',group=details['id']))
 
     return render_template('groups_describe.html', 
                             group_id=group_id,
                             items=items,
-                            sold_price=sold_price)
+                            sold_price=sold_price,
+                            form=form)
 
 @app.route('/location', methods=["GET"])
 def location():

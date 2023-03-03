@@ -84,3 +84,6 @@ class ReportsForm(FlaskForm):
     category = SelectField('category', coerce=int)
     submit = SubmitField('Submit')
 
+class ButtonForm(FlaskForm):
+    button = SubmitField()
+    id = HiddenField()
