@@ -14,7 +14,7 @@ mysql = MySQL(app)
 def get_years():
     cur = mysql.connection.cursor()
     cur.execute("SELECT year FROM years")
-    return cur.fetchall()
+    return list(cur.fetchall())
 
 #Group Data
 def get_all_from_group(group_id):
