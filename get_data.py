@@ -135,7 +135,7 @@ def get_data_for_item_describe(item_id):
 
 def get_all_items_not_sold():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items WHERE sold = 0 ORDER BY name ASC")
+    cur.execute("SELECT * FROM items WHERE sold = 0 AND collection.account = %s ORDER BY name ASC", (session['id'], ))
     return list(cur.fetchall())
 
 def get_all_items_sold():
@@ -146,7 +146,7 @@ def get_all_items_sold():
                     (sale.price - sale.shipping_fee) AS net
                     FROM sale
                     INNER JOIN items items ON items.id = sale.id
-                    WHERE items.sold = 1""")
+                    WHERE items.sold = 1 AND collection.account = %s""", (session['id'], ))
     return list(cur.fetchall())
 
 def get_data_from_sale(item_id):
@@ -185,7 +185,7 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                     FROM items items 
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale on items.id = sale.id
-                    WHERE sale.date LIKE %s AND sold = %s""", (date, sold, ))
+                    WHERE sale.date LIKE %s AND sold = %s AND collection.account = %s""", (date, sold, session['id'], ))
         return list(cur.fetchall())
 
 def get_list_of_items_with_categories(category_id):
@@ -203,9 +203,9 @@ def get_list_of_items_with_categories(category_id):
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale ON items.id = sale.id
                     INNER JOIN categories categories ON items.category_id = categories.id
-                    WHERE categories.id = %s
+                    WHERE categories.id = %s AND collection.account = %s
                     ORDER BY categories.id""",
-                    (category_id,))
+                    (category_id, session['id'], ))
         return list(cur.fetchall())
 
 #Expense Data
