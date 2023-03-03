@@ -39,6 +39,7 @@ def login_data(username, password, ip):
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account['username']
+            print(session)
             f = open("/var/log/gsale/success.log", "a")
             f.write(ip + " - " + username + "\n")
             f.close()
