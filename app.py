@@ -292,7 +292,7 @@ def bought_items():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
-    group_id = request.args.get('group', type = int)
+    group_id = request.args.get('group', type = str)
     groups = get_data.get_all_from_groups(None)
     categories = get_data.get_all_from_categories()
 
