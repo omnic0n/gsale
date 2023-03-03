@@ -10,7 +10,7 @@
             <th>Purchase Date</th> 
             <th>Sold</th>
             <th>Returned</th>
-            {% if item[0]['group_id'] != 1 %}<th>Group</th><th>Group Name</th>{% endif %}
+            {% if item[0]['group_id'] != 1 %}<th>Group</th>{% endif %}
             <th></th>
             {% if not item[0]['sold'] %}<th></th>{% endif %}
         </tr>
@@ -24,8 +24,7 @@
             <td>{% if item[0]['sold'] %}True{% else %}False{% endif %}</td>
             <td>{% if item[0]['returned'] %}True{% else %}False{% endif %}</td>
             {% if item[0]['group_id'] != 1 %}
-            <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_id'] }}</a></td>
-            <td>{{ item[0]['group_name'] }}</td>
+            <td><a href = "/groups/describe?group_id={{ item[0]['group_id'] }}">{{ item[0]['group_name'] }}</a></td>
             {% endif %}
             <td><a href = "/items/modify?item={{ item[0]['id'] }}">Modify</a></td>
             {% if not item[0]['sold'] %}<td><a href = "/items/mark_sold?item={{ item[0]['id'] }}">Mark as Sold</a></td>{% endif %}

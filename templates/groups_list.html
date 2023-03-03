@@ -32,7 +32,6 @@
             <th>Price</th>
             <th>Profit</th>
             <th>Date</th>
-            <th>ID</th>
         </tr>
     </thead>
     <tbody>
@@ -51,7 +50,6 @@
                 <td>{{ group['price'] }}</td>
                 <td>{% if profit %}{{ profit[0] }}{% else %}-{{ group['price'] }}{% endif %}</td>
                 <td>{{ group['date'] }}</td>
-                <td>{{ group['id'] }}</td>
             </tr>
         {% endif %}
         {% endfor %}
