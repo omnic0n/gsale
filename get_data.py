@@ -286,12 +286,12 @@ def get_category(category_id):
 
 #Profit Data
 def get_profit(year):
-    year = year + '-%-%'
+    year_value = year + '-%-%'
     cur = mysql.connection.cursor()
     cur.execute("""SELECT SUM(tbl.price) AS price
                 FROM (SELECT price FROM collection 
                       WHERE collection.account = %s 
-                      AND collection.date LIKE %s) tbl""", (session['id'], year, ))
+                      AND collection.date LIKE %s) tbl""", (session['id'], year_value, ))
     purchase = list(cur.fetchall())
     cur.execute("""SELECT 
                     sum((sale.price - sale.shipping_fee)) AS price 
@@ -300,9 +300,9 @@ def get_profit(year):
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON collection.id = items.group_id
                     WHERE collection.account = %s
-                    AND collection.date LIKE %s""",(session['id'], year,  ))
+                    AND collection.date LIKE %s""",(session['id'], year_value,  ))
     sale = list(cur.fetchall())
-    return sale[0]['price'],purchase[0]['price']
+    return list(sale[0]['price'],purchase[0]['price'],year)
 
 def get_group_profit(group_id):
     cur = mysql.connection.cursor()
