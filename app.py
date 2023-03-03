@@ -33,8 +33,9 @@ def login():
     msg = ''
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         addr = request.environ['HTTP_X_FORWARDED_FOR'].split(',')
-        ip = ([x.strip() for x in addr])
-        print(ip)
+        print(addr)
+        #ip = ([x.strip() for x in addr])
+        ip = 0
         # Create variables for easy access
         username = request.form['username']
         password = request.form['password']
