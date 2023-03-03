@@ -88,7 +88,7 @@ def get_list_of_items_with_name(name):
                 SELECT 
                 items.name,
                 items.sold,
-                colletion.id as group_id,
+                collection.id as group_id,
                 collection.name as group_name
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
