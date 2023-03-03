@@ -172,7 +172,7 @@ def group_add():
         group_name = "%s-%s" % (details['date'],details['name'])
         image_id = files.upload_image(request.files['image'])
         group_id = set_data.set_group_add(group_name, details, image_id)
-        return redirect(url_for('describe_group',group_id=group_id))
+        return redirect(url_for('group_add'))
     return render_template('groups_add.html', form=form)
 
 @app.route('/display/<filename>')
