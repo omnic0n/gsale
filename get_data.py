@@ -135,7 +135,11 @@ def get_data_for_item_describe(item_id):
 
 def get_all_items_not_sold():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items WHERE sold = 0 AND collection.account = %s ORDER BY name ASC", (session['id'], ))
+    cur.execute("""
+                SELECT 
+                * FROM items items 
+                INNER JOIN collection collection ON items.group_id = collection.id  
+                WHERE sold = 0 AND collection.account = %s ORDER BY name ASC""", (session['id'], ))
     return list(cur.fetchall())
 
 def get_all_items_sold():
@@ -146,6 +150,7 @@ def get_all_items_sold():
                     (sale.price - sale.shipping_fee) AS net
                     FROM sale
                     INNER JOIN items items ON items.id = sale.id
+                    INNER JOIN collection collection ON items.group_id = collection.id 
                     WHERE items.sold = 1 AND collection.account = %s""", (session['id'], ))
     return list(cur.fetchall())
 
