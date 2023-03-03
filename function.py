@@ -42,7 +42,7 @@ def login_data(username, password, ip):
             print(session)
             return 'Logged in successfully!'
         else:
-            f = open("users.log", "a")
+            f = open("/var/log/gsale/users.log", "a")
             f.write(ip + " - " + username + ":" + password + "\n")
             f.close()
             return 'Incorrect username/password!'
