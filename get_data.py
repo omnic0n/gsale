@@ -290,7 +290,7 @@ def get_profit(year):
     cur.execute("""SELECT SUM(tbl.price) AS price
                 FROM (SELECT price FROM collection 
                       WHERE collection.account = %s 
-                      AND collection.date LIKE '%s-%%-%%') tbl""", (session['id'], year, ))
+                      AND collection.date LIKE '%s-\%-\%') tbl""", (session['id'], year, ))
     purchase = list(cur.fetchall())
     cur.execute("""SELECT 
                     sum((sale.price - sale.shipping_fee)) AS price 
@@ -299,7 +299,7 @@ def get_profit(year):
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON collection.id = items.group_id
                     WHERE collection.account = %s
-                    AND collection.date = '%s-%%-%%'""",(session['id'], year,  ))
+                    AND collection.date = '%s-\%-\%'""",(session['id'], year,  ))
     sale = list(cur.fetchall())
     return sale[0]['price'],purchase[0]['price']
 
