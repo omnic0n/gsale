@@ -1,11 +1,13 @@
-from flask import Flask
+from flask import Flask, session
 from flask_mysqldb import MySQL
-from datetime import datetime, date, timedelta
+from flask_session import Session
 
 import get_data
 
-#Mysql Config
 app = Flask(__name__)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
 mysql = MySQL(app)
 
@@ -61,15 +63,10 @@ def set_items_modify(details):
 
 def set_group_add(group_name, details, image_id):
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO collection(name, date, price,image) VALUES (%s, %s, %s, %s)", 
-                (group_name, details['date'], details['price'], image_id))
-    mysql.connection.commit()
-    group_id = str(cur.lastrowid)
-    #cur.execute("INSERT INTO location(group_id, longitude, latitude) VALUES (%s, %s, %s)", 
-    #            (group_id, details['longitude'], details['latitude']))
+    cur.execute("INSERT INTO collection(name, date, price, image, account) VALUES (%s, %s, %s, %s, %s)", 
+                (group_name, details['date'], details['price'], image_id, session['id']))
     mysql.connection.commit()
     cur.close()
-    return group_id
 
 def set_group_modify(details, image_id):
     cur = mysql.connection.cursor()
