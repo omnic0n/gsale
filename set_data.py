@@ -1,6 +1,7 @@
 from flask import Flask, session
 from flask_mysqldb import MySQL
 from flask_session import Session
+import uuid
 
 import get_data
 
@@ -13,6 +14,9 @@ mysql = MySQL(app)
 
 #Item Data
 
+def generate_uuid():
+    return uuid.uuid4()
+
 def set_mark_sold(id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE items SET sold = 1 where id = %s", (id,))
@@ -23,21 +27,19 @@ def set_bought_items(details):
     cur = mysql.connection.cursor()
     for item in details:
         if item.startswith("item"):
-            cur.execute("INSERT INTO items(name, group_id, category_id) VALUES (%s, %s, %s)", 
-                        (details[item],details['group'],details['category'],))
-            mysql.connection.commit()
-            item_id = str(cur.lastrowid)
+            item_id = generate_uuid()
+            cur.execute("INSERT INTO items(id, name, group_id, category_id) VALUES (%s, %s, %s, %s)", 
+                        (item_id, details[item],details['group'],details['category'],))
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
                         (item_id,date.today().strftime("%Y-%m-%d"),))
             mysql.connection.commit()
     cur.close()
 
 def set_quick_sale(details):
+    item_id = generate_uuid()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO items(name, group_id, category_id, sold) VALUES (%s, %s, %s, 1)", 
-                (details['name'],details['group'],details['category'],))
-    mysql.connection.commit()
-    item_id = str(cur.lastrowid)
+    cur.execute("INSERT INTO items(id, name, group_id, category_id, sold) VALUES (%s, %s, %s, %s, 1)", 
+                (item_id, details['name'],details['group'],details['category'],))
     cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, %s, %s, %s)",
                 (item_id,details['price'],details['shipping_fee'],date.today().strftime("%Y-%m-%d"),))
     mysql.connection.commit()
@@ -62,18 +64,18 @@ def set_items_modify(details):
 #Group Data
 
 def set_group_add(group_name, details, image_id):
+    group_id = generate_uuid()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO collection(name, date, price, image, account) VALUES (%s, %s, %s, %s, %s)", 
-                (group_name, details['date'], details['price'], image_id, session['id']))
+    cur.execute("INSERT INTO collection(id, name, date, price, image, account) VALUES (%s, %s, %s, %s, %s, %s)", 
+                (group_id, group_name, details['date'], details['price'], image_id, session['id']))
     mysql.connection.commit()
     cur.close()
+    return group_id
 
 def set_group_modify(details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE collection SET name = %s, date = %s, price = %s, image = %s where id = %s", 
                 (details['name'], details['date'], details['price'], image_id, details['id']))
-    #cur.execute("UPDATE location set longitude = %s, latitude =%s where group_id =%s", 
-    #            (details['longitude'], details['latitude'], details['id']))
     mysql.connection.commit()
     cur.close()
 
