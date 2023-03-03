@@ -282,9 +282,15 @@ def get_category(category_id):
 def get_profit():
     cur = mysql.connection.cursor()
     cur.execute("""SELECT SUM(tbl.price) AS price
-                FROM (SELECT price FROM collection) tbl""")
+                FROM (SELECT price FROM collection where account = %s) tbl""", (session['id']))
     purchase = list(cur.fetchall())
-    cur.execute("SELECT sum((sale.price - sale.shipping_fee)) AS price FROM sale")
+    cur.execute("""SELECT 
+                    sum((sale.price - sale.shipping_fee)) AS price 
+                    FROM 
+                    sale sale
+                    INNER JOIN items items ON items.id = sale.id
+                    INNER JOIN collection collection ON collection.id = items.group_id
+                    WHERE collection.account = %s""",(session['id']))
     sale = list(cur.fetchall())
     return sale[0]['price'],purchase[0]['price']
 
