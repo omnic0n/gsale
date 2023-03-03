@@ -367,7 +367,7 @@ def sold_items():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
-    item_id = request.args.get('item', type = int)
+    item_id = request.args.get('item', type = str)
     timer = request.args.get('timer')
     items = get_data.get_all_items_not_sold()
 

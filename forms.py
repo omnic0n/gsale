@@ -60,7 +60,7 @@ class ItemForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):
-    id = SelectField('id', coerce=int)
+    id = SelectField('id', coerce=str)
     price = StringField('price')
     date = DateField('date',
                         default=datetime.today,
