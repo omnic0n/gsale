@@ -13,7 +13,7 @@ mysql = MySQL(app)
 #Get Years
 def get_years():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT year FROM years")
+    cur.execute("SELECT * FROM years")
     return list(cur.fetchall())
 
 #Group Data
