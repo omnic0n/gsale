@@ -36,12 +36,10 @@ def login_data(username, password):
         account = cursor.fetchone()
 
         if account and bcrypt.checkpw(password.encode('utf8'), account['password'].encode('UTF_8')):
-            print("Yaay, It Matches!")
-
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account['username']
-
+            print(session)
             return 'Logged in successfully!'
         else:
             f = open("users.log", "a")
