@@ -286,7 +286,7 @@ def get_category(category_id):
 
 #Profit Data
 def get_profit(year):
-    year = year[0] + '-%-%'
+    year = year + '-%-%'
     cur = mysql.connection.cursor()
     cur.execute("""SELECT SUM(tbl.price) AS price
                 FROM (SELECT price FROM collection 
