@@ -508,14 +508,12 @@ def describe_group():
     if not sold_price:
         sold_price = 0
 
-    form = TimerForm()
+    form = ButtonForm()
     form.button.label.text = "List Items"
     form.id.data = id
 
     if request.method == "POST":
         details = request.form
-        if not get_data.get_timer_data_for_groups(details['id']):
-            set_data.start_timer_listing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('bought_items',group=details['id']))
 
     return render_template('groups_describe.html', 
