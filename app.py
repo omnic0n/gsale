@@ -305,8 +305,6 @@ def bought_items():
     if request.method == "POST":
         details = request.form
         set_data.set_bought_items(details)
-        if get_data.get_timer_data_for_groups(group_id):
-            set_data.end_timer_listing(group_id, datetime.now().replace(microsecond=0))
         group_data = get_data.get_all_from_group(details['group'])
         return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
@@ -368,7 +366,6 @@ def sold_items():
         return redirect(url_for('login'))  
      
     item_id = request.args.get('item', type = str)
-    timer = request.args.get('timer')
     items = get_data.get_all_items_not_sold()
 
     form = SaleForm()
@@ -379,8 +376,6 @@ def sold_items():
         details = request.form
         set_data.set_mark_sold(details['id'])
         set_data.set_sale_data(details)
-        if timer:
-            set_data.end_timer_packing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
 
@@ -516,14 +511,8 @@ def describe_group():
     if not sold_price:
         sold_price = 0
 
-    form = TimerForm()
-    form.button.label.text = "List Items"
-    form.id.data = id
-
     if request.method == "POST":
         details = request.form
-        if not get_data.get_timer_data_for_groups(details['id']):
-            set_data.start_timer_listing(details['id'], datetime.now().replace(microsecond=0))
         return redirect(url_for('bought_items',group=details['id']))
 
     return render_template('groups_describe.html', 
@@ -541,48 +530,6 @@ def location():
     location = get_data.get_location(id)
     print(location)
     return render_template('location.html', location=location, id=id)
-
-
-#Timers
-@app.route('/timer/list', methods=["GET"])
-def timer_list():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
-    timers_packing = get_data.get_timers_packing()
-    timers_listing = get_data.get_timers_listing()
-    timers_garage_sales = get_data.get_timers_garage_sales()
-    return render_template('timer_list.html', 
-                            timers_listing=timers_listing, timers_packing=timers_packing,
-                            timers_garage_sales=timers_garage_sales)
-
-@app.route('/timer/start')
-def timer_start():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
-    active = get_data.get_active_timers_garage_sales()
-    if not active:
-        set_data.start_timer_saling(datetime.now().replace(microsecond=0))
-    return redirect(url_for('timer_list'))
-    
-
-@app.route('/timer/end', methods=["GET"])
-def timer_end():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
-    item = request.args.get('item', type = int)
-    group = request.args.get('group', type = int)
-    time = request.args.get('time')
-
-    if(item):
-        set_data.end_timer_packing(item, datetime.now().replace(microsecond=0))
-    elif(group):
-        set_data.end_timer_listing(group, datetime.now().replace(microsecond=0))
-    else:
-        set_data.end_timer_saling(time, datetime.now().replace(microsecond=0))
-    return redirect(url_for('timer_list'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=app.config['PORT'])
