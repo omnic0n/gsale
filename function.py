@@ -39,10 +39,12 @@ def login_data(username, password, ip):
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account['username']
-            print(session)
+            f = open("/var/log/gsale/success.log", "a")
+            f.write(ip + " - " + username + "\n")
+            f.close()
             return 'Logged in successfully!'
         else:
-            f = open("/var/log/gsale/users.log", "a")
+            f = open("/var/log/gsale/fail.log", "a")
             f.write(ip + " - " + username + ":" + password + "\n")
             f.close()
             return 'Incorrect username/password!'
