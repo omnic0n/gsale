@@ -1,6 +1,8 @@
 from flask import Flask, session
 from flask_mysqldb import MySQL
 from flask_session import Session
+from datetime import datetime, date, timedelta
+
 import uuid
 
 import get_data
@@ -31,7 +33,7 @@ def set_bought_items(details):
             cur.execute("INSERT INTO items(id, name, group_id, category_id) VALUES (%s, %s, %s, %s)", 
                         (item_id, details[item],details['group'],details['category'],))
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
-                        (item_id,date.today().strftime("%Y-%m-%d"),))
+                        (item_id, date.today().strftime("%Y-%m-%d"),))
             mysql.connection.commit()
     cur.close()
 
