@@ -513,8 +513,7 @@ def describe_group():
     return render_template('groups_describe.html', 
                             group_id=group_id,
                             items=items,
-                            sold_price=sold_price,
-                            form=form)
+                            sold_price=sold_price)
 
 @app.route('/location', methods=["GET"])
 def location():
