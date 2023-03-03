@@ -21,10 +21,6 @@ Session(app)
 # Initialize the extension
 app.config.from_object("config.ProductionConfig")
 
-@app.context_processor
-def update_layout_with_timer():
-    return dict(is_timer_running=get_data.get_active_timers_garage_sales())
-
 MySQL(app)
 
 @app.route('/login', methods=['GET', 'POST'])
