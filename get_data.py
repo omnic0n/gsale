@@ -300,7 +300,7 @@ def get_profit(year):
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON collection.id = items.group_id
                     WHERE collection.account = %s
-                    AND collection.date = %s""",(session['id'], year,  ))
+                    AND collection.date LIKE %s""",(session['id'], year,  ))
     sale = list(cur.fetchall())
     return sale[0]['price'],purchase[0]['price']
 
