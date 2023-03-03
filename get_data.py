@@ -58,7 +58,6 @@ def get_data_from_group_describe(group_id):
                     collection.name, 
                     collection.price, 
                     collection.id,
-                    collection.group_id,
                     collection.date,
                     collection.image
                     FROM collection collection
