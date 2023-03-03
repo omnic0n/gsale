@@ -184,7 +184,8 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                     items.sold,
                     items.group_id,
                     sale.date as sales_date,
-                    collection.date
+                    collection.date,
+                    collection.name as group_name
                     FROM items items 
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale on items.id = sale.id
