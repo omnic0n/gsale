@@ -86,7 +86,11 @@ def get_list_of_items_with_name(name):
     cur = mysql.connection.cursor()
     cur.execute("""
                 SELECT 
-                * FROM items 
+                items.name,
+                items.sold,
+                colletion.id as group_id,
+                collection.name as group_name
+                FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
                 WHERE items.name like %s AND collection.account = %s""", ('%'+ name + '%', session['id'], ))
     return list(cur.fetchall())
