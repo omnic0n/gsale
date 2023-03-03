@@ -1,8 +1,13 @@
-from flask import Flask
+from flask import Flask, session
 from flask_mysqldb import MySQL
+from flask_session import Session
 
 #Mysql Config
 app = Flask(__name__)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+
 mysql = MySQL(app)
 
 #Group Data
@@ -24,23 +29,18 @@ def get_all_from_group_and_items(date):
             FROM collection collection
             RIGHT JOIN items items ON collection.id = items.group_id 
             LEFT JOIN sale sale ON sale.id = items.id
-            WHERE collection.date LIKE %s
+            WHERE collection.date LIKE %s AND collection.account = %s
             GROUP by items.group_id
-            ORDER by collection.id""", (date, ))
+            ORDER by collection.id""", (date, session['id'], ))
     return list(cur.fetchall())
 
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     if not date:
-        cur.execute("SELECT * FROM collection ORDER BY name ASC")
+        cur.execute("SELECT * FROM collection where collection.acount = %s ORDER BY name ASC", (session['id'], ))
     else:
-        cur.execute("SELECT * FROM collection WHERE date LIKE %s ORDER BY name ASC", (date, ))
+        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", (date, session['id'], ))
     return list(cur.fetchall())
-
-def get_max_group_id():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT id FROM collection ORDER BY id DESC LIMIT 0,1")
-    return cur.fetchone()
 
 def get_purchased_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
@@ -48,8 +48,8 @@ def get_purchased_from_date(start_date, end_date):
                    date,
                    SUM(price) as price
                    FROM collection
-                   WHERE collection.date >= %s AND collection.date <= %s GROUP by date""",
-                   (start_date, end_date,))
+                   WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP by date""",
+                   (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
 def get_data_from_group_describe(group_id):
@@ -72,8 +72,8 @@ def get_group_sold_from_date(start_date, end_date):
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
                     INNER JOIN collection collection ON items.group_id = collection.id
-                    WHERE collection.date >= %s AND collection.date <= %s GROUP BY collection.date""",
-                    (start_date, end_date,))
+                    WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP BY collection.date""",
+                    (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
 #Item Data
@@ -84,7 +84,7 @@ def get_all_from_items(item_id):
 
 def get_list_of_items_with_name(name):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items WHERE name like %s", ('%'+ name + '%', ))
+    cur.execute("SELECT * FROM items WHERE name like %s AND collection.account = %s", ('%'+ name + '%', session['id'], ))
     return list(cur.fetchall())
 
 def get_data_from_item_groups(group_id):
@@ -111,15 +111,11 @@ def get_sold_from_date(start_date, end_date):
                     SUM(sale.shipping_fee) as shipping_fee,
                     SUM(sale.price - sale.shipping_fee) AS net
                     FROM items items 
+                    INNER JOIN collection collection ON collection.id = items.group_id
                     INNER JOIN sale sale ON items.id = sale.id
-                    WHERE sale.date >= %s AND sale.date <= %s GROUP BY sale.date""",
-                    (start_date, end_date,))
+                    WHERE sale.date >= %s AND sale.date <= %s AND collection.account = %s GROUP BY sale.date""",
+                    (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
-
-def get_max_item_id():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT id FROM items ORDER BY id DESC LIMIT 0,1")
-    return cur.fetchone()
 
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()

@@ -482,13 +482,11 @@ def describe_item():
 
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
-    max_item = get_data.get_max_item_id()
     item_sold = get_data.get_data_for_item_sold(id)
     timer = get_data.get_timer_data_for_item(id)
     return render_template('items_describe.html', 
                             item=item,
                             category=category,
-                            max_item=max_item,
                             sold=item_sold,
                             form=form,
                             timer=timer)
@@ -513,7 +511,6 @@ def describe_group():
      
     id = request.args.get('group_id', type = str)
     group_id = get_data.get_data_from_group_describe(id)
-    max_group_id = get_data.get_max_group_id()
     items = get_data.get_data_from_item_groups(id)
     sold_price = get_data.get_group_profit(id)
     if not sold_price:
@@ -532,7 +529,6 @@ def describe_group():
     return render_template('groups_describe.html', 
                             group_id=group_id,
                             items=items,
-                            max_group_id = max_group_id,
                             sold_price=sold_price,
                             form=form)
 
