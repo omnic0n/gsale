@@ -1,18 +1,6 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
-<table width=100%>
-        <tr>
-            <td>
-                <div style="float:left;width:25%;">
-                    {% if item[0]['id'] != 1 %}<a href = "/items/describe?item={{ item[0]['id'] - 1 }}">Previous Item</a>{% endif %}
-                </div>
-                <div align="right" style="float:right;width:25%;">
-                    {% if item[0]['id'] != max_item['id'] %}<a href = "/items/describe?item={{ item[0]['id'] + 1 }}">Next Item</a>{% endif %}
-                </div>
-            </td>
-        </tr>
-</table>
 <table class="blueTable">
     <thead>
         <tr>
