@@ -37,9 +37,9 @@ def get_all_from_group_and_items(date):
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     if not date:
-        cur.execute("SELECT * FROM collection where collection.acount = %s ORDER BY name ASC", (session['id'], ))
+        cur.execute("SELECT * FROM collection where acount = %s ORDER BY name ASC", (session['id'], ))
     else:
-        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", (date, session['id'], ))
+        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND account = %s ORDER BY name ASC", (date, session['id'], ))
     return list(cur.fetchall())
 
 def get_purchased_from_date(start_date, end_date):
