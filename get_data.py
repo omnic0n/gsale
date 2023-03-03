@@ -10,6 +10,12 @@ Session(app)
 
 mysql = MySQL(app)
 
+#Get Years
+def get_years():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT year FROM YEARS")
+    return list(cur.fetchall())
+
 #Group Data
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
@@ -279,10 +285,13 @@ def get_category(category_id):
     return cur.fetchone()
 
 #Profit Data
-def get_profit():
+def get_profit(year):
+    year = year + "-%-%"
     cur = mysql.connection.cursor()
     cur.execute("""SELECT SUM(tbl.price) AS price
-                FROM (SELECT price FROM collection where collection.account = %s) tbl""", (session['id'], ))
+                FROM (SELECT price FROM collection 
+                      WHERE collection.account = %s 
+                      AND collection.date LIKE %s) tbl""", (session['id'], year, ))
     purchase = list(cur.fetchall())
     cur.execute("""SELECT 
                     sum((sale.price - sale.shipping_fee)) AS price 
@@ -290,7 +299,8 @@ def get_profit():
                     sale sale
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON collection.id = items.group_id
-                    WHERE collection.account = %s""",(session['id'], ))
+                    WHERE collection.account = %s
+                    AND collection.date = %s""",(session['id'], year,  ))
     sale = list(cur.fetchall())
     return sale[0]['price'],purchase[0]['price']
 
