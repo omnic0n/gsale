@@ -32,7 +32,7 @@ def login():
     # Output message if something goes wrong...
     msg = ''
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)   
+        ip = request.environ['REMOTE_ADDR']  
         # Create variables for easy access
         username = request.form['username']
         password = request.form['password']
