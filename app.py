@@ -32,11 +32,12 @@ def login():
     # Output message if something goes wrong...
     msg = ''
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)   
         # Create variables for easy access
         username = request.form['username']
         password = request.form['password']
         # Check if account exists using MySQL
-        msg = function.login_data(username=username, password=password)
+        msg = function.login_data(username=username, password=password, ip=ip)
         if 'loggedin' in session:
             return redirect(url_for('index'))    
     return render_template('login.html', msg=msg)

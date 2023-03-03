@@ -30,7 +30,7 @@ def set_dates(details):
         end_date = date
     return start_date, end_date
 
-def login_data(username, password):
+def login_data(username, password, ip):
         cursor = mysql.connection.cursor()
         cursor.execute("SELECT * FROM accounts WHERE username = %s", (username, ))
         account = cursor.fetchone()
@@ -43,6 +43,6 @@ def login_data(username, password):
             return 'Logged in successfully!'
         else:
             f = open("users.log", "a")
-            f.write(username + ":" + password + "\n")
+            f.write(ip + " - " + username + ":" + password + "\n")
             f.close()
             return 'Incorrect username/password!'
