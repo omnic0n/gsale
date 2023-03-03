@@ -88,7 +88,7 @@ def get_list_of_items_with_name(name):
                 SELECT 
                 * FROM items 
                 INNER JOIN collection collection ON items.group_id = collection.id
-                WHERE name like %s AND collection.account = %s""", ('%'+ name + '%', session['id'], ))
+                WHERE items.name like %s AND collection.account = %s""", ('%'+ name + '%', session['id'], ))
     return list(cur.fetchall())
 
 def get_data_from_item_groups(group_id):
