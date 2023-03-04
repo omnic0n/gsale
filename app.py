@@ -192,7 +192,7 @@ def expense_gas():
         details = request.form
         name = "%s-gas" % (details['date'])
         image_id = files.upload_image(request.files['image'])
-        set_data.set_expense_gas(name, details, image_id)
+        set_data.set_expense(name, details, image_id, 1)
         return redirect(url_for('list_expense'))
     return render_template('expense_gas.html', form=form)
 
@@ -207,7 +207,7 @@ def expense_item():
         details = request.form
         name = "%s-%s" % (details['date'], details['name'])
         image_id = files.upload_image(request.files['image'])
-        set_data.set_expense_item(name, details, image_id)
+        set_data.set_expense(name, details, image_id, 2)
         return redirect(url_for('list_expense'))
     return render_template('expense_item.html', form=form)
 
@@ -222,7 +222,7 @@ def expense_store():
         details = request.form
         name = "%s-ebay-store" % (details['date'])
         image_id = files.upload_image(request.files['image'])
-        set_data.set_expense_store(name, details, image_id)
+        set_data.set_expense(name, details, image_id, 3)
         return redirect(url_for('list_expense'))
     return render_template('expense_store.html', form=form)
 

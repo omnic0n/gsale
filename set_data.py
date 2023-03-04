@@ -82,24 +82,10 @@ def set_group_modify(details, image_id):
     cur.close()
 
 #Expense Data
-def set_expense_gas(name, details, image_id):
+def set_expense(name, details, image_id, expense_type):
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO expenses(name, date, milage, image, type) VALUES (%s, %s, %s, %s, %s)", 
-                   (name, details['date'], details['milage'], image_id, 1))
-    mysql.connection.commit()
-    cur.close()
-
-def set_expense_store(name, details, image_id):
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
-                   (name, details['date'], details['price'], image_id, 3))
-    mysql.connection.commit()
-    cur.close()
-
-def set_expense_item(name, details, image_id):
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO expenses(name, date, price, image, type) VALUES (%s, %s, %s, %s, %s)", 
-                (name, details['date'], details['price'], image_id, 2))
+    cur.execute("INSERT INTO expenses(name, date, price, image, type, account) VALUES (%s, %s, %s, %s, %s, %s)", 
+                (name, details['date'], details['price'], image_id, expense_type, session['id']))
     mysql.connection.commit()
     cur.close()
 

@@ -240,8 +240,9 @@ def get_expenses_from_date(start_date, end_date, type):
 				    * FROM expenses
                     WHERE date >= %s AND date <= %s
                     AND type = %s
+                    AND expenses.account = %s
 					ORDER BY date""",
-                    (start_date, end_date, type,))
+                    (start_date, end_date, type, session['id'], ))
     return list(cur.fetchall())
 
 def get_all_from_expenses_date(start_date, end_date):
@@ -249,16 +250,17 @@ def get_all_from_expenses_date(start_date, end_date):
     cur.execute("""SELECT 
 				    * FROM expenses
                     WHERE date >= %s AND date <= %s
+                    AND expenses.account = %s
 					ORDER BY date""",
-                    (start_date, end_date, ))
+                    (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
 def get_all_from_expenses(date):
     cur = mysql.connection.cursor()
     if not date:
-        cur.execute("SELECT * FROM expenses ORDER BY name ASC")
+        cur.execute("SELECT * FROM expenses WHERE expenses.account = %s ORDER BY name ASC", (session['id'], ))
     else:
-        cur.execute("SELECT * FROM expenses WHERE date LIKE %s ORDER BY name ASC", (date, ))
+        cur.execute("SELECT * FROM expenses WHERE date LIKE %s AND expenses.account = %s ORDER BY name ASC", (date, session['id'], ))
     return list(cur.fetchall())
 
 def get_data_for_expense_describe(id):
@@ -267,11 +269,6 @@ def get_data_for_expense_describe(id):
                     * FROM expenses
                     WHERE id = %s""", (id, ))
     return list(cur.fetchall())
-
-def get_max_expense_id():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT id FROM expenses ORDER BY id DESC LIMIT 0,1")
-    return cur.fetchone()
 
 #Category Data
 def get_all_from_categories():
