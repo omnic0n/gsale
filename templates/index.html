@@ -4,6 +4,7 @@
 <table class="blueTable">
     <thead>
         <tr>
+            <th>Year</th>
             <th>Purchases</th> 
             <th>Sales</th>
             <th>Profit</th>
@@ -12,10 +13,13 @@
     </thead>
     <tbody>
         <tr>
-            <td>${{ profit[1] }}</td>
-            <td>${{ profit[0] }}</td>
-            <td>${{ profit[0] - profit[1]}}</td>
-            <td>{{ '%0.2f'| format(((profit[0] - profit[1]) / profit[1])*100) }}%</td>
+            {% for item in items %}
+            <td>{{ item[2] }}</td>
+            <td>${{ item[1] }}</td>
+            <td>${{ item[0] }}</td>
+            <td>${{ item[1] - item[1]}}</td>
+            <td>{{ '%0.2f'| format(((profit[1] - profit[0]) / profit[0])*100) }}%</td>
+            {% endfor %}
         </tr>
     </tbody>
 </table>

@@ -51,14 +51,13 @@ def index():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
 
-    profits = []
+    items = []
     years = get_data.get_years()
    
     for value in years:
-        profit = get_data.get_profit(value['year'])
-        profits.append(profit)
-    print(profits)
-    #return render_template('index.html', profit=profits)
+        item = get_data.get_profit(value['year'])
+        items.append(item)
+    return render_template('index.html', items=items)
 
 @app.route('/reports/profit',methods=["GET", "POST"])
 def reports_profit():
@@ -181,8 +180,7 @@ def group_add():
 def display_image(filename):
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
-     
-	return redirect(url_for('static', filename='uploads/' + filename), code=301)
+    return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
 @app.route('/expense/gas',methods=["POST","GET"])
 def expense_gas():
