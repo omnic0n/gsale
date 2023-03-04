@@ -293,8 +293,8 @@ def get_profit(year):
                       WHERE collection.account = %s 
                       AND collection.date LIKE %s) tbl""", (session['id'], year_value, ))
     purchase = list(cur.fetchall())
-    if purchase is None:
-        purchase = 0
+    if purchase[0]['price'] is None:
+        purchase[0]['price'] = 0
     cur.execute("""SELECT 
                     sum((sale.price - sale.shipping_fee)) AS price 
                     FROM 
@@ -304,8 +304,8 @@ def get_profit(year):
                     WHERE collection.account = %s
                     AND collection.date LIKE %s""",(session['id'], year_value,  ))
     sale = list(cur.fetchall())
-    if sale is None:
-        sale = 0
+    if sale[0]['price'] is None:
+        sale[0]['price'] = 0
     items = [sale[0]['price'],purchase[0]['price'],year]
     return items
 
