@@ -57,6 +57,7 @@ def index():
     for value in years:
         item = get_data.get_profit(value['year'])
         items.append(item)
+    print(items)
     return render_template('index.html', items=items)
 
 @app.route('/reports/profit',methods=["GET", "POST"])
