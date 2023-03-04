@@ -302,7 +302,8 @@ def get_profit(year):
                     WHERE collection.account = %s
                     AND collection.date LIKE %s""",(session['id'], year_value,  ))
     sale = list(cur.fetchall())
-    return sale[0]['price'],purchase[0]['price'],year
+    items = [sale[0]['price'],purchase[0]['price'],year]
+    return items
 
 def get_group_profit(group_id):
     cur = mysql.connection.cursor()
