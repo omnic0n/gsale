@@ -30,8 +30,8 @@ def set_bought_items(details):
     for item in details:
         if item.startswith("item"):
             item_id = generate_uuid()
-            cur.execute("INSERT INTO items(id, name, group_id, category_id) VALUES (%s, %s, %s, %s)", 
-                        (item_id, details[item],details['group'],details['category'],))
+            cur.execute("INSERT INTO items(id, name, group_id, category_id, storage) VALUES (%s, %s, %s, %s, %s)", 
+                        (item_id, details[item],details['group'],details['category'],details['storage'],))
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
                         (item_id, date.today().strftime("%Y-%m-%d"),))
             mysql.connection.commit()

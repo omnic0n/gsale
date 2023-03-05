@@ -43,6 +43,7 @@ class PurchaseForm(FlaskForm):
     category = SelectField('category', coerce=int)
     price = StringField('price')
     date = DateField('date', default=datetime.today, format='%Y-%m-%d')
+    storage = StringField('storage')
     submit = SubmitField('Submit')
 
 class ItemForm(FlaskForm):
@@ -55,6 +56,7 @@ class ItemForm(FlaskForm):
     price = StringField('price')
     shipping_fee = StringField('shipping_fee')
     id = StringField('id')
+    storage = StringField('storage')
     category = SelectField('category', coerce=int)
     returned = SelectField('returned', coerce=int)
     submit = SubmitField('Submit')
