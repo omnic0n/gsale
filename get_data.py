@@ -199,6 +199,7 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                     items.name, 
                     items.sold,
                     items.group_id,
+                    items.storage,
                     sale.date as sales_date,
                     collection.date,
                     collection.name as group_name

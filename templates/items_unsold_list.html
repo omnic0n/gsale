@@ -6,7 +6,8 @@
         <tr>
             <th>Name</th> 
             <th>Days in stock</th> 
-            <th>Group ID</th>
+            <th>Group</th>
+            <th>Storage</th>
         </tr>
     </thead>
     <tbody>
@@ -21,6 +22,9 @@
                 {{ item['group_name'] }}
                 </a>
                 {% endif %}
+            </td>
+            <td>
+                {{ item['storage'] }}
             </td>
             </tr>
         {% endfor %}
