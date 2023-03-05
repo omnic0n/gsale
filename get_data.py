@@ -141,6 +141,7 @@ def get_data_for_item_describe(item_id):
                     items.group_id,
                     items.category_id,
                     items.returned,
+                    items.storage,
                     collection.name AS group_name,
                     collection.date AS purchase_date
                     FROM items items
