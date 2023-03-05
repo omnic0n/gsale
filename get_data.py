@@ -108,6 +108,7 @@ def get_data_from_item_groups(group_id):
                     items.name, 
                     items.sold, 
                     items.id,
+                    items.storage,
                     sum(sale.price - sale.shipping_fee) AS net 
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id

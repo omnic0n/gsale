@@ -40,6 +40,7 @@
             <th>Name</th> 
             <th>Sold</th>
             <th>Net</th>
+            <th>Storage</th>
         </tr>
     </thead>
     <tbody>
@@ -56,6 +57,7 @@
             <td><a style = color: {{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% elif item['sold'] == 2 %}Not Selling{% else %}True{% endif %}</td>
             <td>{{ item['net'] }}</td>
+            <td>{{ item['storage'] }}</td>
         {% set ns.count = ns.count + 1 %}
         </tr>
         {% endfor %}
