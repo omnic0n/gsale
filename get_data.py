@@ -95,6 +95,7 @@ def get_list_of_items_with_name(name):
                 items.name,
                 items.sold,
                 items.id,
+                items.storage,
                 collection.id as group_id,
                 collection.name as group_name
                 FROM items items 
