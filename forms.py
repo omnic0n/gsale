@@ -59,8 +59,7 @@ class ItemForm(FlaskForm):
     storage = StringField('storage')
     category = SelectField('category', coerce=int)
     returned = SelectField('returned', coerce=int)
-    status =  MultiCheckboxField('status'
-                               coerce=int,
+    status =  MultiCheckboxField('status', coerce=int,
                                choices=[(1, 'sold'), (2, 'unsold')])
     submit = SubmitField('Submit')
 
