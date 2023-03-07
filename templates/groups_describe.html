@@ -54,7 +54,7 @@
             {% else %}
                 {% set color = 'red' %}
             {% endif %}
-            <td><a style = color: {{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
+            <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% elif item['sold'] == 2 %}Not Selling{% else %}True{% endif %}</td>
             <td>{{ item['net'] }}</td>
             <td>{{ item['storage'] }}</td>
