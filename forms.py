@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField, HiddenField, FormField, FieldList, TextField
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField, HiddenField, FormField, FieldList, TextField, MultiCheckboxField
 from wtforms.fields.html5 import DateField
 from wtforms.validators import DataRequired, Length, EqualTo
 from datetime import datetime
@@ -59,6 +59,9 @@ class ItemForm(FlaskForm):
     storage = StringField('storage')
     category = SelectField('category', coerce=int)
     returned = SelectField('returned', coerce=int)
+    status =  MultiCheckboxField('status'
+                               coerce=int,
+                               choices=[(1, 'sold'), (2, 'unsold')])
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):
