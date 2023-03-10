@@ -104,6 +104,6 @@ def add_case_data(details):
         if item.startswith("item"):
             item_id = generate_uuid()
             cur.execute("INSERT INTO cases(id, name, platform,account) VALUES (%s, %s, %s, %s)", 
-                        (item_id, details['name'],details['platform'],session['id'],))
+                        (item_id, details[item],details['platform'],session['id'],))
             mysql.connection.commit()
     cur.close()
