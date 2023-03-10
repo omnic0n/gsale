@@ -350,7 +350,7 @@ def get_all_from_platforms():
 #Cases
 def get_all_from_cases(platform):
     if not platform:
-        platform = '%'
+        platform = '*'
 
     print(platform)
     cur = mysql.connection.cursor()
