@@ -537,7 +537,7 @@ def location():
 
 #List Section
 @app.route('/cases/list', methods=["POST","GET"])
-def list_expense():
+def cases_list():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
@@ -557,7 +557,7 @@ def cases_add():
     if request.method == "POST":
         details = request.form
         set_data.add_case_data(details)
-        return redirect(url_for('case_list'))
+        return redirect(url_for('cases_list'))
     return render_template('case_add.html', form=form)
 if __name__ == '__main__':
     app.run(debug=True, port=app.config['PORT'])
