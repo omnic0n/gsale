@@ -1,0 +1,25 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Platform</th>
+            <th>Modify</th>
+            <th>Remove</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for case in cases %}
+        <tr>
+            <td>{{ case['name'] }}</td>
+            <td>{{ case['platform'] }}</td>
+            <td></td>
+            <td></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+</html>

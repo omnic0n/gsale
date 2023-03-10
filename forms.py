@@ -86,6 +86,12 @@ class ReportsForm(FlaskForm):
     category = SelectField('category', coerce=int)
     submit = SubmitField('Submit')
 
+
+class CasesForm(FlaskForm):
+    itemList = FieldList(TextField(validators=[DataRequired()]), min_entries=0)
+    platform = SelectField('platform', coerce=int)
+
 class ButtonForm(FlaskForm):
     button = SubmitField()
     id = HiddenField()
+

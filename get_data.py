@@ -340,3 +340,21 @@ def get_location_from_date(start_date, end_date):
                    AND latitude != '' AND longitude != '' """,
                    (start_date, end_date,))
     return list(cur.fetchall())
+
+#Platform Data
+def get_all_from_platforms():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM platform")
+    return list(cur.fetchall())
+
+#Cases
+def get_all_from_cases():
+    cur = mysql.connection.cursor()
+    cur.execute("""
+                SELECT 
+                cases.name,
+                platform.name as platform_name
+                FROM cases
+                INNER JOIN platform platform on cases.platform = platform.id 
+                WHERE cases.account = %s ORDER BY name ASC""", (session['id'], ))
+    return list(cur.fetchall())

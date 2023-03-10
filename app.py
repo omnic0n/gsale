@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm, ButtonForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm, ButtonForm, CasesForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
@@ -532,5 +532,32 @@ def location():
     print(location)
     return render_template('location.html', location=location, id=id)
 
+
+#Cases
+
+#List Section
+@app.route('/cases/list', methods=["POST","GET"])
+def list_expense():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+     
+    cases = get_data.get_all_from_cases()
+    return render_template('cases_list.html', cases=cases)
+
+@app.route('/cases/add',methods=["POST","GET"])
+def cases_add():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+     
+    platforms = get_data.get_all_from_plaforms()
+
+    form = CasesForm()
+    form.platform.choices = [(platform['id'], platform['name']) for platform in platforms]
+
+    if request.method == "POST":
+        details = request.form
+        set_data.add_case_data(details)
+        return redirect(url_for('case_list'))
+    return render_template('case_add.html', form=form)
 if __name__ == '__main__':
     app.run(debug=True, port=app.config['PORT'])

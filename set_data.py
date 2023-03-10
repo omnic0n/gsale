@@ -95,3 +95,15 @@ def set_modify_expense(details, price, milage, image_id):
                 (details['name'], details['date'], price, milage, details['expense_type'], image_id, details['id']))
     mysql.connection.commit()
     cur.close()
+
+#Cases
+
+def add_case_data(details):
+    cur = mysql.connection.cursor()
+    for item in details:
+        if item.startswith("item"):
+            item_id = generate_uuid()
+            cur.execute("INSERT INTO cases(id, name, platform,account) VALUES (%s, %s, %s, %s)", 
+                        (item_id, details['name'],details['platform'],session['id'],))
+            mysql.connection.commit()
+    cur.close()
