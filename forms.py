@@ -90,6 +90,7 @@ class ReportsForm(FlaskForm):
 class CasesForm(FlaskForm):
     itemList = FieldList(TextField(validators=[DataRequired()]), min_entries=0)
     platform = SelectField('platform', coerce=int)
+    submit = SubmitField('Submit')
 
 class ButtonForm(FlaskForm):
     button = SubmitField()
