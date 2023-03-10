@@ -357,6 +357,7 @@ def get_all_from_cases(platform):
     cur.execute("""
                 SELECT 
                 cases.name,
+                cases.platform as platform_id,
                 platform.name as platform_name
                 FROM cases
                 INNER JOIN platform platform on cases.platform = platform.id 
