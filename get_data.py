@@ -363,5 +363,5 @@ def get_all_from_cases(platform):
                 WHERE cases.account = %s 
                 AND
                 cases.platform = %s
-                ORDER BY name ASC""", (platform, session['id'], ))
+                ORDER BY name ASC""", (session['id'],platform, ))
     return list(cur.fetchall())
