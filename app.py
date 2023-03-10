@@ -541,7 +541,9 @@ def cases_list():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
-    cases = get_data.get_all_from_cases()
+    platform = request.args.get('platform', type = int)
+
+    cases = get_data.get_all_from_cases(platform)
     return render_template('cases_list.html', cases=cases)
 
 @app.route('/cases/add',methods=["POST","GET"])
