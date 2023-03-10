@@ -543,10 +543,7 @@ def cases_list():
      
     platform = request.args.get('platform', type = int)
 
-    if platform:
-        cases = get_data.get_all_from_cases(platform)
-    else:
-        cases = get_data.get_all_from_cases()
+    cases = get_data.get_all_from_cases(platform)
     return render_template('cases_list.html', cases=cases)
 
 @app.route('/cases/add',methods=["POST","GET"])

@@ -348,21 +348,11 @@ def get_all_from_platforms():
     return list(cur.fetchall())
 
 #Cases
-
-def get_all_from_cases():
-    cur = mysql.connection.cursor()
-    cur.execute("""
-                SELECT 
-                cases.name,
-                cases.platform as platform_id,
-                platform.name as platform_name
-                FROM cases
-                INNER JOIN platform platform on cases.platform = platform.id 
-                WHERE cases.account = %s 
-                ORDER BY name ASC""", (session['id'], ))
-    return list(cur.fetchall())
-
 def get_all_from_cases(platform):
+    if not platform:
+        platform = '%%'
+
+    print(platform)
     cur = mysql.connection.cursor()
     cur.execute("""
                 SELECT 
@@ -373,6 +363,6 @@ def get_all_from_cases(platform):
                 INNER JOIN platform platform on cases.platform = platform.id 
                 WHERE cases.account = %s 
                 AND
-                cases.platform = %s
+                cases.platform LIKE %s
                 ORDER BY name ASC""", (session['id'],platform, ))
     return list(cur.fetchall())
