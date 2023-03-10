@@ -556,6 +556,7 @@ def cases_add():
 
     if request.method == "POST":
         details = request.form
+        print(details)
         set_data.add_case_data(details)
         return redirect(url_for('cases_list'))
     return render_template('case_add.html', form=form)
