@@ -352,6 +352,7 @@ def get_all_from_cases(platform):
     if not platform:
         platform = '%'
 
+    print(platform)
     cur = mysql.connection.cursor()
     cur.execute("""
                 SELECT 
