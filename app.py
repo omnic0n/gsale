@@ -549,7 +549,7 @@ def cases_add():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
-    platforms = get_data.get_all_from_plaforms()
+    platforms = get_data.get_all_from_platforms()
 
     form = CasesForm()
     form.platform.choices = [(platform['id'], platform['name']) for platform in platforms]
