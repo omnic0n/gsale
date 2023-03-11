@@ -320,8 +320,6 @@ def modify_items():
     item = get_data.get_data_for_item_describe(id)
     sale = get_data.get_data_from_sale(id)
 
-    print(item)
-
     form = ItemForm()
     form.group.choices = [(group['id'], group['name']) for group in groups]
     form.group.data = item[0]['group_id']
@@ -555,12 +553,32 @@ def cases_add():
 
     form = CasesForm()
     form.platform.choices = [(platform['id'], platform['name']) for platform in platforms]
-
+    
     if request.method == "POST":
         details = request.form
         print(details)
         set_data.add_case_data(details)
         return redirect(url_for('cases_list'))
     return render_template('case_add.html', form=form)
+
+@app.route('/case/modify',methods=["POST","GET"])
+def modify_case():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+     
+    platforms = get_data.get_all_from_platforms()
+    id = request.args.get('case', type = str)
+    case = get_data.get_data_for_case_describe(id)
+
+    form = CasesForm()
+    form.platform.choices = [(platform['id'], platform['name']) for platform in platforms]
+    form.platform.data = case[0]['platform_id']
+
+    if request.method == "POST":
+        details = request.form
+        set_data.set_cases_modify(details)
+        return redirect(url_for('case_list'))
+    return render_template('modify_case.html', form=form, case=case)
+
 if __name__ == '__main__':
     app.run(debug=True, port=app.config['PORT'])

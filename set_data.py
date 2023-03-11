@@ -107,3 +107,10 @@ def add_case_data(details):
                         (item_id, details[item],details['platform'],session['id'],))
             mysql.connection.commit()
     cur.close()
+
+def set_cases_modify(details):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE cases SET name = %s, platform = %s where id = %s", 
+                (details['name'], details['platform'], details['id']))
+    mysql.connection.commit()
+    cur.close()

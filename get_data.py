@@ -366,3 +366,14 @@ def get_all_from_cases(platform):
                 cases.platform LIKE %s
                 ORDER BY name ASC""", (session['id'],platform, ))
     return list(cur.fetchall())
+
+def get_data_for_case_describe(case_id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" SELECT 
+                    cases.id, 
+                    cases.name,
+                    platform.id as platform_id, 
+                    platform.name as platform_name
+                    from cases
+                    INNER JOIN platform platform on cases.platform = platform.id 
+                    WHERE cases.id = %s""", (case_id, ))
