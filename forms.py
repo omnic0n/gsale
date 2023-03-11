@@ -88,6 +88,8 @@ class ReportsForm(FlaskForm):
 
 
 class CasesForm(FlaskForm):
+    name = StringField('name',
+                        validators=[DataRequired()])
     itemList = FieldList(TextField(validators=[DataRequired()]), min_entries=0)
     platform = SelectField('platform', coerce=int)
     submit = SubmitField('Submit')
