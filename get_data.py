@@ -357,7 +357,7 @@ def get_all_from_cases(platform):
     cur.execute("""
                 SELECT 
                 cases.name,
-                case.id,
+                cases.id,
                 cases.platform as platform_id,
                 platform.name as platform_name
                 FROM cases
