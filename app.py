@@ -562,7 +562,7 @@ def cases_add():
     return render_template('case_add.html', form=form)
 
 @app.route('/cases/remove',methods=["POST","GET"])
-def cases_add():
+def cases_remove():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
 
