@@ -15,7 +15,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.name(class="form-control form-control-lg", value=item[0]['name']) }}
+                        {{ form.name(class="form-control form-control-lg", value=case[0]['name']) }}
                     {% endif %}
                 </div>
                 <div class="form-group">
@@ -41,7 +41,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.id(class="form-control form-control-lg", readonly="readonly", value=item[0]['id']) }}
+                        {{ form.id(class="form-control form-control-lg", readonly="readonly", value=case[0]['id']) }}
                     {% endif %}
                 </div>
             </fieldset>
