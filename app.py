@@ -573,7 +573,7 @@ def modify_case():
 
     form = CasesForm()
     form.platform.choices = [(platform['id'], platform['name']) for platform in platforms]
-    #form.platform.data = case[0]['platform_id']
+    form.platform.data = case[0]['platform_id']
 
     if request.method == "POST":
         details = request.form
