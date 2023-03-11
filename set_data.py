@@ -114,3 +114,11 @@ def set_cases_modify(details):
                 (details['name'], details['platform'], details['id']))
     mysql.connection.commit()
     cur.close()
+
+
+def remove_case_data(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM cases WHERE id = %s", 
+                (id, ))
+    mysql.connection.commit()
+    cur.close()

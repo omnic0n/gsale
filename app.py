@@ -561,6 +561,15 @@ def cases_add():
         return redirect(url_for('cases_list'))
     return render_template('case_add.html', form=form)
 
+@app.route('/cases/remove',methods=["POST","GET"])
+def cases_add():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+
+    id = request.args.get('id', type = str)
+    set_data.remove_case_data(id)
+    return redirect(url_for('cases_list'))
+
 @app.route('/cases/modify',methods=["POST","GET"])
 def modify_case():
     if not 'loggedin' in session:
