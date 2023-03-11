@@ -579,7 +579,7 @@ def modify_case():
         details = request.form
         set_data.set_cases_modify(details)
         return redirect(url_for('case_list'))
-    return render_template('modify_case.html', form=form, case=case)
+    return render_template('cases_modify.html', form=form, case=case)
 
 if __name__ == '__main__':
     app.run(debug=True, port=app.config['PORT'])
