@@ -578,7 +578,7 @@ def modify_case():
     if request.method == "POST":
         details = request.form
         set_data.set_cases_modify(details)
-        return redirect(url_for('case_list'))
+        return redirect(url_for('cases_list'))
     return render_template('cases_modify.html', form=form, case=case)
 
 if __name__ == '__main__':
