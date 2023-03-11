@@ -567,7 +567,7 @@ def modify_case():
         return redirect(url_for('login'))  
      
     platforms = get_data.get_all_from_platforms()
-    id = request.args.get('case', type = str)
+    id = request.args.get('id', type = str)
     case = get_data.get_data_for_case_describe(id)
     print(case)
 
