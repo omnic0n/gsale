@@ -378,3 +378,4 @@ def get_data_for_case_describe(case_id):
                     from cases
                     INNER JOIN platform platform on cases.platform = platform.id 
                     WHERE cases.id = %s""", (case_id, ))
+    return list(cur.fetchall())
