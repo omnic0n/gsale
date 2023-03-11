@@ -13,7 +13,7 @@
     <tbody>
         {% for case in cases %}
         <tr>
-            <td>{{ case['name'] }}</td>
+            <td><a href="/cases/modify?id={{ case['id'] }}">{{ case['name'] }}</a></td>
             <td><a href="/cases/list?platform={{ case['platform_id'] }}">{{ case['platform_name'] }}</a></td>
             <td></td>
             <td></td>
