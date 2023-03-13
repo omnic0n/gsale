@@ -379,3 +379,16 @@ def get_data_for_case_describe(case_id):
                     INNER JOIN platform platform on cases.platform = platform.id 
                     WHERE cases.id = %s""", (case_id, ))
     return list(cur.fetchall())
+
+def get_list_of_cases_with_name(name):
+    cur = mysql.connection.cursor()
+    cur.execute("""
+                SELECT 
+                cases.name,
+                cases.id,
+                cases.platform as platform_id,
+                platform.name as platform_name
+                FROM cases
+                INNER JOIN platform platform on cases.platform = platform.id 
+                WHERE cases.name LIKE %s AND cases.account = %s""" ('%'+ name + '%', session['id'], ))
+    return list(cur.fetchall())

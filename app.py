@@ -590,5 +590,21 @@ def modify_case():
         return redirect(url_for('cases_list'))
     return render_template('cases_modify.html', form=form, case=case)
 
+
+#Search Section
+@app.route('/cases/search', methods=["POST","GET"])
+def cases_search():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+     
+    form = CasesForm()
+
+    if request.method == "POST":
+        details = request.form
+        cases = get_data.get_list_of_cases_with_name(details['name'])
+        return render_template('cases_search.html', form=form, cases=cases)
+    return render_template('cases_search.html', form=form)
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=app.config['PORT'])
