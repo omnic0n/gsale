@@ -390,5 +390,7 @@ def get_list_of_cases_with_name(name):
                 platform.name as platform_name
                 FROM cases
                 INNER JOIN platform platform on cases.platform = platform.id 
-                WHERE cases.name like %s AND cases.account = %s""" ('%'+ name + '%', session['id'], ))
+                WHERE cases.name like %s 
+                AND 
+                cases.account = %s""", ('%'+ name + '%', session['id'], ))
     return list(cur.fetchall())
