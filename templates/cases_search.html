@@ -1,0 +1,49 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Search</legend>
+            <div class="form-group">
+                {{ form.name.label(class="form-control-label") }}
+                {% if form.name.errors %}
+                    {{ form.name(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.name(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+    </fieldset>
+    <div class="form-group">
+        {{ form.submit(class="btn btn-outline-info") }}
+    </div>
+    </form>
+</div>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Platform</th>
+            <th>Modify</th>
+            <th>Remove</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for case in cases %}
+        <tr>
+            <td>{{ case['name'] }}</td>
+            <td><a href="/cases/list?platform={{ case['platform_id'] }}">{{ case['platform_name'] }}</a></td>
+            <td><a href="/cases/modify?id={{ case['id'] }}">modify</a></td>
+            <td><a href="/cases/remove?id={{ case['id'] }}">remove</a></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+</html>
