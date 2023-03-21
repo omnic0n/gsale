@@ -58,8 +58,8 @@ def set_sale_data(details):
 
 def set_items_modify(details):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE items SET name = %s, group_id = %s, category_id = %s, returned = %s where id = %s", 
-                (details['name'], details['group'], details['category'], details['returned'], details['id']))
+    cur.execute("UPDATE items SET name = %s, group_id = %s, category_id = %s, returned = %s, storage = %s where id = %s", 
+                (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['id']))
     mysql.connection.commit()
     cur.close()
 
