@@ -98,4 +98,5 @@ class CasesForm(FlaskForm):
 class ButtonForm(FlaskForm):
     button = SubmitField()
     id = HiddenField()
+    info = HiddenField()
 
