@@ -477,12 +477,12 @@ def describe_item():
 
     form = ButtonForm()
     form.button.label.text = "Sell Item"
-    form.button.label = "sell"
+    form.button.info = "sell"
     form.id.data = id
 
     remove = ButtonForm()
     remove.button.label.text = "Remove Item"
-    remove.button.label = "remove"
+    remove.button.info = "remove"
     remove.id.data = id
 
     if request.method == "POST":
