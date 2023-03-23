@@ -337,6 +337,17 @@ def modify_items():
         return redirect(url_for('describe_item',item=id))
     return render_template('modify_item.html', form=form, item=item, sale=sale)
 
+@app.route('/items/remove',methods=["POST","GET"])
+def cases_remove():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+
+    id = request.args.get('id', type = str)
+    group_id=get_data.get_group_id(id)
+    set_data.remove_item_data(id)
+    return redirect(url_for('describe_group',group_id=group_id))
+
+
 @app.route('/items/quick_sell',methods=["POST","GET"])
 def quick_sell():
     if not 'loggedin' in session:

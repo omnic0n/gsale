@@ -63,6 +63,13 @@ def set_items_modify(details):
     mysql.connection.commit()
     cur.close()
 
+def remove_item_data(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM items WHERE id = %s", 
+                (id, ))
+    mysql.connection.commit()
+    cur.close()
+
 #Group Data
 
 def set_group_add(group_name, details, image_id):
