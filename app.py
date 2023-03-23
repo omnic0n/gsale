@@ -485,10 +485,12 @@ def describe_item():
 
     if request.method == "POST":
         details = request.form
+        print(details)
         return redirect(url_for('sold_items',item=details['id']))
 
     if request.method == "POST":
         details = request.remove
+        print(details)
         return redirect(url_for('items_remove',id=details['id']))
 
     item = get_data.get_data_for_item_describe(id)
