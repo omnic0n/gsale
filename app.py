@@ -344,6 +344,7 @@ def items_remove():
 
     id = request.args.get('id', type = str)
     group_id=get_data.get_group_id(id)
+    print(group_id)
     set_data.remove_item_data(id)
     return redirect(url_for('describe_group',group_id=group_id))
 
