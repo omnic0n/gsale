@@ -83,10 +83,13 @@
 
 <br>
 <br>
-<form>
-    <input type="button" onclick=window.location.href="/items/remove?id={{ item[0]['id'] }}"; value="Remove" />
-</form>
 
+    <form method="POST" action="">
+        {{ remove.hidden_tag() }}
+    <div class="form-group">
+        {{ remove.button(class="btn btn-outline-info") }}
+    </div>
+    </form>
 
 {% endblock content %}
 </html>

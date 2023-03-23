@@ -479,6 +479,10 @@ def describe_item():
     form.button.label.text = "Sell Item"
     form.id.data = id
 
+    remove = ButtonForm()
+    remove.button.label.text = "Remove Item"
+    remove.id.data = id
+
     if request.method == "POST":
         details = request.form
         return redirect(url_for('sold_items',item=details['id']))
@@ -490,7 +494,8 @@ def describe_item():
                             item=item,
                             category=category,
                             sold=item_sold,
-                            form=form)
+                            form=form,
+                            remove=remove)
 
 @app.route('/expense/describe')
 def describe_expense():
