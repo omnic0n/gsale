@@ -72,10 +72,6 @@
 </table>
 {% endif %}
 
-<form>
-    <input type="button" onclick=window.location.href="/items/remove?id={{ item[0]['id'] }}"; value="Remove" />
-</form>
-
 {% if not item[0]['sold'] and not timer %}
     <form method="POST" action="">
         {{ form.hidden_tag() }}
@@ -84,6 +80,13 @@
     </div>
     </form>
 {% endif %}
+
+<br>
+<br>
+<form>
+    <input type="button" onclick=window.location.href="/items/remove?id={{ item[0]['id'] }}"; value="Remove" />
+</form>
+
 
 {% endblock content %}
 </html>
