@@ -338,7 +338,7 @@ def modify_items():
     return render_template('modify_item.html', form=form, item=item, sale=sale)
 
 @app.route('/items/remove',methods=["POST","GET"])
-def cases_remove():
+def items_remove():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
 
