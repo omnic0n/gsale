@@ -487,6 +487,10 @@ def describe_item():
         details = request.form
         return redirect(url_for('sold_items',item=details['id']))
 
+    if request.method == "POST":
+        details = request.remove
+        return redirect(url_for('items_remove',id=details['id']))
+
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
     item_sold = get_data.get_data_for_item_sold(id)
