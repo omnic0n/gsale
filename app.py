@@ -477,15 +477,17 @@ def describe_item():
 
     form = ButtonForm()
     form.button.label.text = "Sell Item"
+    form.button.label = "sell"
     form.id.data = id
 
     remove = ButtonForm()
     remove.button.label.text = "Remove Item"
+    remove.button.label = "remove"
     remove.id.data = id
 
     if request.method == "POST":
         details = request.form
-        print(details['button'])
+        print(details)
         if form.id.data:
             return redirect(url_for('sold_items',item=details['id']))
         elif remove.id.data:
