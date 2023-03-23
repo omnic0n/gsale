@@ -86,7 +86,7 @@ def get_group_sold_from_date(start_date, end_date):
 def get_group_id(item_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT group_id FROM items WHERE id = %s", (item_id, ))
-    return list(cur.fetchone())
+    return cur.fetchone()
 
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
