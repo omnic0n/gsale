@@ -135,7 +135,7 @@ def get_sold_from_date(start_date, end_date):
                     FROM items items 
                     INNER JOIN collection collection ON collection.id = items.group_id
                     INNER JOIN sale sale ON items.id = sale.id
-                    WHERE sale.date >= %s AND sale.date <= %s AND collection.account = %s GROUP BY sale.date""",
+                    WHERE sale.date >= %s AND sale.date <= %s AND collection.account = %s GROUP BY sale.date ORDER BY sale.date ASC""",
                     (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
