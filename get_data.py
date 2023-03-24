@@ -174,7 +174,7 @@ def get_all_items_sold():
                     FROM sale
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON items.group_id = collection.id 
-                    WHERE items.sold = 1 AND collection.account = %s""", (session['id'], ))
+                    WHERE items.sold = 1 AND collection.account = %s ORDER BY sale.date ASC""", (session['id'], ))
     return list(cur.fetchall())
 
 def get_data_from_sale(item_id):
