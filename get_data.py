@@ -1,6 +1,7 @@
 from flask import Flask, session
 from flask_mysqldb import MySQL
 from flask_session import Session
+import datetime
 
 #Mysql Config
 app = Flask(__name__)
@@ -43,6 +44,7 @@ def get_all_from_group_and_items(date):
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     if not date:
+        print(datetime.data.today.year())
         cur.execute("SELECT * FROM collection where collection.account = %s ORDER BY name ASC", (session['id'], ))
     else:
         cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", (date, session['id'], ))
