@@ -54,7 +54,7 @@ def get_purchased_from_date(start_date, end_date):
                    date,
                    SUM(price) as price
                    FROM collection
-                   WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP by date""",
+                   WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
                    (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
