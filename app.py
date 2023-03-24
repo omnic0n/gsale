@@ -353,7 +353,7 @@ def quick_sell():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
-    groups = get_data.get_all_from_groups(None)
+    groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
 
     form = ItemForm()
