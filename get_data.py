@@ -44,7 +44,7 @@ def get_all_from_group_and_items(date):
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     if not date:
-        date = datetime.date.today().year
+        date = str(datetime.date.today().year)
     cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", ('%' + date + '%', session['id'], ))
     return list(cur.fetchall())
 
