@@ -293,7 +293,7 @@ def bought_items():
         return redirect(url_for('login'))  
      
     group_id = request.args.get('group', type = str)
-    groups = get_data.get_all_from_groups(None)
+    groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
 
     form = PurchaseForm()
@@ -314,7 +314,7 @@ def modify_items():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
-    groups = get_data.get_all_from_groups(None)
+    groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
     id = request.args.get('item', type = str)
     item = get_data.get_data_for_item_describe(id)
