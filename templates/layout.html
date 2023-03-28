@@ -194,12 +194,7 @@
       $(document).ready(function() {
         $('#type').prop("selectedIndex", {{ type_value }});
         hideAll();
-        {% if type_value == 0 %}showDate();
-        {% elif type_value == 1 %}showYear(); showMonth();
-        {% elif type_value == 2 %}showYear();
-        {% elif type_value == 3 %}showDay();
-        {% else %}
-        {% endif %}
+
         $('#type').on('change', function() {
           if (this.value == "2") {
             $('#month').hide();
