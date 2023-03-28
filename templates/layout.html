@@ -186,11 +186,14 @@
       }
 
       function hideAll(){
-        hideMonth();
-        hideYear();
-        hideDay();
-        hideDate();
+        return function() {
+          hideMonth();
+          hideYear();
+          hideDay();
+          hideDate();
+        }
       }
+
       $(document).ready(function() {
         $('#type').prop("selectedIndex", {{ type_value }});
         hideAll();
