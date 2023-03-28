@@ -139,7 +139,7 @@
         $('#divMonth').removeAttr('required');
         $('#divMonth').removeAttr('data-error');
         {% endif %}
-        {% if type_value == 0 type_value == 3 %}
+        {% if type_value == 0 or type_value == 3 %}
         $('#year').hide();
         $('#year').removeAttr('required', '');
         $('#year').removeAttr('data-error', 'This field is required.');
