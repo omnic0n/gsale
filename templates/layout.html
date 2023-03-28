@@ -184,12 +184,16 @@
         $('#divDay').attr('required');
         $('#divDay').attr('data-error');
       }
-      $(document).ready(function() {
-        $('#type').prop("selectedIndex", {{ type_value }});
+
+      function hideAll(){
         hideMonth();
         hideYear();
         hideDay();
         hideDate();
+      }
+      $(document).ready(function() {
+        $('#type').prop("selectedIndex", {{ type_value }});
+        hideAll();
         {% if type_value == '0' %}showDate();
         {% elif type_value == '1' %}showYear(); showMonth();
         {% elif type_value == '2' %}showYear();
@@ -198,30 +202,10 @@
         {% endif %}
         $('#type').on('change', function() {
           if (this.value == "2") {
-            $('#month').hide();
-            $('#month').removeAttr('required');
-            $('#month').removeAttr('data-error');
-            $('#divMonth').hide();
-            $('#divMonth').removeAttr('required');
-            $('#divMonth').removeAttr('data-error');
-            $('#year').show();
-            $('#year').attr('required', '');
-            $('#year').attr('data-error', 'This field is required.');
-            $('#divYear').show();
-            $('#divYear').attr('required', '');
-            $('#divYear').attr('data-error', 'This field is required.');
-            $('#date').hide();
-            $('#date').removeAttr('required');
-            $('#date').removeAttr('data-error');
-            $('#divDate').hide();
-            $('#divDate').removeAttr('required');
-            $('#divDate').removeAttr('data-error');
-            $('#day').hide();
-            $('#day').removeAttr('required', '');
-            $('#day').removeAttr('data-error', 'This field is required.');
-            $('#divDay').hide();
-            $('#divDay').removeAttr('required', '');
-            $('#divDay').removeAttr('data-error', 'This field is required.');
+            hideMonth();
+            showYear();
+            hideDate();
+            hideDay();
           } else if (this.value == "1") {
             $('#month').show();
             $('#month').attr('required', '');
