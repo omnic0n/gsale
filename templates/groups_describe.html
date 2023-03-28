@@ -14,7 +14,7 @@
         <tr>
             <td>{{ group_id[0]['name'] }}</td>
             <td><a href = "/groups/list?date={{ group_id[0]['date'] }}">{{ group_id[0]['date'] }}</a></td>
-            <td>${{ total_items[0]['total'] }}</td>
+            <td>${{ total_items['total'] }}</td>
             <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}">Modify Group</a></td>
         </tr>
     </tbody>
@@ -35,7 +35,7 @@
         <tr>
             <td>${{ group_id[0]['price'] }}</td>
             <td>${{ sold_price }}</td>
-            <td>${{ sold_price/total_items[0]['total'] }}</td>
+            <td>${{ sold_price/total_items['total'] }}</td>
             <td>${{ sold_price - group_id[0]['price'] }}</td>
             <td>{{ ((sold_price/group_id[0]['price']) * 100)| round }}%</td>
         </tr>
