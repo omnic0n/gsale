@@ -40,7 +40,7 @@ def get_all_from_group_and_items(date):
             LEFT JOIN sale sale ON sale.id = items.id
             WHERE collection.date LIKE %s AND collection.account = %s
             GROUP by items.group_id
-            ORDER by collection.id""", (date, session['id'], ))
+            ORDER by collection.date""", (date, session['id'], ))
     return list(cur.fetchall())
 
 def get_all_from_groups(date):
