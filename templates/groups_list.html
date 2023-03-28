@@ -36,7 +36,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for group in all_groups %}
+        {% for group in groups %}
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ total_items }}</td>
