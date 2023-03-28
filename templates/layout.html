@@ -190,11 +190,10 @@
         hideYear();
         hideDay();
         hideDate();
-        {{ type_value }}
-        {% if type_value == 0 %}showDate();
-        {% elif type_value == 1 %}showYear(); showMonth();
-        {% elif type_value == 2 %}showYear();
-        {% elif type_value == 3 %}showDay();
+        {% if type_value == '0' %}showDate();
+        {% elif type_value == '1' %}showYear(); showMonth();
+        {% elif type_value == '2' %}showYear();
+        {% elif type_value == '3' %}showDay();
         {% else %}Not set
         {% endif %}
         $('#type').on('change', function() {
