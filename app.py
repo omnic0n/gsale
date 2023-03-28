@@ -413,7 +413,6 @@ def groups_list():
         all_groups = get_data.get_all_from_groups(date)
     else:
         date = request.args.get('date', type = str)
-        print(date)
         groups = get_data.get_all_from_group_and_items(date)
         print(groups)
         all_groups = get_data.get_all_from_groups(date)
