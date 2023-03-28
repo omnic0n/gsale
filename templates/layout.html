@@ -190,6 +190,7 @@
         hideYear();
         hideDay();
         hideDate();
+        {{ type_value }}
         {% if type_value == 0 %}showDate();
         {% elif type_value == 1 %}showYear(); showMonth();
         {% elif type_value == 2 %}showYear();
