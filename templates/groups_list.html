@@ -37,7 +37,7 @@
         </tr>
     </thead>
     <tbody>
-        {% set count = 1 %}
+        {% set count = namespace(value=1) %}
         {% for group in groups %}
             <tr>
                 <td>{{ count }}</td>
@@ -47,7 +47,7 @@
                 <td>{{ group['net'] - group['price'] }}</td>
                 <td>{{ group['date'] }}</td>
             </tr>
-        {% set count = count + 1 %}
+        {% set count.value = count.value + 1 %}
         {% endfor %}
     </tbody>
 </table>
