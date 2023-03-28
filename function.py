@@ -18,11 +18,9 @@ def set_dates(details):
     month = int(details['month'])
     date = details['date']
     if(details['type'] == "Year"):
-        print("year")
         start_date = ("%s-01-01") % (year)
         end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
     elif(details['type'] == "Month"):
-        print("month")
         start_date = ("%s-%s-01") % (year, month)
         end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
     else:
@@ -39,7 +37,6 @@ def login_data(username, password, ip):
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account['username']
-            print(session)
             f = open("/var/log/gsale/success.log", "a")
             f.write(ip + " - " + username + "\n")
             f.close()
