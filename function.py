@@ -20,7 +20,7 @@ def set_dates(details):
     if(details['type'] == "2"):
         start_date = ("%s-01-01") % (year)
         end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
-    elif(details['type'] == "3"):
+    elif(details['type'] == "1"):
         start_date = ("%s-%s-01") % (year, month)
         end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
     else:
