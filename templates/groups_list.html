@@ -40,7 +40,7 @@
         {% set count = namespace(value=1) %}
         {% for group in groups %}
             <tr>
-                <td>{{ count }}</td>
+                <td>{{ count.value }}</td>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['total_items'] }}</td>
                 <td>{{ group['price'] }}</td>
