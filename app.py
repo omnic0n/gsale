@@ -149,7 +149,6 @@ def reports_locations():
         details = request.form
         start_date, end_date = function.set_dates(details)
         locations = get_data.get_location_from_date(start_date, end_date)
-        print(locations)
         map = Map(
             identifier="test",
             lat=locations[0]['latitude'],
@@ -242,7 +241,6 @@ def modify_expense():
 
     if request.method == "POST":
         details = request.form
-        print(details)
         if(request.files['image']):
             image_id = files.upload_image(request.files['image'])
         else:
@@ -363,7 +361,6 @@ def quick_sell():
 
     if request.method == "POST":
         details = request.form
-        print(details)
         id = set_data.set_quick_sale(details)
         return redirect(url_for('describe_item',item=id))
     return render_template('quick_sell.html', form=form)
@@ -413,8 +410,7 @@ def groups_list():
 
     print(date)
     groups = get_data.get_all_from_group_and_items(date)
-    all_groups = get_data.get_all_from_groups(date)
-    return render_template('groups_list.html', groups=groups, all_groups=all_groups, form=form)
+    return render_template('groups_list.html', groups=groups, form=form)
 
 @app.route('/items/sold_list', methods=["POST","GET"])
 def sold_list():
@@ -506,7 +502,6 @@ def describe_expense():
      
     id = request.args.get('id', type = str)
     expense = get_data.get_data_for_expense_describe(id)
-    print(expense)
     max_expense = get_data.get_max_expense_id()
     return render_template('expense_describe.html', 
                             expense=expense,
@@ -545,7 +540,6 @@ def location():
      
     id = request.args.get('group_id', type = str)
     location = get_data.get_location(id)
-    print(location)
     return render_template('location.html', location=location, id=id)
 
 
@@ -574,7 +568,6 @@ def cases_add():
     
     if request.method == "POST":
         details = request.form
-        print(details)
         set_data.add_case_data(details)
         return redirect(url_for('cases_list'))
     return render_template('case_add.html', form=form)
@@ -596,7 +589,6 @@ def modify_case():
     platforms = get_data.get_all_from_platforms()
     id = request.args.get('id', type = str)
     case = get_data.get_data_for_case_describe(id)
-    print(case)
 
     form = CasesForm()
     form.platform.choices = [(platform['id'], platform['name']) for platform in platforms]
