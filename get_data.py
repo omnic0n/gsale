@@ -61,6 +61,17 @@ def get_purchased_from_date(start_date, end_date):
                    (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
+def get_purchased_from_day(day):
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT
+                   date,
+                   SUM(price) as price,
+                   DAYNAME(date) as day
+                   FROM collection
+                   WHERE DAYSOFWEEK(collection.date) = %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
+                   (day, session['id'], ))
+    return list(cur.fetchall())
+
 def get_data_from_group_describe(group_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
