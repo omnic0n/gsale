@@ -73,7 +73,7 @@ class SaleForm(FlaskForm):
 
 class ReportsForm(FlaskForm):
     type = SelectField('Type', 
-                        choices=[("Day"), ("Month"), ("Year")])
+                        choices=[("Date"), ("Month"), ("Year"), ("Day")])
     date = DateField('date',
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')
@@ -82,6 +82,9 @@ class ReportsForm(FlaskForm):
     ])
     year = SelectField('Year', default=datetime.now().year, choices=[
         (2021), (2022), (2023)
+    ])
+    day = SelectField('Day', choices=[
+        (1,"Sunday"),(2, "Monday"),(3, "Tuesday"),(4, "Wednesday"),(5, "Thursday"),(6, "Friday")
     ])
     expense_type = SelectField('type', coerce=int)
     category = SelectField('category', coerce=int)
