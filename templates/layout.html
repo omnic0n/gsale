@@ -119,10 +119,8 @@
               .forEach(tr => tbody.appendChild(tr) );
       })));
     </script>
-    #choices=[(0, "Date"), (1, "Month"), (2, "Year"), (3, "Day")])
     <script>
-      $(document).ready(function() {
-        $('#type').prop("selectedIndex", {{ type_value }});
+      function hideAll(){
         $('#date').hide();
         $('#date').removeAttr('required');
         $('#date').removeAttr('data-error');
@@ -147,6 +145,11 @@
         $('#divDay').hide();
         $('#divDay').removeAttr('required', '');
         $('#divDay').removeAttr('data-error', 'This field is required.');
+      }
+
+      $(document).ready(function() {
+        $('#type').prop("selectedIndex", {{ type_value }});
+        hideAll();
         $('#type').on('change', function() {
           if (this.value == "2") {
             $('#month').hide();
