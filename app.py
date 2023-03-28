@@ -408,7 +408,6 @@ def groups_list():
     else:
         date = request.args.get('date', type = str)
 
-    print(date)
     groups = get_data.get_all_from_group_and_items(date)
     return render_template('groups_list.html', groups=groups, form=form)
 

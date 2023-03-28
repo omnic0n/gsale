@@ -25,7 +25,8 @@ def get_all_from_group(group_id):
 
 def get_all_from_group_and_items(date):
     if not date:
-        date="%"
+        date= '%' + str(datetime.date.today().year) + '%'
+        print(date)
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
             collection.name, 
