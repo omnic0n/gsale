@@ -85,6 +85,7 @@ def reports_sale():
 
     if request.method == "POST":
         details = request.form
+        print(details)
         start_date, end_date = function.set_dates(details)
         sold_dates = get_data.get_sold_from_date(start_date, end_date)
         return render_template('reports_sales.html', form=form, sold_dates=sold_dates)
