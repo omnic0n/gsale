@@ -184,17 +184,18 @@
         $('#divDay').attr('required');
         $('#divDay').attr('data-error');
       }
-      function hideAll(){
+      choices=[(0, "Date"), (1, "Month"), (2, "Year"), (3, "Day")])
+      $(document).ready(function() {
+        $('#type').prop("selectedIndex", {{ type_value }});
         hideMonth();
         hideYear();
         hideDay();
         hideDate();
-      }
-      choices=[(0, "Date"), (1, "Month"), (2, "Year"), (3, "Day")])
-      $(document).ready(function() {
-        $('#type').prop("selectedIndex", {{ type_value }});
-        hideAll();
-
+        {% if type_value == 0 %}showDate();
+        {% elif type_value == 1 %}showYear(); showMonth();
+        {% elif type_value == 2 %}showYear();
+        {% elif type_value == 3 %}showDay();
+        {% endif %}
         $('#type').on('change', function() {
           if (this.value == "2") {
             $('#month').hide();
