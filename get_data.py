@@ -125,8 +125,6 @@ def get_data_from_item_groups(group_id):
     return list(cur.fetchall())
 
 def get_sold_from_date(start_date, end_date):
-    print(start_date)
-    print(end_date)
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    sale.date,
@@ -358,7 +356,6 @@ def get_all_from_cases(platform):
     if not platform:
         platform = '%%'
 
-    print(platform)
     cur = mysql.connection.cursor()
     cur.execute("""
                 SELECT 
