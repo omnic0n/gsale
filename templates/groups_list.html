@@ -28,7 +28,8 @@
 <table class="blueTable">
     <thead>
         <tr>
-            <th>Name</th> 
+            <th>Name</th>
+            <th>Total Items</th> 
             <th>Price</th>
             <th>Profit</th>
             <th>Date</th>
@@ -47,6 +48,7 @@
             {% endfor %}
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
+                <td>{{ group['total_items'] }}</td>
                 <td>{{ group['price'] }}</td>
                 <td>{% if profit %}{{ profit[0] }}{% else %}-{{ group['price'] }}{% endif %}</td>
                 <td>{{ group['date'] }}</td>
