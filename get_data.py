@@ -125,6 +125,11 @@ def get_data_from_item_groups(group_id):
                     GROUP BY items.id""", (group_id, ))
     return list(cur.fetchall())
 
+def get_total_items_in_group(group_id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" SELECT count(*) as total from items WHERE group_id = %s""", (group_id, ))
+    return cur.fetchone()
+
 def get_sold_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 

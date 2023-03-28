@@ -6,10 +6,7 @@
         <tr>
             <th>Name</th> 
             <th>Date</th>
-            <th>Purchase</th>
-            <th>Sale</th>
-            <th>Profit</th>
-            <th>ROI</th>
+            <th>Total Items</th>
             <th>Modify</th>
         </tr>
     </thead>
@@ -17,14 +14,34 @@
         <tr>
             <td>{{ group_id[0]['name'] }}</td>
             <td><a href = "/groups/list?date={{ group_id[0]['date'] }}">{{ group_id[0]['date'] }}</a></td>
-            <td>${{ group_id[0]['price'] }}</td>
-            <td>${{ sold_price }}</td>
-            <td>${{ sold_price - group_id[0]['price']}}</td>
-            <td>{{ ((sold_price/group_id[0]['price']) * 100)| round }}%</td>
+            <td>${{ total_items[0]['total'] }}</td>
             <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}">Modify Group</a></td>
         </tr>
     </tbody>
 </table>
+
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Purchase</th>
+            <th>Sale</th>
+            <th>Average Sale</th>
+            <th>Profit</th>
+            <th>ROI</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>${{ group_id[0]['price'] }}</td>
+            <td>${{ sold_price }}</td>
+            <td>${{ sold_price/total_items[0]['total'] }}</td>
+            <td>${{ sold_price - group_id[0]['price'] }}</td>
+            <td>{{ ((sold_price/group_id[0]['price']) * 100)| round }}%</td>
+        </tr>
+    </tbody>
+</table>
+
 <br>
 <form method="POST" action="">
     {{ form.hidden_tag() }}
