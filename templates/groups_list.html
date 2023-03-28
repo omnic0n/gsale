@@ -28,6 +28,7 @@
 <table class="blueTable">
     <thead>
         <tr>
+            <th></th>
             <th>Name</th>
             <th>Total Items</th> 
             <th>Price</th>
@@ -37,13 +38,16 @@
     </thead>
     <tbody>
         {% for group in groups %}
+        {{ count = 1 }}
             <tr>
+                <td>{{ count }}</td>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['total_items'] }}</td>
                 <td>{{ group['price'] }}</td>
                 <td>{{ group['net'] - group['price'] }}</td>
                 <td>{{ group['date'] }}</td>
             </tr>
+        {{ count++ }}
         {% endfor %}
     </tbody>
 </table>
