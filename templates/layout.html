@@ -141,7 +141,7 @@
         $('#divDay').removeAttr('required', '');
         $('#divDay').removeAttr('data-error', 'This field is required.');
         $('#type').on('change', function() {
-          if (this.value == "Year") {
+          if (this.value == "2") {
             $('#month').hide();
             $('#month').removeAttr('required');
             $('#month').removeAttr('data-error');
@@ -166,7 +166,7 @@
             $('#divDay').hide();
             $('#divDay').removeAttr('required', '');
             $('#divDay').removeAttr('data-error', 'This field is required.');
-          } else if (this.value == "Month") {
+          } else if (this.value == "1") {
             $('#month').show();
             $('#month').attr('required', '');
             $('#month').attr('data-error', 'This field is required.');
@@ -191,7 +191,7 @@
             $('#divDay').hide();
             $('#divDay').removeAttr('required', '');
             $('#divDay').removeAttr('data-error', 'This field is required.');
-          } else if (this.value == "Day") {
+          } else if (this.value == "3") {
             $('#month').hide();
             $('#month').removeAttr('required', '');
             $('#month').removeAttr('data-error', 'This field is required.');
