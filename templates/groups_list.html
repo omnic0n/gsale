@@ -44,7 +44,7 @@
                 {% if group_net['id'] == group['id'] %} 
                     {% set net = group_net['net'] - group_net['price'] %}
                     {% if profit.append(net) %}{% endif %}
-                    {% set total_items = group_net['total_items']}
+                    {% set total_items = group_net['total_items'] %}
                 {% endif %}
             {% endfor %}
             <tr>
