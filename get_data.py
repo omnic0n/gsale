@@ -54,8 +54,8 @@ def get_purchased_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT
                    date,
-                   SUM(price) as price
-                   DAYNAME(date) as day,
+                   SUM(price) as price,
+                   DAYNAME(date) as day
                    FROM collection
                    WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
                    (start_date, end_date, session['id'], ))
