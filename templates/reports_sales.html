@@ -73,6 +73,7 @@
             <th>Shipping Fee</th>
             <th>Shipping Percentage Fee</th>
             <th>Net</th>
+            <th>Total Items</th>
         </tr>
     </thead>
     <tbody>
@@ -94,6 +95,7 @@
                 <td>0</td>
             {% endif %}
             <td>{{ sold_date['net'] }}</td>
+            <td>{{ sold_date['total_items'] }}</td>
         </tr>
         {% endfor %}
     </tbody>
