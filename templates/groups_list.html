@@ -37,8 +37,8 @@
         </tr>
     </thead>
     <tbody>
-        {% for group in groups %}
         {% set count = 1 %}
+        {% for group in groups %}
             <tr>
                 <td>{{ count }}</td>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
@@ -47,7 +47,7 @@
                 <td>{{ group['net'] - group['price'] }}</td>
                 <td>{{ group['date'] }}</td>
             </tr>
-        {% set count++ %}
+        {% set count = count + 1 %}
         {% endfor %}
     </tbody>
 </table>
