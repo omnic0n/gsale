@@ -137,7 +137,8 @@ def get_sold_from_date(start_date, end_date):
                     SUM(sale.price) as price,
                     SUM(sale.shipping_fee) as shipping_fee,
                     SUM(sale.price - sale.shipping_fee) AS net,
-                    COUNT(items.id) AS total_items
+                    COUNT(items.id) AS total_items,
+                    DAYOFWEEK(sale.date) AS day
                     FROM items items 
                     INNER JOIN collection collection ON collection.id = items.group_id
                     INNER JOIN sale sale ON items.id = sale.id
