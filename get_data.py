@@ -147,6 +147,23 @@ def get_sold_from_date(start_date, end_date):
                     (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
+
+def get_sold_from_day(day):
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT 
+				    sale.date,
+                    SUM(sale.price) as price,
+                    SUM(sale.shipping_fee) as shipping_fee,
+                    SUM(sale.price - sale.shipping_fee) AS net,
+                    COUNT(items.id) AS total_items,
+                    DAYNAME(sale.date) AS day
+                    FROM items items 
+                    INNER JOIN collection collection ON collection.id = items.group_id
+                    INNER JOIN sale sale ON items.id = sale.id
+                    WHERE DAYOFWEEK(sale.date) = %s AND collection.account = %s GROUP BY sale.date ORDER BY sale.date ASC""",
+                    (day, session['id'], ))
+    return list(cur.fetchall())
+
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
