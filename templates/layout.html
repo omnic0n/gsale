@@ -140,7 +140,7 @@
         $('#divDay').hide();
         $('#divDay').removeAttr('required', '');
         $('#divDay').removeAttr('data-error', 'This field is required.');
-        $('#type').on('change', function() {
+        $('#type').on('load', function() {
           if (this.value == "2") {
             $('#month').hide();
             $('#month').removeAttr('required');
