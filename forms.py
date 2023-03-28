@@ -77,7 +77,7 @@ class ReportsForm(FlaskForm):
     date = DateField('date',
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')
-    month = SelectField('Month', choices=[
+    month = SelectField('Month', default=datetime.now().month, choices=[
         (1,"January"),(2, "February"),(3, "March"),(4, "April"),(5, "May"),(6, "June"),(7, "July"),(8, "August"),(9, "September"),(10, "October"),(11, "November"),(12, "December")
     ])
     year = SelectField('Year', default=datetime.now().year, choices=[
