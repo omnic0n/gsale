@@ -198,6 +198,10 @@
         {% else %}Not set
         {% endif %}
         $('#type').on('change', function() {
+          hideMonth();
+          hideYear();
+          hideDay();
+          hideDate();
           if (this.value == "2") {
             showYear();
           } else if (this.value == "1") {

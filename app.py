@@ -72,7 +72,7 @@ def reports_profit():
         sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
         purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
         expenses= get_data.get_all_from_expenses_date(start_date, end_date)
-        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates, expenses=expenses)
+        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates, expenses=expenses,type_value=details['type'])
     return render_template('reports_profit.html', form=form)
 
 
@@ -90,7 +90,7 @@ def reports_sale():
             sold_dates = get_data.get_sold_from_date(start_date, end_date)
         else:
             sold_dates = get_data.get_sold_from_day(details['day'])
-        return render_template('reports_sales.html', form=form, sold_dates=sold_dates)
+        return render_template('reports_sales.html', form=form, sold_dates=sold_dates,type_value=details['type'])
     return render_template('reports_sales.html', form=form)
 
 @app.route('/reports/purchases',methods=["GET", "POST"])
