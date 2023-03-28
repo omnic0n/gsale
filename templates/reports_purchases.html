@@ -69,6 +69,7 @@
     <thead>
         <tr>
             <th>Date</th>
+            <th>Day</th>
             <th>Purchase Price</th> 
         </tr>
     </thead>
@@ -81,6 +82,7 @@
                 {% set ns.dates = ns.dates + 1 %}
         <tr>
             <td><a href = "/groups/list?date={{ purchased_date['date'] }}">{{ purchased_date['date'] }}</a></td>
+            <td>{{ purchased_date['day'] }}</td>
             <td>{{ purchased_date['price'] }}</td>
         </tr>
         {% endfor %}
