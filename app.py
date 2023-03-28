@@ -102,7 +102,6 @@ def reports_purchases():
 
     if request.method == "POST":
         details = request.form
-        print(details['type'])
 
         if not details['type'] == '3':
             start_date, end_date = function.set_dates(details)
@@ -110,7 +109,7 @@ def reports_purchases():
         else:
             purchased_dates = get_data.get_purchased_from_day(details['day'])
 
-        return render_template('reports_purchases.html', form=form, purchased_dates=purchased_dates)
+        return render_template('reports_purchases.html', form=form, purchased_dates=purchased_dates, type_value=details['type'])
     return render_template('reports_purchases.html', form=form)
 
 @app.route('/reports/categories',methods=["GET", "POST"])

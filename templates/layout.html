@@ -121,7 +121,7 @@
     </script>
     <script>
       $(document).ready(function() {
-        $('#type').prop("selectedIndex",0);
+        $('#type').prop("selectedIndex", {{ type_value }});
         $('#month').hide();
         $('#month').removeAttr('required');
         $('#month').removeAttr('data-error');
