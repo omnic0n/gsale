@@ -84,7 +84,7 @@ class ReportsForm(FlaskForm):
         (2021), (2022), (2023)
     ])
     day = SelectField('Day', choices=[
-        (1,"Sunday"),(2, "Monday"),(3, "Tuesday"),(4, "Wednesday"),(5, "Thursday"),(6, "Friday")
+        (1,"Sunday"),(2, "Monday"),(3, "Tuesday"),(4, "Wednesday"),(5, "Thursday"),(6, "Friday"),(7, "Saturday")
     ])
     expense_type = SelectField('type', coerce=int)
     category = SelectField('category', coerce=int)
