@@ -85,7 +85,7 @@ def reports_sale():
 
     if request.method == "POST":
         details = request.form
-        if not details['type'] == 'Day':
+        if not details['type'] == '3':
             start_date, end_date = function.set_dates(details)
             sold_dates = get_data.get_sold_from_date(start_date, end_date)
         else:
@@ -104,7 +104,7 @@ def reports_purchases():
         details = request.form
         print(details)
 
-        if not details['type'] == 'Day':
+        if not details['type'] == '3':
             start_date, end_date = function.set_dates(details)
             purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
         else:
