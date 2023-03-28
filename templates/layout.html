@@ -119,9 +119,42 @@
               .forEach(tr => tbody.appendChild(tr) );
       })));
     </script>
+    #choices=[(0, "Date"), (1, "Month"), (2, "Year"), (3, "Day")])
     <script>
       $(document).ready(function() {
         $('#type').prop("selectedIndex", {{ type_value }});
+        {% if type_value == 1 or type_value == 2 or type_value == 3 %}
+        $('#date').hide();
+        $('#date').removeAttr('required');
+        $('#date').removeAttr('data-error');
+        $('#divDate').hide();
+        $('#divDate').removeAttr('required');
+        $('#divDate').removeAttr('data-error');
+        {% endif %}
+        {% if type_value == 0 or type_value == 2 or type_value == 3 %}
+        $('#month').hide();
+        $('#month').removeAttr('required');
+        $('#month').removeAttr('data-error');
+        $('#divMonth').hide();
+        $('#divMonth').removeAttr('required');
+        $('#divMonth').removeAttr('data-error');
+        {% endif %}
+        {% if type_value == 0 type_value == 3 %}
+        $('#year').hide();
+        $('#year').removeAttr('required', '');
+        $('#year').removeAttr('data-error', 'This field is required.');
+        $('#divYear').hide();
+        $('#divYear').removeAttr('required', '');
+        $('#divYear').removeAttr('data-error', 'This field is required.');
+        {% endif %}
+        {% if type_value == 0 or type_value == 1 or type_value == 2 %}
+        $('#day').hide();
+        $('#day').removeAttr('required', '');
+        $('#day').removeAttr('data-error', 'This field is required.');
+        $('#divDay').hide();
+        $('#divDay').removeAttr('required', '');
+        $('#divDay').removeAttr('data-error', 'This field is required.');
+        {% endif %}
         $('#type').on('change', function() {
           if (this.value == "2") {
             $('#month').hide();
