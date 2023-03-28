@@ -102,7 +102,7 @@ def reports_purchases():
 
     if request.method == "POST":
         details = request.form
-        print(details)
+        print(details['type'])
 
         if not details['type'] == '3':
             start_date, end_date = function.set_dates(details)
