@@ -13,7 +13,8 @@ class GroupForm(FlaskForm):
                         validators=[DataRequired()], format='%Y-%m-%d')
     id = StringField('id')
     image = FileField('image')
-    listYear = SelectField('Year', choices=[
+
+    listYear = SelectField('Year', default=datetime.now().year, choices=[
         (2021), (2022), (2023)
     ])
     submit = SubmitField('Submit')
