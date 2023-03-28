@@ -72,7 +72,7 @@ class SaleForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class ReportsForm(FlaskForm):
-    type = SelectField('Type', 
+    type = SelectField('Typse', 
                         choices=[(0, "Date"), (1, "Month"), (2, "Year"), (3, "Day")])
     date = DateField('date',
                         default=datetime.today,
