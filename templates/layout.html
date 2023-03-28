@@ -122,25 +122,7 @@
     <script>
       $(document).ready(function() {
         $('#type').prop("selectedIndex", {{ type_value }});
-        $('#month').hide();
-        $('#month').removeAttr('required');
-        $('#month').removeAttr('data-error');
-        $('#divMonth').hide();
-        $('#divMonth').removeAttr('required');
-        $('#divMonth').removeAttr('data-error');
-        $('#year').hide();
-        $('#year').removeAttr('required', '');
-        $('#year').removeAttr('data-error', 'This field is required.');
-        $('#divYear').hide();
-        $('#divYear').removeAttr('required', '');
-        $('#divYear').removeAttr('data-error', 'This field is required.');
-        $('#day').hide();
-        $('#day').removeAttr('required', '');
-        $('#day').removeAttr('data-error', 'This field is required.');
-        $('#divDay').hide();
-        $('#divDay').removeAttr('required', '');
-        $('#divDay').removeAttr('data-error', 'This field is required.');
-        $('#type').on('load', function() {
+        $('#type').on('change', function() {
           if (this.value == "2") {
             $('#month').hide();
             $('#month').removeAttr('required');
