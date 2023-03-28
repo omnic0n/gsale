@@ -44,11 +44,12 @@
                 {% if group_net['id'] == group['id'] %} 
                     {% set net = group_net['net'] - group_net['price'] %}
                     {% if profit.append(net) %}{% endif %}
+                    {% set total_items = group_net['total_items']}
                 {% endif %}
             {% endfor %}
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
-                <td>{{ group['total_items'] }}</td>
+                <td>{{ total_items }}</td>
                 <td>{{ group['price'] }}</td>
                 <td>{% if profit %}{{ profit[0] }}{% else %}-{{ group['price'] }}{% endif %}</td>
                 <td>{{ group['date'] }}</td>
