@@ -44,10 +44,7 @@
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['total_items'] }}</td>
                 <td>{{ group['price'] }}</td>
-                <td>{% if group['net'] %}
-                    {{ group['net'] - group['price'] }}
-                    {% endif %}
-                </td>
+                <td>{{ group['net'] - group['price'] }}</td>
                 <td>{{ group['date'] }}</td>
             </tr>
         {% set count.value = count.value + 1 %}

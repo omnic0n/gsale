@@ -33,7 +33,7 @@ def get_all_from_group_and_items(date):
             collection.price, 
             collection.id,
             collection.date,
-            sum(sale.price - sale.shipping_fee) AS net,
+            COALESCE(sum(sale.price - sale.shipping_fee),0) AS net,
             COUNT(items.group_id) AS total_items 
             FROM collection collection
             LEFT JOIN items items ON collection.id = items.group_id 
