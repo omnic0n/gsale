@@ -37,7 +37,10 @@
         <tr>
             <td>${{ group_id[0]['price'] }}</td>
             <td>${{ sold_price }}</td>
-            <td>${{ "%.2f"|format(sold_price/total_items['total']) }}</td>
+            <td>{% if total_items['total'] %}
+                ${{ "%.2f"|format(sold_price/total_items['total']) }}
+                {% endif %}
+            </td>
             <td>${{ sold_price - group_id[0]['price'] }}</td>
             <td>{{ ((sold_price/group_id[0]['price']) * 100)| round }}%</td>
         </tr>
