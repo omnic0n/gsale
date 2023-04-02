@@ -36,10 +36,10 @@ def get_all_from_group_and_items(date):
             sum(sale.price - sale.shipping_fee) AS net,
             COUNT(items.group_id) AS total_items 
             FROM collection collection
-            RIGHT JOIN items items ON collection.id = items.group_id 
+            LEFT JOIN items items ON collection.id = items.group_id 
             LEFT JOIN sale sale ON sale.id = items.id
             WHERE collection.date LIKE %s AND collection.account = %s
-            GROUP by items.group_id
+            GROUP by collection.id
             ORDER by collection.date""", (date, session['id'], ))
     return list(cur.fetchall())
 
