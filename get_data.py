@@ -88,10 +88,10 @@ def get_group_sold_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
 				    collection.date,
-                    SUM(sale.price - sale.shipping_fee) AS net
+                    COALESCE(SUM(sale.price - sale.shipping_fee),0) AS net
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
-                    INNER JOIN collection collection ON items.group_id = collection.id
+                    RIGHT JOIN collection collection ON items.group_id = collection.id
                     WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP BY collection.date""",
                     (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
