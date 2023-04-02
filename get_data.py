@@ -92,7 +92,9 @@ def get_group_sold_from_date(start_date, end_date):
                     FROM items items 
                     INNER JOIN sale sale ON items.id = sale.id
                     RIGHT JOIN collection collection ON items.group_id = collection.id
-                    WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP BY collection.date""",
+                    WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s 
+                    GROUP BY collection.date 
+                    ORDER BY collection.date""",
                     (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
