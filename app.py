@@ -301,6 +301,8 @@ def mark_unsold():
         return redirect(url_for('login'))  
      
     id = request.args.get('item', type = str)
+    sold = request.args.get('sold', type = str)
+    print(sold)
     set_data.set_mark_unsold(id)    
     return redirect(url_for('describe_item',item=id))
 
