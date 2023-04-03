@@ -31,7 +31,7 @@
             {% if not item[0]['sold'] %}
                 <a href = "/items/mark_sold?item={{ item[0]['id'] }}&sold=1">Mark as Sold</a>
             {% else %} 
-                <a href = "/items/mark_unsold?item={{ item[0]['id'] }}&sold=0">Mark as UnSold</a>
+                <a href = "/items/mark_sold?item={{ item[0]['id'] }}&sold=0">Mark as Available</a>
             {% endif %}
             </td>
         </tr>

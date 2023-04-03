@@ -19,15 +19,9 @@ mysql = MySQL(app)
 def generate_uuid():
     return uuid.uuid4()
 
-def set_mark_sold(id):
+def set_mark_sold(id,sold):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE items SET sold = 1 where id = %s", (id,))
-    mysql.connection.commit()
-    cur.close()
-
-def set_mark_unsold(id):
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE items SET sold = 0 where id = %s", (id,))
+    cur.execute("UPDATE items SET sold = %s where id = %s", (sold, id,))
     mysql.connection.commit()
     cur.close()
 
