@@ -293,6 +293,15 @@ def mark_sold():
     set_data.set_mark_sold(id)    
     return redirect(url_for('describe_item',item=id))
 
+@app.route('/items/mark_unsold',methods=["POST","GET"])
+def mark_unsold():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+     
+    id = request.args.get('item', type = str)
+    set_data.set_unmark_sold(id)    
+    return redirect(url_for('describe_item',item=id))
+
 @app.route('/items/bought',methods=["POST","GET"])
 def bought_items():
     if not 'loggedin' in session:

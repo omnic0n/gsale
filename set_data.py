@@ -25,6 +25,12 @@ def set_mark_sold(id):
     mysql.connection.commit()
     cur.close()
 
+def set_mark_unsold(id):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE items SET sold = 0 where id = %s", (id,))
+    mysql.connection.commit()
+    cur.close()
+
 def set_bought_items(details):
     cur = mysql.connection.cursor()
     for item in details:
