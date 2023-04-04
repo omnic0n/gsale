@@ -131,12 +131,13 @@ def get_data_from_item_groups(group_id):
                     items.sold, 
                     items.id,
                     items.storage,
-                    sum(sale.price - sale.shipping_fee) AS net 
+                    sum(sale.price - sale.shipping_fee) AS net,
+                    sale.date 
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN sale sale ON sale.id = items.id
                     WHERE items.group_id = %s
-                    GROUP BY items.id""", (group_id, ))
+                    GROUP BY items.id, sale.date""", (group_id, ))
     return list(cur.fetchall())
 
 def get_total_items_in_group(group_id):
