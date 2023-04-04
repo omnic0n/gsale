@@ -60,7 +60,7 @@
         <tr>
             <th></th>
             <th>Name</th> 
-            <th>Sold</th>
+            <th>Sold Date</th>
             <th>Net</th>
             <th>Storage</th>
             <th>Remove</th>
@@ -72,13 +72,8 @@
         {% for item in items %}
         <tr>
             <td>{{ ns.count }}</td>
-            {% if item['sold'] == 0 %}
-                {% set color = 'black' %}
-            {% else %}
-                {% set color = 'red' %}
-            {% endif %}
-            <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{% if item['sold'] == 0 %}False{% elif item['sold'] == 2 %}Not Selling{% else %}True{% endif %}</td>
+            <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
+            <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['date'] }}{% endif %}</td>
             <td>{{ item['net'] }}</td>
             <td>{{ item['storage'] }}</td>
             <td><a href="/items/remove?id={{ item['id'] }}">remove</a></td>
