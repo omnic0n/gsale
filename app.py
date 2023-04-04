@@ -389,7 +389,7 @@ def sold_items():
 
     if request.method == "POST":
         details = request.form
-        set_data.set_mark_sold(details['id'])
+        set_data.set_mark_sold(details['id'], 1)
         set_data.set_sale_data(details)
         return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
