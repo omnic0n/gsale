@@ -22,7 +22,7 @@
             <td><a href = "/items/list?list_date={{ item['list_date'] }}">{{ item['list_date'] }}</a></td>
             {% if item['sold'] %}
                 <td><a href = "/items/list?sold_date={{ item['sale_date'] }}">{{ item['sale_date'] }}</a></td>
-                <td>{{ (item['sales_date'] - item['list_date']).days }}</td>
+                <td>{{ (item['sale_date'] - item['list_date']).days }}</td>
                 <td>{{ item['net']}}</td>
             {% else %}
                 <td>NA</td>
