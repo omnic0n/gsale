@@ -316,7 +316,7 @@ def bought_items():
         details = request.form
         print(details)
         group_data = get_data.get_all_from_group(details['group'])
-        set_data.set_bought_items(details,group_data['date'])
+        set_data.set_bought_items(details)
         return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
 
