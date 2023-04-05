@@ -214,7 +214,7 @@ def get_all_items(sold,list_date,storage):
                 WHERE collection.account = %s 
                 AND items.sold = %s
                 AND items.list_date LIKE %s
-                AND items.storage = %s
+                AND items.storage LIKE %s
                 ORDER BY collection.date ASC""", (session['id'], sold, list_date, storage, ))
     return list(cur.fetchall())
 
