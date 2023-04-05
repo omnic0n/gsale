@@ -511,7 +511,11 @@ def describe_item():
             return redirect(url_for('items_remove',id=details['id']))
         elif details['button'] == "Modify Item":
             return redirect(url_for('modify_items',item=details['id']))
-
+        elif details['button'] == "Mark as Available":
+            return redirect(url_for('mark_sold',item=details['id'],sold=0))
+        elif details['button'] == "Mark as Sold":
+            return redirect(url_for('mark_sold',item=details['id'],sold=1))
+        
     category = get_data.get_category(item[0]['category_id'])
     item_sold = get_data.get_data_for_item_sold(id)
     return render_template('items_describe.html', 
