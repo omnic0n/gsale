@@ -386,8 +386,16 @@ def list_items():
         return redirect(url_for('login'))  
      
     sold = request.args.get('sold', type = int)
+    if sold is None:
+        sold = "%"
+
     list_date = request.args.get('list_date', type = str)
+    if list_date is None:
+        list_date = "%"
+
     storage = request.args.get('storage', type = str)
+    if storage is None:
+        storage = "%"
 
     items = get_data.get_all_items(sold,list_date,storage)
     return render_template('items_list.html',items=items)

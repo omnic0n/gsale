@@ -199,13 +199,6 @@ def get_data_for_item_describe(item_id):
     return list(cur.fetchall())
 
 def get_all_items(sold,list_date,storage):
-    if not sold:
-        sold = "%"
-    if not list_date:
-        list_date = "%"
-    if not storage:
-        storage = "%"
-
     cur = mysql.connection.cursor()
     cur.execute("""
                 SELECT 
