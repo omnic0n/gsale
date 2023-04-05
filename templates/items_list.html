@@ -20,13 +20,9 @@
             <td>{{ item['date'] }}</td>
             <td>{{ item['list_date'] }}</td>
             {% if item['sold'] %}
-            {% for sold_item in sold %}
-                {% if item['id'] == sold_item['id'] %}
-                    <td>{{ sold_item['date']}}</td>
-                    <td>{{ (sold_item['date'] - item['date']).days }}</td>
-                    <td>{{ sold_item['net']}}</td>
-                {% endif %}
-            {% endfor %}
+                <td>{{ item['date']}}</td>
+                <td>{{ (item['sales_date'] - item['list_date']).days }}</td>
+                <td>{{ item['net']}}</td>
             {% else %}
                 <td>NA</td>
                 <td>NA</td>
