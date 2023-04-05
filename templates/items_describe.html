@@ -55,12 +55,26 @@
 </table>
 <br>
 <center>
-    <form method="POST" action="">
-        {{ availability.hidden_tag() }}
-    <div class="form-group">
-        {{ availability.button(class="btn btn-outline-info") }}
-    </div>
-    </form>
+<table>
+    <td>
+        <form method="POST" action="">
+            {{ availability.hidden_tag() }}
+        <div class="form-group">
+            {{ availability.button(class="btn btn-outline-info") }}
+        </div>
+        </form>
+    </td>
+    {% if not item[0]['sold']%}
+    <td>
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.button(class="btn btn-outline-info") }}
+        </div>
+        </form>
+    </td>
+    {% endif %}
+</table>
 </center>
 <br>
 {% if item[0]['sold'] %}
@@ -80,15 +94,6 @@
         </tr>
     </tbody>
 </table>
-{% endif %}
-
-{% if not item[0]['sold'] and not timer %}
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-    <div class="form-group">
-        {{ form.button(class="btn btn-outline-info") }}
-    </div>
-    </form>
 {% endif %}
 
 <br>
