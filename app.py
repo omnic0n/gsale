@@ -508,7 +508,8 @@ def describe_item():
                             category=category,
                             sold=item_sold,
                             form=form,
-                            remove=remove)
+                            remove=remove,
+                            modify=modify)
 
 @app.route('/expense/describe')
 def describe_expense():
