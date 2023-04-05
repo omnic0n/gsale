@@ -302,7 +302,7 @@ def bought_items():
     group_id = request.args.get('group', type = str)
     groups = get_data.get_all_from_groups('%')
     list_date = get_data.get_all_from_group(group_id)
-    print(list_date['list_date'])
+    print(list_date['date'])
     categories = get_data.get_all_from_categories()
 
     form = PurchaseForm()
