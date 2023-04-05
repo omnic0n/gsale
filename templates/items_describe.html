@@ -24,18 +24,12 @@
     </tbody>
 </table>
 <br>
-<!--
-<table class="blueTable">
-<td><a href = "/items/modify?item={{ item[0]['id'] }}">Modify</a></td>
-<td>
-{% if not item[0]['sold'] %}
-    <a href = "/items/mark_sold?item={{ item[0]['id'] }}&sold=1">Mark as Sold</a>
-{% else %} 
-    <a href = "/items/mark_sold?item={{ item[0]['id'] }}&sold=0">Mark as Available</a>
-{% endif %}
-</td>
-</table>
--->
+<form method="POST" action="">
+    {{ availability.hidden_tag() }}
+<div class="form-group">
+    {{ availability.button(class="btn btn-outline-info") }}
+</div>
+</form>
 
 <form method="POST" action="">
     {{ modify.hidden_tag() }}
