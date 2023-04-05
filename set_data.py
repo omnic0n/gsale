@@ -25,13 +25,13 @@ def set_mark_sold(id,sold):
     mysql.connection.commit()
     cur.close()
 
-def set_bought_items(details, list_date):
+def set_bought_items(details):
     cur = mysql.connection.cursor()
     for item in details:
         if item.startswith("item"):
             item_id = generate_uuid()
             cur.execute("INSERT INTO items(id, name, group_id, category_id, storage, list_date) VALUES (%s, %s, %s, %s, %s, %s)", 
-                        (item_id, details[item],details['group'],details['category'],details['storage'],))
+                        (item_id, details[item],details['group'],details['category'],details['storage'],details['list_date'],))
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
                         (item_id, date.today().strftime("%Y-%m-%d"),))
             mysql.connection.commit()
