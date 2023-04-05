@@ -132,7 +132,8 @@ def get_data_from_item_groups(group_id):
                     items.id,
                     items.storage,
                     sum(sale.price - sale.shipping_fee) AS net,
-                    sale.date 
+                    sale.date AS sale_date,
+					DATEDIFF(sale.date,collection.date) AS days_to_sell 
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN sale sale ON sale.id = items.id
