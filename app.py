@@ -301,7 +301,6 @@ def bought_items():
      
     group_id = request.args.get('group', type = str)
     groups = get_data.get_all_from_groups('%')
-    print(get_data.get_all_from_group(group_id)['date'])
 
     categories = get_data.get_all_from_categories()
 
@@ -311,7 +310,7 @@ def bought_items():
 
     form.category.choices = [(category['id'], category['type']) for category in categories]
 
-    #form.list_date.data = 
+    form.list_date.data = get_data.get_all_from_group(group_id)['date']
 
     if request.method == "POST":
         details = request.form
