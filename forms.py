@@ -51,7 +51,10 @@ class ItemForm(FlaskForm):
     name = StringField('name',
                            validators=[DataRequired()])
     group = SelectField('group', coerce=str)
-    date = DateField('date',
+    sale_date = DateField('date',
+                        default=datetime.today,
+                        validators=[DataRequired()], format='%Y-%m-%d')
+    list_date = DateField('date',
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')
     price = StringField('price')

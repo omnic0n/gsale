@@ -25,22 +25,22 @@ def set_mark_sold(id,sold):
     mysql.connection.commit()
     cur.close()
 
-def set_bought_items(details):
+def set_bought_items(details, list_date):
     cur = mysql.connection.cursor()
     for item in details:
         if item.startswith("item"):
             item_id = generate_uuid()
-            cur.execute("INSERT INTO items(id, name, group_id, category_id, storage) VALUES (%s, %s, %s, %s, %s)", 
+            cur.execute("INSERT INTO items(id, name, group_id, category_id, storage, list_date) VALUES (%s, %s, %s, %s, %s, %s)", 
                         (item_id, details[item],details['group'],details['category'],details['storage'],))
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
                         (item_id, date.today().strftime("%Y-%m-%d"),))
             mysql.connection.commit()
     cur.close()
 
-def set_quick_sale(details):
+def set_quick_sale(details, list_date):
     item_id = generate_uuid()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO items(id, name, group_id, category_id, sold) VALUES (%s, %s, %s, %s, 1)", 
+    cur.execute("INSERT INTO items(id, name, group_id, category_id, list_date, sold) VALUES (%s, %s, %s, %s, %s, 1)", 
                 (item_id, details['name'],details['group'],details['category'],))
     cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, %s, %s, %s)",
                 (item_id,details['price'],details['shipping_fee'],date.today().strftime("%Y-%m-%d"),))
@@ -51,15 +51,15 @@ def set_quick_sale(details):
 def set_sale_data(details):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE sale SET date = %s, price = %s, shipping_fee = %s WHERE id = %s", 
-                (details['date'], details['price'], details['shipping_fee'], details['id'],))
+                (details['sale_date'], details['price'], details['shipping_fee'], details['id'],))
     mysql.connection.commit()
     cur.close()
 
 
 def set_items_modify(details):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE items SET name = %s, group_id = %s, category_id = %s, returned = %s, storage = %s where id = %s", 
-                (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['id']))
+    cur.execute("UPDATE items SET name = %s, group_id = %s, category_id = %s, returned = %s, storage = %s, list_date = %s where id = %s", 
+                (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['list_date'], details['id']))
     mysql.connection.commit()
     cur.close()
 

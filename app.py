@@ -311,8 +311,8 @@ def bought_items():
 
     if request.method == "POST":
         details = request.form
-        set_data.set_bought_items(details)
         group_data = get_data.get_all_from_group(details['group'])
+        set_data.set_bought_items(details,group_data['date'])
         return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
 
@@ -370,7 +370,8 @@ def quick_sell():
 
     if request.method == "POST":
         details = request.form
-        id = set_data.set_quick_sale(details)
+        group_data = get_data.get_all_from_group(details['group'])
+        id = set_data.set_quick_sale(details, group_data['date'])
         return redirect(url_for('describe_item',item=id))
     return render_template('quick_sell.html', form=form)
 

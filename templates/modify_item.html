@@ -58,16 +58,29 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.date.label(class="form-control-label") }}
-                    {% if form.date.errors %}
-                        {{ form.date(class="form-control form-control-lg is-invalid") }}
+                    {{ form.sale_date.label(class="form-control-label") }}
+                    {% if form.sale_date.errors %}
+                        {{ form.sale_date(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
                             {% for error in form.sold.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.date(class="form-control form-control-lg", value=sale[0]['date']) }}
+                        {{ form.sale_date(class="form-control form-control-lg", value=sale[0]['date']) }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.list_date.label(class="form-control-label") }}
+                    {% if form.list_date.errors %}
+                        {{ form.list_date(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.sold.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.list_date(class="form-control form-control-lg", value=item[0]['list_date']) }}
                     {% endif %}
                 </div>
                 <div class="form-group">
