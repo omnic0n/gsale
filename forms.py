@@ -43,7 +43,9 @@ class PurchaseForm(FlaskForm):
     group = SelectField('group', coerce=str)
     category = SelectField('category', coerce=int)
     price = StringField('price')
-    date = DateField('date', default=datetime.today, format='%Y-%m-%d')
+    list_date = DateField('List Date',
+                        default=datetime.today,
+                        validators=[DataRequired()], format='%Y-%m-%d')
     storage = StringField('storage')
     submit = SubmitField('Submit')
 
