@@ -24,6 +24,7 @@
     </tbody>
 </table>
 <br>
+<!--
 <table class="blueTable">
 <td><a href = "/items/modify?item={{ item[0]['id'] }}">Modify</a></td>
 <td>
@@ -34,6 +35,15 @@
 {% endif %}
 </td>
 </table>
+-->
+
+<form method="POST" action="">
+    {{ modify.hidden_tag() }}
+<div class="form-group">
+    {{ modify.button(class="btn btn-outline-info") }}
+</div>
+</form>
+
 <table class="blueTable">
     <thead>
         <tr>

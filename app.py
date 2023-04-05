@@ -487,12 +487,18 @@ def describe_item():
     remove.button.label.text = "Remove Item"
     remove.id.data = id
 
+    modify = ButtonForm()
+    modify.button.label.text = "Modify Item"
+    modify.id.data = id
+
     if request.method == "POST":
         details = request.form
         if details['button'] == "Sell Item":
             return redirect(url_for('sold_items',item=details['id']))
         elif details['button'] == "Remove Item":
             return redirect(url_for('items_remove',id=details['id']))
+        elif details['button'] == "Modify Item":
+            return redirect(url_for('modify_items',id=details['id']))
 
     item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
