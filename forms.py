@@ -70,7 +70,7 @@ class ItemForm(FlaskForm):
 class SaleForm(FlaskForm):
     id = SelectField('id', coerce=str)
     price = StringField('price')
-    date = DateField('date',
+    sale_date = DateField('date',
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')
     shipping_fee = StringField('shipping_fee')
