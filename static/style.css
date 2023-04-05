@@ -145,3 +145,9 @@ body.loggedin {
   padding: 5px;
   margin: 0 0 10px 0;
 }
+
+.bottom_right {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+}
