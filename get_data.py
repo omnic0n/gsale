@@ -204,7 +204,7 @@ def get_all_items():
                 SELECT 
                 * FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id  
-                WHERE collection.account = %s ORDER BY items.name ASC""", (session['id'], ))
+                WHERE collection.account = %s ORDER BY collection.date ASC""", (session['id'], ))
     return list(cur.fetchall())
 
 def get_all_items_not_sold():
