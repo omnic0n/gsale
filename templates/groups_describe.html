@@ -81,7 +81,7 @@
                 </a>
             </td>
             <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['sale_date'] }}{% endif %}</td>
-            <td>{{ item['days_to_sell'] }}</td>
+            <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['days_to_sell'] }}{% endif %}</td>
             <td>{{ item['net'] }}</td>
             <td>{{ item['storage'] }}</td>
             <td><a href="/items/remove?id={{ item['id'] }}">remove</a></td>
