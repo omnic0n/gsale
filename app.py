@@ -385,11 +385,11 @@ def list_items():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
-    print(request.args.get('sold', type = int))
-    print(request.args.get('list_date', type = str))
-    print(request.args.get('storage', type = str))
+    sold = request.args.get('sold', type = int)
+    list_date = request.args.get('list_date', type = str)
+    storage = request.args.get('storage', type = str)
 
-    items = get_data.get_all_items()
+    items = get_data.get_all_items(sold,list_date,storage)
     return render_template('items_list.html',items=items)
 
 
