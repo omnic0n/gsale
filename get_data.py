@@ -198,19 +198,6 @@ def get_data_for_item_describe(item_id):
                     WHERE items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_all_items(sold,list_date,storage):
-    cur = mysql.connection.cursor()
-    cur.execute("""
-                SELECT 
-                * FROM items items 
-                INNER JOIN collection collection ON items.group_id = collection.id  
-                WHERE collection.account = %s 
-                AND items.sold LIKE %s
-                AND items.list_date LIKE %s
-                AND items.storage LIKE %s
-                ORDER BY collection.date ASC""", (session['id'], sold, list_date, storage, ))
-    return list(cur.fetchall())
-
 def get_all_items_not_sold():
     cur = mysql.connection.cursor()
     cur.execute("""
@@ -263,6 +250,7 @@ def get_list_of_items_purchased_by_date(date,sold,list_date,storage):
                     items.sold,
                     items.group_id,
                     items.storage,
+                    items.list_date,
                     sale.date as sales_date,
                     collection.date,
                     collection.name as group_name

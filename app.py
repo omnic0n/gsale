@@ -451,15 +451,6 @@ def list_items():
     return render_template('items_list.html', 
                             items=items, sold=sold)
 
-@app.route('/items/unsold_list')
-def unsold_list():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
-    date = request.args.get('date', type = str)
-    items = get_data.get_list_of_items_purchased_by_date(date, sold=0)
-    return render_template('items_unsold_list.html', items=items, current_date=datetime.now().date())
-
 #Search Section
 @app.route('/items/search', methods=["POST","GET"])
 def items_search():
