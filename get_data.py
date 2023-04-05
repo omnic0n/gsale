@@ -212,7 +212,7 @@ def get_all_items(sold,list_date,storage):
                 * FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id  
                 WHERE collection.account = %s 
-                AND items.sold = %s
+                AND items.sold LIKE %s
                 AND items.list_date LIKE %s
                 AND items.storage LIKE %s
                 ORDER BY collection.date ASC""", (session['id'], sold, list_date, storage, ))
