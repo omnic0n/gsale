@@ -24,19 +24,24 @@
     </tbody>
 </table>
 <br>
-<form method="POST" action="">
-    {{ availability.hidden_tag() }}
-<div class="form-group">
-    {{ availability.button(class="btn btn-outline-info") }}
-</div>
-</form>
-
-<form method="POST" action="">
-    {{ modify.hidden_tag() }}
-<div class="form-group">
-    {{ modify.button(class="btn btn-outline-info") }}
-</div>
-</form>
+<table>
+    <td>
+        <form method="POST" action="">
+            {{ availability.hidden_tag() }}
+        <div class="form-group">
+            {{ availability.button(class="btn btn-outline-info") }}
+        </div>
+        </form>
+    </td>
+    <td>
+        <form method="POST" action="">
+            {{ modify.hidden_tag() }}
+        <div class="form-group">
+            {{ modify.button(class="btn btn-outline-info") }}
+        </div>
+        </form>
+    </td>
+</table>
 
 <table class="blueTable">
     <thead>
