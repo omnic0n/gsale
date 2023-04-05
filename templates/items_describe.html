@@ -78,6 +78,7 @@
 <br>
     <table>
         <td>
+        <div style="float:left;width:50%;"></div>
             <form method="POST" action="">
                 {{ availability.hidden_tag() }}
             <div class="form-group">
@@ -93,15 +94,18 @@
                 {{ form.button(class="btn btn-outline-info") }}
             </div>
             </form>
+        </div>
         </td>
         {% endif %}
         <td>
+        <div style="float:right;width:50%;"></div>
             <form method="POST" action="">
                 {{ remove.hidden_tag() }}
             <div class="form-group">
                 {{ remove.button(class="btn btn-outline-info") }}
             </div>
             </form>
+        </div>
         </td>
     </table>
 {% endblock content %}
