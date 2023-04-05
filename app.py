@@ -385,6 +385,8 @@ def list_items():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
+    print(request.args.getlist())
+
     items = get_data.get_all_items()
     return render_template('items_list.html',items=items)
 
