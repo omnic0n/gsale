@@ -249,7 +249,7 @@ def get_list_of_items_purchased_by_date(sold_date, purchase_date,sold,list_date,
                     items.group_id,
                     items.storage,
                     items.list_date,
-                    sale.date as sales_date,
+                    sale.date as sale_date,
                     (sale.price - sale.shipping_fee) AS net,
                     collection.date as purchase_date,
                     collection.name as group_name
