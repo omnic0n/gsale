@@ -428,9 +428,6 @@ def groups_list():
 def list_items():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
-     
-    min_list = 0
-    max_list = 249
     
     date = request.args.get('date', type = str)
     if date is None:
@@ -450,21 +447,9 @@ def list_items():
 
     items = get_data.get_list_of_items_purchased_by_date(date, sold, list_date, storage)
     sold = get_data.get_all_items_sold()
-    page = request.args.get('page', type = int, default = 1)
 
-    pages = int(math.ceil(float(len(items))/250))
-
-    if page >= 1:
-        min_list = (page - 1) * 250
-        max_list = min_list + 249
-    
-    if (page * 250) < (len(items)):
-        max_reached = 1
-    else:
-        max_reached = 0
-
-    return render_template('items_sold_list.html', 
-                            items=items, sold=sold, page=page, min_list=min_list, max_list=max_list, max_reached=max_reached, pages=pages)
+    return render_template('items_list.html', 
+                            items=items, sold=sold)
 
 @app.route('/items/unsold_list')
 def unsold_list():
