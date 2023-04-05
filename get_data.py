@@ -257,8 +257,8 @@ def get_list_of_items_purchased_by_date(sold_date, purchase_date,sold,list_date,
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale on items.id = sale.id
                     WHERE collection.account = %s
-                    AND collection.date LIKE %s
                     AND sale.date LIKE %s 
+                    AND collection.date LIKE %s
                     AND items.sold LIKE %s
                     AND items.list_date LIKE %s
                     AND items.storage LIKE %s
