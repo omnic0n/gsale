@@ -380,6 +380,21 @@ def quick_sell():
     return render_template('quick_sell.html', form=form)
 
 
+@app.route('/items/list',methods=["POST","GET"])
+def list_items():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+     
+    items = get_data.get_all_items()
+
+    if request.method == "POST":
+        details = request.form
+        set_data.set_mark_sold(details['id'], 1)
+        set_data.set_sale_data(details)
+        return redirect(url_for('describe_item',item=details['id']))
+    return render_template('items_list.html')
+
+
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
     if not 'loggedin' in session:

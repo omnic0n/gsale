@@ -198,6 +198,15 @@ def get_data_for_item_describe(item_id):
                     WHERE items.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
+def get_all_items():
+    cur = mysql.connection.cursor()
+    cur.execute("""
+                SELECT 
+                * FROM items items 
+                INNER JOIN collection collection ON items.group_id = collection.id  
+                WHERE collection.account = %s ORDER BY items.name ASC""", (session['id'], ))
+    return list(cur.fetchall())
+
 def get_all_items_not_sold():
     cur = mysql.connection.cursor()
     cur.execute("""
