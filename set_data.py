@@ -41,7 +41,7 @@ def set_quick_sale(details, list_date):
     item_id = generate_uuid()
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO items(id, name, group_id, category_id, list_date, sold) VALUES (%s, %s, %s, %s, %s, 1)", 
-                (item_id, details['name'],details['group'],details['category'],))
+                (item_id, details['name'],details['group'],details['category'], list_date,))
     cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, %s, %s, %s)",
                 (item_id,details['price'],details['shipping_fee'],date.today().strftime("%Y-%m-%d"),))
     mysql.connection.commit()
