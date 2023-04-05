@@ -375,7 +375,7 @@ def quick_sell():
     if request.method == "POST":
         details = request.form
         group_data = get_data.get_all_from_group(details['group'])
-        id = set_data.set_quick_sale(details, group_data['date'])
+        id = set_data.set_quick_sale(details)
         return redirect(url_for('describe_item',item=id))
     return render_template('quick_sell.html', form=form)
 
