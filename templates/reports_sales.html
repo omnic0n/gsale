@@ -100,7 +100,7 @@
                 {% set ns.price = ns.price + sold_date['price'] %}
                 {% set ns.shipping_fee = ns.shipping_fee + sold_date['shipping_fee'] %}
         <tr>
-            <td><a href = "/items/sold_list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
+            <td><a href = "/items/list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
             <td>{{ sold_date['day'] }}</td>
             <td>{{ sold_date['price'] }}</td>
             <td>{{ sold_date['shipping_fee'] }}</td>
