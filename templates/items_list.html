@@ -7,6 +7,8 @@
             <th>Name</th> 
             <th>Sold</th>
             <th>Purchase Date</th>
+            <th>List Date</th>
+            <th>Storage</th>
             <th>Group ID</th> 
         </tr>
     </thead>
@@ -16,6 +18,8 @@
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
             <td>{{ item['date'] }}</td>
+            <td>{{ item['list_date'] }}</td>
+            <td>{{ item['storage'] }}</td>
             <td><a href = "/groups/describe?group_id={{ item['group_id'] }}">{{ item['group_id'] }}</a>
             </td>
             </tr>
