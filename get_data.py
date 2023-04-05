@@ -269,7 +269,7 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                     FROM items items 
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale on items.id = sale.id
-                    WHERE sale.date LIKE %s AND sold = %s AND collection.account = %s""", (date, sold, session['id'], ))
+                    WHERE sale.date LIKE %s AND collection.account = %s""", (date, session['id'], ))
         return list(cur.fetchall())
 
 def get_list_of_items_with_categories(category_id):
