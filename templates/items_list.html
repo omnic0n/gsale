@@ -20,7 +20,7 @@
             <td>{{ item['date'] }}</td>
             <td>{{ item['list_date'] }}</td>
             {% if item['sold'] %}
-                <td>{{ item['sale_date']}}</td>
+                <td>{{ item['sales_date']}}</td>
                 <td>{{ (item['sales_date'] - item['list_date']).days }}</td>
                 <td>{{ item['net']}}</td>
             {% else %}
