@@ -491,12 +491,12 @@ def describe_item():
     modify.button.label.text = "Modify Item"
     modify.id.data = id
 
-    item = get_data.get_data_for_item_describe(id)
-    category = get_data.get_category(item[0]['category_id'])
+    items = get_data.get_data_for_item_describe(id)
+    category = get_data.get_category(items[0]['category_id'])
     item_sold = get_data.get_data_for_item_sold(id)
 
     availability = ButtonForm()
-    if item[0]['sold']:
+    if items[0]['sold']:
         availability.button.label.text = "Mark as Available"
     else:
         availability.button.label.text = "Mark as Sold"
@@ -517,7 +517,7 @@ def describe_item():
         return redirect(url_for('mark_sold',item=details['id'],sold=1))
     
     return render_template('items_describe.html', 
-                            item=item,
+                            item=items,
                             category=category,
                             sold=item_sold,
                             form=form,
