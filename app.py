@@ -379,28 +379,6 @@ def quick_sell():
         return redirect(url_for('describe_item',item=id))
     return render_template('quick_sell.html', form=form)
 
-
-@app.route('/items/list',methods=["POST","GET"])
-def list_items():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
-    sold = request.args.get('sold', type = int)
-    if sold is None:
-        sold = "%"
-
-    list_date = request.args.get('list_date', type = str)
-    if list_date is None:
-        list_date = "%"
-
-    storage = request.args.get('storage', type = str)
-    if storage is None:
-        storage = "%"
-
-    items = get_data.get_all_items(sold,list_date,storage)
-    return render_template('items_list.html',items=items)
-
-
 @app.route('/items/sold',methods=["POST","GET"])
 def sold_items():
     if not 'loggedin' in session:
@@ -446,8 +424,8 @@ def groups_list():
     groups = get_data.get_all_from_group_and_items(date)
     return render_template('groups_list.html', groups=groups, form=form)
 
-@app.route('/items/sold_list', methods=["POST","GET"])
-def sold_list():
+@app.route('/items/list', methods=["POST","GET"])
+def list_items():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
@@ -455,7 +433,22 @@ def sold_list():
     max_list = 249
     
     date = request.args.get('date', type = str)
-    items = get_data.get_list_of_items_purchased_by_date(date, sold=0)
+    if date is None:
+        date = "%"
+
+    sold = request.args.get('sold', type = int)
+    if sold is None:
+        sold = "%"
+
+    list_date = request.args.get('list_date', type = str)
+    if list_date is None:
+        list_date = "%"
+
+    storage = request.args.get('storage', type = str)
+    if storage is None:
+        storage = "%"
+
+    items = get_data.get_list_of_items_purchased_by_date(date, sold, list_date, storage)
     sold = get_data.get_all_items_sold()
     page = request.args.get('page', type = int, default = 1)
 

@@ -253,7 +253,7 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(date, sold=0):
+def get_list_of_items_purchased_by_date(date,sold,list_date,storage):
         if not date:
             date="%"
         cur = mysql.connection.cursor()
@@ -269,7 +269,12 @@ def get_list_of_items_purchased_by_date(date, sold=0):
                     FROM items items 
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale on items.id = sale.id
-                    WHERE sale.date LIKE %s AND collection.account = %s""", (date, session['id'], ))
+                    WHERE collection.account = %s
+                    AND sale.date LIKE %s 
+                    AND items.sold LIKE %s
+                    AND items.list_date LIKE %s
+                    AND items.storage LIKE %s
+                    ORDER BY collection.date ASC""", (session['id'], date, sold, list_date, storage, ))
         return list(cur.fetchall())
 
 def get_list_of_items_with_categories(category_id):
