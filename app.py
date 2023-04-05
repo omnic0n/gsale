@@ -429,9 +429,13 @@ def list_items():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
     
-    date = request.args.get('date', type = str)
-    if date is None:
-        date = "%"
+    sold_date = request.args.get('sold_date', type = str)
+    if sold_date is None:
+        sold_date = "%"
+
+    purchase_date = request.args.get('purchase_date', type = str)
+    if purchase_date is None:
+        purchase_date = "%"
 
     sold = request.args.get('sold', type = int)
     if sold is None:
@@ -445,7 +449,7 @@ def list_items():
     if storage is None:
         storage = "%"
 
-    items = get_data.get_list_of_items_purchased_by_date(date, sold, list_date, storage)
+    items = get_data.get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage)
 
     return render_template('items_list.html', 
                             items=items)
