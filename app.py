@@ -478,7 +478,9 @@ def describe_item():
         return redirect(url_for('login'))  
      
     id = request.args.get('item', type = str)
-
+    if request.method == "POST":
+            details = request.form
+        
     form = ButtonForm()
     form.button.label.text = "Sell Item"
     form.id.data = id
@@ -501,10 +503,7 @@ def describe_item():
     else:
         availability.button.label.text = "Mark as Sold"
     availability.id.data = id
-
-
-    if request.method == "POST":
-        details = request.form
+    
     if details['button'] == "Sell Item":
         return redirect(url_for('sold_items',item=details['id']))
     elif details['button'] == "Remove Item":
