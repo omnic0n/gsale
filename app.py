@@ -446,10 +446,9 @@ def list_items():
         storage = "%"
 
     items = get_data.get_list_of_items_purchased_by_date(date, sold, list_date, storage)
-    sold = get_data.get_all_items_sold()
 
     return render_template('items_list.html', 
-                            items=items, sold=sold)
+                            items=items)
 
 #Search Section
 @app.route('/items/search', methods=["POST","GET"])
