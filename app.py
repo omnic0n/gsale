@@ -478,9 +478,7 @@ def describe_item():
         return redirect(url_for('login'))  
      
     id = request.args.get('item', type = str)
-    if request.method == "POST":
-            details = request.form
-        
+
     form = ButtonForm()
     form.button.label.text = "Sell Item"
     form.id.data = id
@@ -493,36 +491,29 @@ def describe_item():
     modify.button.label.text = "Modify Item"
     modify.id.data = id
 
-    items = get_data.get_data_for_item_describe(id)
-    category = get_data.get_category(items[0]['category_id'])
-    item_sold = get_data.get_data_for_item_sold(id)
+    modify = ButtonForm()
+    modify.button.label.text = "Modify Item"
+    modify.id.data = id
 
-    availability = ButtonForm()
-    if items[0]['sold']:
-        availability.button.label.text = "Mark as Available"
-    else:
-        availability.button.label.text = "Mark as Sold"
-    availability.id.data = id
-    
-    if details['button'] == "Sell Item":
-        return redirect(url_for('sold_items',item=details['id']))
-    elif details['button'] == "Remove Item":
-        return redirect(url_for('items_remove',id=details['id']))
-    elif details['button'] == "Modify Item":
-        return redirect(url_for('modify_items',item=details['id']))
-    elif details['button'] == "Mark as Available":
-        return redirect(url_for('mark_sold',item=details['id'],sold=0))
-    elif details['button'] == "Mark as Sold":
-        return redirect(url_for('mark_sold',item=details['id'],sold=1))
-    
+    if request.method == "POST":
+        details = request.form
+        if details['button'] == "Sell Item":
+            return redirect(url_for('sold_items',item=details['id']))
+        elif details['button'] == "Remove Item":
+            return redirect(url_for('items_remove',id=details['id']))
+        elif details['button'] == "Modify Item":
+            return redirect(url_for('modify_items',item=details['id']))
+
+    item = get_data.get_data_for_item_describe(id)
+    category = get_data.get_category(item[0]['category_id'])
+    item_sold = get_data.get_data_for_item_sold(id)
     return render_template('items_describe.html', 
-                            item=items,
+                            item=item,
                             category=category,
                             sold=item_sold,
                             form=form,
                             remove=remove,
-                            modify=modify,
-                            availability=availability)
+                            modify=modify)
 
 @app.route('/expense/describe')
 def describe_expense():
