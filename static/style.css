@@ -147,7 +147,7 @@ body.loggedin {
 }
 
 .bottom_right {
-    position: absolute;
+    position: relative;
     bottom: 0;
     right: 0;
 }
