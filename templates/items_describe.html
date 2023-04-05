@@ -54,28 +54,6 @@
     </tbody>
 </table>
 <br>
-<center>
-<table>
-    <td>
-        <form method="POST" action="">
-            {{ availability.hidden_tag() }}
-        <div class="form-group">
-            {{ availability.button(class="btn btn-outline-info") }}
-        </div>
-        </form>
-    </td>
-    {% if not item[0]['sold']%}
-    <td>
-        <form method="POST" action="">
-            {{ form.hidden_tag() }}
-        <div class="form-group">
-            {{ form.button(class="btn btn-outline-info") }}
-        </div>
-        </form>
-    </td>
-    {% endif %}
-</table>
-</center>
 <br>
 {% if item[0]['sold'] %}
 <table class="blueTable">
@@ -98,13 +76,33 @@
 
 <br>
 <br>
-<p style="text-align:right">
-    <form method="POST" action="">
-        {{ remove.hidden_tag() }}
-    <div class="form-group">
-        {{ remove.button(class="btn btn-outline-info") }}
-    </div>
-    </form>
-</p>
+    <table>
+        <td>
+            <form method="POST" action="">
+                {{ availability.hidden_tag() }}
+            <div class="form-group">
+                {{ availability.button(class="btn btn-outline-info") }}
+            </div>
+            </form>
+        </td>
+        {% if not item[0]['sold']%}
+        <td>
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.button(class="btn btn-outline-info") }}
+            </div>
+            </form>
+        </td>
+        {% endif %}
+        <td>
+            <form method="POST" action="">
+                {{ remove.hidden_tag() }}
+            <div class="form-group">
+                {{ remove.button(class="btn btn-outline-info") }}
+            </div>
+            </form>
+        </td>
+    </table>
 {% endblock content %}
 </html>
