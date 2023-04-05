@@ -25,24 +25,12 @@
 </table>
 <br>
 <center>
-<table>
-    <td>
         <form method="POST" action="">
             {{ availability.hidden_tag() }}
         <div class="form-group">
             {{ availability.button(class="btn btn-outline-info") }}
         </div>
         </form>
-    </td>
-    <td>
-        <form method="POST" action="">
-            {{ modify.hidden_tag() }}
-        <div class="form-group">
-            {{ modify.button(class="btn btn-outline-info") }}
-        </div>
-        </form>
-    </td>
-</table>
 </center>
 
 <table class="blueTable">
@@ -66,7 +54,15 @@
     </tbody>
 {% if item[0]['sold'] %}
 </table>
-<br><h3>Sale Fees</h3>
+<center>
+    <form method="POST" action="">
+        {{ modify.hidden_tag() }}
+    <div class="form-group">
+        {{ modify.button(class="btn btn-outline-info") }}
+    </div>
+    </form>
+</center>
+<br>
 <table class="blueTable">
     <thead>
         <tr>
