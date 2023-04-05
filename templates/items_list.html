@@ -10,6 +10,7 @@
             <th>Sold Date</th>
             <th>Days to Sell</th>
             <th>Sold Net</th>
+            <th>Storage</th>
             <th>Group</th> 
         </tr>
     </thead>
@@ -17,10 +18,10 @@
         {% for item in items %}
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{{ item['purchase_date'] }}</td>
-            <td>{{ item['list_date'] }}</td>
+            <td><a href = "/items/list?purchase_date={{ item['purchase_date'] }}"></a>{{ item['purchase_date'] }}</td>
+            <td><a href = "/items/list?list_date={{ item['list_date'] }}"></a>{{ item['list_date'] }}</td>
             {% if item['sold'] %}
-                <td>{{ item['sales_date']}}</td>
+                <td><a href = "/items/list?sold_date={{ item['sale_date'] }}"></a>{{ item['sale_date'] }}</td>
                 <td>{{ (item['sales_date'] - item['list_date']).days }}</td>
                 <td>{{ item['net']}}</td>
             {% else %}
@@ -28,12 +29,8 @@
                 <td>NA</td>
                 <td>0</td>
             {% endif %}
-            <td>{% if item['group_id'] == 1%}
-                None
-                {% elif item['group_id'] %}
-                <a href = "/groups/describe?group_id={{ item['group_id'] }}">{{ item['group_name'] }}</a>
-                {% endif %}
-            </td>
+            <td><a href = "/items/list?storage={{ item['storage'] }}"></a>{{ item['storage'] }}</td>
+            <td><a href = "/groups/describe?group_id={{ item['group_id'] }}">{{ item['group_name'] }}</a></td>
             </tr>
         {% endfor %}
     </tbody>
