@@ -215,7 +215,7 @@ def get_all_items(sold,list_date,storage):
                 AND items.sold = %s
                 AND items.list_date LIKE %s
                 AND items.storage = %s
-                ORDER BY collection.date ASC""", (sold, list_date, storage, session['id'], ))
+                ORDER BY collection.date ASC""", (session['id'], sold, list_date, storage, ))
     return list(cur.fetchall())
 
 def get_all_items_not_sold():
