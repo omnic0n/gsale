@@ -478,6 +478,7 @@ def describe_item():
         return redirect(url_for('login'))  
      
     id = request.args.get('item', type = str)
+    item = get_data.get_data_for_item_describe(id)
 
     form = ButtonForm()
     form.button.label.text = "Sell Item"
@@ -495,6 +496,13 @@ def describe_item():
     modify.button.label.text = "Modify Item"
     modify.id.data = id
 
+    availability = ButtonForm()
+    if item[0]['sold']:
+        availability.button.label.text = "Mark as Available"
+    else:
+        availability.button.label.text = "Mark as Sold"
+    availability.id.data = id
+
     if request.method == "POST":
         details = request.form
         if details['button'] == "Sell Item":
@@ -504,7 +512,6 @@ def describe_item():
         elif details['button'] == "Modify Item":
             return redirect(url_for('modify_items',item=details['id']))
 
-    item = get_data.get_data_for_item_describe(id)
     category = get_data.get_category(item[0]['category_id'])
     item_sold = get_data.get_data_for_item_sold(id)
     return render_template('items_describe.html', 
@@ -513,7 +520,8 @@ def describe_item():
                             sold=item_sold,
                             form=form,
                             remove=remove,
-                            modify=modify)
+                            modify=modify,
+                            availability=availability)
 
 @app.route('/expense/describe')
 def describe_expense():
