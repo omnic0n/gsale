@@ -46,6 +46,7 @@
         <tr>
             <td><a href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
             <td>{{ item['date'] }}</td>
+            {% if item['sold'] %}
             {% for sold_item in sold %}
                 {% if item['id'] == sold_item['id'] %}
                     <td>{{ sold_item['date']}}</td>
@@ -53,6 +54,11 @@
                     <td>{{ sold_item['net']}}</td>
                 {% endif %}
             {% endfor %}
+            {% else %}
+                <td></td>
+                <td></td>
+                <td></td>
+            {% endif %}
             <td>{% if item['group_id'] == 1%}
                 None
                 {% elif item['group_id'] %}
