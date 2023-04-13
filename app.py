@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from flask_session import Session
 import random, os, math
 
-from routes import reports
+from routes.reports import reports_api
 
 import get_data, set_data
 import files
@@ -25,7 +25,7 @@ app.config.from_object("config.ProductionConfig")
 
 MySQL(app)
 
-app.register_blueprint(reports)
+app.register_blueprint(reports_api)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
