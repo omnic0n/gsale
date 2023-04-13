@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_session import Session
-import ..activeUsers
+from .activeUsers import activeUser
 
 report_api = Blueprint('report_api', __name__)
 
