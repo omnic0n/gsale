@@ -1,8 +1,8 @@
 from flask import Blueprint
 
-account_api = Blueprint('reports', __name__)
+reports = Blueprint('reports', __name__)
 
-@app.route('/reports/profit',methods=["GET", "POST"])
+@reports.route('/reports/profit',methods=["GET", "POST"])
 def reports_profit():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
