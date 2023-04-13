@@ -33,6 +33,8 @@ def login_data(username, password, ip):
         cursor.execute("SELECT * FROM accounts WHERE username = %s", (username, ))
         account = cursor.fetchone()
 
+        global session
+
         if account and bcrypt.checkpw(password.encode('utf8'), account['password'].encode('UTF_8')):
             session['loggedin'] = True
             session['id'] = account['id']
