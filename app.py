@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from flask_session import Session
 import random, os, math
 
-from routes.reports import reports_api
+from .routes.reports import reports_api
 
 import get_data, set_data
 import files
