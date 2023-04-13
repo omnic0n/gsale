@@ -1,5 +1,5 @@
 from flask import Blueprint
-from flask_session import Session
+from flask_session import session
 
 report_api = Blueprint('report_api', __name__)
 
