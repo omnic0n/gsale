@@ -2,6 +2,7 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from flask import Flask, session
 from flask_session import Session
+import activeUsers
 
 from flask_mysqldb import MySQL
 import bcrypt
@@ -33,12 +34,11 @@ def login_data(username, password, ip):
         cursor.execute("SELECT * FROM accounts WHERE username = %s", (username, ))
         account = cursor.fetchone()
 
-        global session
-
         if account and bcrypt.checkpw(password.encode('utf8'), account['password'].encode('UTF_8')):
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account['username']
+            activeSession = activeUsers.activeUser(session)
             f = open("/var/log/gsale/success.log", "a")
             f.write(ip + " - " + username + "\n")
             f.close()
