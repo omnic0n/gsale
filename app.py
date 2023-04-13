@@ -8,6 +8,8 @@ from werkzeug.utils import secure_filename
 from flask_session import Session
 import random, os, math
 
+from routes import reports
+
 import get_data, set_data
 import files
 import function
@@ -22,6 +24,8 @@ Session(app)
 app.config.from_object("config.ProductionConfig")
 
 MySQL(app)
+
+app.register_blueprint(reports)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -58,23 +62,6 @@ def index():
         item = get_data.get_profit(value['year'])
         items.append(item)
     return render_template('index.html', items=items)
-
-@app.route('/reports/profit',methods=["GET", "POST"])
-def reports_profit():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-
-    form = ReportsForm()
-
-    if request.method == "POST":
-        details = request.form
-        start_date, end_date = function.set_dates(details)
-        sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
-        purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
-        expenses= get_data.get_all_from_expenses_date(start_date, end_date)
-        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates, expenses=expenses,type_value=details['type'])
-    return render_template('reports_profit.html', form=form)
-
 
 @app.route('/reports/sales',methods=["GET", "POST"])
 def reports_sale():
