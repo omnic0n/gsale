@@ -2,7 +2,6 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from flask import Flask, session
 from flask_session import Session
-import activeUsers
 
 from flask_mysqldb import MySQL
 import bcrypt
