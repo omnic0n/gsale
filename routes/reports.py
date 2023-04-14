@@ -1,12 +1,11 @@
-from flask import Blueprint
+from flask import Blueprint, current_app
 from flask_session import Session
-from .activeUsers import activeUser
 
 report_api = Blueprint('report_api', __name__)
 
 @report_api.route('/reports/profit',methods=["GET", "POST"])
 def reports_profit():
-    if not 'loggedin' in activeUsers.activeUser(session):
+    if not 'loggedin' in current_app.config['session']:
         return redirect(url_for('login'))  
 
     form = ReportsForm()

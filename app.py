@@ -38,6 +38,7 @@ def login():
         password = request.form['password']
         # Check if account exists using MySQL
         msg = function.login_data(username=username, password=password, ip=addr[0])
+        app.config['session'] = session
         if 'loggedin' in session:
             return redirect(url_for('index'))    
     return render_template('login.html', msg=msg)
