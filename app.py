@@ -9,6 +9,7 @@ from flask_session import Session
 import random, os, math
 
 from routes.reports import report_api
+import auth_api
 
 import get_data, set_data
 import files
@@ -26,30 +27,7 @@ app.config.from_object("config.ProductionConfig")
 MySQL(app)
 
 app.register_blueprint(report_api)
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    # Output message if something goes wrong...
-    msg = ''
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        addr = request.environ['HTTP_X_FORWARDED_FOR'].split(',')
-        # Create variables for easy access
-        username = request.form['username']
-        password = request.form['password']
-        # Check if account exists using MySQL
-        msg = function.login_data(username=username, password=password, ip=addr[0])
-        app.config['session'] = session
-        if 'loggedin' in session:
-            return redirect(url_for('index'))    
-    return render_template('login.html', msg=msg)
-
-@app.route('/logout')
-def logout():
-    # Remove session data, this will log the user out
-   session.pop('loggedin', None)
-   session.pop('id', None)
-   session.pop('username', None)
-   return redirect(url_for('login'))
+app.register_blueprint(auth_api)
 
 @app.route('/')
 def index():
