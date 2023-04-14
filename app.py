@@ -9,7 +9,7 @@ from flask_session import Session
 import random, os, math
 
 from routes.reports import report_api
-from auth_api import *
+import auth_api
 
 import get_data, set_data
 import files
