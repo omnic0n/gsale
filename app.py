@@ -13,7 +13,6 @@ from routes.reports import report_api
 import get_data, set_data
 import files
 import function
-import config
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
