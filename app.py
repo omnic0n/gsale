@@ -531,10 +531,8 @@ def describe_expense():
      
     id = request.args.get('id', type = str)
     expense = get_data.get_data_for_expense_describe(id)
-    max_expense = get_data.get_max_expense_id()
     return render_template('expense_describe.html', 
-                            expense=expense,
-                            max_expense=max_expense)
+                            expense=expense)
 
 @app.route('/groups/describe', methods=["POST","GET"])
 def describe_group():
