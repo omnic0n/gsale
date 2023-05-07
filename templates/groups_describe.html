@@ -42,7 +42,7 @@
                 {% endif %}
             </td>
             <td>${{ sold_price - group_id[0]['price'] }}</td>
-            <td>{% if not group_id[0]['price'] %}
+            <td>{% if group_id[0]['price'] != 0 %}
                 {{ ((sold_price/group_id[0]['price']) * 100)| round }}%
                 {% else %}
                 0
