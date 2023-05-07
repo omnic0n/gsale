@@ -31,6 +31,7 @@
             <th>Name</th> 
             <th>Sold</th>
             <th>Group</th>
+            <th>Net</th>
             <th>Storage</th> 
         </tr>
     </thead>
@@ -54,6 +55,7 @@
                 </a>
                 {% endif %}
             </td>
+            <td>{{ item['net'] }}</td>
             <td>{{ item['storage'] }}</td>
             </tr>
         {% endfor %}

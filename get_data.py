@@ -117,10 +117,12 @@ def get_list_of_items_with_name(name):
                 items.sold,
                 items.id,
                 items.storage,
+                (sale.price - sale.shipping_fee) AS net,
                 collection.id as group_id,
                 collection.name as group_name
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
+                INNER JOIN sale sale ON items.id = sale.id
                 WHERE items.name like %s AND collection.account = %s""", ('%'+ name + '%', session['id'], ))
     return list(cur.fetchall())
 
