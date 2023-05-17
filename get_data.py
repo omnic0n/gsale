@@ -109,7 +109,7 @@ def get_all_from_items(item_id):
     cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_with_name(name):
+def get_list_of_items_with_name(name,sold):
     cur = mysql.connection.cursor()
     cur.execute("""
                 SELECT 
@@ -123,7 +123,7 @@ def get_list_of_items_with_name(name):
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
                 INNER JOIN sale sale ON items.id = sale.id
-                WHERE items.name like %s AND collection.account = %s""", ('%'+ name + '%', session['id'], ))
+                WHERE items.name LIKE %s AND collection.account = %s AND items.sold LIKE %s""", ('%'+ name + '%', session['id'], sold ))
     return list(cur.fetchall())
 
 def get_data_from_item_groups(group_id):
