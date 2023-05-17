@@ -65,6 +65,7 @@ class ItemForm(FlaskForm):
     storage = StringField('storage')
     category = SelectField('category', coerce=int)
     returned = SelectField('returned', coerce=int)
+    sold = BooleanField('sold')
     submit = SubmitField('Submit')
 
 class SaleForm(FlaskForm):
