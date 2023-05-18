@@ -310,8 +310,7 @@ def bought_items():
 
     form.category.choices = [(category['id'], category['type']) for category in categories]
 
-    if group_id['date']:
-        form.list_date.data = get_data.get_all_from_group(group_id)['date']
+    form.list_date.data = get_data.get_all_from_group(group_id)['date']
 
     if request.method == "POST":
         details = request.form
