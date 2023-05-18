@@ -300,17 +300,18 @@ def bought_items():
         return redirect(url_for('login'))  
      
     group_id = request.args.get('group', type = str)
+    
     groups = get_data.get_all_from_groups('%')
-
     categories = get_data.get_all_from_categories()
 
     form = PurchaseForm()
-    form.group.choices = [(group['id'], group['name']) for group in groups]
-    form.group.data = group_id
 
+    form.group.choices = [(group['id'], group['name']) for group in groups]
     form.category.choices = [(category['id'], category['type']) for category in categories]
 
-    form.list_date.data = get_data.get_all_from_group(group_id)['date']
+    if group_id:
+        form.group.data = group_id
+        form.list_date.data = get_data.get_all_from_group(group_id)['date']
 
     if request.method == "POST":
         details = request.form
