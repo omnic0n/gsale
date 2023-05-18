@@ -300,6 +300,7 @@ def bought_items():
         return redirect(url_for('login'))  
      
     group_id = request.args.get('group', type = str)
+    print(group_id)
     groups = get_data.get_all_from_groups('%')
 
     categories = get_data.get_all_from_categories()
