@@ -47,14 +47,14 @@
                 <div class="form-group">
                     {{ form.shipping_fee.label(class="form-control-label") }}
                     {% if form.shipping_fee.errors %}
-                        {{ form.shipping_fee(class="form-control form-control-lg is-invalid", value=0) }}
+                        {{ form.shipping_fee(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
                             {% for error in form.shipping_fee.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.shipping_fee(class="form-control form-control-lg") }}
+                        {{ form.shipping_fee(class="form-control form-control-lg", value=0) }}
                     {% endif %}
                 </div>
             </fieldset>
