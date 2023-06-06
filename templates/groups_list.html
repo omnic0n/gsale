@@ -34,6 +34,7 @@
             <th>Price</th>
             <th>Profit</th>
             <th>Date</th>
+            <th>Remove</th>
         </tr>
     </thead>
     <tbody>
@@ -46,6 +47,7 @@
                 <td>{{ group['price'] }}</td>
                 <td>{{ group['net'] - group['price'] }}</td>
                 <td>{{ group['date'] }}</td>
+                <td><a href = "/groups/remove?id={{ group['id'] }}">Remove</td>
             </tr>
         {% set count.value = count.value + 1 %}
         {% endfor %}

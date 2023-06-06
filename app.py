@@ -564,6 +564,15 @@ def describe_group():
                             sold_price=sold_price,
                             form=form)
 
+@app.route('/groups/remove',methods=["POST","GET"])
+def group_remove():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+
+    id = request.args.get('id', type = str)
+    set_data.remove_group_data(id)
+    return redirect(url_for('groups_list'))
+
 @app.route('/location', methods=["GET"])
 def location():
     if not 'loggedin' in session:

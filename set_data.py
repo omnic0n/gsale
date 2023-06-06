@@ -70,6 +70,7 @@ def remove_item_data(id):
     mysql.connection.commit()
     cur.close()
 
+
 #Group Data
 
 def set_group_add(group_name, details, image_id):
@@ -85,6 +86,13 @@ def set_group_modify(details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE collection SET name = %s, date = %s, price = %s, image = %s where id = %s", 
                 (details['name'], details['date'], details['price'], image_id, details['id']))
+    mysql.connection.commit()
+    cur.close()
+
+def remove_group_data(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM collection WHERE id = %s", 
+                (id, ))
     mysql.connection.commit()
     cur.close()
 
