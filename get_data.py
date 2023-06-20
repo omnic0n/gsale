@@ -332,7 +332,7 @@ def get_data_for_expense_describe(id):
 #Category Data
 def get_all_from_categories():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM categories")
+    cur.execute("SELECT * FROM categories ORDER BY type")
     return list(cur.fetchall())
 
 def get_category(category_id):
