@@ -423,6 +423,7 @@ def groups_list():
         date = request.args.get('date', type = str)
 
     groups = get_data.get_all_from_group_and_items(date)
+    print(groups)
     return render_template('groups_list.html', groups=groups, form=form)
 
 @app.route('/items/list', methods=["POST","GET"])
