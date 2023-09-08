@@ -30,7 +30,8 @@
         <tr>
             <th></th>
             <th>Name</th>
-            <th>Total Items</th> 
+            <th>Total Items</th>
+            <th>Sold Items</th> 
             <th>Price</th>
             <th>Profit</th>
             <th>Date</th>
@@ -44,6 +45,7 @@
                 <td>{{ count.value }}</td>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['total_items'] }}</td>
+                <td>{{ group['sold_items'] }}</td>
                 <td>{{ group['price'] }}</td>
                 <td>{{ group['net'] - group['price'] }}</td>
                 <td>{{ group['date'] }}</td>
