@@ -450,6 +450,7 @@ def list_items():
     if storage is None:
         storage = "%"
 
+    print(session['id'])
     items = get_data.get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage)
     print(items)
 
