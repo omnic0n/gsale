@@ -451,6 +451,7 @@ def list_items():
         storage = "%"
 
     print(session['id'])
+    print(sold_date, purchase_date, sold, list_date, storage)
     items = get_data.get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage)
     print(items)
 
