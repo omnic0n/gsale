@@ -32,7 +32,8 @@
             <th>Name</th>
             <th>Total Items</th>
             <th>Sold Items</th> 
-            <th>Price</th>
+            <th>Purchase Total</th>
+            <th>Sold Total</th>
             <th>Profit</th>
             <th>Date</th>
             <th>Remove</th>
@@ -52,7 +53,8 @@
                 <td>{{ group['total_items'] }}</td>{% set ns.total_items = ns.total_items + group['total_items'] %}
                 <td>{{ group['sold_items'] }}</td>{% set ns.sold_items = ns.sold_items + group['sold_items'] %}
                 <td>{{ group['price'] }}</td>{% set ns.price = ns.price + group['price'] %}
-                <td>{{ group['net'] - group['price'] }}</td>{% set ns.profit = ns.profit + group['net'] %}
+                <td>{{ group['net'] }}</td>{% set ns.profit = ns.profit + group['net'] %}
+                <td>{{ group['net'] - group['price'] }}</td>
                 <td>{{ group['date'] }}</td>
                 <td><a href = "/groups/remove?id={{ group['id'] }}">Remove</td>
             </tr>
@@ -64,6 +66,7 @@
             <td>{{ ns.total_items }}</td>
             <td>{{ ns.sold_items }}</td>
             <td>{{ ns.price }}</td>
+            <td>{{ ns.profit }}</td>
             <td>{{ ns.profit - ns.price }}</td>
             <td></td>
             <td></td>
