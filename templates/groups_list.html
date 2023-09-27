@@ -58,7 +58,12 @@
                 <td>${{ group['price'] }}</td>{% set ns.price = ns.price + group['price'] %}
                 <td>${{ group['net'] }}</td>{% set ns.profit = ns.profit + group['net'] %}
                 <td>${{ group['net'] - group['price'] }}</td>
-                <td>${{ '%0.2f' % ( group['price'] / group['sold_items']) | float }}</td>
+                <td>${% if group['sold_items'] > 0 %}
+                        {{ '%0.2f' % ( group['price'] / group['sold_items']) | float }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </td>
                 <td>{{ group['date'] }}</td>
                 <td><a href = "/groups/remove?id={{ group['id'] }}">Remove</td>
             </tr>
