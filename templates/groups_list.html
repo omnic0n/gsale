@@ -71,7 +71,7 @@
             <td>{{ ns.price }}</td>
             <td>{{ ns.profit }}</td>
             <td>{{ ns.profit - ns.price }}</td>
-            <td>{{ (ns.price / ns.sold_items) | round }}</td>
+            <td>{{ '%0.2f' % (ns.price / ns.sold_items) | float }}</td>
             <td></td>
         </tr>
     </tbody>
