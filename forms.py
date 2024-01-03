@@ -15,7 +15,7 @@ class GroupForm(FlaskForm):
     image = FileField('image')
 
     listYear = SelectField('Year', default=datetime.now().year, choices=[
-        (2021), (2022), (2023)
+        (2021), (2022), (2023), (2024)
     ])
     submit = SubmitField('Submit')
 
