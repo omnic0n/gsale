@@ -545,6 +545,7 @@ def describe_group():
     group_id = get_data.get_data_from_group_describe(id)
     items = get_data.get_data_from_item_groups(id)
     total_items = get_data.get_total_items_in_group(id)
+    total_sold_items = get_data.get_total_items_in_group_sold(id)
     sold_price = get_data.get_group_profit(id)
     if not sold_price:
         sold_price = 0
@@ -561,6 +562,7 @@ def describe_group():
                             group_id=group_id,
                             items=items,
                             total_items=total_items,
+                            total_sold_items=total_sold_items,
                             sold_price=sold_price,
                             form=form)
 

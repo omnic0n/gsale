@@ -8,6 +8,7 @@
             <th>Name</th> 
             <th>Purchase Date</th>
             <th>Total Items</th>
+            <th>Sold Items</th>
             <th>Modify</th>
         </tr>
     </thead>
@@ -16,6 +17,7 @@
             <td>{{ group_id[0]['name'] }}</td>
             <td><a href = "/groups/list?date={{ group_id[0]['date'] }}">{{ group_id[0]['date'] }}</a></td>
             <td>{{ total_items['total'] }}</td>
+            <td>{{ total_sold_items['total'] }}</td>
             <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}">Modify Group</a></td>
         </tr>
     </tbody>
