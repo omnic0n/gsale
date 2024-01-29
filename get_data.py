@@ -148,8 +148,6 @@ def get_data_from_item_groups(group_id):
                     items.sold, 
                     items.id,
                     items.storage,
-                    sale.price AS gross,
-                    sale.shipping_fee AS shipping_fee,
                     sum(sale.price - sale.shipping_fee) AS net,
                     sale.date AS sale_date,
 					DATEDIFF(sale.date,collection.date) AS days_to_sell 
