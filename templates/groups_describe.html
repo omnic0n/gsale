@@ -69,7 +69,9 @@
             <th>Name</th> 
             <th>Sold Date</th>
             <th>Days to Sell</th>
+            <th>Gross</th>
             <th>Net</th>
+            <th>Shipping Fee</th>
             <th>Storage</th>
             <th>Remove</th>
         </tr>
@@ -89,7 +91,9 @@
             </td>
             <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['sale_date'] }}{% endif %}</td>
             <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['days_to_sell'] }}{% endif %}</td>
+            <td>{{ item['gross'] }}</td>
             <td>{{ item['net'] }}</td>
+            <td>{{ item['shipping_fee'] }}</td>
             <td>{{ item['storage'] }}</td>
             <td><a href="/items/remove?id={{ item['id'] }}">remove</a></td>
         {% set ns.count = ns.count + 1 %}
