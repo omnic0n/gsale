@@ -83,7 +83,7 @@ def get_purchased_from_day(day, year):
         end_date='3000-01-01'
     else:
         start_date = ("%s-01-01") % (year)
-        end_date = ("%s-01-01") % (year + 1)
+        end_date = ("%s-01-01") % (int(year) + 1)
     cur = mysql.connection.cursor()
     cur.execute("""SELECT
                    date,
