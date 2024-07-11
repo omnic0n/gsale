@@ -200,7 +200,7 @@ def get_sold_from_day(day):
                     FROM items items 
                     INNER JOIN collection collection ON collection.id = items.group_id
                     INNER JOIN sale sale ON items.id = sale.id
-                    WHERE DAYOFWEEK(sale.date) = %s AND collection.account = %s GROUP BY sale.date ORDER BY sale.date ASC""",
+                    WHERE DAYOFWEEK(collection.date) = %s AND collection.account = %s GROUP BY sale.date ORDER BY sale.date ASC""",
                     (day, session['id'], ))
     return list(cur.fetchall())
 
