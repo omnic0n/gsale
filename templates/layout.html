@@ -194,7 +194,7 @@
         hideDate();
         {% if type_value == '2' %}showYear();
         {% elif type_value == '1' %}showYear(); showMonth();
-        {% elif type_value == '3' %}showDay();
+        {% elif type_value == '3' %}showDay(); showYear();
         {% else %}showDate();
         {% endif %}
         $('#type').on('change', function() {

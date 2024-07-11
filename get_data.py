@@ -90,7 +90,7 @@ def get_purchased_from_day(day, year):
                    SUM(price) as price,
                    DAYNAME(date) as day
                    FROM collection
-                   WHERE DAYOFWEEK(collection.date) =  %s AND collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
+                   WHERE DAYOFWEEK(collection.date) =  %s AND collection.date >= %s AND collection.date < %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
                    (day, start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
