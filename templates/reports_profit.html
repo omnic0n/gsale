@@ -105,7 +105,7 @@
             <td>{{ total }}</td>
             {% if total < 0 %}<td style="color:#EE4B2B">{% else %}<td>{% endif %}
             {% if purchased_date['price'] > 0 %}{{ (((total + purchased_date['price'])/purchased_date['price']) * 100)| round }}%
-            {% else %}{{ (((total + purchased_date['price'])) * 100)| round }}%</td>
+            {% else %}{{ (((total + purchased_date['price'])) * 100)| round }}%</td>{% endif %}
         </tr>
                {% endif %}
             {% endfor %}
