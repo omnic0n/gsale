@@ -1,6 +1,7 @@
 from flask import Flask, session
 from flask_mysqldb import MySQL
 from flask_session import Session
+from datetime import datetime, date, timedelta
 import datetime
 
 #Mysql Config
@@ -76,15 +77,21 @@ def get_purchased_from_date(start_date, end_date):
                    (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
-def get_purchased_from_day(day):
+def get_purchased_from_day(day, year):
+    if(year == "All"):
+        start_date='2000-01-01'
+        end_date='3000-01-01'
+    else:
+        start_date = ("%s-01-01") % (year)
+        end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
     cur = mysql.connection.cursor()
     cur.execute("""SELECT
                    date,
                    SUM(price) as price,
                    DAYNAME(date) as day
                    FROM collection
-                   WHERE DAYOFWEEK(collection.date) = %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
-                   (day, session['id'], ))
+                   WHERE DAYOFWEEK(collection.date) =  %s AND collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
+                   (day, start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
 def get_data_from_group_describe(group_id):
