@@ -14,7 +14,10 @@ Session(app)
 mysql = MySQL(app)
 
 def set_dates(details):
-    year = int(details['year'])
+    if(details['year'] == "All"):
+         year = '%'
+    else:
+        year = int(details['year'])
     month = int(details['month'])
     date = details['date']
     if(details['type'] == "2"):
