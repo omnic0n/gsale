@@ -82,6 +82,7 @@
     <thead>
         <tr>
             <th>Date</th>
+            <th>Day</th>
             <th>Purchase Price</th> 
             <th>Profit</th>
             <th>ROI</th>
@@ -99,6 +100,7 @@
                 {% set ns.purchase = ns.purchase + purchased_date['price'] %}
         <tr>
             <td><a href = "/groups/list?date={{ sold_date['date'] }}">{{ sold_date['date'] }}</a></td>
+            <td>{{ purchased_date['day'] }}</td>
             <td>{{ purchased_date['price'] }}</td>
             <td>{{ total }}</td>
             {% if total < 0 %}<td style="color:#EE4B2B">{% else %}<td>{% endif %}{{ (((total + purchased_date['price'])/purchased_date['price']) * 100)| round }}%</td>
