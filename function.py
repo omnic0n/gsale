@@ -15,20 +15,21 @@ mysql = MySQL(app)
 
 def set_dates(details):
     if(details['year'] == "All"):
-         year = '%'
+         start_date = "2000-01-01"
+         end_date = "3000-01-01"
     else:
         year = int(details['year'])
-    month = int(details['month'])
-    date = details['date']
-    if(details['type'] == "2"):
-        start_date = ("%s-01-01") % (year)
-        end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
-    elif(details['type'] == "1"):
-        start_date = ("%s-%s-01") % (year, month)
-        end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
-    else:
-        start_date = date
-        end_date = date
+        month = int(details['month'])
+        date = details['date']
+        if(details['type'] == "2"):
+            start_date = ("%s-01-01") % (year)
+            end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
+        elif(details['type'] == "1"):
+            start_date = ("%s-%s-01") % (year, month)
+            end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
+        else:
+            start_date = date
+            end_date = date
     return start_date, end_date
 
 def login_data(username, password, ip):
