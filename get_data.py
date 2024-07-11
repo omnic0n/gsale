@@ -113,6 +113,21 @@ def get_group_sold_from_date(start_date, end_date):
                     (start_date, end_date, session['id'], ))
     return list(cur.fetchall())
 
+def get_group_sold_from_date(day):
+    cur = mysql.connection.cursor()
+    cur.execute("""SELECT 
+				    collection.date,
+                    COALESCE(SUM(sale.price - sale.shipping_fee),0) AS net,
+                    DAYNAME(collection.date) AS day
+                    FROM items items 
+                    INNER JOIN sale sale ON items.id = sale.id
+                    RIGHT JOIN collection collection ON items.group_id = collection.id
+                    WHERE DAYOFWEEK(collection.date) = %s AND collection.account = %s 
+                    GROUP BY collection.date 
+                    ORDER BY collection.date""",
+                    (day, session['id'], ))
+    return list(cur.fetchall())
+
 #Item Data
 def get_group_id(item_id):
     cur = mysql.connection.cursor()

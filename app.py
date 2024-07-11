@@ -73,7 +73,7 @@ def reports_profit():
             sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
             purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
         else:
-            sold_dates = get_data.get_sold_from_day(details['day'])
+            sold_dates = get_data.get_group_sold_from_day(details['day'])
             purchased_dates = get_data.get_purchased_from_day(details['day'])
         return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates,type_value=details['type'])
     return render_template('reports_profit.html', form=form)
