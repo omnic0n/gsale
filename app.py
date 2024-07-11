@@ -69,8 +69,8 @@ def reports_profit():
     if request.method == "POST":
         details = request.form
         if not details['type'] == '3':
-            sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
             start_date, end_date = function.set_dates(details)
+            sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
             purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
         else:
             sold_dates = get_data.get_sold_from_day(details['day'])
