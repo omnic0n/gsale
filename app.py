@@ -68,11 +68,14 @@ def reports_profit():
 
     if request.method == "POST":
         details = request.form
-        start_date, end_date = function.set_dates(details)
-        sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
-        purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
-        expenses= get_data.get_all_from_expenses_date(start_date, end_date)
-        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates, expenses=expenses,type_value=details['type'])
+        if not details['type'] == '3':
+            sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
+            start_date, end_date = function.set_dates(details)
+            purchased_dates = get_data.get_purchased_from_date(start_date, end_date)
+        else:
+            sold_dates = get_data.get_sold_from_day(details['day'])
+            purchased_dates = get_data.get_purchased_from_day(details['day'])
+        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates,type_value=details['type'])
     return render_template('reports_profit.html', form=form)
 
 
