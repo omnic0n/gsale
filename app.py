@@ -368,6 +368,8 @@ def quick_sell():
     if not 'loggedin' in session:
         return redirect(url_for('login'))  
      
+    group_id = request.args.get('group', type = str)
+
     groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
 
@@ -375,6 +377,10 @@ def quick_sell():
     form.group.choices = [(group['id'], group['name']) for group in groups]
 
     form.category.choices = [(category['id'], category['type']) for category in categories]
+
+    if group_id:
+        form.group.data = group_id
+        form.list_date.data = get_data.get_all_from_group(group_id)['date']
 
     if request.method == "POST":
         details = request.form
@@ -554,12 +560,15 @@ def describe_group():
     form.id.data = id
 
     quicksell = ButtonForm()
-    quicksell.button.label.text = "Quick Sell Item"
+    quicksell.button.label.text = "Quick Sell"
     quicksell.id.data = id
 
     if request.method == "POST":
         details = request.form
-        return redirect(url_for('bought_items',group=details['id']))
+        if details['button'] == "List Items":
+            return redirect(url_for('bought_items',group=details['id']))
+        elif details['button'] == "Quick Sell":
+            return redirect(url_for('quick_sell',group=details['id']))
 
     return render_template('groups_describe.html', 
                             group_id=group_id,
