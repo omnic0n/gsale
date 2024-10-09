@@ -494,10 +494,6 @@ def describe_item():
     modify.button.label.text = "Modify Item"
     modify.id.data = id
 
-    modify = ButtonForm()
-    modify.button.label.text = "Modify Item"
-    modify.id.data = id
-
     availability = ButtonForm()
     if item[0]['sold']:
         availability.button.label.text = "Mark as Available"
@@ -557,6 +553,10 @@ def describe_group():
     form.button.label.text = "List Items"
     form.id.data = id
 
+    quicksell = ButtonForm()
+    quicksell.button.label.text = "Quick Sell Item"
+    quicksell.id.data = id
+
     if request.method == "POST":
         details = request.form
         return redirect(url_for('bought_items',group=details['id']))
@@ -567,7 +567,8 @@ def describe_group():
                             total_items=total_items,
                             total_sold_items=total_sold_items,
                             sold_price=sold_price,
-                            form=form)
+                            form=form,
+                            quicksell=quicksell)
 
 @app.route('/groups/remove',methods=["POST","GET"])
 def group_remove():
