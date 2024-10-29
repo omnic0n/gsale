@@ -30,11 +30,11 @@
         </tr>
         {% endfor %}
         <tr>
-            <td>Total</td>
-            <td>${{ ns.purchases }}</td>
-            <td>${{ ns.sales }}</td>
-            <td>$${{ ns.sales - ns.purchases }}</td>
-            <td>{{ '%0.2f'| format(((ns.sales - ns.purchases) / ns.purchases)*100) }}%</td>
+            <td><b>Total</b></td>
+            <td><b>${{ ns.purchases }}</b></td>
+            <td><b>${{ ns.sales }}</b></td>
+            <td><b>${{ ns.sales - ns.purchases }}</b></td>
+            <td><b>{{ '%0.2f'| format(((ns.sales - ns.purchases) / ns.purchases)*100) }}%</b></td>
         </tr>
     </tbody>
 </table>
