@@ -12,11 +12,15 @@
         </tr>
     </thead>
     <tbody>
+        {% set ns = namespace() %}
+        {% set ns.purchases = 0 %}
+        {% set ns.sales = 0 %}
+
         {% for item in items %}
         <tr>
             <td>{{ item[2] }}</td>
-            <td>${{ item[1] }}</td>
-            <td>${{ item[0] }}</td>
+            <td>${{ item[1] }}</td>{% set ns.purchases = ns.purchases + item[1] %}
+            <td>${{ item[0] }}</td>{% set ns.sales = ns.sales + item[0] %}
             <td>${{ item[0] - item[1]}}</td>
             {% if item[1] != 0 %}
             <td>{{ '%0.2f'| format(((item[0] - item[1]) / item[1])*100) }}%</td>
@@ -25,6 +29,13 @@
             {% endif %}
         </tr>
         {% endfor %}
+        <tr>
+            <td>Total</td>
+            <td>${{ ns.purchases }}</td>
+            <td>${{ ns.sales }}</td>
+            <td>$${{ ns.sales - ns.purchases }}</td>
+            <td>{{ '%0.2f'| format(((ns.sales - ns.purchases) / ns.purchases)*100) }}%</td>
+        </tr>
     </tbody>
 </table>
 {% endblock content %}
