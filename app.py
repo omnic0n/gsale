@@ -427,7 +427,10 @@ def groups_list():
 
     if request.method == "POST":
         details = request.form
-        date = details['listYear'] + "-%-%"
+        if details['listYear'] == 'All':
+            date = "%-%-%"
+        else:
+            date = details['listYear'] + "-%-%"
     else:
         date = request.args.get('date', type = str)
 
