@@ -488,11 +488,10 @@ def groups_search():
         return redirect(url_for('login'))  
      
     form = GroupForm()
-    date = "%-%-%"
     
     if request.method == "POST":
         details = request.form
-        groups = get_data.get_all_from_group_and_items(date)
+        groups = get_data.get_all_from_group_and_items_by_name(details['name'])
         return render_template('groups_search.html', groups=groups, form=form)
     return render_template('groups_search.html', form=form)
 

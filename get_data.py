@@ -59,6 +59,38 @@ def get_all_from_group_and_items(date):
                 (date, session['id'], date, session['id'], ))
     return list(cur.fetchall())
 
+def get_all_from_group_and_items_by_name(name):
+    cur = mysql.connection.cursor()
+    cur.execute("""WITH 
+                grp1 AS (
+                    SELECT 
+                        collection.name, 
+                        collection.price, 
+                        collection.id,
+                        collection.date,
+                        COALESCE(sum(sale.price - sale.shipping_fee),0) AS net,
+                        COUNT(items.group_id) AS total_items,
+                        COUNT(items.sold) AS sold_items
+                        FROM collection collection
+                        LEFT JOIN items items ON collection.id = items.group_id
+                        LEFT JOIN sale sale ON sale.id = items.id
+                        WHERE collection.name LIKE %s AND collection.account = %s
+                        GROUP by collection.id
+                        ORDER by collection.date),
+                grp2 AS (
+                    SELECT
+                        collection.id,  
+                        COUNT(items.sold) AS sold_items
+                        FROM collection collection
+                        LEFT JOIN items items ON collection.id = items.group_id 
+                        WHERE collection.name LIKE %s AND collection.account = %s AND items.sold=1
+                        GROUP by collection.id
+                        ORDER by collection.date)
+            
+                SELECT grp1.name, grp1.price, grp1.id, grp1.date, grp1.net, grp1.total_items, IFNULL(grp2.sold_items, 0) AS sold_items FROM grp1 LEFT JOIN grp2 ON grp1.id = grp2.id""", 
+                (date, session['id'], date, session['id'], ))
+    return list(cur.fetchall())
+
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     if not date:
