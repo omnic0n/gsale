@@ -88,7 +88,7 @@ def get_all_from_group_and_items_by_name(name):
                         ORDER by collection.date)
             
                 SELECT grp1.name, grp1.price, grp1.id, grp1.date, grp1.net, grp1.total_items, IFNULL(grp2.sold_items, 0) AS sold_items FROM grp1 LEFT JOIN grp2 ON grp1.id = grp2.id""", 
-                (date, session['id'], date, session['id'], ))
+                (name, session['id'], name, session['id'], ))
     return list(cur.fetchall())
 
 def get_all_from_groups(date):
