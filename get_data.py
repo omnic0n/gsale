@@ -60,6 +60,7 @@ def get_all_from_group_and_items(date):
     return list(cur.fetchall())
 
 def get_all_from_group_and_items_by_name(name):
+    name = '%' + name + '%'
     cur = mysql.connection.cursor()
     cur.execute("""WITH 
                 grp1 AS (
