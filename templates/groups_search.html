@@ -40,6 +40,7 @@
         </tr>
     </thead>
     <tbody>
+        {% for group in groups %}
             <tr>
                 <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
                 <td>{{ group['total_items'] }}</td>
@@ -51,6 +52,7 @@
                 <td>{% if group['sold_items'] > 0 %}{{ '%0.2f' % ( group['net'] / group['sold_items']) | float }}{% else %}0.00{% endif %}</td>
                 <td>{{ group['date'] }}</td>
             </tr>
+        {% endfor %}
     </tbody>
 </table>
 {% endblock content %}
