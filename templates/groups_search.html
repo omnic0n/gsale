@@ -1,0 +1,59 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Search</legend>
+            <div class="form-group">
+                {{ form.name.label(class="form-control-label") }}
+                {% if form.name.errors %}
+                    {{ form.name(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.name(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+    </fieldset>
+    <div class="form-group">
+        {{ form.submit(class="btn btn-outline-info") }}
+    </div>
+    </form>
+</div>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Total</th>
+            <th>Sold</th> 
+            <th>Unsold</th>
+            <th>Purchase Total</th>
+            <th>Sold Total</th>
+            <th>Profit</th>
+            <th>Average</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+            <tr>
+                <td>{{ count.value }}</td>
+                <td><a href = "/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</td>
+                <td>{{ group['total_items'] }}</td>
+                <td>{{ group['sold_items'] }}</td>
+                <td>{{ group['total_items'] - group['sold_items'] }}</td>
+                <td>{{ group['price'] }}</td>
+                <td>{{ group['net'] }}</td>
+                <td>{{ group['net'] - group['price'] }}</td>
+                <td>{% if group['sold_items'] > 0 %}{{ '%0.2f' % ( group['net'] / group['sold_items']) | float }}{% else %}0.00{% endif %}</td>
+                <td>{{ group['date'] }}</td>
+            </tr>
+    </tbody>
+</table>
+{% endblock content %}
+</html>

@@ -482,6 +482,20 @@ def items_search():
         return render_template('items_search.html', form=form, items=items)
     return render_template('items_search.html', form=form)
 
+@app.route('/groups/search', methods=["POST","GET"])
+def groups_search():
+    if not 'loggedin' in session:
+        return redirect(url_for('login'))  
+     
+    form = GroupForm()
+    date = "%-%-%"
+    
+    if request.method == "POST":
+        details = request.form
+        groups = get_data.get_all_from_group_and_items(date)
+        return render_template('groups_search.html', groups=groups, form=form)
+    return render_template('groups_search.html', form=form)
+
 #Describe Section
 @app.route('/items/describe',methods=["POST","GET"])
 def describe_item():
