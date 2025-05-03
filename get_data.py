@@ -424,7 +424,8 @@ def get_profit(year):
     cur.execute("""SELECT SUM(tbl.price) AS price
                 FROM (SELECT price FROM collection 
                       WHERE collection.account = %s 
-                      AND collection.date LIKE %s) tbl""", (session['id'], year_value, ))
+                      AND collection.date LIKE %s) tbl
+                      ORDER by collection.date""", (session['id'], year_value, ))
     purchase = list(cur.fetchall())
     if purchase[0]['price'] is None:
         purchase[0]['price'] = 0
