@@ -34,7 +34,13 @@
             <td><b>${{ ns.purchases }}</b></td>
             <td><b>${{ ns.sales }}</b></td>
             <td><b>${{ ns.sales - ns.purchases }}</b></td>
-            <td><b>{{ '%0.2f'| format(((ns.sales - ns.purchases) / ns.purchases)*100) }}%</b></td>
+            <td><b>
+            {% if ns.purchases != 0 %}
+                {{ '%0.2f'| format(((ns.sales - ns.purchases) / ns.purchases)*100) }}%
+            {% else %}
+                0%
+            {% endif %}
+            </b></td>
         </tr>
     </tbody>
 </table>
