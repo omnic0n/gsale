@@ -13,6 +13,9 @@
 				<a href="{{ url_for('login') }}" class="active">Login</a>
 			</div>
 			<form action="{{ url_for('login') }}" method="post">
+				{% if request.args.get('next') %}
+				<input type="hidden" name="next" value="{{ request.args.get('next') }}">
+				{% endif %}
 				<label for="username">
 					<i class="fas fa-user"></i>
 				</label>

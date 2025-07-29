@@ -23,6 +23,16 @@ app.config.from_object("config.ProductionConfig")
 
 MySQL(app)
 
+def login_required(f):
+    """Decorator to check if user is logged in and redirect to login with next parameter"""
+    def decorated_function(*args, **kwargs):
+        if not 'loggedin' in session:
+            next_page = request.url
+            return redirect(url_for('login', next=next_page))
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     # Output message if something goes wrong...
@@ -35,6 +45,10 @@ def login():
         # Check if account exists using MySQL
         msg = function.login_data(username=username, password=password, ip=addr[0])
         if 'loggedin' in session:
+            # Redirect to the next page if specified, otherwise go to index
+            next_page = request.form.get('next') or request.args.get('next')
+            if next_page and next_page.startswith('/'):
+                return redirect(next_page)
             return redirect(url_for('index'))    
     return render_template('login.html', msg=msg)
 
@@ -47,10 +61,8 @@ def logout():
    return redirect(url_for('login'))
 
 @app.route('/')
+@login_required
 def index():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-
     items = []
     years = get_data.get_years()
    
@@ -60,10 +72,8 @@ def index():
     return render_template('index.html', items=items)
 
 @app.route('/reports/profit',methods=["GET", "POST"])
+@login_required
 def reports_profit():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-
     form = ReportsForm()
 
     if request.method == "POST":
@@ -80,10 +90,8 @@ def reports_profit():
 
 
 @app.route('/reports/sales',methods=["GET", "POST"])
+@login_required
 def reports_sale():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-        
     form = ReportsForm()
 
     if request.method == "POST":
@@ -97,10 +105,8 @@ def reports_sale():
     return render_template('reports_sales.html', form=form)
 
 @app.route('/reports/purchases',methods=["GET", "POST"])
+@login_required
 def reports_purchases():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = ReportsForm()
 
     if request.method == "POST":
@@ -116,10 +122,8 @@ def reports_purchases():
     return render_template('reports_purchases.html', form=form)
 
 @app.route('/reports/categories',methods=["GET", "POST"])
+@login_required
 def reports_categories():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = ReportsForm()
 
     categories = get_data.get_all_from_categories()
@@ -132,10 +136,8 @@ def reports_categories():
     return render_template('reports_item_categories.html', form=form)
 
 @app.route('/reports/expenses',methods=["GET", "POST"])
+@login_required
 def reports_expenses():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     expense_choices = get_data.get_expenses_choices()
 
     form = ReportsForm()
@@ -150,10 +152,8 @@ def reports_expenses():
     return render_template('reports_expenses.html', form=form)
 
 @app.route('/reports/locations',methods=["GET", "POST"])
+@login_required
 def reports_locations():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = ReportsForm()
 
     if request.method == "POST":
@@ -172,10 +172,8 @@ def reports_locations():
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
+@login_required
 def group_add():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = GroupForm()
 
     if request.method == "POST":
@@ -187,16 +185,13 @@ def group_add():
     return render_template('groups_add.html', form=form)
 
 @app.route('/display/<filename>')
+@login_required
 def display_image(filename):
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
     return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
 @app.route('/expense/gas',methods=["POST","GET"])
+@login_required
 def expense_gas():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = ExpenseForm()
     if request.method == "POST":
         details = request.form
@@ -207,10 +202,8 @@ def expense_gas():
     return render_template('expense_gas.html', form=form)
 
 @app.route('/expense/item',methods=["POST","GET"])
+@login_required
 def expense_item():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = ExpenseForm()
 
     if request.method == "POST":
@@ -222,10 +215,8 @@ def expense_item():
     return render_template('expense_item.html', form=form)
 
 @app.route('/expense/store',methods=["POST","GET"])
+@login_required
 def expense_store():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = ExpenseForm()
 
     if request.method == "POST":
@@ -238,10 +229,8 @@ def expense_store():
 
 
 @app.route('/expense/modify',methods=["POST","GET"])
+@login_required
 def modify_expense():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     id = request.args.get('id', type = str)
     expense = get_data.get_data_for_expense_describe(id)
     expense_choices = get_data.get_expenses_choices()
@@ -268,10 +257,8 @@ def modify_expense():
     return render_template('modify_expense.html', expense=expense, form=form)
 
 @app.route('/groups/modify',methods=["POST","GET"])
+@login_required
 def modify_group():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     id = request.args.get('group_id', type = str)
     group_id = get_data.get_data_from_group_describe(id)
 
@@ -288,20 +275,16 @@ def modify_group():
     return render_template('modify_group.html', group_id=group_id, form=form)
 
 @app.route('/items/mark_sold',methods=["POST","GET"])
+@login_required
 def mark_sold():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     id = request.args.get('item', type = str)
     sold = request.args.get('sold', type = str)
     set_data.set_mark_sold(id, sold)    
     return redirect(url_for('describe_item',item=id))
 
 @app.route('/items/bought',methods=["POST","GET"])
+@login_required
 def bought_items():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     group_id = request.args.get('group', type = str)
     
     groups = get_data.get_all_from_groups('%')
@@ -325,10 +308,8 @@ def bought_items():
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/modify',methods=["POST","GET"])
+@login_required
 def modify_items():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
     id = request.args.get('item', type = str)
@@ -353,10 +334,8 @@ def modify_items():
     return render_template('modify_item.html', form=form, item=item, sale=sale)
 
 @app.route('/items/remove',methods=["POST","GET"])
+@login_required
 def items_remove():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-
     id = request.args.get('id', type = str)
     item=get_data.get_group_id(id)
     set_data.remove_item_data(id)
@@ -364,10 +343,8 @@ def items_remove():
 
 
 @app.route('/items/quick_sell',methods=["POST","GET"])
+@login_required
 def quick_sell():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     group_id = request.args.get('group', type = str)
 
     groups = get_data.get_all_from_groups('%')
@@ -390,10 +367,8 @@ def quick_sell():
     return render_template('quick_sell.html', form=form)
 
 @app.route('/items/sold',methods=["POST","GET"])
+@login_required
 def sold_items():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     item_id = request.args.get('item', type = str)
     items = get_data.get_all_items_not_sold()
 
@@ -410,19 +385,15 @@ def sold_items():
 
 #List Section
 @app.route('/expense/list', methods=["POST","GET"])
+@login_required
 def list_expense():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     date = request.args.get('date', type = str)
     expenses = get_data.get_all_from_expenses(date)
     return render_template('expenses_list.html', expenses=expenses)
 
 @app.route('/groups/list', methods=["POST","GET"])
+@login_required
 def groups_list():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = GroupForm()
 
     if request.method == "POST":
@@ -438,10 +409,8 @@ def groups_list():
     return render_template('groups_list.html', groups=groups, form=form)
 
 @app.route('/items/list', methods=["POST","GET"])
+@login_required
 def list_items():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-    
     sold_date = request.args.get('sold_date', type = str)
     if sold_date is None:
         sold_date = "%"
@@ -469,10 +438,8 @@ def list_items():
 
 #Search Section
 @app.route('/items/search', methods=["POST","GET"])
+@login_required
 def items_search():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = ItemForm()
 
     if request.method == "POST":
@@ -483,10 +450,8 @@ def items_search():
     return render_template('items_search.html', form=form)
 
 @app.route('/groups/search', methods=["POST","GET"])
+@login_required
 def groups_search():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = GroupForm()
     
     if request.method == "POST":
@@ -497,10 +462,8 @@ def groups_search():
 
 #Describe Section
 @app.route('/items/describe',methods=["POST","GET"])
+@login_required
 def describe_item():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     id = request.args.get('item', type = str)
     item = get_data.get_data_for_item_describe(id)
 
@@ -548,20 +511,16 @@ def describe_item():
                             availability=availability)
 
 @app.route('/expense/describe')
+@login_required
 def describe_expense():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     id = request.args.get('id', type = str)
     expense = get_data.get_data_for_expense_describe(id)
     return render_template('expense_describe.html', 
                             expense=expense)
 
 @app.route('/groups/describe', methods=["POST","GET"])
+@login_required
 def describe_group():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     id = request.args.get('group_id', type = str)
     group_id = get_data.get_data_from_group_describe(id)
     items = get_data.get_data_from_item_groups(id)
@@ -596,19 +555,15 @@ def describe_group():
                             quicksell=quicksell)
 
 @app.route('/groups/remove',methods=["POST","GET"])
+@login_required
 def group_remove():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-
     id = request.args.get('id', type = str)
     set_data.remove_group_data(id)
     return redirect(url_for('groups_list'))
 
 @app.route('/location', methods=["GET"])
+@login_required
 def location():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     id = request.args.get('group_id', type = str)
     location = get_data.get_location(id)
     return render_template('location.html', location=location, id=id)
@@ -618,20 +573,16 @@ def location():
 
 #List Section
 @app.route('/cases/list', methods=["POST","GET"])
+@login_required
 def cases_list():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     platform = request.args.get('platform', type = int)
 
     cases = get_data.get_all_from_cases(platform)
     return render_template('cases_list.html', cases=cases)
 
 @app.route('/cases/add',methods=["POST","GET"])
+@login_required
 def cases_add():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     platforms = get_data.get_all_from_platforms()
 
     form = CasesForm()
@@ -644,19 +595,15 @@ def cases_add():
     return render_template('case_add.html', form=form)
 
 @app.route('/cases/remove',methods=["POST","GET"])
+@login_required
 def cases_remove():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-
     id = request.args.get('id', type = str)
     set_data.remove_case_data(id)
     return redirect(url_for('cases_list'))
 
 @app.route('/cases/modify',methods=["POST","GET"])
+@login_required
 def modify_case():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     platforms = get_data.get_all_from_platforms()
     id = request.args.get('id', type = str)
     case = get_data.get_data_for_case_describe(id)
@@ -674,10 +621,8 @@ def modify_case():
 
 #Search Section
 @app.route('/cases/search', methods=["POST","GET"])
+@login_required
 def cases_search():
-    if not 'loggedin' in session:
-        return redirect(url_for('login'))  
-     
     form = CasesForm()
 
     if request.method == "POST":
