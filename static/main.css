@@ -426,11 +426,12 @@ main.container {
   text-decoration: none;
 }
 
-/* Responsive Design */
+/* Responsive Design - Mobile First Approach */
 @media (max-width: 768px) {
-  /* Navbar adjustments */
+  /* Navbar adjustments for mobile */
   .navbar {
-    padding: 0.5rem 0 !important;
+    padding: 0.75rem 0 !important;
+    background: rgba(255, 255, 255, 0.98) !important;
   }
   
   /* Ensure navbar collapse is always expanded on mobile */
@@ -444,21 +445,177 @@ main.container {
     display: none !important;
   }
   
-  /* Ensure navigation is always visible */
+  /* Mobile navigation layout */
   .navbar-nav {
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 0.25rem !important;
+    flex-direction: column !important;
     width: 100% !important;
     margin: 0 !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem 0 !important;
+  }
+  
+  /* Brand styling for mobile */
+  .navbar-brand {
+    font-size: 1.1rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+  
+  .brand-text {
+    font-size: 1.3rem;
+  }
+  
+  .user-welcome {
+    font-size: 0.8rem;
+    margin-top: 0;
+  }
+  
+  /* Mobile dropdown styling */
+  .nav-item.nav-link.dropdown {
+    width: 100% !important;
+    margin: 0 !important;
+    display: block !important;
+    position: relative !important;
+  }
+  
+  .nav-item.nav-link.dropdown .dropbtn {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 12px !important;
+    color: #000000 !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .nav-item.nav-link.dropdown .dropbtn:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .nav-item.nav-link.dropdown .dropdown-content {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    backdrop-filter: blur(10px) !important;
+    padding: 0.5rem !important;
+  }
+  
+  .nav-item.nav-link.dropdown .dropdown-content a {
+    display: block !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.95rem !important;
+    color: #000000 !important;
+    background: transparent !important;
+    border-radius: 8px !important;
+    margin: 0.25rem 0 !important;
+    text-align: center !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  .nav-item.nav-link.dropdown .dropdown-content a:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #000000 !important;
+    transform: translateX(5px) !important;
+  }
+  
+  /* Logout button styling */
+  .logout-button {
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+  }
+  
+  .logout-button a {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+    text-align: center !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 2px solid rgba(239, 68, 68, 0.2) !important;
+    border-radius: 12px !important;
+    color: #dc2626 !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  .logout-button a:hover {
+    background: rgba(239, 68, 68, 0.15) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2) !important;
+  }
+  
+  /* Content adjustments */
+  .content-wrapper {
+    padding: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 20px;
+  }
+  
+  main.container {
+    margin-top: 120px;
+    padding: 0 1rem;
+  }
+  
+  /* Form adjustments */
+  .form-control {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 12px;
+  }
+  
+  .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 12px;
+  }
+  
+  /* Table adjustments */
+  .table {
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+  
+  .table td, .table th {
+    padding: 0.75rem;
+  }
+  
+  /* Typography adjustments */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Alert adjustments */
+  .alert {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 12px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 576px) {
+  .navbar {
+    padding: 0.5rem 0 !important;
   }
   
   .navbar-brand {
     font-size: 1rem;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
   }
   
   .brand-text {
@@ -469,125 +626,56 @@ main.container {
     font-size: 0.75rem;
   }
   
-  /* Content adjustments */
+  .nav-item.nav-link.dropdown .dropbtn {
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.95rem !important;
+  }
+  
+  .nav-item.nav-link.dropdown .dropdown-content a {
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .logout-button a {
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.95rem !important;
+  }
+  
   .content-wrapper {
     padding: 1rem;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-    border-radius: 15px;
+    margin-top: 0.75rem;
   }
   
   main.container {
-    margin-top: 70px;
+    margin-top: 100px;
     padding: 0 0.5rem;
   }
   
-  /* Form adjustments */
   .form-control {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
   }
   
   .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
   }
   
-  /* Table adjustments */
   .table {
     font-size: 0.85rem;
   }
   
   .table td, .table th {
-    padding: 0.5rem;
+    padding: 0.6rem;
   }
   
-  /* Dropdown adjustments */
-  .dropbtn {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-    min-width: 80px;
-  }
-  
-  .dropdown-content {
-    min-width: 150px;
-    font-size: 0.85rem;
-  }
-  
-  .dropdown-content a {
-    padding: 0.5rem 1rem;
-  }
-  
-  /* Navigation adjustments */
-  .nav-item.nav-link.dropdown {
-    margin: 0 0.25rem;
-    display: inline-block !important;
-  }
-  
-  /* Logout button */
-  .logout-button a {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-  }
-  
-  /* Typography adjustments */
   h1, h2, h3, h4, h5, h6 {
-    font-size: 1.1rem;
-    margin-bottom: 0.75rem;
+    font-size: 1.2rem;
   }
   
-  /* Alert adjustments */
   .alert {
     padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-  }
-}
-
-/* Extra small devices */
-@media (max-width: 576px) {
-  .navbar-brand {
-    font-size: 0.9rem;
-  }
-  
-  .brand-text {
-    font-size: 1rem;
-  }
-  
-  .content-wrapper {
-    padding: 0.75rem;
-    margin-top: 0.25rem;
-  }
-  
-  main.container {
-    margin-top: 60px;
-    padding: 0 0.25rem;
-  }
-  
-  .dropbtn {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.8rem;
-    min-width: 70px;
-  }
-  
-  .dropdown-content {
-    min-width: 120px;
-    font-size: 0.8rem;
-  }
-  
-  .navbar-nav {
-    gap: 0.15rem;
-  }
-  
-  .nav-item.nav-link.dropdown {
-    margin: 0 0.15rem;
-  }
-  
-  .table {
-    font-size: 0.75rem;
-  }
-  
-  .table td, .table th {
-    padding: 0.4rem;
+    font-size: 0.95rem;
   }
 }
 
