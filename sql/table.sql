@@ -149,3 +149,24 @@ CREATE INDEX idx_location_group_id ON location(group_id);
 
 -- Platform table index
 CREATE INDEX idx_platform_name ON platform(name);
+
+-- Report-specific indexes for better performance
+-- Sales report indexes
+CREATE INDEX idx_sale_date_account ON sale(date, id);
+CREATE INDEX idx_sale_price_shipping ON sale(price, shipping_fee);
+
+-- Purchase report indexes  
+CREATE INDEX idx_collection_date_account ON collection(date, account);
+CREATE INDEX idx_collection_price ON collection(price);
+
+-- Expenses report indexes
+CREATE INDEX idx_expenses_date_type ON expenses(date, type);
+CREATE INDEX idx_expenses_account_type ON expenses(account, type);
+
+-- Day of week function indexes for faster filtering
+CREATE INDEX idx_sale_dayofweek ON sale((DAYOFWEEK(date)));
+CREATE INDEX idx_collection_dayofweek ON collection((DAYOFWEEK(date)));
+
+-- Composite indexes for common report queries
+CREATE INDEX idx_items_sale_collection ON items(id, group_id);
+CREATE INDEX idx_sale_items_collection ON sale(id, date);

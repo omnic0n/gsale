@@ -6,6 +6,8 @@ from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
 from urllib.parse import unquote
 import random, os, math
+import hashlib
+import json
 
 import get_data, set_data
 import files
@@ -19,6 +21,31 @@ app.secret_key = 'your-secret-key-here'  # Required for session functionality
 app.config.from_object("config.ProductionConfig")
 
 MySQL(app)
+
+# Simple report caching
+report_cache = {}
+CACHE_DURATION = 300  # 5 minutes
+
+def get_cache_key(report_type, params):
+    """Generate cache key for reports"""
+    param_str = json.dumps(params, sort_keys=True)
+    return f"{report_type}_{hashlib.md5(param_str.encode()).hexdigest()}"
+
+def get_cached_report(report_type, params):
+    """Get cached report data if available and not expired"""
+    cache_key = get_cache_key(report_type, params)
+    if cache_key in report_cache:
+        timestamp, data = report_cache[cache_key]
+        if datetime.now().timestamp() - timestamp < CACHE_DURATION:
+            return data
+        else:
+            del report_cache[cache_key]
+    return None
+
+def cache_report(report_type, params, data):
+    """Cache report data with timestamp"""
+    cache_key = get_cache_key(report_type, params)
+    report_cache[cache_key] = (datetime.now().timestamp(), data)
 
 def login_required(f):
     """Decorator to check if user is logged in and redirect to login with next parameter"""
@@ -102,6 +129,24 @@ def reports_profit():
 
     if request.method == "POST":
         details = request.form
+        
+        # Check cache first
+        cache_params = {
+            'type': details['type'],
+            'date': str(details['date']),
+            'month': details['month'],
+            'year': details['year'],
+            'day': details.get('day', '')
+        }
+        
+        cached_data = get_cached_report('profit', cache_params)
+        if cached_data:
+            return render_template('reports_profit.html', 
+                                form=form, 
+                                sold_dates=cached_data['sold_dates'], 
+                                purchased_dates=cached_data['purchased_dates'],
+                                type_value=details['type'])
+        
         if not details['type'] == '3':
             start_date, end_date = function.set_dates(details)
             sold_dates = get_data.get_group_sold_from_date(start_date, end_date)
@@ -109,7 +154,18 @@ def reports_profit():
         else:
             sold_dates = get_data.get_group_sold_from_day(details['day'])
             purchased_dates = get_data.get_purchased_from_day(details['day'],details['year'])
-        return render_template('reports_profit.html', form=form, sold_dates=sold_dates, purchased_dates=purchased_dates,type_value=details['type'])
+        
+        # Cache the results
+        cache_report('profit', cache_params, {
+            'sold_dates': sold_dates,
+            'purchased_dates': purchased_dates
+        })
+        
+        return render_template('reports_profit.html', 
+                            form=form, 
+                            sold_dates=sold_dates, 
+                            purchased_dates=purchased_dates,
+                            type_value=details['type'])
     return render_template('reports_profit.html', form=form)
 
 

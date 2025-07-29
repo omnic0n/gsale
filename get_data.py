@@ -72,31 +72,44 @@ def get_all_from_groups(date):
     return list(cur.fetchall())
 
 def get_purchased_from_date(start_date, end_date):
+    """Optimized purchase report query"""
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT
-                   date,
-                   SUM(price) as price,
-                   DAYNAME(date) as day
-                   FROM collection
-                   WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
-                   (start_date, end_date, session['id'], ))
+    cur.execute("""
+        SELECT
+            date,
+            SUM(price) as price,
+            DAYNAME(date) as day
+        FROM collection
+        WHERE date BETWEEN %s AND %s 
+        AND account = %s 
+        GROUP BY date 
+        ORDER BY date ASC
+    """, (start_date, end_date, session['id']))
     return list(cur.fetchall())
 
 def get_purchased_from_day(day, year):
-    if(year == "All"):
-        start_date='2000-01-01'
-        end_date='3000-01-01'
+    """Optimized purchase by day of week query"""
+    if year == "All":
+        start_date = '2000-01-01'
+        end_date = '3000-01-01'
     else:
-        start_date = ("%s-01-01") % (year)
-        end_date = ("%s-01-01") % (int(year) + 1)
+        start_date = f"{year}-01-01"
+        end_date = f"{int(year) + 1}-01-01"
+    
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT
-                   date,
-                   SUM(price) as price,
-                   DAYNAME(date) as day
-                   FROM collection
-                   WHERE DAYOFWEEK(collection.date) =  %s AND collection.date >= %s AND collection.date < %s AND collection.account = %s GROUP by date ORDER BY date ASC""",
-                   (day, start_date, end_date, session['id'], ))
+    cur.execute("""
+        SELECT
+            date,
+            SUM(price) as price,
+            DAYNAME(date) as day
+        FROM collection
+        WHERE DAYOFWEEK(date) = %s 
+        AND date >= %s 
+        AND date < %s 
+        AND account = %s 
+        GROUP BY date 
+        ORDER BY date ASC
+    """, (day, start_date, end_date, session['id']))
     return list(cur.fetchall())
 
 def get_data_from_group_describe(group_id):
@@ -112,32 +125,38 @@ def get_data_from_group_describe(group_id):
     return list(cur.fetchall())
 
 def get_group_sold_from_date(start_date, end_date):
+    """Optimized group sales report query"""
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT 
-				    collection.date,
-                    COALESCE(SUM(sale.price - sale.shipping_fee),0) AS net
-                    FROM items items 
-                    INNER JOIN sale sale ON items.id = sale.id
-                    RIGHT JOIN collection collection ON items.group_id = collection.id
-                    WHERE collection.date >= %s AND collection.date <= %s AND collection.account = %s 
-                    GROUP BY collection.date 
-                    ORDER BY collection.date""",
-                    (start_date, end_date, session['id'], ))
+    cur.execute("""
+        SELECT 
+            c.date,
+            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.date BETWEEN %s AND %s 
+        AND c.account = %s 
+        GROUP BY c.date 
+        ORDER BY c.date
+    """, (start_date, end_date, session['id']))
     return list(cur.fetchall())
 
 def get_group_sold_from_day(day):
+    """Optimized group sales by day of week query"""
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT 
-				    collection.date,
-                    COALESCE(SUM(sale.price - sale.shipping_fee),0) AS net,
-                    DAYNAME(collection.date) AS day
-                    FROM items items 
-                    INNER JOIN sale sale ON items.id = sale.id
-                    RIGHT JOIN collection collection ON items.group_id = collection.id
-                    WHERE DAYOFWEEK(collection.date) = %s AND collection.account = %s 
-                    GROUP BY collection.date 
-                    ORDER BY collection.date""",
-                    (day, session['id'], ))
+    cur.execute("""
+        SELECT 
+            c.date,
+            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
+            DAYNAME(c.date) AS day
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE DAYOFWEEK(c.date) = %s 
+        AND c.account = %s 
+        GROUP BY c.date 
+        ORDER BY c.date
+    """, (day, session['id']))
     return list(cur.fetchall())
 
 #Item Data
@@ -199,36 +218,46 @@ def get_total_items_in_group_sold(group_id):
     return cur.fetchone()
 
 def get_sold_from_date(start_date, end_date):
+    """Optimized sales report query with better indexing"""
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT 
-				    sale.date,
-                    SUM(sale.price) as price,
-                    SUM(sale.shipping_fee) as shipping_fee,
-                    SUM(sale.price - sale.shipping_fee) AS net,
-                    COUNT(items.id) AS total_items,
-                    DAYNAME(sale.date) AS day
-                    FROM items items 
-                    INNER JOIN collection collection ON collection.id = items.group_id
-                    INNER JOIN sale sale ON items.id = sale.id
-                    WHERE sale.date >= %s AND sale.date <= %s AND collection.account = %s GROUP BY sale.date ORDER BY sale.date ASC""",
-                    (start_date, end_date, session['id'], ))
+    cur.execute("""
+        SELECT 
+            s.date,
+            SUM(s.price) as price,
+            SUM(s.shipping_fee) as shipping_fee,
+            SUM(s.price - s.shipping_fee) AS net,
+            COUNT(i.id) AS total_items,
+            DAYNAME(s.date) AS day
+        FROM sale s
+        INNER JOIN items i ON s.id = i.id
+        INNER JOIN collection c ON i.group_id = c.id
+        WHERE s.date BETWEEN %s AND %s 
+        AND c.account = %s 
+        GROUP BY s.date 
+        ORDER BY s.date ASC
+    """, (start_date, end_date, session['id']))
     return list(cur.fetchall())
 
 
 def get_sold_from_day(day):
+    """Optimized sales by day of week query"""
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT 
-				    sale.date,
-                    SUM(sale.price) as price,
-                    SUM(sale.shipping_fee) as shipping_fee,
-                    SUM(sale.price - sale.shipping_fee) AS net,
-                    COUNT(items.id) AS total_items,
-                    DAYNAME(sale.date) AS day
-                    FROM items items 
-                    INNER JOIN collection collection ON collection.id = items.group_id
-                    INNER JOIN sale sale ON items.id = sale.id
-                    WHERE DAYOFWEEK(sale.date) = %s AND collection.account = %s GROUP BY sale.date ORDER BY sale.date ASC""",
-                    (day, session['id'], ))
+    cur.execute("""
+        SELECT 
+            s.date,
+            SUM(s.price) as price,
+            SUM(s.shipping_fee) as shipping_fee,
+            SUM(s.price - s.shipping_fee) AS net,
+            COUNT(i.id) AS total_items,
+            DAYNAME(s.date) AS day
+        FROM sale s
+        INNER JOIN items i ON s.id = i.id
+        INNER JOIN collection c ON i.group_id = c.id
+        WHERE DAYOFWEEK(s.date) = %s 
+        AND c.account = %s 
+        GROUP BY s.date 
+        ORDER BY s.date ASC
+    """, (day, session['id']))
     return list(cur.fetchall())
 
 def get_data_for_item_describe(item_id):
@@ -345,14 +374,15 @@ def get_expenses_choices():
     return list(cur.fetchall())
 
 def get_expenses_from_date(start_date, end_date, type):
+    """Optimized expenses report query"""
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT 
-				    * FROM expenses
-                    WHERE date >= %s AND date <= %s
-                    AND type = %s
-                    AND expenses.account = %s
-					ORDER BY date""",
-                    (start_date, end_date, type, session['id'], ))
+    cur.execute("""
+        SELECT * FROM expenses
+        WHERE date BETWEEN %s AND %s
+        AND type = %s
+        AND account = %s
+        ORDER BY date
+    """, (start_date, end_date, type, session['id']))
     return list(cur.fetchall())
 
 def get_all_from_expenses_date(start_date, end_date):
@@ -489,4 +519,74 @@ def get_list_of_cases_with_name(name):
                 WHERE cases.name like %s 
                 AND 
                 cases.account = %s""", ('%'+ name + '%', session['id'], ))
+    return list(cur.fetchall())
+
+# Optimized Report Functions
+def get_combined_profit_report(start_date, end_date):
+    """Single query for profit report combining sales and purchases"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            COALESCE(s.date, c.date) as date,
+            COALESCE(SUM(s.price - s.shipping_fee), 0) as sales_net,
+            COALESCE(SUM(c.price), 0) as purchase_price,
+            COALESCE(SUM(s.price - s.shipping_fee), 0) - COALESCE(SUM(c.price), 0) as profit,
+            DAYNAME(COALESCE(s.date, c.date)) as day
+        FROM (
+            SELECT date, SUM(price - shipping_fee) as price, SUM(shipping_fee) as shipping_fee
+            FROM sale s
+            INNER JOIN items i ON s.id = i.id
+            INNER JOIN collection c ON i.group_id = c.id
+            WHERE s.date BETWEEN %s AND %s AND c.account = %s
+            GROUP BY s.date
+        ) s
+        FULL OUTER JOIN (
+            SELECT date, SUM(price) as price
+            FROM collection
+            WHERE date BETWEEN %s AND %s AND account = %s
+            GROUP BY date
+        ) c ON s.date = c.date
+        GROUP BY COALESCE(s.date, c.date)
+        ORDER BY COALESCE(s.date, c.date)
+    """, (start_date, end_date, session['id'], start_date, end_date, session['id']))
+    return list(cur.fetchall())
+
+def get_combined_sales_summary(start_date, end_date):
+    """Single query for comprehensive sales summary"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            s.date,
+            SUM(s.price) as total_sales,
+            SUM(s.shipping_fee) as total_shipping,
+            SUM(s.price - s.shipping_fee) as net_sales,
+            COUNT(i.id) as items_sold,
+            AVG(s.price) as avg_sale_price,
+            AVG(s.shipping_fee) as avg_shipping,
+            DAYNAME(s.date) as day
+        FROM sale s
+        INNER JOIN items i ON s.id = i.id
+        INNER JOIN collection c ON i.group_id = c.id
+        WHERE s.date BETWEEN %s AND %s AND c.account = %s
+        GROUP BY s.date
+        ORDER BY s.date
+    """, (start_date, end_date, session['id']))
+    return list(cur.fetchall())
+
+def get_expense_summary_by_type(start_date, end_date):
+    """Optimized expense summary grouped by type"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            type,
+            COUNT(*) as expense_count,
+            SUM(CASE WHEN type = 1 THEN milage ELSE price END) as total_amount,
+            AVG(CASE WHEN type = 1 THEN milage ELSE price END) as avg_amount,
+            MIN(date) as first_expense,
+            MAX(date) as last_expense
+        FROM expenses
+        WHERE date BETWEEN %s AND %s AND account = %s
+        GROUP BY type
+        ORDER BY type
+    """, (start_date, end_date, session['id']))
     return list(cur.fetchall())
