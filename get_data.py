@@ -24,69 +24,44 @@ def get_all_from_group(group_id):
 def get_all_from_group_and_items(date):
     if not date:
         date= '%' + str(datetime.date.today().year) + '%'
-        print(date)
     cur = mysql.connection.cursor()
-    cur.execute("""WITH 
-                grp1 AS (
-                    SELECT 
-                        collection.name, 
-                        collection.price, 
-                        collection.id,
-                        collection.date,
-                        COALESCE(sum(sale.price - sale.shipping_fee),0) AS net,
-                        COUNT(items.group_id) AS total_items,
-                        COUNT(items.sold) AS sold_items
-                        FROM collection collection
-                        LEFT JOIN items items ON collection.id = items.group_id
-                        LEFT JOIN sale sale ON sale.id = items.id
-                        WHERE collection.date LIKE %s AND collection.account = %s
-                        GROUP by collection.id
-                        ORDER by collection.date),
-                grp2 AS (
-                    SELECT
-                        collection.id,  
-                        COUNT(items.sold) AS sold_items
-                        FROM collection collection
-                        LEFT JOIN items items ON collection.id = items.group_id 
-                        WHERE collection.date LIKE %s AND collection.account = %s AND items.sold=1
-                        GROUP by collection.id
-                        ORDER by collection.date)
-            
-                SELECT grp1.name, grp1.price, grp1.id, grp1.date, grp1.net, grp1.total_items, IFNULL(grp2.sold_items, 0) AS sold_items FROM grp1 LEFT JOIN grp2 ON grp1.id = grp2.id""", 
-                (date, session['id'], date, session['id'], ))
+    cur.execute("""
+        SELECT 
+            c.name, 
+            c.price, 
+            c.id,
+            c.date,
+            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
+            COUNT(i.group_id) AS total_items,
+            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) AS sold_items
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.date LIKE %s AND c.account = %s
+        GROUP BY c.id, c.name, c.price, c.date
+        ORDER BY c.date
+    """, (date, session['id']))
     return list(cur.fetchall())
 
 def get_all_from_group_and_items_by_name(name):
     name = '%' + name + '%'
     cur = mysql.connection.cursor()
-    cur.execute("""WITH 
-                grp1 AS (
-                    SELECT 
-                        collection.name, 
-                        collection.price, 
-                        collection.id,
-                        collection.date,
-                        COALESCE(sum(sale.price - sale.shipping_fee),0) AS net,
-                        COUNT(items.group_id) AS total_items,
-                        COUNT(items.sold) AS sold_items
-                        FROM collection collection
-                        LEFT JOIN items items ON collection.id = items.group_id
-                        LEFT JOIN sale sale ON sale.id = items.id
-                        WHERE collection.name LIKE %s AND collection.account = %s
-                        GROUP by collection.id
-                        ORDER by collection.date),
-                grp2 AS (
-                    SELECT
-                        collection.id,  
-                        COUNT(items.sold) AS sold_items
-                        FROM collection collection
-                        LEFT JOIN items items ON collection.id = items.group_id 
-                        WHERE collection.name LIKE %s AND collection.account = %s AND items.sold=1
-                        GROUP by collection.id
-                        ORDER by collection.date)
-            
-                SELECT grp1.name, grp1.price, grp1.id, grp1.date, grp1.net, grp1.total_items, IFNULL(grp2.sold_items, 0) AS sold_items FROM grp1 LEFT JOIN grp2 ON grp1.id = grp2.id""", 
-                (name, session['id'], name, session['id'], ))
+    cur.execute("""
+        SELECT 
+            c.name, 
+            c.price, 
+            c.id,
+            c.date,
+            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
+            COUNT(i.group_id) AS total_items,
+            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) AS sold_items
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.name LIKE %s AND c.account = %s
+        GROUP BY c.id, c.name, c.price, c.date
+        ORDER BY c.date
+    """, (name, session['id']))
     return list(cur.fetchall())
 
 def get_all_from_groups(date):
@@ -316,30 +291,32 @@ def get_data_for_item_sold(item_id):
                     WHERE sale.id = %s""", (item_id, ))
     return list(cur.fetchall())
 
-def get_list_of_items_purchased_by_date(sold_date, purchase_date,sold,list_date,storage):
-        cur = mysql.connection.cursor()
-        cur.execute("""SELECT 
-                    items.id, 
-                    items.name, 
-                    items.sold,
-                    items.group_id,
-                    items.storage,
-                    items.list_date,
-                    sale.date as sale_date,
-                    (sale.price - sale.shipping_fee) AS net,
-                    collection.date as purchase_date,
-                    collection.name as group_name
-                    FROM items items 
-                    INNER JOIN collection collection ON items.group_id = collection.id
-                    INNER JOIN sale sale on items.id = sale.id
-                    WHERE collection.account = %s
-                    AND sale.date LIKE %s 
-                    AND collection.date LIKE %s
-                    AND items.sold LIKE %s
-                    AND items.list_date LIKE %s
-                    AND items.storage LIKE %s
-                    ORDER BY collection.date ASC""", (session['id'], sold_date, purchase_date, sold, list_date, storage, ))
-        return list(cur.fetchall())
+def get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage):
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            i.id, 
+            i.name, 
+            i.sold,
+            i.group_id,
+            i.storage,
+            i.list_date,
+            s.date as sale_date,
+            (s.price - s.shipping_fee) AS net,
+            c.date as purchase_date,
+            c.name as group_name
+        FROM items i
+        INNER JOIN collection c ON i.group_id = c.id
+        INNER JOIN sale s ON i.id = s.id
+        WHERE c.account = %s
+        AND s.date LIKE %s 
+        AND c.date LIKE %s
+        AND i.sold LIKE %s
+        AND i.list_date LIKE %s
+        AND i.storage LIKE %s
+        ORDER BY c.date ASC
+    """, (session['id'], sold_date, purchase_date, sold, list_date, storage))
+    return list(cur.fetchall())
 
 def get_list_of_items_with_categories(category_id):
         cur = mysql.connection.cursor()
@@ -418,37 +395,28 @@ def get_category(category_id):
 def get_profit(year):
     year_value = year + '-%-%'
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT SUM(tbl.price) AS price
-                FROM (SELECT price FROM collection 
-                      WHERE collection.account = %s 
-                      AND collection.date LIKE %s) tbl""", (session['id'], year_value, ))
-    purchase = list(cur.fetchall())
-    if purchase[0]['price'] is None:
-        purchase[0]['price'] = 0
-    cur.execute("""SELECT 
-                    sum((sale.price - sale.shipping_fee)) AS price 
-                    FROM 
-                    sale sale
-                    INNER JOIN items items ON items.id = sale.id
-                    INNER JOIN collection collection ON collection.id = items.group_id
-                    WHERE collection.account = %s
-                    AND collection.date LIKE %s""",(session['id'], year_value,  ))
-    sale = list(cur.fetchall())
-    if sale[0]['price'] is None:
-        sale[0]['price'] = 0
-    items = [sale[0]['price'],purchase[0]['price'],year]
-    return items
+    cur.execute("""
+        SELECT 
+            COALESCE(SUM(s.price - s.shipping_fee), 0) AS sale_price,
+            COALESCE(SUM(c.price), 0) AS purchase_price
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.account = %s AND c.date LIKE %s
+    """, (session['id'], year_value))
+    result = cur.fetchone()
+    return [result['sale_price'], result['purchase_price'], year]
 
 def get_group_profit(group_id):
     cur = mysql.connection.cursor()
-    cur.execute("""SELECT sum((sale.price - sale.shipping_fee)) 
-                AS price FROM sale 
-                WHERE id IN 
-                    (SELECT id FROM items 
-                     WHERE sold = 1 
-                     AND group_id = %s)""", (group_id, ))
-    sale = list(cur.fetchall())
-    return sale[0]['price']
+    cur.execute("""
+        SELECT COALESCE(SUM(s.price - s.shipping_fee), 0) AS price 
+        FROM sale s
+        INNER JOIN items i ON s.id = i.id
+        WHERE i.sold = 1 AND i.group_id = %s
+    """, (group_id,))
+    result = cur.fetchone()
+    return result['price']
 
 #Location Data
 def get_location(group_id):

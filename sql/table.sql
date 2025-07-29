@@ -108,3 +108,44 @@ CREATE TABLE `sale` (
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2022-03-22  0:05:27
+
+-- Add performance indexes for better query performance
+-- These indexes will significantly improve the speed of your most common queries
+
+-- Collection table indexes
+CREATE INDEX idx_collection_account ON collection(account);
+CREATE INDEX idx_collection_date ON collection(date);
+CREATE INDEX idx_collection_account_date ON collection(account, date);
+
+-- Items table indexes  
+CREATE INDEX idx_items_group_id ON items(group_id);
+CREATE INDEX idx_items_sold ON items(sold);
+CREATE INDEX idx_items_category_id ON items(category_id);
+CREATE INDEX idx_items_storage ON items(storage);
+CREATE INDEX idx_items_list_date ON items(list_date);
+CREATE INDEX idx_items_group_sold ON items(group_id, sold);
+
+-- Sale table indexes
+CREATE INDEX idx_sale_id ON sale(id);
+CREATE INDEX idx_sale_date ON sale(date);
+CREATE INDEX idx_sale_price ON sale(price);
+
+-- Expenses table indexes
+CREATE INDEX idx_expenses_account ON expenses(account);
+CREATE INDEX idx_expenses_date ON expenses(date);
+CREATE INDEX idx_expenses_type ON expenses(type);
+CREATE INDEX idx_expenses_account_date ON expenses(account, date);
+
+-- Categories table index
+CREATE INDEX idx_categories_type ON categories(type);
+
+-- Cases table indexes
+CREATE INDEX idx_cases_account ON cases(account);
+CREATE INDEX idx_cases_platform ON cases(platform);
+CREATE INDEX idx_cases_name ON cases(name);
+
+-- Location table index
+CREATE INDEX idx_location_group_id ON location(group_id);
+
+-- Platform table index
+CREATE INDEX idx_platform_name ON platform(name);
