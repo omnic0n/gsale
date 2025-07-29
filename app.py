@@ -388,13 +388,20 @@ def bought_items():
     form.category.choices = [(category['id'], category['type']) for category in categories]
 
     if group_id:
+        group_data = get_data.get_all_from_group(group_id)
+        if not group_data:
+            flash('Group not found or access denied.', 'error')
+            return redirect(url_for('index'))
         form.group.data = group_id
-        form.list_date.data = get_data.get_all_from_group(group_id)['date']
+        form.list_date.data = group_data['date']
 
     if request.method == "POST":
         details = request.form
         print(details)
         group_data = get_data.get_all_from_group(details['group'])
+        if not group_data:
+            flash('Group not found or access denied.', 'error')
+            return redirect(url_for('index'))
         set_data.set_bought_items(details)
         return redirect(url_for('describe_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
@@ -406,6 +413,12 @@ def modify_items():
     categories = get_data.get_all_from_categories()
     id = request.args.get('item', type = str)
     item = get_data.get_data_for_item_describe(id)
+    
+    # Check if item exists and belongs to current user
+    if not item:
+        flash('Item not found or access denied.', 'error')
+        return redirect(url_for('index'))
+    
     sale = get_data.get_data_from_sale(id)
 
     form = ItemForm()
@@ -430,6 +443,12 @@ def modify_items():
 def items_remove():
     id = request.args.get('id', type = str)
     item=get_data.get_group_id(id)
+    
+    # Check if item exists and belongs to current user
+    if not item:
+        flash('Item not found or access denied.', 'error')
+        return redirect(url_for('index'))
+    
     set_data.remove_item_data(id)
     return redirect(url_for('describe_group',group_id=item['group_id']))
 
@@ -448,12 +467,19 @@ def quick_sell():
     form.category.choices = [(category['id'], category['type']) for category in categories]
 
     if group_id:
+        group_data = get_data.get_all_from_group(group_id)
+        if not group_data:
+            flash('Group not found or access denied.', 'error')
+            return redirect(url_for('index'))
         form.group.data = group_id
-        form.list_date.data = get_data.get_all_from_group(group_id)['date']
+        form.list_date.data = group_data['date']
 
     if request.method == "POST":
         details = request.form
         group_data = get_data.get_all_from_group(details['group'])
+        if not group_data:
+            flash('Group not found or access denied.', 'error')
+            return redirect(url_for('index'))
         id = set_data.set_quick_sale(details)
         return redirect(url_for('describe_item',item=id))
     return render_template('quick_sell.html', form=form)
@@ -558,6 +584,11 @@ def groups_search():
 def describe_item():
     id = request.args.get('item', type = str)
     item = get_data.get_data_for_item_describe(id)
+    
+    # Check if item exists and belongs to current user
+    if not item:
+        flash('Item not found or access denied.', 'error')
+        return redirect(url_for('index'))
 
     form = ButtonForm()
     form.button.label.text = "Sell Item"
@@ -607,6 +638,12 @@ def describe_item():
 def describe_expense():
     id = request.args.get('id', type = str)
     expense = get_data.get_data_for_expense_describe(id)
+    
+    # Check if expense exists and belongs to current user
+    if not expense:
+        flash('Expense not found or access denied.', 'error')
+        return redirect(url_for('index'))
+    
     return render_template('expense_describe.html', 
                             expense=expense)
 
@@ -615,6 +652,12 @@ def describe_expense():
 def describe_group():
     id = request.args.get('group_id', type = str)
     group_id = get_data.get_data_from_group_describe(id)
+    
+    # Check if group exists and belongs to current user
+    if not group_id:
+        flash('Group not found or access denied.', 'error')
+        return redirect(url_for('index'))
+    
     items = get_data.get_data_from_item_groups(id)
     total_items = get_data.get_total_items_in_group(id)
     total_sold_items = get_data.get_total_items_in_group_sold(id)
