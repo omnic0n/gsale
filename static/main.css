@@ -301,6 +301,28 @@ main.container {
   background: transparent !important;
   color: #000000 !important;
   border: none !important;
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+/* Ensure dropdown content is clickable */
+.nav-item.nav-link.dropdown .dropdown-content {
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+  position: absolute !important;
+  display: none !important;
+}
+
+.nav-item.nav-link.dropdown:hover .dropdown-content {
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure dropdown links are clickable */
+.nav-item.nav-link.dropdown .dropdown-content a {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 10000 !important;
 }
 
 /* Logout Button */
