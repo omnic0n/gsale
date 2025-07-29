@@ -320,6 +320,7 @@ main.container {
   .nav-item.nav-link.dropdown {
     position: relative !important;
     display: inline-block !important;
+    margin: 0.25rem !important;
   }
   
   .nav-item.nav-link.dropdown .dropdown-content {
@@ -334,6 +335,24 @@ main.container {
   .nav-item.nav-link.dropdown .dropbtn {
     display: block !important;
     width: auto !important;
+    min-width: 70px !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.85rem !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    color: #000000 !important;
+  }
+  
+  /* Ensure the navbar container doesn't hide content */
+  .navbar .container {
+    padding: 0 0.5rem !important;
+  }
+  
+  /* Make sure the navbar is properly sized */
+  .navbar-nav.mr-auto {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
   }
 }
 
@@ -341,6 +360,20 @@ main.container {
   .nav-item.nav-link.dropdown .dropdown-content {
     min-width: 120px !important;
     max-width: 200px !important;
+  }
+  
+  .nav-item.nav-link.dropdown .dropbtn {
+    min-width: 60px !important;
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .navbar-nav {
+    gap: 0.15rem !important;
+  }
+  
+  .nav-item.nav-link.dropdown {
+    margin: 0.15rem !important;
   }
 }
 
@@ -393,6 +426,27 @@ main.container {
   /* Navbar adjustments */
   .navbar {
     padding: 0.5rem 0 !important;
+  }
+  
+  /* Ensure navbar collapse is always expanded on mobile */
+  .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto !important;
+  }
+  
+  /* Hide the hamburger menu on mobile */
+  .navbar-toggler {
+    display: none !important;
+  }
+  
+  /* Ensure navigation is always visible */
+  .navbar-nav {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    width: 100% !important;
+    margin: 0 !important;
   }
   
   .navbar-brand {
@@ -460,15 +514,9 @@ main.container {
   }
   
   /* Navigation adjustments */
-  .navbar-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.25rem;
-  }
-  
   .nav-item.nav-link.dropdown {
     margin: 0 0.25rem;
+    display: inline-block !important;
   }
   
   /* Logout button */
