@@ -47,7 +47,10 @@ def login():
             print(f"DEBUG: next_page = {next_page}")
             print(f"DEBUG: request.form.get('next') = {request.form.get('next')}")
             print(f"DEBUG: request.args.get('next') = {request.args.get('next')}")
-            if next_page and next_page.startswith('/'):
+            if next_page:
+                # Handle both relative and absolute paths
+                if not next_page.startswith('/'):
+                    next_page = '/' + next_page
                 print(f"DEBUG: Redirecting to {next_page}")
                 return redirect(next_page)
             print(f"DEBUG: Redirecting to index")
