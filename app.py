@@ -44,9 +44,15 @@ def login():
         if 'loggedin' in session:
             # Redirect to the next page if specified, otherwise go to index
             next_page = request.form.get('next') or request.args.get('next')
+            print(f"DEBUG: next_page = {next_page}")
+            print(f"DEBUG: request.form.get('next') = {request.form.get('next')}")
+            print(f"DEBUG: request.args.get('next') = {request.args.get('next')}")
             if next_page and next_page.startswith('/'):
+                print(f"DEBUG: Redirecting to {next_page}")
                 return redirect(next_page)
+            print(f"DEBUG: Redirecting to index")
             return redirect(url_for('index'))    
+    print(f"DEBUG: Login page rendered with request.args = {request.args}")
     return render_template('login.html', msg=msg)
 
 @app.route('/logout')
@@ -70,6 +76,8 @@ def logout():
 def logout_with_redirect(next_page):
     """Logout and redirect to a specific page after login"""
     
+    print(f"DEBUG: logout_with_redirect called with next_page = {next_page}")
+    
     # Remove session data, this will log the user out
     session.pop('loggedin', None)
     session.pop('id', None)
@@ -77,6 +85,7 @@ def logout_with_redirect(next_page):
     
     # Decode the URL-encoded next_page parameter
     decoded_next_page = unquote(next_page)
+    print(f"DEBUG: decoded_next_page = {decoded_next_page}")
     
     # Redirect to login with the specified page as the next parameter
     return redirect(url_for('login', next=decoded_next_page))
