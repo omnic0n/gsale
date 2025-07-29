@@ -264,17 +264,43 @@ main.container {
 /* Navigation Links */
 .nav-link {
   color: #000000 !important;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  background: transparent !important;
+  border: none !important;
   padding: 0.5rem 1rem !important;
-  border-radius: 10px;
-  margin: 0 0.25rem;
+  text-decoration: none !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
 }
 
 .nav-link:hover {
   color: #000000 !important;
-  background: rgba(59, 130, 246, 0.2);
-  transform: translateY(-2px);
+  background: transparent !important;
+  transform: translateY(-2px) !important;
+  text-decoration: none !important;
+}
+
+/* Override Bootstrap nav-link styling */
+.nav-item.nav-link.dropdown {
+  background: transparent !important;
+  color: #000000 !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 0.5rem !important;
+}
+
+.nav-item.nav-link.dropdown:hover {
+  background: transparent !important;
+  color: #000000 !important;
+}
+
+/* Ensure dropdown containers don't inherit blue styling */
+.navbar-nav .nav-item.nav-link.dropdown {
+  background: transparent !important;
+  color: #000000 !important;
+  border: none !important;
 }
 
 /* Logout Button */
