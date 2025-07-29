@@ -6,6 +6,7 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
 from flask_session import Session
+from flask_googlemaps import Map
 import random, os, math
 
 import get_data, set_data
@@ -47,11 +48,8 @@ def login():
         if 'loggedin' in session:
             # Redirect to the next page if specified, otherwise go to index
             next_page = request.form.get('next') or request.args.get('next')
-            print(f"Next page: {next_page}")  # Debug print
             if next_page and next_page.startswith('/'):
-                print(f"Redirecting to: {next_page}")  # Debug print
                 return redirect(next_page)
-            print("Redirecting to index")  # Debug print
             return redirect(url_for('index'))    
     return render_template('login.html', msg=msg)
 
@@ -75,7 +73,6 @@ def logout():
 @app.route('/logout/<path:next_page>')
 def logout_with_redirect(next_page):
     """Logout and redirect to a specific page after login"""
-    print(f"Logout with redirect called. next_page: {next_page}")  # Debug print
     
     # Remove session data, this will log the user out
     session.pop('loggedin', None)
@@ -85,7 +82,6 @@ def logout_with_redirect(next_page):
     # Decode the URL-encoded next_page parameter
     from urllib.parse import unquote
     decoded_next_page = unquote(next_page)
-    print(f"Decoded next_page: {decoded_next_page}")  # Debug print
     
     # Redirect to login with the specified page as the next parameter
     return redirect(url_for('login', next=decoded_next_page))
