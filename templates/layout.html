@@ -244,41 +244,44 @@
         window.location.href = '/logout/' + encodeURIComponent(currentPage);
       }
       
-      // Dropdown functionality - pure hover based
+      // Dropdown functionality - click based
       document.addEventListener('DOMContentLoaded', function() {
         const dropdowns = document.querySelectorAll('.dropdown');
         
         dropdowns.forEach(dropdown => {
           const dropbtn = dropdown.querySelector('.dropbtn');
           const dropdownContent = dropdown.querySelector('.dropdown-content');
-          let timeout;
           
-          // Show dropdown on mouse enter (no click required)
-          dropdown.addEventListener('mouseenter', function() {
-            clearTimeout(timeout);
-            dropdownContent.style.display = 'block';
+          // Toggle dropdown on click
+          dropbtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Close all other dropdowns first
+            dropdowns.forEach(otherDropdown => {
+              if (otherDropdown !== dropdown) {
+                otherDropdown.querySelector('.dropdown-content').style.display = 'none';
+              }
+            });
+            
+            // Toggle current dropdown
+            const isVisible = dropdownContent.style.display === 'block';
+            dropdownContent.style.display = isVisible ? 'none' : 'block';
           });
           
-          // Hide dropdown on mouse leave with delay
-          dropdown.addEventListener('mouseleave', function() {
-            timeout = setTimeout(() => {
+          // Close dropdown when clicking outside
+          document.addEventListener('click', function(event) {
+            if (!dropdown.contains(event.target)) {
               dropdownContent.style.display = 'none';
-            }, 200); // Increased delay for better user experience
+            }
           });
           
-          // Keep dropdown open when hovering over content
-          dropdownContent.addEventListener('mouseenter', function() {
-            clearTimeout(timeout);
-          });
-          
-          dropdownContent.addEventListener('mouseleave', function() {
-            timeout = setTimeout(() => {
+          // Close dropdown when pressing Escape key
+          document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
               dropdownContent.style.display = 'none';
-            }, 200);
+            }
           });
-          
-          // Remove click outside handler since we want pure hover
-          // The dropdowns will close automatically on mouse leave
         });
       });
       

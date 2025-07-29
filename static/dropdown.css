@@ -90,22 +90,22 @@
   outline-offset: 2px;
 }
 
-/* Show the dropdown menu on hover only */
-.dropdown:hover .dropdown-content {
+/* Show the dropdown menu on click only - remove hover behavior */
+/* .dropdown:hover .dropdown-content {
   display: block;
   pointer-events: auto;
-}
+} */
 
-/* Keep dropdown open when hovering over the content area */
-.dropdown-content:hover {
+/* Remove hover-based content display */
+/* .dropdown-content:hover {
   display: block;
-}
+} */
 
-/* Change the background color of the dropdown button when the dropdown content is shown */
-.dropdown:hover .dropbtn {
+/* Change the background color of the dropdown button when clicked */
+.dropbtn:active {
   background: rgba(255, 255, 255, 1);
   color: #000000;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 /* Logout button styling */
