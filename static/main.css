@@ -313,7 +313,8 @@ main.container {
   display: none !important;
 }
 
-.nav-item.nav-link.dropdown:hover .dropdown-content {
+.nav-item.nav-link.dropdown:hover .dropdown-content,
+.nav-item.nav-link.dropdown:focus-within .dropdown-content {
   display: block !important;
   pointer-events: auto !important;
 }
@@ -323,6 +324,18 @@ main.container {
   pointer-events: auto !important;
   cursor: pointer !important;
   z-index: 10000 !important;
+}
+
+/* Add focus states for accessibility */
+.nav-item.nav-link.dropdown .dropbtn:focus {
+  outline: 2px solid rgba(0, 0, 0, 0.3) !important;
+  outline-offset: 2px !important;
+}
+
+.nav-item.nav-link.dropdown .dropdown-content a:focus {
+  outline: 2px solid rgba(0, 0, 0, 0.3) !important;
+  outline-offset: 2px !important;
+  background: rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Logout Button */
