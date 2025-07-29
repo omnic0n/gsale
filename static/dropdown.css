@@ -97,6 +97,11 @@
   pointer-events: auto;
 }
 
+/* Keep dropdown open when hovering over the content area */
+.dropdown-content:hover {
+  display: block;
+}
+
 /* Change the background color of the dropdown button when the dropdown content is shown */
 .dropdown:hover .dropbtn,
 .dropdown:focus-within .dropbtn {

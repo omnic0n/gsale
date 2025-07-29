@@ -244,6 +244,41 @@
         window.location.href = '/logout/' + encodeURIComponent(currentPage);
       }
       
+      // Dropdown functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const dropdowns = document.querySelectorAll('.dropdown');
+        
+        dropdowns.forEach(dropdown => {
+          const dropbtn = dropdown.querySelector('.dropbtn');
+          const dropdownContent = dropdown.querySelector('.dropdown-content');
+          let timeout;
+          
+          // Show dropdown on mouse enter
+          dropdown.addEventListener('mouseenter', function() {
+            clearTimeout(timeout);
+            dropdownContent.style.display = 'block';
+          });
+          
+          // Hide dropdown on mouse leave with delay
+          dropdown.addEventListener('mouseleave', function() {
+            timeout = setTimeout(() => {
+              dropdownContent.style.display = 'none';
+            }, 150); // 150ms delay to allow moving to menu items
+          });
+          
+          // Keep dropdown open when hovering over content
+          dropdownContent.addEventListener('mouseenter', function() {
+            clearTimeout(timeout);
+          });
+          
+          dropdownContent.addEventListener('mouseleave', function() {
+            timeout = setTimeout(() => {
+              dropdownContent.style.display = 'none';
+            }, 150);
+          });
+        });
+      });
+      
       const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
 
       const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
