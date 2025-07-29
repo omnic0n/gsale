@@ -3,9 +3,7 @@ from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm, ButtonForm, CasesForm
 from upload_function import *
 from datetime import datetime, date, timedelta
-from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
-from flask_session import Session
 from urllib.parse import unquote
 import random, os, math
 
@@ -15,9 +13,7 @@ import function
 import config
 
 app = Flask(__name__)
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
+app.secret_key = 'your-secret-key-here'  # Required for session functionality
 
 # Initialize the extension
 app.config.from_object("config.ProductionConfig")
