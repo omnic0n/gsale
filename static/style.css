@@ -1,149 +1,211 @@
 * {
     box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "segoe ui", roboto, oxygen, ubuntu, cantarell, "fira sans", "droid sans", "helvetica neue", Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "segoe ui", roboto, oxygen, ubuntu, cantarell, "fira sans", "droid sans", "helvetica neue", Arial, sans-serif;
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
 body {
-    background-color: #435165;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     margin: 0;
+    color: #e2e8f0;
+    min-height: 100vh;
 }
+
 .login, .register {
     width: 400px;
-    background-color: #ffffff;
-    box-shadow: 0 0 9px 0 rgba(0, 0, 0, 0.3);
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     margin: 100px auto;
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.1);
 }
+
 .login h1, .register h1 {
     text-align: center;
-    color: #5b6574;
+    color: #f7fafc;
     font-size: 24px;
     padding: 20px 0 20px 0;
-    border-bottom: 1px solid #dee0e4;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
 }
+
 .login .links, .register .links {
     display: flex;
     padding: 0 15px;
 }
+
 .login .links a, .register .links a {
-    color: #adb2ba;
+    color: #94a3b8;
     text-decoration: none;
     display: inline-flex;
     padding: 0 10px 10px 10px;
     font-weight: bold;
+    transition: all 0.3s ease;
 }
+
 .login .links a:hover, .register .links a:hover {
-    color: #9da3ac;
+    color: #e2e8f0;
 }
+
 .login .links a.active, .register .links a.active {
-    border-bottom: 3px solid #3274d6;
-    color: #3274d6;
+    border-bottom: 3px solid #3b82f6;
+    color: #3b82f6;
 }
+
 .login form, .register form {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     padding-top: 20px;
 }
+
 .login form label, .register form label {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 50px;
     height: 50px;
-    background-color: #3274d6;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     color: #ffffff;
+    border-radius: 10px 0 0 10px;
 }
+
 .login form input[type="password"], .login form input[type="text"], .login form input[type="email"], .register form input[type="password"], .register form input[type="text"], .register form input[type="email"] {
     width: 310px;
     height: 50px;
-    border: 1px solid #dee0e4;
+    border: 2px solid #475569;
     margin-bottom: 20px;
     padding: 0 15px;
+    background: rgba(15, 23, 42, 0.8);
+    color: #e2e8f0;
+    border-radius: 0 10px 10px 0;
+    transition: all 0.3s ease;
 }
+
+.login form input[type="password"]:focus, .login form input[type="text"]:focus, .login form input[type="email"]:focus, .register form input[type="password"]:focus, .register form input[type="text"]:focus, .register form input[type="email"]:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+    background: rgba(15, 23, 42, 0.95);
+    color: #f7fafc;
+}
+
 .login form input[type="submit"], .register form input[type="submit"] {
     width: 100%;
     padding: 15px;
     margin-top: 20px;
-    background-color: #3274d6;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     border: 0;
     cursor: pointer;
     font-weight: bold;
     color: #ffffff;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
+    border-radius: 10px;
 }
+
 .login form input[type="submit"]:hover, .register form input[type="submit"]:hover {
-    background-color: #2868c7;
-    transition: background-color 0.2s;
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
 }
+
 .navtop {
-    background-color: #2f3947;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
     height: 60px;
     width: 100%;
     border: 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
 }
+
 .navtop div {
     display: flex;
     margin: 0 auto;
     width: 1000px;
     height: 100%;
 }
+
 .navtop div h1, .navtop div a {
     display: inline-flex;
     align-items: center;
 }
+
 .navtop div h1 {
     flex: 1;
     font-size: 24px;
     padding: 0;
-   margin: 0;
-    color: #eaebed;
+    margin: 0;
+    color: #f7fafc;
     font-weight: normal;
 }
+
 .navtop div a {
     padding: 0 20px;
     text-decoration: none;
-    color: #c1c4c8;
+    color: #cbd5e0;
     font-weight: bold;
+    transition: all 0.3s ease;
 }
+
 .navtop div a i {
     padding: 2px 8px 0 0;
 }
+
 .navtop div a:hover {
-    color: #eaebed;
+    color: #f7fafc;
+    transform: translateY(-2px);
 }
+
 body.loggedin {
-    background-color: #f3f4f7;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
 }
+
 .content {
     width: 1000px;
     margin: 0 auto;
 }
+
 .content h2 {
     margin: 0;
     padding: 25px 0;
     font-size: 22px;
-    border-bottom: 1px solid #e0e0e3;
-    color: #4a536e;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    color: #f7fafc;
 }
+
 .content > p, .content > div {
-    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     margin: 25px 0;
     padding: 25px;
-  background-color: #fff;
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 15px;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    transition: all 0.3s ease;
 }
+
+.content > p:hover, .content > div:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+}
+
 .content > p table td, .content > div table td {
-  padding: 5px;
+    padding: 5px;
+    color: #e2e8f0;
 }
+
 .content > p table td:first-child, .content > div table td:first-child {
-  font-weight: bold;
-  color: #4a536e;
-  padding-right: 15px;
+    font-weight: bold;
+    color: #f7fafc;
+    padding-right: 15px;
 }
+
 .content > div p {
-  padding: 5px;
-  margin: 0 0 10px 0;
+    padding: 5px;
+    margin: 0 0 10px 0;
+    color: #e2e8f0;
 }
 
 .bottom_right {
