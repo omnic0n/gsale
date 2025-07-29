@@ -134,15 +134,25 @@
 
 /* Responsive dropdown */
 @media (max-width: 768px) {
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
   .dropdown-content {
     position: absolute;
+    top: 100%;
+    left: 0;
     background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(0, 0, 0, 0.1);
     margin-top: 0.25rem;
     border-radius: 10px;
     min-width: 140px;
     font-size: 0.85rem;
+    z-index: 9999;
+    display: none;
   }
   
   .dropdown-content a {
@@ -151,6 +161,8 @@
     margin: 0.15rem 0.25rem;
     padding: 0.5rem 0.75rem;
     font-size: 0.85rem;
+    display: block;
+    white-space: nowrap;
   }
   
   .dropdown-content a:hover {
@@ -165,6 +177,7 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.85rem;
     min-width: 70px;
+    display: block;
   }
   
   .dropbtn::after {
@@ -180,6 +193,7 @@
     min-width: 120px;
     font-size: 0.8rem;
     margin-top: 0.2rem;
+    max-width: 200px;
   }
   
   .dropdown-content a {
