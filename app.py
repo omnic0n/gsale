@@ -51,8 +51,10 @@ def login_required(f):
     """Decorator to check if user is logged in and redirect to login with next parameter"""
     def decorated_function(*args, **kwargs):
         if not 'loggedin' in session:
-            next_page = request.url
-            return redirect(url_for('login', next=next_page))
+            # Don't redirect to login if already on login page
+            if request.endpoint != 'login':
+                next_page = request.url
+                return redirect(url_for('login', next=next_page))
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
     return decorated_function
