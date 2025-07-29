@@ -108,6 +108,14 @@ def logout_with_redirect(next_page):
     # Decode the URL-encoded next_page parameter
     decoded_next_page = unquote(next_page)
     
+    # Handle the "index" parameter specially
+    if decoded_next_page == 'index':
+        decoded_next_page = '/'
+    else:
+        # Add leading slash for non-index pages
+        if not decoded_next_page.startswith('/'):
+            decoded_next_page = '/' + decoded_next_page
+    
     # Redirect to login with the specified page as the next parameter
     return redirect(url_for('login', next=decoded_next_page))
 

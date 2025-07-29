@@ -233,7 +233,15 @@
         const currentPage = currentPath + currentSearch;
         
         // Ensure we have a valid path (not empty)
-        const pageToRedirect = currentPage || '/';
+        let pageToRedirect = currentPage || '/';
+        
+        // Handle the index page specially to avoid double slashes
+        if (pageToRedirect === '/') {
+          pageToRedirect = 'index';
+        } else {
+          // Remove leading slash for non-index pages to avoid double slashes
+          pageToRedirect = pageToRedirect.substring(1);
+        }
         
         // Redirect to logout with the current page as parameter
         window.location.href = '/logout/' + encodeURIComponent(pageToRedirect);
