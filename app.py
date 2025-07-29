@@ -44,18 +44,12 @@ def login():
         if 'loggedin' in session:
             # Redirect to the next page if specified, otherwise go to index
             next_page = request.form.get('next') or request.args.get('next')
-            print(f"DEBUG: next_page = {next_page}")
-            print(f"DEBUG: request.form.get('next') = {request.form.get('next')}")
-            print(f"DEBUG: request.args.get('next') = {request.args.get('next')}")
             if next_page:
                 # Handle both relative and absolute paths
                 if not next_page.startswith('/'):
                     next_page = '/' + next_page
-                print(f"DEBUG: Redirecting to {next_page}")
                 return redirect(next_page)
-            print(f"DEBUG: Redirecting to index")
             return redirect(url_for('index'))    
-    print(f"DEBUG: Login page rendered with request.args = {request.args}")
     return render_template('login.html', msg=msg)
 
 @app.route('/logout')
