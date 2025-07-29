@@ -53,7 +53,9 @@ def login_required(f):
         if not 'loggedin' in session:
             # Don't redirect to login if already on login page
             if request.endpoint != 'login':
-                next_page = request.url
+                next_page = request.path
+                if request.query_string:
+                    next_page += '?' + request.query_string.decode('utf-8')
                 return redirect(url_for('login', next=next_page))
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
@@ -74,8 +76,15 @@ def login():
             # Redirect to the next page if specified, otherwise go to index
             next_page = request.form.get('next') or request.args.get('next')
             if next_page:
-                # Handle both relative and absolute paths
-                if not next_page.startswith('/'):
+                # Extract only the path and query string from the URL
+                from urllib.parse import urlparse
+                parsed = urlparse(next_page)
+                if parsed.netloc:  # If it's a full URL, extract just the path
+                    next_page = parsed.path
+                    if parsed.query:
+                        next_page += '?' + parsed.query
+                # Handle relative paths
+                elif not next_page.startswith('/'):
                     next_page = '/' + next_page
                 return redirect(next_page)
             return redirect(url_for('index'))    
