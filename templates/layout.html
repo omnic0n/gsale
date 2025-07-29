@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -7,6 +7,12 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dropdown.css') }}">
@@ -14,97 +20,131 @@
 </head>
 <body>
     <header class="site-header">
-      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+      <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-          <a class="navbar-brand mr-4" href="/">Welcome {{ session['username'] }}</a>
+          <a class="navbar-brand" href="/">
+            <i class="fas fa-chart-line me-2"></i>
+            <span class="brand-text">GSale Dashboard</span>
+            <small class="d-block user-welcome">Welcome, {{ session['username'] }}</small>
+          </a>
+          
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
+          
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
               <div class="nav-item nav-link dropdown">
-                <button class="dropbtn">Groups</button>
+                <button class="dropbtn">
+                  <i class="fas fa-boxes me-1"></i>Groups
+                </button>
                 <div class="dropdown-content">
-                  <a href="/groups/list">Describe</a>
-                  <a href="/groups/create">Create</a>
-                  <a href="/groups/search">Search</a>
+                  <a href="/groups/list"><i class="fas fa-list me-2"></i>Describe</a>
+                  <a href="/groups/create"><i class="fas fa-plus me-2"></i>Create</a>
+                  <a href="/groups/search"><i class="fas fa-search me-2"></i>Search</a>
                 </div>
               </div>
+              
               <div class="nav-item nav-link dropdown">
-                <button class="dropbtn">Items</button>
+                <button class="dropbtn">
+                  <i class="fas fa-tags me-1"></i>Items
+                </button>
                 <div class="dropdown-content">
-                  <a href="/items/bought">Add</a>
-                  <a href="/items/sold">Sell</a>
-                  <a href="/items/quick_sell">Quick Sell</a>
-                  <a href="/items/list">List</a>
-                  <a href="/items/list?sold=1">Sold</a>
-                  <a href="/items/list?sold=0">UnSold</a>
-                  <a href="/items/search">Search</a>
+                  <a href="/items/bought"><i class="fas fa-plus me-2"></i>Add</a>
+                  <a href="/items/sold"><i class="fas fa-shopping-cart me-2"></i>Sell</a>
+                  <a href="/items/quick_sell"><i class="fas fa-bolt me-2"></i>Quick Sell</a>
+                  <a href="/items/list"><i class="fas fa-list me-2"></i>List</a>
+                  <a href="/items/list?sold=1"><i class="fas fa-check-circle me-2"></i>Sold</a>
+                  <a href="/items/list?sold=0"><i class="fas fa-clock me-2"></i>UnSold</a>
+                  <a href="/items/search"><i class="fas fa-search me-2"></i>Search</a>
                 </div>
               </div>
+              
               <div class="nav-item nav-link dropdown">
-                <button class="dropbtn">Expenses</button>
+                <button class="dropbtn">
+                  <i class="fas fa-receipt me-1"></i>Expenses
+                </button>
                 <div class="dropdown-content">
-                  <a href="/expense/item">Item</a>
-                  <a href="/expense/gas">Gas</a>
-                  <a href="/expense/store">Store</a>
-                  <a href="/expense/list">List</a>
+                  <a href="/expense/item"><i class="fas fa-box me-2"></i>Item</a>
+                  <a href="/expense/gas"><i class="fas fa-gas-pump me-2"></i>Gas</a>
+                  <a href="/expense/store"><i class="fas fa-store me-2"></i>Store</a>
+                  <a href="/expense/list"><i class="fas fa-list me-2"></i>List</a>
                 </div>
               </div>
+              
               <div class="nav-item nav-link dropdown">
-                <button class="dropbtn">Reports</button>
+                <button class="dropbtn">
+                  <i class="fas fa-chart-bar me-1"></i>Reports
+                </button>
                 <div class="dropdown-content">
-                  <a href="/reports/profit">Profit</a>
-                  <a href="/reports/sales">Sales</a>
-                  <a href="/reports/purchases">Purchases</a>
-                  <a href="/reports/expenses">Expenses</a>
-                  <a href="/reports/categories">Categories</a>
+                  <a href="/reports/profit"><i class="fas fa-dollar-sign me-2"></i>Profit</a>
+                  <a href="/reports/sales"><i class="fas fa-chart-line me-2"></i>Sales</a>
+                  <a href="/reports/purchases"><i class="fas fa-shopping-bag me-2"></i>Purchases</a>
+                  <a href="/reports/expenses"><i class="fas fa-receipt me-2"></i>Expenses</a>
+                  <a href="/reports/categories"><i class="fas fa-tags me-2"></i>Categories</a>
                 </div>
                </div>
+               
                <div class="nav-item nav-link dropdown">
-                <button class="dropbtn">Cases</button>
+                <button class="dropbtn">
+                  <i class="fas fa-folder me-1"></i>Cases
+                </button>
                 <div class="dropdown-content">
-                  <a href="/cases/list">List</a>
-                  <a href="/cases/add">Add</a>
-                  <a href="/cases/search">Search</a>
+                  <a href="/cases/list"><i class="fas fa-list me-2"></i>List</a>
+                  <a href="/cases/add"><i class="fas fa-plus me-2"></i>Add</a>
+                  <a href="/cases/search"><i class="fas fa-search me-2"></i>Search</a>
                 </div>
                </div>
               </div>
             </div>
+            
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
               <div class="logout-button">
-                <a href="#" onclick="logoutWithRedirect()">Logout</a>
+                <a href="#" onclick="logoutWithRedirect()">
+                  <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
               </div>
             </div>
           </div>
         </div>
       </nav>
     </header>
+    
     <main role="main" class="container">
       <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-12">
           {% if is_timer_running %}
-          <Center><font color='red'>Timer Running</font></Center>
+          <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-clock me-2"></i><strong>Timer Running</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
           {% endif %}
+          
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
               {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                  {{ message }}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                  <i class="fas fa-info-circle me-2"></i>{{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
               {% endfor %}
             {% endif %}
           {% endwith %}
-          {% block content %}{% endblock %}
+          
+          <div class="content-wrapper">
+            {% block content %}{% endblock %}
+          </div>
         </div>
       </div>
     </main>
+    
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    
     <script>
       function logoutWithRedirect() {
         // Get the current page path
@@ -128,6 +168,7 @@
               .forEach(tr => tbody.appendChild(tr) );
       })));
     </script>
+    
     <script>
       function hideDate(){
         $('#date').hide();
@@ -224,6 +265,7 @@
         });
       });
     </script>
+    
     <script>
       $(document).ready(function() {
           var addCount = 1;

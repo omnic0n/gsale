@@ -1,61 +1,181 @@
+/* Modern Table Styling */
 table.blueTable {
-    border: 1px solid #1C6EA4;
-    background-color: #EEEEEE;
-    width: 100%;
-    text-align: left;
-    border-collapse: collapse;
-  }
-  table.blueTable td, table.blueTable th {
-    border: 1px solid #AAAAAA;
-    padding: 3px 2px;
-  }
-  table.blueTable tbody td {
-    font-size: 13px;
-  }
- 
-  table.blueTable tr:nth-child(even) {
-    background: #D0E4F5;
-  }
-  table.blueTable tr.unsold {
-    background: #FF0000;
-  }
-  table.blueTable thead {
-    background: #1C6EA4;
-    background: -moz-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
-    background: -webkit-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
-    background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
-    border-bottom: 2px solid #444444;
-  }
-  table.blueTable thead th {
-    font-size: 15px;
-    font-weight: bold;
-    color: #FFFFFF;
-    border-left: 2px solid #D0E4F5;
-  }
-  table.blueTable thead th:first-child {
-    border-left: none;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+}
+
+table.blueTable td, table.blueTable th {
+  border: none;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.3);
+}
+
+table.blueTable tbody td {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2d3748;
+  transition: all 0.3s ease;
+}
+
+table.blueTable tbody tr {
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+table.blueTable tbody tr:hover {
+  background: rgba(102, 126, 234, 0.05);
+  transform: scale(1.01);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+table.blueTable tr:nth-child(even) {
+  background: rgba(247, 250, 252, 0.8);
+}
+
+table.blueTable tr.unsold {
+  background: linear-gradient(135deg, rgba(245, 101, 101, 0.1) 0%, rgba(229, 62, 62, 0.1) 100%);
+  border-left: 4px solid #f56565;
+}
+
+table.blueTable thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+table.blueTable thead th {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  border: none;
+  padding: 1.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+table.blueTable thead th:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: scale(1.02);
+}
+
+table.blueTable thead th:first-child {
+  border-left: none;
+}
+
+/* Sort indicator */
+table.blueTable thead th::after {
+  content: '↕';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+table.blueTable thead th:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1);
+}
+
+table.blueTable tfoot {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2d3748;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-top: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+table.blueTable tfoot td {
+  font-size: 1rem;
+  padding: 1.5rem 1rem;
+}
+
+table.blueTable tfoot .links {
+  text-align: right;
+}
+
+table.blueTable tfoot .links a {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+table.blueTable tfoot .links a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+  table.blueTable {
+    font-size: 0.875rem;
+    border-radius: 15px;
   }
   
-  table.blueTable tfoot {
-    font-size: 14px;
-    font-weight: bold;
-    color: #FFFFFF;
-    background: #D0E4F5;
-    background: -moz-linear-gradient(top, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
-    background: -webkit-linear-gradient(top, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
-    background: linear-gradient(to bottom, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
-    border-top: 2px solid #444444;
+  table.blueTable td, table.blueTable th {
+    padding: 1rem 0.75rem;
   }
+  
+  table.blueTable thead th {
+    padding: 1.25rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
   table.blueTable tfoot td {
-    font-size: 14px;
+    padding: 1.25rem 0.75rem;
   }
-  table.blueTable tfoot .links {
-    text-align: right;
+}
+
+/* Table animations */
+@keyframes tableRowFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  table.blueTable tfoot .links a{
-    display: inline-block;
-    background: #1C6EA4;
-    color: #FFFFFF;
-    padding: 2px 8px;
-    border-radius: 5px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+table.blueTable tbody tr {
+  animation: tableRowFadeIn 0.6s ease-out;
+}
+
+table.blueTable tbody tr:nth-child(1) { animation-delay: 0.1s; }
+table.blueTable tbody tr:nth-child(2) { animation-delay: 0.2s; }
+table.blueTable tbody tr:nth-child(3) { animation-delay: 0.3s; }
+table.blueTable tbody tr:nth-child(4) { animation-delay: 0.4s; }
+table.blueTable tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+/* Status indicators */
+.status-sold {
+  background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
+  border-left: 4px solid #48bb78;
+}
+
+.status-unsold {
+  background: linear-gradient(135deg, rgba(245, 101, 101, 0.1) 0%, rgba(229, 62, 62, 0.1) 100%);
+  border-left: 4px solid #f56565;
+}
+
+.status-pending {
+  background: linear-gradient(135deg, rgba(237, 137, 54, 0.1) 0%, rgba(221, 107, 32, 0.1) 100%);
+  border-left: 4px solid #ed8936;
+}
