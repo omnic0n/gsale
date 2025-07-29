@@ -361,21 +361,151 @@ main.container {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  /* Navbar adjustments */
+  .navbar {
+    padding: 0.5rem 0 !important;
+  }
+  
   .navbar-brand {
-    font-size: 1.2rem;
+    font-size: 1rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
   }
   
   .brand-text {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
   }
   
+  .user-welcome {
+    font-size: 0.75rem;
+  }
+  
+  /* Content adjustments */
   .content-wrapper {
-    padding: 1.5rem;
-    margin-top: 1rem;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    border-radius: 15px;
   }
   
   main.container {
-    margin-top: 80px;
+    margin-top: 70px;
+    padding: 0 0.5rem;
+  }
+  
+  /* Form adjustments */
+  .form-control {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Table adjustments */
+  .table {
+    font-size: 0.85rem;
+  }
+  
+  .table td, .table th {
+    padding: 0.5rem;
+  }
+  
+  /* Dropdown adjustments */
+  .dropbtn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    min-width: 80px;
+  }
+  
+  .dropdown-content {
+    min-width: 150px;
+    font-size: 0.85rem;
+  }
+  
+  .dropdown-content a {
+    padding: 0.5rem 1rem;
+  }
+  
+  /* Navigation adjustments */
+  .navbar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+  
+  .nav-item.nav-link.dropdown {
+    margin: 0 0.25rem;
+  }
+  
+  /* Logout button */
+  .logout-button a {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  /* Typography adjustments */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Alert adjustments */
+  .alert {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 576px) {
+  .navbar-brand {
+    font-size: 0.9rem;
+  }
+  
+  .brand-text {
+    font-size: 1rem;
+  }
+  
+  .content-wrapper {
+    padding: 0.75rem;
+    margin-top: 0.25rem;
+  }
+  
+  main.container {
+    margin-top: 60px;
+    padding: 0 0.25rem;
+  }
+  
+  .dropbtn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+  
+  .dropdown-content {
+    min-width: 120px;
+    font-size: 0.8rem;
+  }
+  
+  .navbar-nav {
+    gap: 0.15rem;
+  }
+  
+  .nav-item.nav-link.dropdown {
+    margin: 0 0.15rem;
+  }
+  
+  .table {
+    font-size: 0.75rem;
+  }
+  
+  .table td, .table th {
+    padding: 0.4rem;
   }
 }
 
