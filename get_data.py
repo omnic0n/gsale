@@ -425,17 +425,28 @@ def get_category(category_id):
 def get_profit(year):
     year_value = year + '-%-%'
     cur = mysql.connection.cursor()
+    
+    # Get sales (only for sold items)
     cur.execute("""
-        SELECT 
-            COALESCE(SUM(s.price - s.shipping_fee), 0) AS sale_price,
-            COALESCE(SUM(c.price), 0) AS purchase_price
-        FROM collection c
-        LEFT JOIN items i ON c.id = i.group_id
-        LEFT JOIN sale s ON i.id = s.id
-        WHERE c.account = %s AND c.date LIKE %s
+        SELECT COALESCE(SUM(s.price - s.shipping_fee), 0) AS sale_price
+        FROM sale s
+        INNER JOIN items i ON s.id = i.id
+        INNER JOIN collection c ON i.group_id = c.id
+        WHERE c.account = %s AND c.date LIKE %s AND i.sold = 1
     """, (session['id'], year_value))
-    result = cur.fetchone()
-    return [result['sale_price'], result['purchase_price'], year]
+    sales_result = cur.fetchone()
+    sale_price = sales_result['sale_price'] if sales_result else 0
+    
+    # Get purchases (total collection prices for the year)
+    cur.execute("""
+        SELECT COALESCE(SUM(price), 0) AS purchase_price
+        FROM collection
+        WHERE account = %s AND date LIKE %s
+    """, (session['id'], year_value))
+    purchase_result = cur.fetchone()
+    purchase_price = purchase_result['purchase_price'] if purchase_result else 0
+    
+    return [sale_price, purchase_price, year]
 
 def get_group_profit(group_id):
     cur = mysql.connection.cursor()
