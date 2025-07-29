@@ -168,7 +168,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     backdrop-filter: blur(10px) !important;
     padding: 0.5rem !important;
-    display: none !important;
+    /* Remove display: none to allow JavaScript to control visibility */
   }
   
   .dropdown-content a {
