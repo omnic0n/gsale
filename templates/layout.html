@@ -263,7 +263,7 @@
           dropdown.addEventListener('mouseleave', function() {
             timeout = setTimeout(() => {
               dropdownContent.style.display = 'none';
-            }, 150); // 150ms delay to allow moving to menu items
+            }, 100); // Reduced delay to 100ms
           });
           
           // Keep dropdown open when hovering over content
@@ -274,7 +274,14 @@
           dropdownContent.addEventListener('mouseleave', function() {
             timeout = setTimeout(() => {
               dropdownContent.style.display = 'none';
-            }, 150);
+            }, 100);
+          });
+          
+          // Also handle click outside to close
+          document.addEventListener('click', function(event) {
+            if (!dropdown.contains(event.target)) {
+              dropdownContent.style.display = 'none';
+            }
           });
         });
       });
