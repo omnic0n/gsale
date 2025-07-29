@@ -6,7 +6,6 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
 from flask_session import Session
-from flask_googlemaps import Map
 import random, os, math
 
 import get_data, set_data
@@ -186,14 +185,7 @@ def reports_locations():
         details = request.form
         start_date, end_date = function.set_dates(details)
         locations = get_data.get_location_from_date(start_date, end_date)
-        map = Map(
-            identifier="test",
-            lat=locations[0]['latitude'],
-            lng=locations[0]['longitude'],
-            markers=[(loc['latitude'], loc['longitude'], "<a href=/groups/describe?group_id=%s>%s</a>" % (loc['id'], loc['name'])) for loc in locations],
-            style="height:800px;width:800px"
-        )
-        return render_template('reports_locations.html', form=form, map=map)
+        return render_template('reports_locations.html', form=form, locations=locations)
     return render_template('reports_locations.html', form=form)
 
 #Data Section
