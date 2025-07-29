@@ -6,6 +6,7 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
 from flask_session import Session
+from urllib.parse import unquote
 import random, os, math
 
 import get_data, set_data
@@ -79,7 +80,6 @@ def logout_with_redirect(next_page):
     session.pop('username', None)
     
     # Decode the URL-encoded next_page parameter
-    from urllib.parse import unquote
     decoded_next_page = unquote(next_page)
     
     # Redirect to login with the specified page as the next parameter
