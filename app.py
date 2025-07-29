@@ -73,8 +73,6 @@ def logout():
 def logout_with_redirect(next_page):
     """Logout and redirect to a specific page after login"""
     
-    print(f"DEBUG: logout_with_redirect called with next_page = {next_page}")
-    
     # Remove session data, this will log the user out
     session.pop('loggedin', None)
     session.pop('id', None)
@@ -82,7 +80,6 @@ def logout_with_redirect(next_page):
     
     # Decode the URL-encoded next_page parameter
     decoded_next_page = unquote(next_page)
-    print(f"DEBUG: decoded_next_page = {decoded_next_page}")
     
     # Redirect to login with the specified page as the next parameter
     return redirect(url_for('login', next=decoded_next_page))
