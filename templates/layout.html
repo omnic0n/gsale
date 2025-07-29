@@ -14,9 +14,30 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Custom CSS Files -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dropdown.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='table.css') }}">
+    
+    <!-- Inline CSS to ensure dark background -->
+    <style>
+        html, body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+            color: #e2e8f0 !important;
+            min-height: 100vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        body.loggedin {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+    </style>
 </head>
 <body>
     <header class="site-header">
