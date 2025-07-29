@@ -1,7 +1,7 @@
 /* Modern Table Styling */
 table.blueTable {
   border: none;
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   width: 100%;
   text-align: left;
@@ -21,13 +21,13 @@ table.blueTable td, table.blueTable th {
 table.blueTable tbody td {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #e2e8f0;
+  color: #000000;
   transition: all 0.3s ease;
 }
 
 table.blueTable tbody tr {
   transition: all 0.3s ease;
-  background: rgba(30, 41, 59, 0.7);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 table.blueTable tbody tr:hover {
@@ -37,7 +37,7 @@ table.blueTable tbody tr:hover {
 }
 
 table.blueTable tr:nth-child(even) {
-  background: rgba(51, 65, 85, 0.8);
+  background: rgba(247, 250, 252, 0.8);
 }
 
 table.blueTable tr.unsold {
@@ -90,7 +90,7 @@ table.blueTable thead th:hover::after {
 table.blueTable tfoot {
   font-size: 1rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #000000;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
   border-top: 2px solid rgba(59, 130, 246, 0.3);
 }

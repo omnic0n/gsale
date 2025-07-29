@@ -24,7 +24,7 @@
     <style>
         html, body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
-            color: #e2e8f0 !important;
+            color: #000000 !important;
             min-height: 100vh !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -65,7 +65,7 @@
         
         .navbar-brand {
             display: flex !important;
-            color: white !important;
+            color: #000000 !important;
         }
         
         .navbar-nav {
@@ -81,6 +81,33 @@
         .dropbtn {
             display: flex !important;
             visibility: visible !important;
+        }
+        
+        /* Ensure all text is black */
+        body, p, h1, h2, h3, h4, h5, h6, div, span, a, label, input, textarea, select {
+            color: #000000 !important;
+        }
+        
+        /* Content areas with white background */
+        .content-wrapper, .content-section, .content > p, .content > div {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #000000 !important;
+        }
+        
+        /* Form elements */
+        input, textarea, select {
+            background: rgba(255, 255, 255, 0.9) !important;
+            color: #000000 !important;
+        }
+        
+        /* Tables */
+        table, table td, table th {
+            color: #000000 !important;
+        }
+        
+        /* Navigation links */
+        .nav-link, .dropbtn, .dropdown-content a {
+            color: #000000 !important;
         }
     </style>
 </head>

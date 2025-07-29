@@ -1,7 +1,7 @@
 /* Modern Dropdown Button */
 .dropbtn {
   background: rgba(59, 130, 246, 0.1);
-  color: #cbd5e0;
+  color: #000000;
   border: 1px solid rgba(59, 130, 246, 0.2);
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
@@ -17,7 +17,7 @@
 
 .dropbtn:hover {
   background: rgba(59, 130, 246, 0.2);
-  color: white;
+  color: #000000;
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
@@ -35,7 +35,7 @@
   position: absolute;
   top: 100%;
   left: 0;
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   min-width: 200px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -61,7 +61,7 @@
 
 /* Links inside the dropdown */
 .dropdown-content a {
-  color: #e2e8f0;
+  color: #000000;
   padding: 0.75rem 1.5rem;
   text-decoration: none;
   display: flex;
@@ -89,13 +89,13 @@
 /* Change the background color of the dropdown button when the dropdown content is shown */
 .dropdown:hover .dropbtn {
   background: rgba(59, 130, 246, 0.2);
-  color: white;
+  color: #000000;
   transform: translateY(-2px);
 }
 
 /* Logout button styling */
 .logout-button a {
-  color: #cbd5e0;
+  color: #000000;
   background: rgba(239, 68, 68, 0.2);
   text-decoration: none;
   padding: 0.75rem 1.5rem;
@@ -110,7 +110,7 @@
 }
 
 .logout-button a:hover {
-  color: white;
+  color: #000000;
   background: rgba(239, 68, 68, 0.3);
   transform: translateY(-2px);
   text-decoration: none;
@@ -121,7 +121,7 @@
 @media (max-width: 768px) {
   .dropdown-content {
     position: static;
-    background: rgba(30, 41, 59, 0.2);
+    background: rgba(255, 255, 255, 0.2);
     box-shadow: none;
     border: none;
     margin-top: 0;
@@ -129,14 +129,14 @@
   }
   
   .dropdown-content a {
-    color: #cbd5e0;
+    color: #000000;
     border-radius: 0;
     margin: 0;
   }
   
   .dropdown-content a:hover {
     background: rgba(59, 130, 246, 0.2);
-    color: white;
+    color: #000000;
     transform: none;
   }
   
