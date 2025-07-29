@@ -19,7 +19,7 @@
   background: rgba(59, 130, 246, 0.2);
   color: #000000;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 /* The container <div> - needed to position the dropdown content */
@@ -38,7 +38,7 @@
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   min-width: 200px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   border-radius: 15px;
   border: 1px solid rgba(148, 163, 184, 0.1);
   z-index: 1000;
@@ -96,12 +96,12 @@
 /* Logout button styling */
 .logout-button a {
   color: #000000;
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.1);
   text-decoration: none;
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
   transition: all 0.3s ease;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -111,10 +111,10 @@
 
 .logout-button a:hover {
   color: #000000;
-  background: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.2);
   transform: translateY(-2px);
   text-decoration: none;
-  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
 }
 
 /* Responsive dropdown */
