@@ -289,12 +289,15 @@ main.container {
   border: none !important;
   padding: 0 !important;
   margin: 0 0.5rem !important;
+  position: relative !important;
+  z-index: 9999 !important;
 }
 
-.nav-item.nav-link.dropdown:hover {
+/* Remove hover behavior for nav-item dropdown */
+/* .nav-item.nav-link.dropdown:hover {
   background: transparent !important;
   color: #000000 !important;
-}
+} */
 
 /* Ensure dropdown containers don't inherit blue styling */
 .navbar-nav .nav-item.nav-link.dropdown {
@@ -313,11 +316,12 @@ main.container {
   display: none !important;
 }
 
-.nav-item.nav-link.dropdown:hover .dropdown-content,
+/* Remove hover-based dropdown display - only JavaScript controls this */
+/* .nav-item.nav-link.dropdown:hover .dropdown-content,
 .nav-item.nav-link.dropdown:focus-within .dropdown-content {
   display: block !important;
   pointer-events: auto !important;
-}
+} */
 
 /* Ensure dropdown links are clickable */
 .nav-item.nav-link.dropdown .dropdown-content a {

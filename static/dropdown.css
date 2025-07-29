@@ -90,7 +90,7 @@
   outline-offset: 2px;
 }
 
-/* Show the dropdown menu on click only - remove hover behavior */
+/* Remove all hover-based dropdown display - only JavaScript controls display */
 /* .dropdown:hover .dropdown-content {
   display: block;
   pointer-events: auto;
