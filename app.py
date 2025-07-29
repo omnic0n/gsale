@@ -54,9 +54,11 @@ def login():
 
 @app.route('/logout')
 def logout():
-    # Store the current page before logging out
+    # Get the current page from referrer, but handle edge cases
     next_page = request.referrer
-    if not next_page or next_page.endswith('/logout'):
+    
+    # If no referrer or referrer is the logout page itself, use a default
+    if not next_page or '/logout' in next_page or next_page.endswith('/'):
         next_page = url_for('index')
     
     # Remove session data, this will log the user out
@@ -65,6 +67,17 @@ def logout():
     session.pop('username', None)
     
     # Redirect to login with the stored page as the next parameter
+    return redirect(url_for('login', next=next_page))
+
+@app.route('/logout/<path:next_page>')
+def logout_with_redirect(next_page):
+    """Logout and redirect to a specific page after login"""
+    # Remove session data, this will log the user out
+    session.pop('loggedin', None)
+    session.pop('id', None)
+    session.pop('username', None)
+    
+    # Redirect to login with the specified page as the next parameter
     return redirect(url_for('login', next=next_page))
 
 @app.route('/')
