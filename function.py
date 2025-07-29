@@ -1,15 +1,11 @@
 from datetime import datetime, date, timedelta
-from dateutil.relativedelta import relativedelta
 from flask import Flask, session
-from flask_session import Session
 
 from flask_mysqldb import MySQL
 import bcrypt
 
 app = Flask(__name__)
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
+app.secret_key = 'your-secret-key-here'  # Required for session functionality
 
 mysql = MySQL(app)
 
@@ -26,7 +22,14 @@ def set_dates(details):
             end_date = datetime.strptime(("%s-01-01") % (year + 1), '%Y-%m-%d').date() - timedelta(days=1)
         elif(details['type'] == "1"):
             start_date = ("%s-%s-01") % (year, month)
-            end_date = datetime.strptime(("%s-%s-01") % (year,month),'%Y-%m-%d').date() + relativedelta(months=1) - timedelta(days=1)
+            # Calculate end date by adding one month and subtracting one day
+            if month == 12:
+                next_year = year + 1
+                next_month = 1
+            else:
+                next_year = year
+                next_month = month + 1
+            end_date = datetime.strptime(("%s-%s-01") % (next_year, next_month),'%Y-%m-%d').date() - timedelta(days=1)
         else:
             start_date = date
             end_date = date
