@@ -313,7 +313,6 @@ main.container {
   z-index: 9999 !important;
   pointer-events: auto !important;
   position: absolute !important;
-  display: none !important;
 }
 
 /* Remove hover-based dropdown display - only JavaScript controls this */
