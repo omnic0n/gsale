@@ -18,7 +18,7 @@ def get_years():
 #Group Data
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM collection WHERE id = %s", (group_id,))
+    cur.execute("SELECT * FROM collection WHERE id = %s AND account = %s", (group_id, session['id']))
     return cur.fetchone()
 
 def get_all_from_group_and_items(date):
@@ -121,7 +121,7 @@ def get_data_from_group_describe(group_id):
                     collection.date,
                     collection.image
                     FROM collection collection
-                    WHERE collection.id = %s""", (group_id, ))
+                    WHERE collection.id = %s AND collection.account = %s""", (group_id, session['id']))
     return list(cur.fetchall())
 
 def get_group_sold_from_date(start_date, end_date):
@@ -162,12 +162,22 @@ def get_group_sold_from_day(day):
 #Item Data
 def get_group_id(item_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT group_id FROM items WHERE id = %s", (item_id, ))
+    cur.execute("""
+        SELECT i.group_id 
+        FROM items i 
+        INNER JOIN collection c ON i.group_id = c.id 
+        WHERE i.id = %s AND c.account = %s
+    """, (item_id, session['id']))
     return cur.fetchone()
 
 def get_all_from_items(item_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
+    cur.execute("""
+        SELECT i.* 
+        FROM items i 
+        INNER JOIN collection c ON i.group_id = c.id 
+        WHERE i.id = %s AND c.account = %s
+    """, (item_id, session['id']))
     return list(cur.fetchall())
 
 def get_list_of_items_with_name(name,sold):
@@ -202,19 +212,29 @@ def get_data_from_item_groups(group_id):
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN sale sale ON sale.id = items.id
-                    WHERE items.group_id = %s
+                    WHERE items.group_id = %s AND collection.account = %s
                     GROUP BY items.id, sale.date, sale.price, sale.shipping_fee
-                    ORDER BY sale.date""", (group_id, ))
+                    ORDER BY sale.date""", (group_id, session['id']))
     return list(cur.fetchall())
 
 def get_total_items_in_group(group_id):
     cur = mysql.connection.cursor()
-    cur.execute(""" SELECT count(*) as total from items WHERE group_id = %s""", (group_id, ))
+    cur.execute(""" 
+        SELECT count(*) as total 
+        FROM items i 
+        INNER JOIN collection c ON i.group_id = c.id 
+        WHERE i.group_id = %s AND c.account = %s
+    """, (group_id, session['id']))
     return cur.fetchone()
 
 def get_total_items_in_group_sold(group_id):
     cur = mysql.connection.cursor()
-    cur.execute(""" SELECT count(*) as total from items WHERE group_id = %s AND sold = 1""", (group_id, ))
+    cur.execute(""" 
+        SELECT count(*) as total 
+        FROM items i 
+        INNER JOIN collection c ON i.group_id = c.id 
+        WHERE i.group_id = %s AND i.sold = 1 AND c.account = %s
+    """, (group_id, session['id']))
     return cur.fetchone()
 
 def get_sold_from_date(start_date, end_date):
@@ -275,7 +295,7 @@ def get_data_for_item_describe(item_id):
                     collection.date AS purchase_date
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
-                    WHERE items.id = %s""", (item_id, ))
+                    WHERE items.id = %s AND collection.account = %s""", (item_id, session['id']))
     return list(cur.fetchall())
 
 def get_all_items_not_sold():
@@ -302,22 +322,26 @@ def get_all_items_sold():
 def get_data_from_sale(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
-                    date, 
-                    price, 
-                    shipping_fee
-                    from sale
-                    WHERE id = %s""", (item_id, ))
+                    s.date, 
+                    s.price, 
+                    s.shipping_fee
+                    FROM sale s
+                    INNER JOIN items i ON s.id = i.id
+                    INNER JOIN collection c ON i.group_id = c.id
+                    WHERE s.id = %s AND c.account = %s""", (item_id, session['id']))
     return list(cur.fetchall())
 
 def get_data_for_item_sold(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
-                    sale.price, 
-                    sale.date,
-                    sale.shipping_fee,
-                    (sale.price - sale.shipping_fee) AS net
-                    FROM sale sale
-                    WHERE sale.id = %s""", (item_id, ))
+                    s.price, 
+                    s.date,
+                    s.shipping_fee,
+                    (s.price - s.shipping_fee) AS net
+                    FROM sale s
+                    INNER JOIN items i ON s.id = i.id
+                    INNER JOIN collection c ON i.group_id = c.id
+                    WHERE s.id = %s AND c.account = %s""", (item_id, session['id']))
     return list(cur.fetchall())
 
 def get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage):
@@ -407,7 +431,7 @@ def get_data_for_expense_describe(id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
                     * FROM expenses
-                    WHERE id = %s""", (id, ))
+                    WHERE id = %s AND account = %s""", (id, session['id']))
     return list(cur.fetchall())
 
 #Category Data
@@ -454,15 +478,21 @@ def get_group_profit(group_id):
         SELECT COALESCE(SUM(s.price - s.shipping_fee), 0) AS price 
         FROM sale s
         INNER JOIN items i ON s.id = i.id
-        WHERE i.sold = 1 AND i.group_id = %s
-    """, (group_id,))
+        INNER JOIN collection c ON i.group_id = c.id
+        WHERE i.sold = 1 AND i.group_id = %s AND c.account = %s
+    """, (group_id, session['id']))
     result = cur.fetchone()
     return result['price']
 
 #Location Data
 def get_location(group_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT longitude, latitude FROM location WHERE group_id = %s", (group_id, ))
+    cur.execute("""
+        SELECT l.longitude, l.latitude 
+        FROM location l
+        INNER JOIN collection c ON l.group_id = c.id
+        WHERE l.group_id = %s AND c.account = %s
+    """, (group_id, session['id']))
     return cur.fetchone()
 
 def get_location_from_date(start_date, end_date):
@@ -475,8 +505,9 @@ def get_location_from_date(start_date, end_date):
                    FROM location
                    INNER join collection collection on location.group_id = collection.id
                    WHERE collection.date >= %s AND collection.date <= %s
+                   AND collection.account = %s
                    AND latitude != '' AND longitude != '' """,
-                   (start_date, end_date,))
+                   (start_date, end_date, session['id']))
     return list(cur.fetchall())
 
 #Platform Data
@@ -514,7 +545,7 @@ def get_data_for_case_describe(case_id):
                     platform.name as platform_name
                     from cases
                     INNER JOIN platform platform on cases.platform = platform.id 
-                    WHERE cases.id = %s""", (case_id, ))
+                    WHERE cases.id = %s AND cases.account = %s""", (case_id, session['id']))
     return list(cur.fetchall())
 
 def get_list_of_cases_with_name(name):

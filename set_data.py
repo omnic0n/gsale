@@ -18,7 +18,12 @@ def generate_uuid():
 
 def set_mark_sold(id,sold):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE items SET sold = %s where id = %s", (sold, id,))
+    cur.execute("""
+        UPDATE items i 
+        INNER JOIN collection c ON i.group_id = c.id 
+        SET i.sold = %s 
+        WHERE i.id = %s AND c.account = %s
+    """, (sold, id, session['id']))
     mysql.connection.commit()
     cur.close()
 
@@ -47,23 +52,35 @@ def set_quick_sale(details):
 
 def set_sale_data(details):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE sale SET date = %s, price = %s, shipping_fee = %s WHERE id = %s", 
-                (details['sale_date'], details['price'], details['shipping_fee'], details['id'],))
+    cur.execute("""
+        UPDATE sale s
+        INNER JOIN items i ON s.id = i.id
+        INNER JOIN collection c ON i.group_id = c.id
+        SET s.date = %s, s.price = %s, s.shipping_fee = %s 
+        WHERE s.id = %s AND c.account = %s
+    """, (details['sale_date'], details['price'], details['shipping_fee'], details['id'], session['id']))
     mysql.connection.commit()
     cur.close()
 
 
 def set_items_modify(details):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE items SET name = %s, group_id = %s, category_id = %s, returned = %s, storage = %s, list_date = %s where id = %s", 
-                (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['list_date'], details['id']))
+    cur.execute("""
+        UPDATE items i
+        INNER JOIN collection c ON i.group_id = c.id
+        SET i.name = %s, i.group_id = %s, i.category_id = %s, i.returned = %s, i.storage = %s, i.list_date = %s 
+        WHERE i.id = %s AND c.account = %s
+    """, (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['list_date'], details['id'], session['id']))
     mysql.connection.commit()
     cur.close()
 
 def remove_item_data(id):
     cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM items WHERE id = %s", 
-                (id, ))
+    cur.execute("""
+        DELETE i FROM items i
+        INNER JOIN collection c ON i.group_id = c.id
+        WHERE i.id = %s AND c.account = %s
+    """, (id, session['id']))
     mysql.connection.commit()
     cur.close()
 
@@ -81,15 +98,15 @@ def set_group_add(group_name, details, image_id):
 
 def set_group_modify(details, image_id):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE collection SET name = %s, date = %s, price = %s, image = %s where id = %s", 
-                (details['name'], details['date'], details['price'], image_id, details['id']))
+    cur.execute("UPDATE collection SET name = %s, date = %s, price = %s, image = %s where id = %s AND account = %s", 
+                (details['name'], details['date'], details['price'], image_id, details['id'], session['id']))
     mysql.connection.commit()
     cur.close()
 
 def remove_group_data(id):
     cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM collection WHERE id = %s", 
-                (id, ))
+    cur.execute("DELETE FROM collection WHERE id = %s AND account = %s", 
+                (id, session['id']))
     mysql.connection.commit()
     cur.close()
 
@@ -103,8 +120,8 @@ def set_expense(name, details, image_id, expense_type):
 
 def set_modify_expense(details, price, milage, image_id):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s", 
-                (details['name'], details['date'], price, milage, details['expense_type'], image_id, details['id']))
+    cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s AND account = %s", 
+                (details['name'], details['date'], price, milage, details['expense_type'], image_id, details['id'], session['id']))
     mysql.connection.commit()
     cur.close()
 
@@ -122,15 +139,15 @@ def add_case_data(details):
 
 def set_cases_modify(details):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE cases SET name = %s, platform = %s where id = %s", 
-                (details['name'], details['platform'], details['id']))
+    cur.execute("UPDATE cases SET name = %s, platform = %s where id = %s AND account = %s", 
+                (details['name'], details['platform'], details['id'], session['id']))
     mysql.connection.commit()
     cur.close()
 
 
 def remove_case_data(id):
     cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM cases WHERE id = %s", 
-                (id, ))
+    cur.execute("DELETE FROM cases WHERE id = %s AND account = %s", 
+                (id, session['id']))
     mysql.connection.commit()
     cur.close()
