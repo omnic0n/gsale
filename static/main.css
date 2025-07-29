@@ -216,7 +216,8 @@ main.container {
   border-left: 4px solid #f59e0b;
 }
 
-.alert-danger {
+.alert-danger,
+.alert-error {
   background: rgba(255, 255, 255, 0.95);
   color: #000000;
   border-left: 4px solid #ef4444;
