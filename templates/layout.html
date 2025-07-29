@@ -227,10 +227,16 @@
     
     <script>
       function logoutWithRedirect() {
-        // Get the current page path
-        const currentPage = window.location.pathname + window.location.search;
+        // Get the current page path and search parameters
+        const currentPath = window.location.pathname;
+        const currentSearch = window.location.search;
+        const currentPage = currentPath + currentSearch;
+        
+        // Ensure we have a valid path (not empty)
+        const pageToRedirect = currentPage || '/';
+        
         // Redirect to logout with the current page as parameter
-        window.location.href = '/logout/' + encodeURIComponent(currentPage);
+        window.location.href = '/logout/' + encodeURIComponent(pageToRedirect);
       }
       
       // Dropdown functionality - click based
@@ -276,9 +282,11 @@
       
       const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
 
-      const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
-          v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
-          )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+      const comparer = (idx, asc) => (a, b) => {
+        const v1 = getCellValue(asc ? a : b, idx);
+        const v2 = getCellValue(asc ? b : a, idx);
+        return v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2);
+      };
 
       // do the work...
       document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
