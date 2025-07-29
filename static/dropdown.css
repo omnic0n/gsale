@@ -90,9 +90,8 @@
   outline-offset: 2px;
 }
 
-/* Show the dropdown menu on hover and focus */
-.dropdown:hover .dropdown-content,
-.dropdown:focus-within .dropdown-content {
+/* Show the dropdown menu on hover only */
+.dropdown:hover .dropdown-content {
   display: block;
   pointer-events: auto;
 }
@@ -103,8 +102,7 @@
 }
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
-.dropdown:hover .dropbtn,
-.dropdown:focus-within .dropbtn {
+.dropdown:hover .dropbtn {
   background: rgba(255, 255, 255, 1);
   color: #000000;
   transform: translateY(-2px);

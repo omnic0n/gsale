@@ -244,7 +244,7 @@
         window.location.href = '/logout/' + encodeURIComponent(currentPage);
       }
       
-      // Dropdown functionality
+      // Dropdown functionality - pure hover based
       document.addEventListener('DOMContentLoaded', function() {
         const dropdowns = document.querySelectorAll('.dropdown');
         
@@ -253,7 +253,7 @@
           const dropdownContent = dropdown.querySelector('.dropdown-content');
           let timeout;
           
-          // Show dropdown on mouse enter
+          // Show dropdown on mouse enter (no click required)
           dropdown.addEventListener('mouseenter', function() {
             clearTimeout(timeout);
             dropdownContent.style.display = 'block';
@@ -263,7 +263,7 @@
           dropdown.addEventListener('mouseleave', function() {
             timeout = setTimeout(() => {
               dropdownContent.style.display = 'none';
-            }, 100); // Reduced delay to 100ms
+            }, 200); // Increased delay for better user experience
           });
           
           // Keep dropdown open when hovering over content
@@ -274,15 +274,11 @@
           dropdownContent.addEventListener('mouseleave', function() {
             timeout = setTimeout(() => {
               dropdownContent.style.display = 'none';
-            }, 100);
+            }, 200);
           });
           
-          // Also handle click outside to close
-          document.addEventListener('click', function(event) {
-            if (!dropdown.contains(event.target)) {
-              dropdownContent.style.display = 'none';
-            }
-          });
+          // Remove click outside handler since we want pure hover
+          // The dropdowns will close automatically on mouse leave
         });
       });
       
