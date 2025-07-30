@@ -16,8 +16,15 @@ class UserManager {
     }
     
     var cookie: String? {
-        get { defaults.string(forKey: cookieKey) }
-        set { defaults.set(newValue, forKey: cookieKey) }
+        get { 
+            let cookie = defaults.string(forKey: cookieKey)
+            print("🍪 Retrieved cookie: \(cookie ?? "none")")
+            return cookie
+        }
+        set { 
+            print("🍪 Setting cookie: \(newValue ?? "none")")
+            defaults.set(newValue, forKey: cookieKey) 
+        }
     }
     
     var userId: Int? {
@@ -40,6 +47,12 @@ class UserManager {
         userId = response.user_id
         username = response.username
         isAdmin = response.is_admin ?? false
+        
+        print("💾 Saved login data:")
+        print("   Cookie: \(response.cookie ?? "none")")
+        print("   Username: \(response.username ?? "none")")
+        print("   User ID: \(response.user_id ?? 0)")
+        print("   Is Admin: \(response.is_admin ?? false)")
     }
     
     func logout() {

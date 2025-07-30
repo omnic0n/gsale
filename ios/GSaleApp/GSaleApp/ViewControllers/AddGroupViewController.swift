@@ -195,16 +195,16 @@ class AddGroupViewController: UIViewController {
                     image: selectedImage // This can be nil
                 )
                 
-                await MainActor.run {
-                    self.activityIndicator.stopAnimating()
-                    self.addButton.isEnabled = true
-                    
-                    if response.success {
-                        self.showSuccessAlert()
-                    } else {
-                        self.showAlert(title: "Error", message: response.message)
-                    }
-                }
+                                       await MainActor.run {
+                           self.activityIndicator.stopAnimating()
+                           self.addButton.isEnabled = true
+                           
+                           if response.success {
+                               self.showSuccessAlert(groupId: response.group_id)
+                           } else {
+                               self.showAlert(title: "Error", message: response.message)
+                           }
+                       }
             } catch {
                 await MainActor.run {
                     self.activityIndicator.stopAnimating()
@@ -226,13 +226,45 @@ class AddGroupViewController: UIViewController {
         }
     }
     
-    private func showSuccessAlert() {
-        let alert = UIAlertController(title: "Success", message: "Group created successfully using the web app! You can view it in the GSale web interface.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            self.dismiss(animated: true)
-        })
-        present(alert, animated: true)
-    }
+               private func showSuccessAlert(groupId: String? = nil) {
+               let message: String
+               if let groupId = groupId {
+                   message = "Group created successfully! Group ID: \(groupId)"
+               } else {
+                   message = "Group created successfully using the web app! You can view it in the GSale web interface."
+               }
+               
+               let alert = UIAlertController(title: "Success", message: message, preferredStyle: .alert)
+               alert.addAction(UIAlertAction(title: "View Details", style: .default) { _ in
+                   if let groupId = groupId {
+                       self.showGroupDetails(groupId: groupId)
+                   } else {
+                       self.dismiss(animated: true)
+                   }
+               })
+               alert.addAction(UIAlertAction(title: "OK", style: .cancel) { _ in
+                   self.dismiss(animated: true)
+               })
+               present(alert, animated: true)
+           }
+           
+           private func showGroupDetails(groupId: String) {
+               Task {
+                   do {
+                       let groupDetail = try await NetworkManager.shared.getGroupDetails(groupId: groupId)
+                       
+                       await MainActor.run {
+                           let detailVC = GroupDetailViewController(groupDetail: groupDetail)
+                           let navController = UINavigationController(rootViewController: detailVC)
+                           self.present(navController, animated: true)
+                       }
+                   } catch {
+                       await MainActor.run {
+                           self.showAlert(title: "Error", message: "Failed to load group details. Please try again.")
+                       }
+                   }
+               }
+           }
     
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)

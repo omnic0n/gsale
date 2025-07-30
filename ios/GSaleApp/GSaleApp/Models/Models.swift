@@ -11,7 +11,7 @@ struct LoginResponse: Codable {
 }
 
 struct Group: Codable {
-    let id: Int
+    let id: String
     let name: String
     let description: String?
     let created_at: String
@@ -21,7 +21,7 @@ struct Group: Codable {
 struct AddGroupResponse: Codable {
     let success: Bool
     let message: String
-    let group_id: Int?
+    let group_id: String?
 }
 
 struct GroupsResponse: Codable {
@@ -31,7 +31,7 @@ struct GroupsResponse: Codable {
 
 // MARK: - Group Detail Models
 struct GroupDetail: Codable {
-    let id: Int
+    let id: String
     let name: String
     let date: String
     let price: Double
@@ -42,7 +42,7 @@ struct GroupDetail: Codable {
 }
 
 struct GroupItem: Codable {
-    let id: Int
+    let id: String
     let name: String
     let price: Double
     let sold: Bool

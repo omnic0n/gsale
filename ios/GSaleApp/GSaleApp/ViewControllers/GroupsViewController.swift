@@ -117,10 +117,10 @@ extension GroupsViewController: UITableViewDataSource {
         let group = groups[indexPath.row]
         
         cell.textLabel?.text = group.name
-        cell.detailTextLabel?.text = "Created: \(group.created_at)"
+        cell.detailTextLabel?.text = group.description ?? "Created: \(group.created_at)"
         cell.accessoryType = .disclosureIndicator
         
-        print("📱 Configuring cell for group: \(group.name)")
+        print("📱 Configuring cell for group: \(group.name) - \(group.description ?? "no description")")
         return cell
     }
     
@@ -140,7 +140,7 @@ extension GroupsViewController: UITableViewDelegate {
         showGroupDetails(groupId: group.id)
     }
     
-    private func showGroupDetails(groupId: Int) {
+    private func showGroupDetails(groupId: String) {
         Task {
             do {
                 let groupDetail = try await NetworkManager.shared.getGroupDetails(groupId: groupId)
