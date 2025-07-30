@@ -1,19 +1,9 @@
-from flask import Flask, session
-from flask_mysqldb import MySQL
+from flask import session
 from datetime import datetime, date, timedelta
 import datetime
 
-#Mysql Config
-app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Required for session functionality
-
-# Initialize MySQL with error handling
-try:
-    mysql = MySQL(app)
-    print("MySQL initialized in get_data.py")
-except Exception as e:
-    print(f"Error initializing MySQL in get_data.py: {e}")
-    mysql = None
+# Import the mysql object from the main app
+from app import mysql
 
 #Get Years
 def get_years():
@@ -24,7 +14,7 @@ def get_years():
 #Group Data
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM collection WHERE id = %s AND account = %s", (group_id, session['id']))
+    cur.execute("SELECT * FROM collection WHERE id = %s AND account = %s", (group_id, session.get('id')))
     return cur.fetchone()
 
 def get_all_from_group_and_items(date):
@@ -46,7 +36,7 @@ def get_all_from_group_and_items(date):
         WHERE c.date LIKE %s AND c.account = %s
         GROUP BY c.id, c.name, c.price, c.date
         ORDER BY c.date
-    """, (date, session['id']))
+    """, (date, session.get('id')))
     return list(cur.fetchall())
 
 def get_all_from_group_and_items_by_name(name):
@@ -67,14 +57,14 @@ def get_all_from_group_and_items_by_name(name):
         WHERE c.name LIKE %s AND c.account = %s
         GROUP BY c.id, c.name, c.price, c.date
         ORDER BY c.date
-    """, (name, session['id']))
+    """, (name, session.get('id')))
     return list(cur.fetchall())
 
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     if not date:
         date = str(datetime.date.today().year)
-    cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", ('%' + date + '%', session['id'], ))
+    cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", ('%' + date + '%', session.get('id'), ))
     return list(cur.fetchall())
 
 def get_purchased_from_date(start_date, end_date):
@@ -90,7 +80,7 @@ def get_purchased_from_date(start_date, end_date):
         AND account = %s 
         GROUP BY date 
         ORDER BY date ASC
-    """, (start_date, end_date, session['id']))
+    """, (start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
 def get_purchased_from_day(day, year):
@@ -115,7 +105,7 @@ def get_purchased_from_day(day, year):
         AND account = %s 
         GROUP BY date 
         ORDER BY date ASC
-    """, (day, start_date, end_date, session['id']))
+    """, (day, start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
 def get_data_from_group_describe(group_id):
@@ -127,7 +117,7 @@ def get_data_from_group_describe(group_id):
                     collection.date,
                     collection.image
                     FROM collection collection
-                    WHERE collection.id = %s AND collection.account = %s""", (group_id, session['id']))
+                    WHERE collection.id = %s AND collection.account = %s""", (group_id, session.get('id')))
     return list(cur.fetchall())
 
 def get_group_sold_from_date(start_date, end_date):
@@ -144,7 +134,7 @@ def get_group_sold_from_date(start_date, end_date):
         AND c.account = %s 
         GROUP BY c.date 
         ORDER BY c.date
-    """, (start_date, end_date, session['id']))
+    """, (start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
 def get_group_sold_from_day(day):
@@ -162,7 +152,7 @@ def get_group_sold_from_day(day):
         AND c.account = %s 
         GROUP BY c.date 
         ORDER BY c.date
-    """, (day, session['id']))
+    """, (day, session.get('id')))
     return list(cur.fetchall())
 
 #Item Data
@@ -173,7 +163,7 @@ def get_group_id(item_id):
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
         WHERE i.id = %s AND c.account = %s
-    """, (item_id, session['id']))
+    """, (item_id, session.get('id')))
     return cur.fetchone()
 
 def get_all_from_items(item_id):
@@ -183,7 +173,7 @@ def get_all_from_items(item_id):
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
         WHERE i.id = %s AND c.account = %s
-    """, (item_id, session['id']))
+    """, (item_id, session.get('id')))
     return list(cur.fetchall())
 
 def get_list_of_items_with_name(name,sold):
@@ -200,7 +190,7 @@ def get_list_of_items_with_name(name,sold):
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
                 INNER JOIN sale sale ON items.id = sale.id
-                WHERE items.name LIKE %s AND collection.account = %s AND items.sold LIKE %s""", ('%'+ name + '%', session['id'], sold ))
+                WHERE items.name LIKE %s AND collection.account = %s AND items.sold LIKE %s""", ('%'+ name + '%', session.get('id'), sold ))
     return list(cur.fetchall())
 
 def get_data_from_item_groups(group_id):
@@ -220,7 +210,7 @@ def get_data_from_item_groups(group_id):
                     LEFT JOIN sale sale ON sale.id = items.id
                     WHERE items.group_id = %s AND collection.account = %s
                     GROUP BY items.id, sale.date, sale.price, sale.shipping_fee
-                    ORDER BY sale.date""", (group_id, session['id']))
+                    ORDER BY sale.date""", (group_id, session.get('id')))
     return list(cur.fetchall())
 
 def get_total_items_in_group(group_id):
@@ -230,7 +220,7 @@ def get_total_items_in_group(group_id):
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
         WHERE i.group_id = %s AND c.account = %s
-    """, (group_id, session['id']))
+    """, (group_id, session.get('id')))
     return cur.fetchone()
 
 def get_total_items_in_group_sold(group_id):
@@ -240,7 +230,7 @@ def get_total_items_in_group_sold(group_id):
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
         WHERE i.group_id = %s AND i.sold = 1 AND c.account = %s
-    """, (group_id, session['id']))
+    """, (group_id, session.get('id')))
     return cur.fetchone()
 
 def get_sold_from_date(start_date, end_date):
@@ -261,7 +251,7 @@ def get_sold_from_date(start_date, end_date):
         AND c.account = %s 
         GROUP BY s.date 
         ORDER BY s.date ASC
-    """, (start_date, end_date, session['id']))
+    """, (start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
 
@@ -283,7 +273,7 @@ def get_sold_from_day(day):
         AND c.account = %s 
         GROUP BY s.date 
         ORDER BY s.date ASC
-    """, (day, session['id']))
+    """, (day, session.get('id')))
     return list(cur.fetchall())
 
 def get_data_for_item_describe(item_id):
@@ -301,7 +291,7 @@ def get_data_for_item_describe(item_id):
                     collection.date AS purchase_date
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
-                    WHERE items.id = %s AND collection.account = %s""", (item_id, session['id']))
+                    WHERE items.id = %s AND collection.account = %s""", (item_id, session.get('id')))
     return list(cur.fetchall())
 
 def get_all_items_not_sold():
@@ -310,7 +300,7 @@ def get_all_items_not_sold():
                 SELECT 
                 * FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id  
-                WHERE items.sold = 0 AND collection.account = %s ORDER BY items.name ASC""", (session['id'], ))
+                WHERE items.sold = 0 AND collection.account = %s ORDER BY items.name ASC""", (session.get('id'), ))
     return list(cur.fetchall())
 
 def get_all_items_sold():
@@ -322,7 +312,7 @@ def get_all_items_sold():
                     FROM sale
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON items.group_id = collection.id 
-                    WHERE items.sold = 1 AND collection.account = %s ORDER BY sale.date ASC""", (session['id'], ))
+                    WHERE items.sold = 1 AND collection.account = %s ORDER BY sale.date ASC""", (session.get('id'), ))
     return list(cur.fetchall())
 
 def get_data_from_sale(item_id):
@@ -334,7 +324,7 @@ def get_data_from_sale(item_id):
                     FROM sale s
                     INNER JOIN items i ON s.id = i.id
                     INNER JOIN collection c ON i.group_id = c.id
-                    WHERE s.id = %s AND c.account = %s""", (item_id, session['id']))
+                    WHERE s.id = %s AND c.account = %s""", (item_id, session.get('id')))
     return list(cur.fetchall())
 
 def get_data_for_item_sold(item_id):
@@ -347,7 +337,7 @@ def get_data_for_item_sold(item_id):
                     FROM sale s
                     INNER JOIN items i ON s.id = i.id
                     INNER JOIN collection c ON i.group_id = c.id
-                    WHERE s.id = %s AND c.account = %s""", (item_id, session['id']))
+                    WHERE s.id = %s AND c.account = %s""", (item_id, session.get('id')))
     return list(cur.fetchall())
 
 def get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage):
@@ -374,7 +364,7 @@ def get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_dat
         AND i.list_date LIKE %s
         AND i.storage LIKE %s
         ORDER BY c.date ASC
-    """, (session['id'], sold_date, purchase_date, sold, list_date, storage))
+    """, (session.get('id'), sold_date, purchase_date, sold, list_date, storage))
     return list(cur.fetchall())
 
 def get_list_of_items_with_categories(category_id):
@@ -394,7 +384,7 @@ def get_list_of_items_with_categories(category_id):
                     INNER JOIN categories categories ON items.category_id = categories.id
                     WHERE categories.id = %s AND collection.account = %s
                     ORDER BY categories.id""",
-                    (category_id, session['id'], ))
+                    (category_id, session.get('id'), ))
         return list(cur.fetchall())
 
 #Expense Data
@@ -412,7 +402,7 @@ def get_expenses_from_date(start_date, end_date, type):
         AND type = %s
         AND account = %s
         ORDER BY date
-    """, (start_date, end_date, type, session['id']))
+    """, (start_date, end_date, type, session.get('id')))
     return list(cur.fetchall())
 
 def get_all_from_expenses_date(start_date, end_date):
@@ -422,22 +412,22 @@ def get_all_from_expenses_date(start_date, end_date):
                     WHERE date >= %s AND date <= %s
                     AND expenses.account = %s
 					ORDER BY date""",
-                    (start_date, end_date, session['id'], ))
+                    (start_date, end_date, session.get('id'), ))
     return list(cur.fetchall())
 
 def get_all_from_expenses(date):
     cur = mysql.connection.cursor()
     if not date:
-        cur.execute("SELECT * FROM expenses WHERE expenses.account = %s ORDER BY name ASC", (session['id'], ))
+        cur.execute("SELECT * FROM expenses WHERE expenses.account = %s ORDER BY name ASC", (session.get('id'), ))
     else:
-        cur.execute("SELECT * FROM expenses WHERE date LIKE %s AND expenses.account = %s ORDER BY name ASC", (date, session['id'], ))
+        cur.execute("SELECT * FROM expenses WHERE date LIKE %s AND expenses.account = %s ORDER BY name ASC", (date, session.get('id'), ))
     return list(cur.fetchall())
 
 def get_data_for_expense_describe(id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
                     * FROM expenses
-                    WHERE id = %s AND account = %s""", (id, session['id']))
+                    WHERE id = %s AND account = %s""", (id, session.get('id')))
     return list(cur.fetchall())
 
 #Category Data
@@ -463,7 +453,7 @@ def get_profit(year):
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
         WHERE c.account = %s AND c.date LIKE %s AND i.sold = 1
-    """, (session['id'], year_value))
+    """, (session.get('id'), year_value))
     sales_result = cur.fetchone()
     sale_price = sales_result['sale_price'] if sales_result else 0
     
@@ -472,7 +462,7 @@ def get_profit(year):
         SELECT COALESCE(SUM(price), 0) AS purchase_price
         FROM collection
         WHERE account = %s AND date LIKE %s
-    """, (session['id'], year_value))
+    """, (session.get('id'), year_value))
     purchase_result = cur.fetchone()
     purchase_price = purchase_result['purchase_price'] if purchase_result else 0
     
@@ -486,7 +476,7 @@ def get_group_profit(group_id):
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
         WHERE i.sold = 1 AND i.group_id = %s AND c.account = %s
-    """, (group_id, session['id']))
+    """, (group_id, session.get('id')))
     result = cur.fetchone()
     return result['price']
 
@@ -498,7 +488,7 @@ def get_location(group_id):
         FROM location l
         INNER JOIN collection c ON l.group_id = c.id
         WHERE l.group_id = %s AND c.account = %s
-    """, (group_id, session['id']))
+    """, (group_id, session.get('id')))
     return cur.fetchone()
 
 def get_location_from_date(start_date, end_date):
@@ -513,7 +503,7 @@ def get_location_from_date(start_date, end_date):
                    WHERE collection.date >= %s AND collection.date <= %s
                    AND collection.account = %s
                    AND latitude != '' AND longitude != '' """,
-                   (start_date, end_date, session['id']))
+                   (start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
 #Platform Data
@@ -539,7 +529,7 @@ def get_all_from_cases(platform):
                 WHERE cases.account = %s 
                 AND
                 cases.platform LIKE %s
-                ORDER BY name ASC""", (session['id'],platform, ))
+                ORDER BY name ASC""", (session.get('id'),platform, ))
     return list(cur.fetchall())
 
 def get_data_for_case_describe(case_id):
@@ -551,7 +541,7 @@ def get_data_for_case_describe(case_id):
                     platform.name as platform_name
                     from cases
                     INNER JOIN platform platform on cases.platform = platform.id 
-                    WHERE cases.id = %s AND cases.account = %s""", (case_id, session['id']))
+                    WHERE cases.id = %s AND cases.account = %s""", (case_id, session.get('id')))
     return list(cur.fetchall())
 
 def get_list_of_cases_with_name(name):
@@ -566,7 +556,7 @@ def get_list_of_cases_with_name(name):
                 INNER JOIN platform platform on cases.platform = platform.id 
                 WHERE cases.name like %s 
                 AND 
-                cases.account = %s""", ('%'+ name + '%', session['id'], ))
+                cases.account = %s""", ('%'+ name + '%', session.get('id'), ))
     return list(cur.fetchall())
 
 # Optimized Report Functions
@@ -596,7 +586,7 @@ def get_combined_profit_report(start_date, end_date):
         ) c ON s.date = c.date
         GROUP BY COALESCE(s.date, c.date)
         ORDER BY COALESCE(s.date, c.date)
-    """, (start_date, end_date, session['id'], start_date, end_date, session['id']))
+    """, (start_date, end_date, session.get('id'), start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
 def get_combined_sales_summary(start_date, end_date):
@@ -618,7 +608,7 @@ def get_combined_sales_summary(start_date, end_date):
         WHERE s.date BETWEEN %s AND %s AND c.account = %s
         GROUP BY s.date
         ORDER BY s.date
-    """, (start_date, end_date, session['id']))
+    """, (start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
 def get_expense_summary_by_type(start_date, end_date):
@@ -636,7 +626,7 @@ def get_expense_summary_by_type(start_date, end_date):
         WHERE date BETWEEN %s AND %s AND account = %s
         GROUP BY type
         ORDER BY type
-    """, (start_date, end_date, session['id']))
+    """, (start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
 # Admin Functions
