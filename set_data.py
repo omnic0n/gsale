@@ -225,3 +225,20 @@ def create_user(details):
     except Exception as e:
         print(f"Error creating user: {e}")
         return False
+
+def change_user_password(user_id, new_password):
+    """Change a user's password"""
+    try:
+        import hashlib
+        
+        # Hash the new password
+        hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
+        
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE accounts SET password = %s WHERE id = %s", (hashed_password, user_id))
+        mysql.connection.commit()
+        cur.close()
+        return True
+    except Exception as e:
+        print(f"Error changing password: {e}")
+        return False

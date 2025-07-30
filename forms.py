@@ -118,3 +118,8 @@ class AddUserForm(FlaskForm):
     is_admin = BooleanField('Admin Privileges')
     submit = SubmitField('Add User')
 
+class ChangePasswordForm(FlaskForm):
+    new_password = StringField('New Password', validators=[DataRequired(), Length(min=6, max=100)])
+    confirm_password = StringField('Confirm Password', validators=[DataRequired(), EqualTo('new_password', message='Passwords must match')])
+    submit = SubmitField('Change Password')
+

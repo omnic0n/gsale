@@ -872,6 +872,33 @@ def admin_panel():
                     flash('Failed to update admin status.', 'error')
                 return redirect(url_for('admin_panel'))
             
+            elif action == 'change_password':
+                # Change user password
+                user_id = request.form.get('user_id')
+                new_password = request.form.get('new_password')
+                confirm_password = request.form.get('confirm_new_password')
+                
+                # Validate input
+                if not new_password or not confirm_password:
+                    flash('Password fields are required.', 'error')
+                    return redirect(url_for('admin_panel'))
+                
+                if new_password != confirm_password:
+                    flash('Passwords do not match.', 'error')
+                    return redirect(url_for('admin_panel'))
+                
+                if len(new_password) < 6:
+                    flash('Password must be at least 6 characters long.', 'error')
+                    return redirect(url_for('admin_panel'))
+                
+                # Change password
+                success = set_data.change_user_password(user_id, new_password)
+                if success:
+                    flash('Password changed successfully.', 'success')
+                else:
+                    flash('Failed to change password.', 'error')
+                return redirect(url_for('admin_panel'))
+            
             elif action == 'delete_user':
                 # Delete user (only if not the current admin)
                 user_id = request.form.get('user_id')
