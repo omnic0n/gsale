@@ -1,6 +1,32 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<style>
+.action-buttons {
+    min-width: 200px;
+}
+
+.action-buttons .btn {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+}
+
+.action-buttons .d-flex {
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        min-width: 150px;
+    }
+    
+    .action-buttons .btn {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
+</style>
 <div class="container">
     <div class="row">
         <div class="col-md-12">
@@ -90,35 +116,41 @@
                                                 <span class="text-primary">{{ user.is_current_user }}</span>
                                             {% endif %}
                                         </td>
-                                        <td>
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="user_id" value="{{ user.id or '' }}">
-                                                <input type="hidden" name="action" value="toggle_admin">
-                                                <button type="submit" class="btn btn-sm btn-warning" 
-                                                        onclick="return confirm('Are you sure you want to toggle admin status for {{ user.username or 'this user' }}?')">
-                                                    {% if user.is_admin %}
-                                                        Remove Admin
-                                                    {% else %}
-                                                        Make Admin
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-                                            
-                                            <button type="button" class="btn btn-sm btn-info" 
-                                                    onclick="openChangePasswordModal('{{ user.id or '' }}', '{{ user.username or 'this user' }}')">
-                                                Change Password
-                                            </button>
-                                            
-                                            {% if not user.is_current_user %}
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="user_id" value="{{ user.id or '' }}">
-                                                <input type="hidden" name="action" value="delete_user">
-                                                <button type="submit" class="btn btn-sm btn-danger" 
-                                                        onclick="return confirm('Are you sure you want to delete {{ user.username or 'this user' }}? This action cannot be undone.')">
-                                                    Delete User
-                                                </button>
-                                            </form>
-                                            {% endif %}
+                                        <td class="action-buttons">
+                                            <div class="d-flex flex-column gap-1">
+                                                <div class="d-flex gap-1">
+                                                    <form method="POST" style="display: inline;">
+                                                        <input type="hidden" name="user_id" value="{{ user.id or '' }}">
+                                                        <input type="hidden" name="action" value="toggle_admin">
+                                                        <button type="submit" class="btn btn-sm btn-warning" 
+                                                                onclick="return confirm('Are you sure you want to toggle admin status for {{ user.username or 'this user' }}?')">
+                                                            {% if user.is_admin %}
+                                                                Remove Admin
+                                                            {% else %}
+                                                                Make Admin
+                                                            {% endif %}
+                                                        </button>
+                                                    </form>
+                                                    
+                                                    <button type="button" class="btn btn-sm btn-info" 
+                                                            onclick="openChangePasswordModal('{{ user.id or '' }}', '{{ user.username or 'this user' }}')">
+                                                        Change Password
+                                                    </button>
+                                                </div>
+                                                
+                                                {% if not user.is_current_user %}
+                                                <div class="d-flex gap-1">
+                                                    <form method="POST" style="display: inline;">
+                                                        <input type="hidden" name="user_id" value="{{ user.id or '' }}">
+                                                        <input type="hidden" name="action" value="delete_user">
+                                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                                onclick="return confirm('Are you sure you want to delete {{ user.username or 'this user' }}? This action cannot be undone.')">
+                                                            Delete User
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
