@@ -168,16 +168,33 @@ def delete_user(user_id):
     """Delete a user account"""
     try:
         cur = mysql.connection.cursor()
-        # First delete all user's data
-        cur.execute("DELETE FROM collection WHERE account = %s", (user_id,))
-        cur.execute("DELETE FROM items WHERE group_id IN (SELECT id FROM collection WHERE account = %s)", (user_id,))
-        cur.execute("DELETE FROM sale WHERE id IN (SELECT id FROM items WHERE group_id IN (SELECT id FROM collection WHERE account = %s))", (user_id,))
+        
+        # First, get all the group IDs for this user
+        cur.execute("SELECT id FROM collection WHERE account = %s", (user_id,))
+        group_ids = [row[0] for row in cur.fetchall()]
+        
+        if group_ids:
+            # Delete sales for items in these groups
+            cur.execute("DELETE s FROM sale s INNER JOIN items i ON s.id = i.id WHERE i.group_id IN %s", (tuple(group_ids),))
+            
+            # Delete items in these groups
+            cur.execute("DELETE FROM items WHERE group_id IN %s", (tuple(group_ids),))
+            
+            # Delete locations for these groups
+            cur.execute("DELETE FROM location WHERE group_id IN %s", (tuple(group_ids),))
+            
+            # Delete the collections
+            cur.execute("DELETE FROM collection WHERE account = %s", (user_id,))
+        
+        # Delete expenses for this user
         cur.execute("DELETE FROM expenses WHERE account = %s", (user_id,))
+        
+        # Delete cases for this user
         cur.execute("DELETE FROM cases WHERE account = %s", (user_id,))
-        cur.execute("DELETE FROM location WHERE group_id IN (SELECT id FROM collection WHERE account = %s)", (user_id,))
         
         # Finally delete the user account
         cur.execute("DELETE FROM accounts WHERE id = %s", (user_id,))
+        
         mysql.connection.commit()
         cur.close()
         return True
