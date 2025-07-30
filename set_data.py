@@ -205,13 +205,14 @@ def delete_user(user_id):
 def create_user(details):
     """Create a new user account"""
     try:
-        import hashlib
+        import bcrypt
         
         # Generate UUID for the new user
         user_id = generate_uuid()
         
-        # Hash the password
-        hashed_password = hashlib.sha256(details['password'].encode()).hexdigest()
+        # Hash the password using bcrypt
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(details['password'].encode('utf-8'), salt)
         
         # Set admin status (1 for admin, 0 for regular user)
         is_admin = 1 if details.get('is_admin') else 0
@@ -229,10 +230,11 @@ def create_user(details):
 def change_user_password(user_id, new_password):
     """Change a user's password"""
     try:
-        import hashlib
+        import bcrypt
         
-        # Hash the new password
-        hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
+        # Hash the new password using bcrypt
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), salt)
         
         cur = mysql.connection.cursor()
         cur.execute("UPDATE accounts SET password = %s WHERE id = %s", (hashed_password, user_id))
