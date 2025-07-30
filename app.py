@@ -370,10 +370,42 @@ def group_add():
 
     if request.method == "POST":
         details = request.form
+        print(f"📝 Received form data: {details}")
+        
+        # Check for required fields
+        if 'date' not in details or 'name' not in details:
+            return jsonify({
+                'success': False,
+                'message': 'Missing required fields: date and name are required'
+            }), 400
+        
         group_name = "%s-%s" % (details['date'],details['name'])
-        image_id = files.upload_image(request.files['image'])
-        group_id = set_data.set_group_add(group_name, details, image_id)
-        return redirect(url_for('describe_group',group_id=group_id))
+        
+        # Handle image upload - make it optional for API calls
+        image_id = ""
+        if 'image' in request.files and request.files['image'].filename:
+            try:
+                image_id = files.upload_image(request.files['image'])
+            except Exception as e:
+                print(f"Error uploading image: {e}")
+                image_id = ""
+        else:
+            # No image provided, use empty string
+            image_id = ""
+        
+        try:
+            group_id = set_data.set_group_add(group_name, details, image_id)
+            return redirect(url_for('describe_group',group_id=group_id))
+        except KeyError as e:
+            return jsonify({
+                'success': False,
+                'message': f'Missing required field: {str(e)}'
+            }), 400
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'Error creating group: {str(e)}'
+            }), 500
     return render_template('groups_add.html', form=form)
 
 @app.route('/display/<filename>')
@@ -987,6 +1019,72 @@ def admin_panel():
         print(f"Error in admin panel: {e}")
         flash('An error occurred while loading the admin panel.', 'error')
         return redirect(url_for('index'))
+
+# JSON API endpoints for iOS app
+@app.route('/api/groups', methods=['GET'])
+@login_required
+def api_groups():
+    """Get all groups as JSON for iOS app"""
+    try:
+        # Get all groups using the existing function
+        groups_data = get_data.get_all_from_group_and_items("%-%-%")
+        
+        # Convert to JSON format
+        groups = []
+        for group in groups_data:
+            groups.append({
+                'id': group['id'],
+                'name': group['name'],
+                'description': group.get('description', ''),
+                'created_at': group.get('created_at', ''),
+                'updated_at': group.get('updated_at', '')
+            })
+        
+        return jsonify({
+            'success': True,
+            'groups': groups
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/groups/add', methods=['POST'])
+@login_required
+def api_add_group():
+    """Add a new group via JSON API"""
+    try:
+        data = request.get_json()
+        if not data or 'name' not in data:
+            return jsonify({
+                'success': False,
+                'message': 'Name is required'
+            }), 400
+        
+        name = data['name']
+        description = data.get('description', '')
+        
+        # Use the existing group creation logic
+        result = set_data.add_group(name, description)
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': 'Group added successfully',
+                'group_id': result
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to add group'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
 
 if __name__ == '__main__':

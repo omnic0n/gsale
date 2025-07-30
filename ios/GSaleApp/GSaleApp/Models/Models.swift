@@ -1,0 +1,65 @@
+import Foundation
+
+// MARK: - API Response Models
+struct LoginResponse: Codable {
+    let success: Bool
+    let message: String
+    let cookie: String?
+    let user_id: Int?
+    let username: String?
+    let is_admin: Bool?
+}
+
+struct Group: Codable {
+    let id: Int
+    let name: String
+    let description: String?
+    let created_at: String
+    let updated_at: String
+}
+
+struct AddGroupResponse: Codable {
+    let success: Bool
+    let message: String
+    let group_id: Int?
+}
+
+struct GroupsResponse: Codable {
+    let success: Bool
+    let groups: [Group]
+}
+
+// MARK: - Group Detail Models
+struct GroupDetail: Codable {
+    let id: Int
+    let name: String
+    let date: String
+    let price: Double
+    let totalItems: Int
+    let totalSoldItems: Int
+    let soldPrice: Double
+    let items: [GroupItem]
+}
+
+struct GroupItem: Codable {
+    let id: Int
+    let name: String
+    let price: Double
+    let sold: Bool
+}
+
+// MARK: - Network Error
+enum NetworkError: Error {
+    case invalidURL
+    case noData
+    case decodingError
+    case serverError(String)
+    case unauthorized
+}
+
+// MARK: - API Response
+struct APIResponse<T: Codable>: Codable {
+    let success: Bool
+    let message: String
+    let data: T?
+} 
