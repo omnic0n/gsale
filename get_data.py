@@ -645,11 +645,19 @@ def check_admin_status(user_id):
     if not user_id:
         return False
     
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT is_admin FROM accounts WHERE id = %s", (user_id,))
-    result = cur.fetchone()
-    cur.close()
-    return result and result[0] == 1
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT is_admin FROM accounts WHERE id = %s", (user_id,))
+        result = cur.fetchone()
+        cur.close()
+        
+        # Safely check if result exists and has the expected value
+        if result and len(result) > 0:
+            return result[0] == 1
+        return False
+    except Exception as e:
+        print(f"Error in check_admin_status: {e}")
+        return False
 
 def get_all_users():
     """Get all users for admin management"""
