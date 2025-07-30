@@ -38,6 +38,7 @@
 
 .modal-backdrop {
     z-index: 1040 !important;
+    opacity: 0.5 !important;
 }
 
 .modal.show {
@@ -46,10 +47,20 @@
 
 .modal-dialog {
     pointer-events: auto !important;
+    z-index: 1055 !important;
 }
 
 .modal-content {
     pointer-events: auto !important;
+    background: white !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Ensure modal is above backdrop */
+.modal.show .modal-dialog {
+    transform: none !important;
+    z-index: 1055 !important;
 }
 </style>
 <div class="container">
@@ -279,18 +290,34 @@ function openChangePasswordModal(userId, username) {
         
         // Try Bootstrap 5 first
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+            const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'), {
+                backdrop: true,
+                keyboard: true,
+                focus: true
+            });
             modal.show();
         } else {
             // Fallback to jQuery if Bootstrap 4
-            $('#changePasswordModal').modal('show');
+            $('#changePasswordModal').modal({
+                backdrop: true,
+                keyboard: true,
+                show: true
+            });
         }
     } catch (error) {
         console.error('Error opening modal:', error);
         // Fallback: just show the modal without Bootstrap
-        document.getElementById('changePasswordModal').style.display = 'block';
-        document.getElementById('changePasswordModal').classList.add('show');
+        const modal = document.getElementById('changePasswordModal');
+        modal.style.display = 'block';
+        modal.classList.add('show');
         document.body.classList.add('modal-open');
+        
+        // Add backdrop manually if needed
+        if (!document.querySelector('.modal-backdrop')) {
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+        }
     }
 }
 
@@ -308,9 +335,16 @@ function closeChangePasswordModal() {
     } catch (error) {
         console.error('Error closing modal:', error);
         // Fallback: just hide the modal
-        document.getElementById('changePasswordModal').style.display = 'none';
-        document.getElementById('changePasswordModal').classList.remove('show');
+        const modal = document.getElementById('changePasswordModal');
+        modal.style.display = 'none';
+        modal.classList.remove('show');
         document.body.classList.remove('modal-open');
+        
+        // Remove backdrop manually
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
     }
 }
 
