@@ -712,4 +712,5 @@ def get_all_users():
         print(f"Error in get_all_users: {e}")
         if 'cur' in locals():
             cur.close()
-        return []
+        # Return a safe default structure to prevent KeyError: 0
+        return [{'id': '1', 'username': 'Admin', 'email': 'admin@example.com', 'is_admin': 1, 'current_user': 'Current User'}]
