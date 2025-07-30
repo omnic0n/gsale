@@ -61,6 +61,32 @@ def login_required(f):
     decorated_function.__name__ = f.__name__
     return decorated_function
 
+def admin_required(f):
+    """Decorator to check if user is logged in and is an admin"""
+    def decorated_function(*args, **kwargs):
+        if not 'loggedin' in session:
+            # Don't redirect to login if already on login page
+            if request.endpoint != 'login':
+                next_page = request.path
+                if request.query_string:
+                    next_page += '?' + request.query_string.decode('utf-8')
+                return redirect(url_for('login', next=next_page))
+        
+        # Check if user is admin
+        if not 'id' in session:
+            flash('Access denied. Please log in.', 'error')
+            return redirect(url_for('index'))
+        
+        # Check admin status in database
+        admin_status = get_data.check_admin_status(session['id'])
+        if not admin_status:
+            flash('Access denied. Admin privileges required.', 'error')
+            return redirect(url_for('index'))
+        
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     # Output message if something goes wrong...
@@ -765,6 +791,43 @@ def cases_search():
         cases = get_data.get_list_of_cases_with_name(details['name'])
         return render_template('cases_search.html', form=form, cases=cases)
     return render_template('cases_search.html', form=form)
+
+
+# Admin Section
+@app.route('/admin', methods=["GET", "POST"])
+@admin_required
+def admin_panel():
+    """Admin panel for managing users and system settings"""
+    
+    # Get all users for admin management
+    users = get_data.get_all_users()
+    
+    if request.method == "POST":
+        action = request.form.get('action')
+        user_id = request.form.get('user_id')
+        
+        if action == 'toggle_admin':
+            # Toggle admin status
+            success = set_data.toggle_admin_status(user_id)
+            if success:
+                flash('Admin status updated successfully.', 'success')
+            else:
+                flash('Failed to update admin status.', 'error')
+            return redirect(url_for('admin_panel'))
+        
+        elif action == 'delete_user':
+            # Delete user (only if not the current admin)
+            if user_id != session['id']:
+                success = set_data.delete_user(user_id)
+                if success:
+                    flash('User deleted successfully.', 'success')
+                else:
+                    flash('Failed to delete user.', 'error')
+            else:
+                flash('Cannot delete your own account.', 'error')
+            return redirect(url_for('admin_panel'))
+    
+    return render_template('admin.html', users=users)
 
 
 if __name__ == '__main__':

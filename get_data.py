@@ -632,3 +632,29 @@ def get_expense_summary_by_type(start_date, end_date):
         ORDER BY type
     """, (start_date, end_date, session['id']))
     return list(cur.fetchall())
+
+# Admin Functions
+def check_admin_status(user_id):
+    """Check if a user has admin privileges"""
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT is_admin FROM accounts WHERE id = %s", (user_id,))
+    result = cur.fetchone()
+    return result and result[0] == 1
+
+def get_all_users():
+    """Get all users for admin management"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            id, 
+            username, 
+            email, 
+            is_admin,
+            CASE 
+                WHEN id = %s THEN 'Current User'
+                ELSE ''
+            END as current_user
+        FROM accounts 
+        ORDER BY username
+    """, (session['id'],))
+    return list(cur.fetchall())
