@@ -206,7 +206,12 @@ def change_password():
         
         # Check current password using bcrypt
         import bcrypt
-        stored_password = result[0] if hasattr(result, 'keys') else result[0]
+        
+        # Handle both DictCursor and regular cursor results
+        if hasattr(result, 'keys'):  # DictCursor result
+            stored_password = result['password']
+        else:  # Regular cursor result
+            stored_password = result[0]
         
         if not bcrypt.checkpw(current_password.encode('utf-8'), stored_password.encode('utf-8')):
             flash('Current password is incorrect.', 'error')
