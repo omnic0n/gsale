@@ -20,7 +20,13 @@ app.secret_key = 'your-secret-key-here'  # Required for session functionality
 # Initialize the extension
 app.config.from_object("config.ProductionConfig")
 
-MySQL(app)
+# Initialize MySQL with proper error handling
+try:
+    mysql = MySQL(app)
+    print("MySQL connection initialized successfully")
+except Exception as e:
+    print(f"Error initializing MySQL: {e}")
+    mysql = None
 
 # Simple report caching
 report_cache = {}
@@ -73,12 +79,13 @@ def admin_required(f):
                 return redirect(url_for('login', next=next_page))
         
         # Check if user is admin
-        if not 'id' in session:
+        current_user_id = session.get('id')
+        if not current_user_id:
             flash('Access denied. Please log in.', 'error')
             return redirect(url_for('index'))
         
         # Check admin status in database
-        admin_status = get_data.check_admin_status(session['id'])
+        admin_status = get_data.check_admin_status(current_user_id)
         if not admin_status:
             flash('Access denied. Admin privileges required.', 'error')
             return redirect(url_for('index'))
@@ -799,35 +806,43 @@ def cases_search():
 def admin_panel():
     """Admin panel for managing users and system settings"""
     
-    # Get all users for admin management
-    users = get_data.get_all_users()
-    
-    if request.method == "POST":
-        action = request.form.get('action')
-        user_id = request.form.get('user_id')
+    try:
+        # Get all users for admin management
+        users = get_data.get_all_users()
         
-        if action == 'toggle_admin':
-            # Toggle admin status
-            success = set_data.toggle_admin_status(user_id)
-            if success:
-                flash('Admin status updated successfully.', 'success')
-            else:
-                flash('Failed to update admin status.', 'error')
-            return redirect(url_for('admin_panel'))
-        
-        elif action == 'delete_user':
-            # Delete user (only if not the current admin)
-            if user_id != session['id']:
-                success = set_data.delete_user(user_id)
+        if request.method == "POST":
+            action = request.form.get('action')
+            user_id = request.form.get('user_id')
+            
+            if action == 'toggle_admin':
+                # Toggle admin status
+                success = set_data.toggle_admin_status(user_id)
                 if success:
-                    flash('User deleted successfully.', 'success')
+                    flash('Admin status updated successfully.', 'success')
                 else:
-                    flash('Failed to delete user.', 'error')
-            else:
-                flash('Cannot delete your own account.', 'error')
-            return redirect(url_for('admin_panel'))
+                    flash('Failed to update admin status.', 'error')
+                return redirect(url_for('admin_panel'))
+            
+            elif action == 'delete_user':
+                # Delete user (only if not the current admin)
+                current_user_id = session.get('id')
+                if user_id != current_user_id:
+                    success = set_data.delete_user(user_id)
+                    if success:
+                        flash('User deleted successfully.', 'success')
+                    else:
+                        flash('Failed to delete user.', 'error')
+                else:
+                    flash('Cannot delete your own account.', 'error')
+                return redirect(url_for('admin_panel'))
+        
+        return render_template('admin.html', users=users or [])
     
-    return render_template('admin.html', users=users)
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in admin panel: {e}")
+        flash('An error occurred while loading the admin panel.', 'error')
+        return redirect(url_for('index'))
 
 
 if __name__ == '__main__':

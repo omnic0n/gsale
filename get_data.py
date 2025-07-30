@@ -7,7 +7,13 @@ import datetime
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Required for session functionality
 
-mysql = MySQL(app)
+# Initialize MySQL with error handling
+try:
+    mysql = MySQL(app)
+    print("MySQL initialized in get_data.py")
+except Exception as e:
+    print(f"Error initializing MySQL in get_data.py: {e}")
+    mysql = None
 
 #Get Years
 def get_years():
@@ -636,25 +642,74 @@ def get_expense_summary_by_type(start_date, end_date):
 # Admin Functions
 def check_admin_status(user_id):
     """Check if a user has admin privileges"""
+    if not user_id:
+        return False
+    
     cur = mysql.connection.cursor()
     cur.execute("SELECT is_admin FROM accounts WHERE id = %s", (user_id,))
     result = cur.fetchone()
+    cur.close()
     return result and result[0] == 1
 
 def get_all_users():
     """Get all users for admin management"""
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT 
-            id, 
-            username, 
-            email, 
-            is_admin,
-            CASE 
-                WHEN id = %s THEN 'Current User'
-                ELSE ''
-            END as current_user
-        FROM accounts 
-        ORDER BY username
-    """, (session['id'],))
-    return list(cur.fetchall())
+    try:
+        # Check if session has 'id' key
+        current_user_id = session.get('id')
+        if not current_user_id:
+            print("Warning: No session ID found in get_all_users")
+            return []
+        
+        # Check if MySQL is available
+        if not mysql:
+            print("Warning: MySQL not initialized")
+            return []
+        
+        # Check if database connection is available
+        if not hasattr(mysql, 'connection') or not mysql.connection:
+            print("Warning: No database connection available")
+            return []
+        
+        cur = mysql.connection.cursor()
+        
+        # Test query to check if accounts table exists and is accessible
+        cur.execute("SELECT COUNT(*) as count FROM accounts")
+        count_result = cur.fetchone()
+        print(f"Found {count_result['count'] if count_result else 0} users in database")
+        
+        cur.execute("""
+            SELECT 
+                id, 
+                username, 
+                email, 
+                is_admin,
+                CASE 
+                    WHEN id = %s THEN 'Current User'
+                    ELSE ''
+                END as current_user
+            FROM accounts 
+            ORDER BY username
+        """, (current_user_id,))
+        result = list(cur.fetchall())
+        print(f"Retrieved {len(result)} users for admin panel")
+        
+        # Debug: Check the structure of the first result
+        if result:
+            first_user = result[0]
+            print(f"First user type: {type(first_user)}")
+            print(f"First user keys: {first_user.keys() if hasattr(first_user, 'keys') else 'No keys (not a dict)'}")
+            print(f"First user: {first_user}")
+            
+            # If the result is not a dictionary, convert it to a list of dictionaries
+            if not hasattr(first_user, 'keys'):
+                print("Converting tuple results to dictionaries")
+                column_names = ['id', 'username', 'email', 'is_admin', 'current_user']
+                result = [dict(zip(column_names, user)) for user in result]
+        
+        cur.close()
+        return result
+    except Exception as e:
+        print(f"Error in get_all_users: {e}")
+        if 'cur' in locals():
+            cur.close()
+        return []

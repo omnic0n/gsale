@@ -26,8 +26,8 @@
                                 <tbody>
                                     {% for user in users %}
                                     <tr>
-                                        <td>{{ user.username }}</td>
-                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.username or 'N/A' }}</td>
+                                        <td>{{ user.email or 'N/A' }}</td>
                                         <td>
                                             {% if user.is_admin %}
                                                 <span class="badge bg-success">Admin</span>
@@ -42,10 +42,10 @@
                                         </td>
                                         <td>
                                             <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                 <input type="hidden" name="action" value="toggle_admin">
                                                 <button type="submit" class="btn btn-sm btn-warning" 
-                                                        onclick="return confirm('Are you sure you want to toggle admin status for {{ user.username }}?')">
+                                                        onclick="return confirm('Are you sure you want to toggle admin status for {{ user.username or 'this user' }}?')">
                                                     {% if user.is_admin %}
                                                         Remove Admin
                                                     {% else %}
@@ -56,10 +56,10 @@
                                             
                                             {% if not user.current_user %}
                                             <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                 <input type="hidden" name="action" value="delete_user">
                                                 <button type="submit" class="btn btn-sm btn-danger" 
-                                                        onclick="return confirm('Are you sure you want to delete {{ user.username }}? This action cannot be undone.')">
+                                                        onclick="return confirm('Are you sure you want to delete {{ user.username or 'this user' }}? This action cannot be undone.')">
                                                     Delete User
                                                 </button>
                                             </form>
