@@ -644,9 +644,6 @@ def check_admin_status(user_id):
         # Check if MySQL is available
         if not mysql or not hasattr(mysql, 'connection') or not mysql.connection:
             print(f"Warning: MySQL not available in check_admin_status for user {user_id}")
-            # For now, assume user 1 is admin to allow access
-            if user_id == '1':
-                return True
             return False
         
         cur = mysql.connection.cursor()
@@ -655,14 +652,18 @@ def check_admin_status(user_id):
         cur.close()
         
         # Safely check if result exists and has the expected value
-        if result and len(result) > 0:
-            return result[0] == 1
+        if result:
+            # Handle both dict and tuple results
+            if hasattr(result, 'keys'):  # DictCursor result
+                is_admin = result['is_admin']
+            else:  # Regular cursor result
+                is_admin = result[0]
+            
+            return is_admin == 1 or is_admin == '1'
+        
         return False
     except Exception as e:
         print(f"Error in check_admin_status: {e}")
-        # For now, assume user 1 is admin to allow access
-        if user_id == '1':
-            return True
         return False
 
 def get_all_users():
