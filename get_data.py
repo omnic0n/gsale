@@ -686,7 +686,7 @@ def get_all_users():
                 CASE 
                     WHEN id = %s THEN 'Current User'
                     ELSE ''
-                END as current_user
+                END as is_current_user
             FROM accounts 
             ORDER BY username
         """, (current_user_id,))
@@ -703,7 +703,7 @@ def get_all_users():
             # If the result is not a dictionary, convert it to a list of dictionaries
             if not hasattr(first_user, 'keys'):
                 print("Converting tuple results to dictionaries")
-                column_names = ['id', 'username', 'email', 'is_admin', 'current_user']
+                column_names = ['id', 'username', 'email', 'is_admin', 'is_current_user']
                 result = [dict(zip(column_names, user)) for user in result]
         
         cur.close()
@@ -713,4 +713,4 @@ def get_all_users():
         if 'cur' in locals():
             cur.close()
         # Return a safe default structure to prevent KeyError: 0
-        return [{'id': '1', 'username': 'Admin', 'email': 'admin@example.com', 'is_admin': 1, 'current_user': 'Current User'}]
+        return [{'id': '1', 'username': 'Admin', 'email': 'admin@example.com', 'is_admin': 1, 'is_current_user': 'Current User'}]

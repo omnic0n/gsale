@@ -36,8 +36,8 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% if user.current_user %}
-                                                <span class="text-primary">{{ user.current_user }}</span>
+                                            {% if user.is_current_user %}
+                                                <span class="text-primary">{{ user.is_current_user }}</span>
                                             {% endif %}
                                         </td>
                                         <td>
@@ -54,7 +54,7 @@
                                                 </button>
                                             </form>
                                             
-                                            {% if not user.current_user %}
+                                            {% if not user.is_current_user %}
                                             <form method="POST" style="display: inline;">
                                                 <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                 <input type="hidden" name="action" value="delete_user">
