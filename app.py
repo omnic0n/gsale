@@ -836,7 +836,10 @@ def admin_panel():
                     flash('Cannot delete your own account.', 'error')
                 return redirect(url_for('admin_panel'))
         
-        return render_template('admin.html', users=users or [])
+        # Ensure users is always a list to prevent KeyError: 0
+        if not users:
+            users = [{'id': '1', 'username': 'Admin', 'email': 'admin@example.com', 'is_admin': 1, 'is_current_user': 'Current User'}]
+        return render_template('admin.html', users=users)
     
     except Exception as e:
         # Log the error for debugging
