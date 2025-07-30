@@ -24,6 +24,8 @@ app.config.from_object("config.ProductionConfig")
 try:
     mysql = MySQL(app)
     print("MySQL connection initialized successfully")
+    # Set the MySQL connection in get_data module
+    get_data.set_mysql_connection(mysql)
 except Exception as e:
     print(f"Error initializing MySQL: {e}")
     mysql = None
