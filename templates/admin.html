@@ -219,7 +219,7 @@
                                                 </form>
                                                 
                                                 <button type="button" class="btn btn-sm btn-primary" 
-                                                        onclick="openChangePasswordModal('{{ user.id or '' }}', '{{ user.username or 'this user' }}')">
+                                                        onclick="openAdminChangePasswordModal('{{ user.id or '' }}', '{{ user.username or 'this user' }}')">
                                                     Change Password
                                                 </button>
                                                 
@@ -253,14 +253,14 @@
 
 <!-- Change Password Modal -->
 <div id="changePasswordModal" class="custom-modal" style="display: none;">
-    <div class="custom-modal-backdrop" onclick="closeChangePasswordModal()"></div>
+    <div class="custom-modal-backdrop" onclick="closeAdminChangePasswordModal()"></div>
     <div class="custom-modal-dialog">
         <div class="custom-modal-content">
             <div class="custom-modal-header">
                 <h5 class="custom-modal-title">Change Password</h5>
-                <button type="button" class="btn-close" onclick="closeChangePasswordModal()" aria-label="Close">×</button>
+                <button type="button" class="btn-close" onclick="closeAdminChangePasswordModal()" aria-label="Close">×</button>
             </div>
-            <form method="POST" id="changePasswordForm">
+            <form method="POST" id="adminChangePasswordForm" action="/admin">
                 <div class="custom-modal-body">
                     <input type="hidden" name="action" value="change_password">
                     <input type="hidden" name="user_id" id="changePasswordUserId">
@@ -275,7 +275,7 @@
                     </div>
                 </div>
                 <div class="custom-modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeAdminChangePasswordModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Change Password</button>
                 </div>
             </form>
@@ -330,8 +330,8 @@ document.getElementById('new_password').addEventListener('input', function() {
     }
 });
 
-// Function to open change password modal
-function openChangePasswordModal(userId, username) {
+// Function to open admin change password modal
+function openAdminChangePasswordModal(userId, username) {
     document.getElementById('changePasswordUserId').value = userId;
     document.getElementById('changePasswordUsername').textContent = username;
     document.getElementById('new_password').value = '';
@@ -344,8 +344,8 @@ function openChangePasswordModal(userId, username) {
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
 }
 
-// Function to close modal manually
-function closeChangePasswordModal() {
+// Function to close admin modal manually
+function closeAdminChangePasswordModal() {
     document.getElementById('changePasswordModal').style.display = 'none';
     document.body.style.overflow = ''; // Restore scrolling
 }

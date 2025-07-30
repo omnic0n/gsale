@@ -219,6 +219,7 @@ def change_password():
         
         # Change password
         success = set_data.change_user_password(user_id, new_password)
+        
         if success:
             flash('Password changed successfully.', 'success')
         else:
