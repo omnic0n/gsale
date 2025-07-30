@@ -11,6 +11,8 @@
     padding: 0.25rem 0.5rem;
     white-space: nowrap;
     flex-shrink: 0;
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 
 .action-buttons .d-flex {
@@ -133,7 +135,7 @@
                                                     </button>
                                                 </form>
                                                 
-                                                <button type="button" class="btn btn-sm btn-info" 
+                                                <button type="button" class="btn btn-sm btn-primary" 
                                                         onclick="openChangePasswordModal('{{ user.id or '' }}', '{{ user.username or 'this user' }}')">
                                                     Change Password
                                                 </button>
