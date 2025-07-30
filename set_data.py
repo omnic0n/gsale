@@ -1,15 +1,14 @@
-from flask import Flask, session
-from flask_mysqldb import MySQL
+from flask import session
 from datetime import datetime, date, timedelta
-
 import uuid
 
-import get_data
+# We'll get the mysql object passed to us or use a global reference
+mysql = None
 
-app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Required for session functionality
-
-mysql = MySQL(app)
+def set_mysql_connection(mysql_connection):
+    """Set the MySQL connection from the main app"""
+    global mysql
+    mysql = mysql_connection
 
 #Item Data
 
@@ -23,7 +22,7 @@ def set_mark_sold(id,sold):
         INNER JOIN collection c ON i.group_id = c.id 
         SET i.sold = %s 
         WHERE i.id = %s AND c.account = %s
-    """, (sold, id, session['id']))
+    """, (sold, id, session.get('id')))
     mysql.connection.commit()
     cur.close()
 
@@ -58,7 +57,7 @@ def set_sale_data(details):
         INNER JOIN collection c ON i.group_id = c.id
         SET s.date = %s, s.price = %s, s.shipping_fee = %s 
         WHERE s.id = %s AND c.account = %s
-    """, (details['sale_date'], details['price'], details['shipping_fee'], details['id'], session['id']))
+    """, (details['sale_date'], details['price'], details['shipping_fee'], details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
 
@@ -70,7 +69,7 @@ def set_items_modify(details):
         INNER JOIN collection c ON i.group_id = c.id
         SET i.name = %s, i.group_id = %s, i.category_id = %s, i.returned = %s, i.storage = %s, i.list_date = %s 
         WHERE i.id = %s AND c.account = %s
-    """, (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['list_date'], details['id'], session['id']))
+    """, (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['list_date'], details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
 
@@ -80,7 +79,7 @@ def remove_item_data(id):
         DELETE i FROM items i
         INNER JOIN collection c ON i.group_id = c.id
         WHERE i.id = %s AND c.account = %s
-    """, (id, session['id']))
+    """, (id, session.get('id')))
     mysql.connection.commit()
     cur.close()
 
@@ -91,7 +90,7 @@ def set_group_add(group_name, details, image_id):
     group_id = generate_uuid()
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO collection(id, name, date, price, image, account) VALUES (%s, %s, %s, %s, %s, %s)", 
-                (group_id, group_name, details['date'], details['price'], image_id, session['id']))
+                (group_id, group_name, details['date'], details['price'], image_id, session.get('id')))
     mysql.connection.commit()
     cur.close()
     return group_id
@@ -99,14 +98,14 @@ def set_group_add(group_name, details, image_id):
 def set_group_modify(details, image_id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE collection SET name = %s, date = %s, price = %s, image = %s where id = %s AND account = %s", 
-                (details['name'], details['date'], details['price'], image_id, details['id'], session['id']))
+                (details['name'], details['date'], details['price'], image_id, details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
 
 def remove_group_data(id):
     cur = mysql.connection.cursor()
     cur.execute("DELETE FROM collection WHERE id = %s AND account = %s", 
-                (id, session['id']))
+                (id, session.get('id')))
     mysql.connection.commit()
     cur.close()
 
@@ -114,14 +113,14 @@ def remove_group_data(id):
 def set_expense(name, details, image_id, expense_type):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO expenses(name, date, price, image, type, account) VALUES (%s, %s, %s, %s, %s, %s)", 
-                (name, details['date'], details['price'], image_id, expense_type, session['id']))
+                (name, details['date'], details['price'], image_id, expense_type, session.get('id')))
     mysql.connection.commit()
     cur.close()
 
 def set_modify_expense(details, price, milage, image_id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s AND account = %s", 
-                (details['name'], details['date'], price, milage, details['expense_type'], image_id, details['id'], session['id']))
+                (details['name'], details['date'], price, milage, details['expense_type'], image_id, details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
 
@@ -133,14 +132,14 @@ def add_case_data(details):
         if item.startswith("item"):
             item_id = generate_uuid()
             cur.execute("INSERT INTO cases(id, name, platform,account) VALUES (%s, %s, %s, %s)", 
-                        (item_id, details[item],details['platform'],session['id'],))
+                        (item_id, details[item],details['platform'],session.get('id'),))
             mysql.connection.commit()
     cur.close()
 
 def set_cases_modify(details):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE cases SET name = %s, platform = %s where id = %s AND account = %s", 
-                (details['name'], details['platform'], details['id'], session['id']))
+                (details['name'], details['platform'], details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
 
@@ -148,7 +147,7 @@ def set_cases_modify(details):
 def remove_case_data(id):
     cur = mysql.connection.cursor()
     cur.execute("DELETE FROM cases WHERE id = %s AND account = %s", 
-                (id, session['id']))
+                (id, session.get('id')))
     mysql.connection.commit()
     cur.close()
 
@@ -184,4 +183,28 @@ def delete_user(user_id):
         return True
     except Exception as e:
         print(f"Error deleting user: {e}")
+        return False
+
+def create_user(details):
+    """Create a new user account"""
+    try:
+        import hashlib
+        
+        # Generate UUID for the new user
+        user_id = generate_uuid()
+        
+        # Hash the password
+        hashed_password = hashlib.sha256(details['password'].encode()).hexdigest()
+        
+        # Set admin status (1 for admin, 0 for regular user)
+        is_admin = 1 if details.get('is_admin') else 0
+        
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO accounts(id, username, email, password, is_admin) VALUES (%s, %s, %s, %s, %s)", 
+                    (user_id, details['username'], details['email'], hashed_password, is_admin))
+        mysql.connection.commit()
+        cur.close()
+        return True
+    except Exception as e:
+        print(f"Error creating user: {e}")
         return False

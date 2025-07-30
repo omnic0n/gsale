@@ -24,8 +24,9 @@ app.config.from_object("config.ProductionConfig")
 try:
     mysql = MySQL(app)
     print("MySQL connection initialized successfully")
-    # Set the MySQL connection in get_data module
+    # Set the MySQL connection in get_data and set_data modules
     get_data.set_mysql_connection(mysql)
+    set_data.set_mysql_connection(mysql)
 except Exception as e:
     print(f"Error initializing MySQL: {e}")
     mysql = None
@@ -814,10 +815,56 @@ def admin_panel():
         
         if request.method == "POST":
             action = request.form.get('action')
-            user_id = request.form.get('user_id')
             
-            if action == 'toggle_admin':
+            if action == 'add_user':
+                # Add new user
+                username = request.form.get('username')
+                email = request.form.get('email')
+                password = request.form.get('password')
+                confirm_password = request.form.get('confirm_password')
+                is_admin = request.form.get('is_admin') == 'on'
+                
+                # Validate input
+                if not username or not email or not password:
+                    flash('All fields are required.', 'error')
+                    return redirect(url_for('admin_panel'))
+                
+                if password != confirm_password:
+                    flash('Passwords do not match.', 'error')
+                    return redirect(url_for('admin_panel'))
+                
+                if len(password) < 6:
+                    flash('Password must be at least 6 characters long.', 'error')
+                    return redirect(url_for('admin_panel'))
+                
+                # Check if username or email already exists
+                cur = mysql.connection.cursor()
+                cur.execute("SELECT id FROM accounts WHERE username = %s OR email = %s", (username, email))
+                existing_user = cur.fetchone()
+                cur.close()
+                
+                if existing_user:
+                    flash('Username or email already exists.', 'error')
+                    return redirect(url_for('admin_panel'))
+                
+                # Create user
+                user_details = {
+                    'username': username,
+                    'email': email,
+                    'password': password,
+                    'is_admin': is_admin
+                }
+                
+                success = set_data.create_user(user_details)
+                if success:
+                    flash('User created successfully.', 'success')
+                else:
+                    flash('Failed to create user.', 'error')
+                return redirect(url_for('admin_panel'))
+            
+            elif action == 'toggle_admin':
                 # Toggle admin status
+                user_id = request.form.get('user_id')
                 success = set_data.toggle_admin_status(user_id)
                 if success:
                     flash('Admin status updated successfully.', 'success')
@@ -827,6 +874,7 @@ def admin_panel():
             
             elif action == 'delete_user':
                 # Delete user (only if not the current admin)
+                user_id = request.form.get('user_id')
                 current_user_id = session.get('id')
                 if user_id != current_user_id:
                     success = set_data.delete_user(user_id)

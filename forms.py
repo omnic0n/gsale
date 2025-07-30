@@ -110,3 +110,11 @@ class ButtonForm(FlaskForm):
     id = HiddenField()
     info = HiddenField()
 
+class AddUserForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=50)])
+    email = StringField('Email', validators=[DataRequired(), Length(max=120)])
+    password = StringField('Password', validators=[DataRequired(), Length(min=6, max=100)])
+    confirm_password = StringField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
+    is_admin = BooleanField('Admin Privileges')
+    submit = SubmitField('Add User')
+
