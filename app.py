@@ -166,6 +166,64 @@ def logout_with_redirect(next_page):
     # Redirect to login with the specified page as the next parameter
     return redirect(url_for('login', next=decoded_next_page))
 
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Allow users to change their own password"""
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_new_password')
+        
+        # Validate input
+        if not current_password or not new_password or not confirm_password:
+            flash('All fields are required.', 'error')
+            return redirect(url_for('index'))
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match.', 'error')
+            return redirect(url_for('index'))
+        
+        if len(new_password) < 6:
+            flash('New password must be at least 6 characters long.', 'error')
+            return redirect(url_for('index'))
+        
+        # Get current user ID
+        user_id = session.get('id')
+        if not user_id:
+            flash('User session not found.', 'error')
+            return redirect(url_for('index'))
+        
+        # Verify current password
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT password FROM accounts WHERE id = %s", (user_id,))
+        result = cur.fetchone()
+        cur.close()
+        
+        if not result:
+            flash('User not found.', 'error')
+            return redirect(url_for('index'))
+        
+        # Check current password using bcrypt
+        import bcrypt
+        stored_password = result[0] if hasattr(result, 'keys') else result[0]
+        
+        if not bcrypt.checkpw(current_password.encode('utf-8'), stored_password.encode('utf-8')):
+            flash('Current password is incorrect.', 'error')
+            return redirect(url_for('index'))
+        
+        # Change password
+        success = set_data.change_user_password(user_id, new_password)
+        if success:
+            flash('Password changed successfully.', 'success')
+        else:
+            flash('Failed to change password.', 'error')
+        
+        return redirect(url_for('index'))
+    
+    # GET request - redirect to index
+    return redirect(url_for('index'))
+
 @app.route('/')
 @login_required
 def index():
