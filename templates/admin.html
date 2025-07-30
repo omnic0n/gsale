@@ -30,6 +30,27 @@
         padding: 0.2rem 0.4rem;
     }
 }
+
+/* Modal fixes */
+.modal {
+    z-index: 1050 !important;
+}
+
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+.modal.show {
+    display: block !important;
+}
+
+.modal-dialog {
+    pointer-events: auto !important;
+}
+
+.modal-content {
+    pointer-events: auto !important;
+}
 </style>
 <div class="container">
     <div class="row">
@@ -248,15 +269,57 @@ document.getElementById('new_password').addEventListener('input', function() {
 
 // Function to open change password modal
 function openChangePasswordModal(userId, username) {
-    document.getElementById('changePasswordUserId').value = userId;
-    document.getElementById('changePasswordUsername').textContent = username;
-    document.getElementById('new_password').value = '';
-    document.getElementById('confirm_new_password').value = '';
-    document.getElementById('new_password').setCustomValidity('');
-    document.getElementById('confirm_new_password').setCustomValidity('');
-    
-    const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
-    modal.show();
+    try {
+        document.getElementById('changePasswordUserId').value = userId;
+        document.getElementById('changePasswordUsername').textContent = username;
+        document.getElementById('new_password').value = '';
+        document.getElementById('confirm_new_password').value = '';
+        document.getElementById('new_password').setCustomValidity('');
+        document.getElementById('confirm_new_password').setCustomValidity('');
+        
+        // Try Bootstrap 5 first
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+            modal.show();
+        } else {
+            // Fallback to jQuery if Bootstrap 4
+            $('#changePasswordModal').modal('show');
+        }
+    } catch (error) {
+        console.error('Error opening modal:', error);
+        // Fallback: just show the modal without Bootstrap
+        document.getElementById('changePasswordModal').style.display = 'block';
+        document.getElementById('changePasswordModal').classList.add('show');
+        document.body.classList.add('modal-open');
+    }
 }
+
+// Function to close modal manually
+function closeChangePasswordModal() {
+    try {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+            if (modal) {
+                modal.hide();
+            }
+        } else {
+            $('#changePasswordModal').modal('hide');
+        }
+    } catch (error) {
+        console.error('Error closing modal:', error);
+        // Fallback: just hide the modal
+        document.getElementById('changePasswordModal').style.display = 'none';
+        document.getElementById('changePasswordModal').classList.remove('show');
+        document.body.classList.remove('modal-open');
+    }
+}
+
+// Add event listeners for modal close buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const closeButtons = document.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', closeChangePasswordModal);
+    });
+});
 </script>
 {% endblock %} 
