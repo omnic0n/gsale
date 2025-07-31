@@ -137,9 +137,15 @@
 console.log('Script starting...');
 console.log('jQuery available:', typeof $);
 console.log('jQuery version:', typeof $ !== 'undefined' ? $.fn.jquery : 'jQuery not loaded');
-try {
-    $(document).ready(function() {
-        console.log('Categories manage page loaded');
+console.log('Document ready state:', document.readyState);
+console.log('Window loaded:', typeof window !== 'undefined');
+
+// Wait for both DOM and jQuery to be ready
+function waitForJQuery() {
+    if (typeof $ !== 'undefined') {
+        console.log('jQuery is available, proceeding...');
+        $(document).ready(function() {
+            console.log('Categories manage page loaded');
         
         // Edit functionality
         document.querySelectorAll('.edit-btn').forEach(btn => {
@@ -203,8 +209,12 @@ try {
             });
         });
     });
-} catch (error) {
-    console.error('JavaScript error:', error);
+} else {
+    console.log('jQuery not available yet, retrying in 100ms...');
+    setTimeout(waitForJQuery, 100);
 }
+
+// Start the waiting process
+waitForJQuery();
 </script>
 {% endblock %} 
