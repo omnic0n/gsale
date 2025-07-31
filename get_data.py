@@ -438,12 +438,12 @@ def get_data_for_expense_describe(id):
 #Category Data
 def get_all_from_categories():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM categories ORDER BY type")
+    cur.execute("SELECT * FROM categories WHERE user_id = %s ORDER BY type", (session.get('id'),))
     return list(cur.fetchall())
 
 def get_category(category_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT type FROM categories where id = %s", (category_id,))
+    cur.execute("SELECT type FROM categories where id = %s AND user_id = %s", (category_id, session.get('id')))
     return cur.fetchone()
 
 def get_category_by_id(category_id):

@@ -158,7 +158,7 @@ def add_category(category_name, user_id):
     try:
         import uuid
         category_id = str(uuid.uuid4())
-        cur.execute("INSERT INTO categories (id, type) VALUES (%s, %s)", (category_id, category_name))
+        cur.execute("INSERT INTO categories (id, type, user_id) VALUES (%s, %s, %s)", (category_id, category_name, user_id))
         mysql.connection.commit()
         return category_id
     except Exception as e:
@@ -172,8 +172,8 @@ def update_category(category_id, category_name, user_id):
     """Update a category"""
     cur = mysql.connection.cursor()
     try:
-        cur.execute("UPDATE categories SET type = %s WHERE id = %s", 
-                   (category_name, category_id))
+        cur.execute("UPDATE categories SET type = %s WHERE id = %s AND user_id = %s", 
+                   (category_name, category_id, user_id))
         mysql.connection.commit()
         return cur.rowcount > 0
     except Exception as e:
@@ -197,14 +197,14 @@ def delete_category(category_id, user_id):
             cur.execute("UPDATE items SET category_id = NULL WHERE category_id = %s", (category_id,))
             updated_items = cur.rowcount
             
-            # Delete the category
-            cur.execute("DELETE FROM categories WHERE id = %s", (category_id,))
+            # Delete the category (only if it belongs to the user)
+            cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
             mysql.connection.commit()
             
             return True, f"Category deleted successfully. {updated_items} items have been unassigned from this category."
         else:
             # No items using this category, just delete it
-            cur.execute("DELETE FROM categories WHERE id = %s", (category_id,))
+            cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
             mysql.connection.commit()
             return True, "Category deleted successfully"
             
