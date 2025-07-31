@@ -4,27 +4,87 @@
 
 {% block content %}
 <style>
-/* Ensure modal is visible */
-.modal {
-    z-index: 1050 !important;
+/* Custom Modal Styles */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.modal-backdrop {
-    z-index: 1040 !important;
+
+.custom-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
 }
-.modal-dialog {
-    z-index: 1055 !important;
+
+.custom-modal-dialog {
+    position: relative;
+    z-index: 1055;
+    width: 90%;
+    max-width: 500px;
+    margin: 1.75rem auto;
 }
-.modal-content {
-    z-index: 1056 !important;
+
+.custom-modal-content {
+    background: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    position: relative;
 }
-/* Ensure modal buttons are clickable */
-.modal-footer .btn {
-    pointer-events: auto !important;
-    cursor: pointer !important;
+
+.custom-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
 }
-.modal-header .close {
-    pointer-events: auto !important;
-    cursor: pointer !important;
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.custom-modal-body {
+    padding: 1rem;
+}
+
+.custom-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close:hover {
+    opacity: 0.7;
 }
 </style>
 <div class="container mt-4">
@@ -116,16 +176,15 @@
             </div>
 
             <!-- Delete Confirmation Modal -->
-            <div class="modal fade" id="deleteModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Confirm Delete</h5>
-                            <button type="button" class="close" data-dismiss="modal">
-                                <span>&times;</span>
-                            </button>
+            <div id="deleteModal" class="custom-modal" style="display: none;">
+                <div class="custom-modal-backdrop" onclick="closeDeleteModal()"></div>
+                <div class="custom-modal-dialog">
+                    <div class="custom-modal-content">
+                        <div class="custom-modal-header">
+                            <h5 class="custom-modal-title">Confirm Delete</h5>
+                            <button type="button" class="btn-close" onclick="closeDeleteModal()" aria-label="Close">×</button>
                         </div>
-                        <div class="modal-body">
+                        <div class="custom-modal-body">
                             <p>Are you sure you want to delete the category "<span id="categoryName"></span>"?</p>
                             <p id="itemCountInfo" class="text-info" style="display: none;">
                                 <small>This category is assigned to <strong id="itemCount"></strong> items. These items will be moved to Uncategorized.</small>
@@ -133,8 +192,8 @@
                             <p class="text-info"><small>If this category is assigned to any items, those items will be moved to Uncategorized.</small></p>
                             <p class="text-warning"><small>This action cannot be undone.</small></p>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <div class="custom-modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                             <form method="POST" action="{{ url_for('manage_categories') }}" style="display: inline;">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="category_id" id="deleteCategoryId">
@@ -210,17 +269,8 @@ function waitForJQuery() {
                     }
                     
                     console.log('Showing modal...');
-                    console.log('jQuery version:', $.fn.jquery);
-                    console.log('Bootstrap modal available:', typeof $.fn.modal);
-                    $('#deleteModal').modal('show');
+                    showDeleteModal();
                     console.log('Modal show command executed');
-                    
-                    // Add debugging for modal state
-                    setTimeout(() => {
-                        console.log('Modal visible:', $('#deleteModal').is(':visible'));
-                        console.log('Modal backdrop visible:', $('.modal-backdrop').length > 0);
-                        console.log('Modal z-index:', $('#deleteModal').css('z-index'));
-                    }, 100);
                 });
             });
         });
@@ -228,6 +278,17 @@ function waitForJQuery() {
         // jQuery not loaded yet, retry in 100ms
         setTimeout(waitForJQuery, 100);
     }
+}
+
+// Custom modal functions
+function showDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
 }
 
 // Start waiting for jQuery
