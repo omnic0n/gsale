@@ -153,12 +153,12 @@ def remove_case_data(id):
 
 # Category Functions
 def add_category(category_name, user_id):
-    """Add a new category for a specific user"""
+    """Add a new category"""
     cur = mysql.connection.cursor()
     try:
         import uuid
         category_id = str(uuid.uuid4())
-        cur.execute("INSERT INTO categories (id, type, user_id) VALUES (%s, %s, %s)", (category_id, category_name, user_id))
+        cur.execute("INSERT INTO categories (id, type) VALUES (%s, %s)", (category_id, category_name))
         mysql.connection.commit()
         return category_id
     except Exception as e:
@@ -169,11 +169,11 @@ def add_category(category_name, user_id):
         cur.close()
 
 def update_category(category_id, category_name, user_id):
-    """Update a category for a specific user"""
+    """Update a category"""
     cur = mysql.connection.cursor()
     try:
-        cur.execute("UPDATE categories SET type = %s WHERE id = %s AND user_id = %s", 
-                   (category_name, category_id, user_id))
+        cur.execute("UPDATE categories SET type = %s WHERE id = %s", 
+                   (category_name, category_id))
         mysql.connection.commit()
         return cur.rowcount > 0
     except Exception as e:
@@ -184,19 +184,30 @@ def update_category(category_id, category_name, user_id):
         cur.close()
 
 def delete_category(category_id, user_id):
-    """Delete a category for a specific user (only if not used by any items)"""
+    """Delete a category and update all items to be unassigned"""
     cur = mysql.connection.cursor()
     try:
         # Check if category is used by any items
         cur.execute("SELECT COUNT(*) as count FROM items WHERE category_id = %s", (category_id,))
         result = cur.fetchone()
-        if result['count'] > 0:
-            return False, "Category is in use by items and cannot be deleted"
+        affected_items = result['count']
         
-        # Delete the category
-        cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
-        mysql.connection.commit()
-        return True, "Category deleted successfully"
+        if affected_items > 0:
+            # Update all items to be unassigned (set category_id to NULL)
+            cur.execute("UPDATE items SET category_id = NULL WHERE category_id = %s", (category_id,))
+            updated_items = cur.rowcount
+            
+            # Delete the category
+            cur.execute("DELETE FROM categories WHERE id = %s", (category_id,))
+            mysql.connection.commit()
+            
+            return True, f"Category deleted successfully. {updated_items} items have been unassigned from this category."
+        else:
+            # No items using this category, just delete it
+            cur.execute("DELETE FROM categories WHERE id = %s", (category_id,))
+            mysql.connection.commit()
+            return True, "Category deleted successfully"
+            
     except Exception as e:
         mysql.connection.rollback()
         print(f"Error deleting category: {e}")

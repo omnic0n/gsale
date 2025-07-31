@@ -42,6 +42,7 @@
                                 <thead>
                                     <tr>
                                         <th>Category Name</th>
+                                        <th>Items</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -66,11 +67,15 @@
                                             </form>
                                         </td>
                                         <td>
+                                            <span class="badge badge-info">{{ category.item_count }} items</span>
+                                        </td>
+                                        <td>
                                             <div class="btn-group btn-group-sm">
                                                 <button type="button" class="btn btn-outline-primary edit-btn">Edit</button>
                                                 <button type="button" class="btn btn-outline-danger delete-btn" 
                                                         data-category-id="{{ category.id }}" 
-                                                        data-category-name="{{ category.type }}">Delete</button>
+                                                        data-category-name="{{ category.type }}"
+                                                        data-item-count="{{ category.item_count }}">Delete</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -98,6 +103,10 @@
                         </div>
                         <div class="modal-body">
                             <p>Are you sure you want to delete the category "<span id="categoryName"></span>"?</p>
+                            <p id="itemCountInfo" class="text-info" style="display: none;">
+                                <small>This category is assigned to <strong id="itemCount"></strong> items. These items will become unassigned (no category).</small>
+                            </p>
+                            <p class="text-info"><small>If this category is assigned to any items, those items will become unassigned (no category).</small></p>
                             <p class="text-warning"><small>This action cannot be undone.</small></p>
                         </div>
                         <div class="modal-footer">
@@ -150,9 +159,21 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             const categoryId = this.getAttribute('data-category-id');
             const categoryName = this.getAttribute('data-category-name');
+            const itemCount = this.getAttribute('data-item-count');
             
             document.getElementById('categoryName').textContent = categoryName;
             document.getElementById('deleteCategoryId').value = categoryId;
+            
+            // Show item count if there are items
+            const itemCountInfo = document.getElementById('itemCountInfo');
+            const itemCountElement = document.getElementById('itemCount');
+            
+            if (itemCount > 0) {
+                itemCountElement.textContent = itemCount;
+                itemCountInfo.style.display = 'block';
+            } else {
+                itemCountInfo.style.display = 'none';
+            }
             
             $('#deleteModal').modal('show');
         });

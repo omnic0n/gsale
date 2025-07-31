@@ -944,8 +944,17 @@ def manage_categories():
         
         return redirect(url_for('manage_categories'))
     
-    # Get user's categories
+    # Get user's categories with item counts
     categories = get_data.get_all_from_categories()
+    
+    # Add item count for each category
+    cur = mysql.connection.cursor()
+    for category in categories:
+        cur.execute("SELECT COUNT(*) as count FROM items WHERE category_id = %s", (category['id'],))
+        result = cur.fetchone()
+        category['item_count'] = result['count']
+    cur.close()
+    
     return render_template('categories_manage.html', categories=categories)
 
 # Admin Section
