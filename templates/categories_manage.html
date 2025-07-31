@@ -11,6 +11,21 @@
 .modal-backdrop {
     z-index: 1040 !important;
 }
+.modal-dialog {
+    z-index: 1055 !important;
+}
+.modal-content {
+    z-index: 1056 !important;
+}
+/* Ensure modal buttons are clickable */
+.modal-footer .btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+.modal-header .close {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
 </style>
 <div class="container mt-4">
     <div class="row">
@@ -199,6 +214,13 @@ function waitForJQuery() {
                     console.log('Bootstrap modal available:', typeof $.fn.modal);
                     $('#deleteModal').modal('show');
                     console.log('Modal show command executed');
+                    
+                    // Add debugging for modal state
+                    setTimeout(() => {
+                        console.log('Modal visible:', $('#deleteModal').is(':visible'));
+                        console.log('Modal backdrop visible:', $('.modal-backdrop').length > 0);
+                        console.log('Modal z-index:', $('#deleteModal').css('z-index'));
+                    }, 100);
                 });
             });
         });
