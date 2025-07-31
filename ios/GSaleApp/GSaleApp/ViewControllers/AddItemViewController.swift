@@ -12,7 +12,7 @@ class AddItemViewController: UIViewController {
     
     private let categoryLabel = UILabel()
     private let categoryButton = UIButton(type: .system)
-    private var selectedCategoryId: Int?
+    private var selectedCategoryId: String?
     private var categories: [Category] = []
     
     private let storageLabel = UILabel()
@@ -413,8 +413,4 @@ extension Notification.Name {
     static let itemAdded = Notification.Name("itemAdded")
 }
 
-// Category model for this view controller
-struct Category {
-    let id: Int
-    let name: String
-} 
+ 

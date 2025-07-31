@@ -56,7 +56,7 @@ struct ItemDetail: Codable {
     let name: String
     let sold: Bool
     let groupId: String
-    let categoryId: Int
+    let categoryId: String  // Changed from Int to String for UUID
     let category: String
     let returned: Bool
     let storage: String?
@@ -71,6 +71,13 @@ struct ItemDetail: Codable {
     let netPrice: Double?
     let soldDate: String?
     let daysToSell: Int?
+}
+
+// MARK: - Category Model
+struct Category: Codable {
+    let id: String  // UUID
+    let name: String
+    let userId: String?
 }
 
 // MARK: - Network Error

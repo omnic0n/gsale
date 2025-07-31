@@ -1284,7 +1284,7 @@ class NetworkManager {
             name: name,
             sold: sold,
             groupId: groupId,
-            categoryId: 0, // We don't extract this from HTML
+                                categoryId: "550e8400-e29b-41d4-a716-446655440000", // Default UUID for unknown category
             category: category,
             returned: returned,
             storage: storage.isEmpty ? nil : storage,
@@ -1625,17 +1625,17 @@ class NetworkManager {
     // MARK: - Categories
     
     func getCategories() async throws -> [Category] {
-        // Always provide fallback categories
+        // Always provide fallback categories with UUID strings
         let fallbackCategories = [
-            Category(id: 1, name: "Electronics"),
-            Category(id: 2, name: "Books & Media"),
-            Category(id: 3, name: "Clothing & Accessories"),
-            Category(id: 4, name: "Home & Garden"),
-            Category(id: 5, name: "Toys & Collectibles"),
-            Category(id: 6, name: "Sports & Outdoor"),
-            Category(id: 7, name: "Automotive"),
-            Category(id: 8, name: "Gaming"),
-            Category(id: 9, name: "Other")
+            Category(id: "550e8400-e29b-41d4-a716-446655440001", name: "Electronics", userId: nil),
+            Category(id: "550e8400-e29b-41d4-a716-446655440002", name: "Books & Media", userId: nil),
+            Category(id: "550e8400-e29b-41d4-a716-446655440003", name: "Clothing & Accessories", userId: nil),
+            Category(id: "550e8400-e29b-41d4-a716-446655440004", name: "Home & Garden", userId: nil),
+            Category(id: "550e8400-e29b-41d4-a716-446655440005", name: "Toys & Collectibles", userId: nil),
+            Category(id: "550e8400-e29b-41d4-a716-446655440006", name: "Sports & Outdoor", userId: nil),
+            Category(id: "550e8400-e29b-41d4-a716-446655440007", name: "Automotive", userId: nil),
+            Category(id: "550e8400-e29b-41d4-a716-446655440008", name: "Gaming", userId: nil),
+            Category(id: "550e8400-e29b-41d4-a716-446655440009", name: "Other", userId: nil)
         ]
         
         guard let cookie = UserManager.shared.cookie else {
@@ -1743,7 +1743,8 @@ class NetworkManager {
                 print("📋 Category select content (first 300 chars): \(selectContent.prefix(300))")
                 
                 // Now extract individual options from the category select
-                let optionPattern = #"<option[^>]*value="(\d+)"[^>]*>([^<]+)</option>"#
+                // Updated pattern to handle both numeric IDs and UUIDs
+                let optionPattern = #"<option[^>]*value="([^"]+)"[^>]*>([^<]+)</option>"#
                 let optionRegex = try NSRegularExpression(pattern: optionPattern, options: [])
                 let optionMatches = optionRegex.matches(in: selectContent, options: [], range: NSRange(selectContent.startIndex..<selectContent.endIndex, in: selectContent))
                 
@@ -1755,7 +1756,7 @@ class NetworkManager {
                     let idRange = Range(match.range(at: 1), in: selectContent)!
                     let nameRange = Range(match.range(at: 2), in: selectContent)!
                     
-                    let idString = String(selectContent[idRange])
+                    let idString = String(selectContent[idRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                     var name = String(selectContent[nameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                     
                     // Decode HTML entities
@@ -1764,13 +1765,12 @@ class NetworkManager {
                                  .replacingOccurrences(of: "&gt;", with: ">")
                                  .replacingOccurrences(of: "&quot;", with: "\"")
                     
-                    // Skip empty names or default "Select" options
-                    if !name.isEmpty && name != "Select" && name != "Category" && name != "Choose..." {
-                        if let id = Int(idString) {
-                            let category = Category(id: id, name: name)
-                            categories.append(category)
-                            print("✅ Found category: '\(name)' (ID: \(id))")
-                        }
+                    // Skip empty names, default "Select" options, or empty IDs
+                    if !name.isEmpty && !idString.isEmpty && name != "Select" && name != "Category" && name != "Choose..." {
+                        // Accept both numeric IDs (legacy) and UUIDs
+                        let category = Category(id: idString, name: name, userId: nil)
+                        categories.append(category)
+                        print("✅ Found category: '\(name)' (ID: \(idString))")
                     }
                 }
             } else {
@@ -1826,7 +1826,87 @@ class NetworkManager {
         }
         
         print("📄 Items HTML preview (first 500 chars): \(responseString.prefix(500))")
-        return parseItemsFromHTML(responseString)
+        let items = parseItemsFromHTML(responseString)
+        
+        // Fetch categories for all items
+        print("🔄 Fetching categories for \(items.count) items...")
+        let itemsWithCategories = await fetchCategoriesForItems(items)
+        
+        return itemsWithCategories
+    }
+    
+    // MARK: - Category Fetching for Items
+    private func fetchCategoriesForItems(_ items: [ItemDetail]) async -> [ItemDetail] {
+        var updatedItems: [ItemDetail] = []
+        
+        // Process items in batches to avoid overwhelming the server
+        let batchSize = 5
+        for i in stride(from: 0, to: items.count, by: batchSize) {
+            let endIndex = min(i + batchSize, items.count)
+            let batch = Array(items[i..<endIndex])
+            
+            // Process batch concurrently
+            let batchTasks = batch.map { item in
+                Task {
+                    do {
+                        let detailedItem = try await getItemDetails(itemId: item.id)
+                        // Create updated item with the real category from item details
+                        return ItemDetail(
+                            id: item.id,
+                            name: item.name,
+                            sold: item.sold,
+                            groupId: item.groupId,
+                            categoryId: detailedItem.categoryId,
+                            category: detailedItem.category,
+                            returned: item.returned,
+                            storage: item.storage,
+                            listDate: item.listDate,
+                            groupName: item.groupName,
+                            purchaseDate: item.purchaseDate,
+                            price: item.price,
+                            soldPrice: item.soldPrice,
+                            shippingFee: item.shippingFee,
+                            netPrice: item.netPrice,
+                            soldDate: item.soldDate,
+                            daysToSell: item.daysToSell
+                        )
+                    } catch {
+                        print("⚠️ Failed to fetch category for item \(item.name): \(error)")
+                        // Return original item with "Uncategorized" if category fetch fails
+                        return ItemDetail(
+                            id: item.id,
+                            name: item.name,
+                            sold: item.sold,
+                            groupId: item.groupId,
+                            categoryId: "550e8400-e29b-41d4-a716-446655440000",
+                            category: "Uncategorized",
+                            returned: item.returned,
+                            storage: item.storage,
+                            listDate: item.listDate,
+                            groupName: item.groupName,
+                            purchaseDate: item.purchaseDate,
+                            price: item.price,
+                            soldPrice: item.soldPrice,
+                            shippingFee: item.shippingFee,
+                            netPrice: item.netPrice,
+                            soldDate: item.soldDate,
+                            daysToSell: item.daysToSell
+                        )
+                    }
+                }
+            }
+            
+            // Wait for batch to complete
+            for task in batchTasks {
+                let updatedItem = await task.value
+                updatedItems.append(updatedItem)
+            }
+            
+            print("🔄 Processed batch \(i/batchSize + 1) - \(updatedItems.count)/\(items.count) items")
+        }
+        
+        print("✅ Finished fetching categories for all items")
+        return updatedItems
     }
     
     private func parseItemsFromHTML(_ html: String) -> [ItemDetail] {
@@ -1848,6 +1928,7 @@ class NetworkManager {
         
         // The actual HTML has irregular spacing and conditional content, so use a more flexible pattern
         // Note: storage field can be empty, so we make the content optional with ([^<]*)
+        // This pattern matches the current production structure WITHOUT category column
         let itemPattern = #"<tr[^>]*>[\s\S]*?<td[^>]*>(\d+)</td>[\s\S]*?<td[^>]*><a[^>]*href\s*=\s*"[^"]*item=([^"&]+)"[^>]*>([^<]+)</a></td>[\s\S]*?<td[^>]*><a[^>]*href[^>]*>([^<]+)</a></td>[\s\S]*?<td[^>]*><a[^>]*href[^>]*>([^<]+)</a></td>[\s\S]*?<td[^>]*>([^<]*?)</td>[\s\S]*?<td[^>]*>([^<]*?)</td>[\s\S]*?<td[^>]*>([^<]*?)</td>[\s\S]*?<td[^>]*><a[^>]*href\s*=\s*"[^"]*storage=([^"]*)"[^>]*>([^<]*)</a></td>[\s\S]*?<td[^>]*><a[^>]*href\s*=\s*"[^"]*group_id=([^"&]+)"[^>]*>([^<]+)</a></td>[\s\S]*?</tr>"#
         
         do {
@@ -1904,8 +1985,8 @@ class NetworkManager {
                     name: name,
                     sold: sold,
                     groupId: groupId,
-                    categoryId: 0, // Will be filled in later if needed
-                    category: "Unknown", // Will fetch from /items/describe if needed
+                    categoryId: "550e8400-e29b-41d4-a716-446655440000", // Default UUID for unknown category
+                    category: "Loading...", // Will be fetched from individual item details
                     returned: false,
                     storage: storageText.isEmpty ? nil : storageText,
                     listDate: listDate.isEmpty ? nil : listDate,
@@ -2078,8 +2159,8 @@ class NetworkManager {
             name: name,
             sold: sold,
             groupId: groupId,
-            categoryId: 0,
-            category: "Unknown",
+                                categoryId: "550e8400-e29b-41d4-a716-446655440000", // Default UUID for unknown category
+            category: "Uncategorized", // Simple parser can't extract category from new table structure
             returned: false,
             storage: storage.isEmpty ? nil : storage,
             listDate: listDate.isEmpty ? nil : listDate,
@@ -2104,7 +2185,7 @@ class NetworkManager {
     
     // MARK: - Add Item
     
-    func addItem(itemName: String, groupId: String, categoryId: Int, storage: String, listDate: String) async throws -> Bool {
+    func addItem(itemName: String, groupId: String, categoryId: String, storage: String, listDate: String) async throws -> Bool {
         guard let cookie = UserManager.shared.cookie else {
             throw NetworkError.unauthorized
         }
@@ -2116,7 +2197,7 @@ class NetworkManager {
         let parameters = [
             "item-0": itemName,  // The backend expects item-0, item-1, etc.
             "group": groupId,
-            "category": String(categoryId),
+            "category": categoryId,  // Now categoryId is already a String (UUID)
             "storage": storage,
             "list_date": listDate
         ]
