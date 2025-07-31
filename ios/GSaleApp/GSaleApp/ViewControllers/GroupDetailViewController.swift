@@ -15,6 +15,7 @@ class GroupDetailViewController: UIViewController {
     private let soldPriceLabel = UILabel()
     
     private let modifyButton = UIButton(type: .system)
+    private let addItemButton = UIButton(type: .system)
     private let refreshItemsButton = UIButton(type: .system)
     private let deleteButton = UIButton(type: .system)
     
@@ -43,6 +44,18 @@ class GroupDetailViewController: UIViewController {
         print("📱 GroupDetailViewController loaded for group: \(groupDetail.name)")
         setupUI()
         setupData()
+        
+        // Add notification observer for item additions
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(itemWasAdded),
+            name: .itemAdded,
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func setupUI() {
@@ -109,7 +122,10 @@ class GroupDetailViewController: UIViewController {
         setupButton(modifyButton, title: "✏️ Modify Group", backgroundColor: .systemBlue)
         modifyButton.addTarget(self, action: #selector(modifyButtonTapped), for: .touchUpInside)
         
-        setupButton(refreshItemsButton, title: "🔄 Refresh Items", backgroundColor: .systemGreen)
+        setupButton(addItemButton, title: "➕ Add Item", backgroundColor: .systemGreen)
+        addItemButton.addTarget(self, action: #selector(addItemButtonTapped), for: .touchUpInside)
+        
+        setupButton(refreshItemsButton, title: "🔄 Refresh Items", backgroundColor: .systemTeal)
         refreshItemsButton.addTarget(self, action: #selector(refreshItemsButtonTapped), for: .touchUpInside)
         
         setupButton(deleteButton, title: "🗑️ Delete Group", backgroundColor: .systemRed)
@@ -151,6 +167,7 @@ class GroupDetailViewController: UIViewController {
         
         contentView.addSubview(headerView)
         contentView.addSubview(modifyButton)
+        contentView.addSubview(addItemButton)
         contentView.addSubview(refreshItemsButton)
         contentView.addSubview(deleteButton)
         contentView.addSubview(itemsLabel)
@@ -264,7 +281,12 @@ class GroupDetailViewController: UIViewController {
             modifyButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             modifyButton.heightAnchor.constraint(equalToConstant: 56),
             
-            refreshItemsButton.topAnchor.constraint(equalTo: modifyButton.bottomAnchor, constant: 16),
+            addItemButton.topAnchor.constraint(equalTo: modifyButton.bottomAnchor, constant: 16),
+            addItemButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            addItemButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            addItemButton.heightAnchor.constraint(equalToConstant: 56),
+            
+            refreshItemsButton.topAnchor.constraint(equalTo: addItemButton.bottomAnchor, constant: 16),
             refreshItemsButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             refreshItemsButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             refreshItemsButton.heightAnchor.constraint(equalToConstant: 56),
@@ -327,9 +349,22 @@ class GroupDetailViewController: UIViewController {
         navigationController?.pushViewController(modifyGroupVC, animated: true)
     }
     
+    @objc private func addItemButtonTapped() {
+        print("🔘 Add Item button tapped for group: \(groupDetail.name)")
+        // Navigate to add item page
+        let addItemVC = AddItemViewController(groupId: groupDetail.id, groupName: groupDetail.name)
+        let navController = UINavigationController(rootViewController: addItemVC)
+        present(navController, animated: true)
+    }
+    
     @objc private func refreshItemsButtonTapped() {
         print("🔘 Refresh Items button tapped for group: \(groupDetail.name)")
         loadActualItems()
+    }
+    
+    @objc private func itemWasAdded() {
+        print("📬 Received item added notification - refreshing items")
+        loadActualItemsSimple()
     }
     
     private func loadActualItemsSimple() {

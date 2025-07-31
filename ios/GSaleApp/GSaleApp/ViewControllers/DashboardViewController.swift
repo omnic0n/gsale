@@ -7,6 +7,7 @@ class DashboardViewController: UIViewController {
     
     private let welcomeLabel = UILabel()
     private let groupsButton = UIButton(type: .system)
+    private let itemsButton = UIButton(type: .system)
     private let logoutButton = UIButton(type: .system)
     
     override func viewDidLoad() {
@@ -39,6 +40,14 @@ class DashboardViewController: UIViewController {
         groupsButton.translatesAutoresizingMaskIntoConstraints = false
         groupsButton.addTarget(self, action: #selector(groupsTapped), for: .touchUpInside)
         
+        itemsButton.setTitle("Manage Items", for: .normal)
+        itemsButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        itemsButton.backgroundColor = .systemGreen
+        itemsButton.setTitleColor(.white, for: .normal)
+        itemsButton.layer.cornerRadius = 12
+        itemsButton.translatesAutoresizingMaskIntoConstraints = false
+        itemsButton.addTarget(self, action: #selector(itemsTapped), for: .touchUpInside)
+        
         logoutButton.setTitle("Logout", for: .normal)
         logoutButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         logoutButton.setTitleColor(.systemRed, for: .normal)
@@ -47,6 +56,7 @@ class DashboardViewController: UIViewController {
         
         contentView.addSubview(welcomeLabel)
         contentView.addSubview(groupsButton)
+        contentView.addSubview(itemsButton)
         contentView.addSubview(logoutButton)
         
         setupConstraints()
@@ -74,7 +84,12 @@ class DashboardViewController: UIViewController {
             groupsButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             groupsButton.heightAnchor.constraint(equalToConstant: 50),
             
-            logoutButton.topAnchor.constraint(equalTo: groupsButton.bottomAnchor, constant: 40),
+            itemsButton.topAnchor.constraint(equalTo: groupsButton.bottomAnchor, constant: 20),
+            itemsButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            itemsButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            itemsButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            logoutButton.topAnchor.constraint(equalTo: itemsButton.bottomAnchor, constant: 40),
             logoutButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             logoutButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -40)
         ])
@@ -83,6 +98,11 @@ class DashboardViewController: UIViewController {
     @objc private func groupsTapped() {
         let groupsVC = GroupsViewController()
         navigationController?.pushViewController(groupsVC, animated: true)
+    }
+    
+    @objc private func itemsTapped() {
+        let itemsVC = ItemsViewController()
+        navigationController?.pushViewController(itemsVC, animated: true)
     }
     
     @objc private func logoutTapped() {

@@ -1291,6 +1291,7 @@ class NetworkManager {
             listDate: listDate.isEmpty ? nil : listDate,
             groupName: groupName,
             purchaseDate: purchaseDate,
+            price: 0.0, // We don't extract this from the item details page
             soldPrice: soldPrice,
             shippingFee: shippingFee,
             netPrice: netPrice,
@@ -1617,6 +1618,568 @@ class NetworkManager {
         } else if httpResponse.statusCode == 400 {
             throw NetworkError.serverError("Bad request (400) - \(responseString)")
         } else {
+            throw NetworkError.serverError("HTTP \(httpResponse.statusCode) - \(responseString)")
+        }
+    }
+    
+    // MARK: - Categories
+    
+    func getCategories() async throws -> [Category] {
+        // Always provide fallback categories
+        let fallbackCategories = [
+            Category(id: 1, name: "Electronics"),
+            Category(id: 2, name: "Books & Media"),
+            Category(id: 3, name: "Clothing & Accessories"),
+            Category(id: 4, name: "Home & Garden"),
+            Category(id: 5, name: "Toys & Collectibles"),
+            Category(id: 6, name: "Sports & Outdoor"),
+            Category(id: 7, name: "Automotive"),
+            Category(id: 8, name: "Gaming"),
+            Category(id: 9, name: "Other")
+        ]
+        
+        guard let cookie = UserManager.shared.cookie else {
+            print("⚠️ No cookie available, using fallback categories")
+            return fallbackCategories
+        }
+        
+        let url = URL(string: "\(baseURL)/items/bought")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        // Handle cookie format - it might already include "session=" prefix
+        let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
+        request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+        
+        print("🌐 Getting categories from: \(url)")
+        print("🍪 Raw cookie: \(cookie.prefix(50))...")
+        print("🍪 Cookie header: \(cookieHeader.prefix(60))...")
+        
+        do {
+            let (data, response) = try await session.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("⚠️ Invalid response, using fallback categories")
+                return fallbackCategories
+            }
+            
+            print("📡 Categories response status: \(httpResponse.statusCode)")
+            
+            guard httpResponse.statusCode == 200 else {
+                print("⚠️ HTTP \(httpResponse.statusCode), using fallback categories")
+                return fallbackCategories
+            }
+            
+            guard let responseString = String(data: data, encoding: .utf8) else {
+                print("⚠️ No data received, using fallback categories")
+                return fallbackCategories
+            }
+            
+            // Check if we got a login page instead of the categories page  
+            if responseString.contains("<title>Login</title>") || 
+               responseString.contains("Please log in") ||
+               responseString.contains("You should be redirected") ||
+               !responseString.contains("Add Item") {
+                print("⚠️ Received login page or wrong page, using fallback categories")
+                return fallbackCategories
+            }
+            
+            print("📄 Categories HTML preview (first 500 chars): \(responseString.prefix(500))")
+            print("📄 Categories HTML length: \(responseString.count) characters")
+            
+            // Save full HTML response to debug
+            if let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                let filePath = documentsPath.appendingPathComponent("categories_response.html")
+                try? responseString.write(to: filePath, atomically: true, encoding: .utf8)
+                print("💾 Saved full HTML response to: \(filePath.path)")
+            }
+            
+            // Check if HTML contains the category select element
+            if responseString.contains("name=\"category\"") {
+                print("✅ Found category select element in HTML")
+            } else {
+                print("⚠️ No category select element found in HTML")
+                print("🔍 Searching for 'category' (case insensitive): \(responseString.lowercased().contains("category"))")
+                print("🔍 Searching for 'select': \(responseString.contains("select"))")
+                print("🔍 Searching for 'items/bought': \(responseString.contains("items/bought"))")
+                print("🔍 Searching for 'Add Item': \(responseString.contains("Add Item"))")
+            }
+            
+            let parsedCategories = parseCategories(from: responseString)
+            
+            // If parsing failed, return fallback categories
+            if parsedCategories.isEmpty {
+                print("⚠️ No categories parsed from HTML, using fallback categories")
+                return fallbackCategories
+            }
+            
+            return parsedCategories
+            
+        } catch {
+            print("⚠️ Network error: \(error), using fallback categories")
+            return fallbackCategories
+        }
+    }
+    
+    private func parseCategories(from html: String) -> [Category] {
+        var categories: [Category] = []
+        
+        // Look for category option elements in the category select dropdown
+        // Pattern: <option value="10">Board Games</option>
+        // Need to specifically target the category select, not group select
+        
+        do {
+            // First find the category select section
+            let selectRegex = try NSRegularExpression(pattern: #"<select[^>]*name="category"[^>]*>(.*?)</select>"#, options: [.dotMatchesLineSeparators])
+            let selectMatches = selectRegex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
+            
+            print("🔍 Found \(selectMatches.count) select matches for category")
+            
+            if let selectMatch = selectMatches.first, selectMatch.numberOfRanges >= 2 {
+                let selectRange = Range(selectMatch.range(at: 1), in: html)!
+                let selectContent = String(html[selectRange])
+                
+                print("📋 Category select content (first 300 chars): \(selectContent.prefix(300))")
+                
+                // Now extract individual options from the category select
+                let optionPattern = #"<option[^>]*value="(\d+)"[^>]*>([^<]+)</option>"#
+                let optionRegex = try NSRegularExpression(pattern: optionPattern, options: [])
+                let optionMatches = optionRegex.matches(in: selectContent, options: [], range: NSRange(selectContent.startIndex..<selectContent.endIndex, in: selectContent))
+                
+                print("🔍 Found \(optionMatches.count) category options in select")
+                
+                for match in optionMatches {
+                    guard match.numberOfRanges >= 3 else { continue }
+                    
+                    let idRange = Range(match.range(at: 1), in: selectContent)!
+                    let nameRange = Range(match.range(at: 2), in: selectContent)!
+                    
+                    let idString = String(selectContent[idRange])
+                    var name = String(selectContent[nameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    // Decode HTML entities
+                    name = name.replacingOccurrences(of: "&amp;", with: "&")
+                                 .replacingOccurrences(of: "&lt;", with: "<")
+                                 .replacingOccurrences(of: "&gt;", with: ">")
+                                 .replacingOccurrences(of: "&quot;", with: "\"")
+                    
+                    // Skip empty names or default "Select" options
+                    if !name.isEmpty && name != "Select" && name != "Category" && name != "Choose..." {
+                        if let id = Int(idString) {
+                            let category = Category(id: id, name: name)
+                            categories.append(category)
+                            print("✅ Found category: '\(name)' (ID: \(id))")
+                        }
+                    }
+                }
+            } else {
+                print("⚠️ Could not find category select element in HTML")
+            }
+        } catch {
+            print("❌ Error parsing categories: \(error)")
+        }
+        
+        print("📋 Parsed \(categories.count) categories from HTML")
+        return categories
+    }
+    
+    // MARK: - Get All Items
+    func getAllItems() async throws -> [ItemDetail] {
+        guard let cookie = UserManager.shared.cookie else {
+            throw NetworkError.unauthorized
+        }
+        
+        let url = URL(string: "\(baseURL)/items/list")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        // Handle cookie format - it might already include "session=" prefix
+        let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
+        request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+        
+        print("🌐 Getting all items from: \(url)")
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        print("📡 Items list response status: \(httpResponse.statusCode)")
+        
+        guard httpResponse.statusCode == 200 else {
+            throw NetworkError.serverError("Failed to get items: HTTP \(httpResponse.statusCode)")
+        }
+        
+        guard let responseString = String(data: data, encoding: .utf8) else {
+            throw NetworkError.noData
+        }
+        
+        // Check if we got a login page instead of the items page
+        if responseString.contains("<title>Login</title>") || 
+           responseString.contains("Please log in") ||
+           responseString.contains("You should be redirected") {
+            print("⚠️ Received login page when getting items")
+            throw NetworkError.unauthorized
+        }
+        
+        print("📄 Items HTML preview (first 500 chars): \(responseString.prefix(500))")
+        return parseItemsFromHTML(responseString)
+    }
+    
+    private func parseItemsFromHTML(_ html: String) -> [ItemDetail] {
+        var items: [ItemDetail] = []
+        
+        // Parse the actual table structure:
+        // <tr>
+        //   <td>1</td>  
+        //   <td><a href="/items/describe?item=ID">NAME</a></td>
+        //   <td><a href="/items/list?purchase_date=DATE">PURCHASE_DATE</a></td>
+        //   <td><a href="/items/list?list_date=DATE">LIST_DATE</a></td>
+        //   <td>SOLD_DATE or NA</td>
+        //   <td>DAYS_TO_SELL or NA</td>
+        //   <td>SOLD_NET or 0</td>
+        //   <td><a href="/items/list?storage=STORAGE">STORAGE</a></td>
+        //   <td><a href="/groups/describe?group_id=GROUP_ID">GROUP_NAME</a></td>
+        //   <td><a href="/items/remove?id=ID">remove</a></td>
+        // </tr>
+        
+        // The actual HTML has irregular spacing and conditional content, so use a more flexible pattern
+        // Note: storage field can be empty, so we make the content optional with ([^<]*)
+        let itemPattern = #"<tr[^>]*>[\s\S]*?<td[^>]*>(\d+)</td>[\s\S]*?<td[^>]*><a[^>]*href\s*=\s*"[^"]*item=([^"&]+)"[^>]*>([^<]+)</a></td>[\s\S]*?<td[^>]*><a[^>]*href[^>]*>([^<]+)</a></td>[\s\S]*?<td[^>]*><a[^>]*href[^>]*>([^<]+)</a></td>[\s\S]*?<td[^>]*>([^<]*?)</td>[\s\S]*?<td[^>]*>([^<]*?)</td>[\s\S]*?<td[^>]*>([^<]*?)</td>[\s\S]*?<td[^>]*><a[^>]*href\s*=\s*"[^"]*storage=([^"]*)"[^>]*>([^<]*)</a></td>[\s\S]*?<td[^>]*><a[^>]*href\s*=\s*"[^"]*group_id=([^"&]+)"[^>]*>([^<]+)</a></td>[\s\S]*?</tr>"#
+        
+        do {
+            let regex = try NSRegularExpression(pattern: itemPattern, options: [.dotMatchesLineSeparators])
+            let matches = regex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
+            
+            print("🔍 Found \(matches.count) potential items with regex")
+            
+            for match in matches {
+                guard match.numberOfRanges >= 13 else { 
+                    print("⚠️ Match has insufficient groups: \(match.numberOfRanges)")
+                    continue 
+                }
+                
+                let indexRange = Range(match.range(at: 1), in: html)!
+                let itemIdRange = Range(match.range(at: 2), in: html)!
+                let nameRange = Range(match.range(at: 3), in: html)!
+                let purchaseDateRange = Range(match.range(at: 4), in: html)!
+                let listDateRange = Range(match.range(at: 5), in: html)!
+                let soldDateRange = Range(match.range(at: 6), in: html)!
+                let daysToSellRange = Range(match.range(at: 7), in: html)!
+                let soldNetRange = Range(match.range(at: 8), in: html)!
+                let storageValueRange = Range(match.range(at: 9), in: html)!
+                let storageTextRange = Range(match.range(at: 10), in: html)!
+                let groupIdRange = Range(match.range(at: 11), in: html)!
+                let groupNameRange = Range(match.range(at: 12), in: html)!
+                
+                let index = String(html[indexRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let itemId = String(html[itemIdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let name = String(html[nameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let purchaseDate = String(html[purchaseDateRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let listDate = String(html[listDateRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let soldDate = String(html[soldDateRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let daysToSell = String(html[daysToSellRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let soldNet = String(html[soldNetRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let storageValue = String(html[storageValueRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let storageText = String(html[storageTextRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let groupId = String(html[groupIdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let groupName = String(html[groupNameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                print("🔍 Raw values - Index: '\(index)' Name: '\(name)' SoldDate: '\(soldDate)' SoldNet: '\(soldNet)' Storage: '\(storageText)' Group: '\(groupName)'")
+                
+                // Determine if item is sold
+                let sold = soldDate != "NA" && !soldDate.isEmpty
+                
+                // Parse sold price
+                let soldPrice = sold ? parsePrice(from: soldNet) : nil
+                
+                // Parse days to sell
+                let daysToSellInt = (daysToSell != "NA" && !daysToSell.isEmpty) ? Int(daysToSell) : nil
+                
+                let item = ItemDetail(
+                    id: itemId,
+                    name: name,
+                    sold: sold,
+                    groupId: groupId,
+                    categoryId: 0, // Will be filled in later if needed
+                    category: "Unknown", // Will fetch from /items/describe if needed
+                    returned: false,
+                    storage: storageText.isEmpty ? nil : storageText,
+                    listDate: listDate.isEmpty ? nil : listDate,
+                    groupName: groupName,
+                    purchaseDate: purchaseDate,
+                    price: 0.0, // We don't have list price in this table, will fetch if needed
+                    soldPrice: soldPrice,
+                    shippingFee: nil,
+                    netPrice: soldPrice, // Use sold net as net price for now
+                    soldDate: sold ? soldDate : nil,
+                    daysToSell: daysToSellInt
+                )
+                
+                items.append(item)
+                print("✅ Parsed item #\(index): \(name) (\(sold ? "Sold $\(soldNet)" : "Available")) - Group: \(groupName)")
+            }
+        } catch {
+            print("❌ Error parsing items: \(error)")
+        }
+        
+        // Always try the simple approach as well and compare results
+        print("🔄 Regex found \(items.count) items, also trying simpler approach for comparison...")
+        let simpleItems = parseItemsSimple(html)
+        print("🔄 Simple parsing found \(simpleItems.count) items")
+        
+        // Use whichever method found more items
+        if simpleItems.count > items.count {
+            print("🔄 Using simple parsing results (\(simpleItems.count) vs \(items.count))")
+            items = simpleItems
+        } else {
+            print("🔄 Using regex results (\(items.count) vs \(simpleItems.count))")
+        }
+        
+        print("📋 Parsed \(items.count) items from HTML")
+        return items
+    }
+    
+    private func parseItemsSimple(_ html: String) -> [ItemDetail] {
+        var items: [ItemDetail] = []
+        
+        // Find all table rows
+        let rowPattern = #"<tr[^>]*>(.*?)</tr>"#
+        
+        do {
+            let rowRegex = try NSRegularExpression(pattern: rowPattern, options: [.dotMatchesLineSeparators])
+            let rowMatches = rowRegex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
+            
+            print("🔍 Found \(rowMatches.count) table rows")
+            
+            for rowMatch in rowMatches {
+                let rowContentRange = Range(rowMatch.range(at: 1), in: html)!
+                let rowContent = String(html[rowContentRange])
+                
+                // Look for item describe link to identify item rows
+                if rowContent.contains("/items/describe?item=") {
+                    if let item = parseItemRow(rowContent) {
+                        items.append(item)
+                        print("✅ Parsed item: \(item.name)")
+                    }
+                }
+            }
+        } catch {
+            print("❌ Error in simple parsing: \(error)")
+        }
+        
+        return items
+    }
+    
+    private func parseItemRow(_ rowContent: String) -> ItemDetail? {
+        print("🔍 Parsing row content: \(rowContent.prefix(200))...")
+        
+        // Extract item ID and name
+        let itemPattern = #"/items/describe\?item=([^"&]+)"[^>]*>([^<]+)</a>"#
+        guard let itemRegex = try? NSRegularExpression(pattern: itemPattern),
+              let itemMatch = itemRegex.firstMatch(in: rowContent, options: [], range: NSRange(rowContent.startIndex..<rowContent.endIndex, in: rowContent)),
+              itemMatch.numberOfRanges >= 3 else {
+            print("⚠️ Could not extract item info from row")
+            return nil
+        }
+        
+        let itemIdRange = Range(itemMatch.range(at: 1), in: rowContent)!
+        let nameRange = Range(itemMatch.range(at: 2), in: rowContent)!
+        let itemId = String(rowContent[itemIdRange])
+        let name = String(rowContent[nameRange])
+        
+        print("📝 Found item: \(name) with ID: \(itemId)")
+        
+        // Extract group ID and name
+        let groupPattern = #"/groups/describe\?group_id=([^"&]+)"[^>]*>([^<]+)</a>"#
+        var groupId = ""
+        var groupName = ""
+        if let groupRegex = try? NSRegularExpression(pattern: groupPattern),
+           let groupMatch = groupRegex.firstMatch(in: rowContent, options: [], range: NSRange(rowContent.startIndex..<rowContent.endIndex, in: rowContent)),
+           groupMatch.numberOfRanges >= 3 {
+            let groupIdRange = Range(groupMatch.range(at: 1), in: rowContent)!
+            let groupNameRange = Range(groupMatch.range(at: 2), in: rowContent)!
+            groupId = String(rowContent[groupIdRange])
+            groupName = String(rowContent[groupNameRange])
+            print("🏷️ Group: \(groupName) (\(groupId))")
+        }
+        
+        // Extract purchase date, list date
+        var purchaseDate = ""
+        var listDate = ""
+        let purchaseDatePattern = #"purchase_date=([^"]+)"[^>]*>([^<]+)</a>"#
+        if let purchaseRegex = try? NSRegularExpression(pattern: purchaseDatePattern),
+           let purchaseMatch = purchaseRegex.firstMatch(in: rowContent, options: [], range: NSRange(rowContent.startIndex..<rowContent.endIndex, in: rowContent)) {
+            let purchaseDateRange = Range(purchaseMatch.range(at: 2), in: rowContent)!
+            purchaseDate = String(rowContent[purchaseDateRange])
+        }
+        
+        let listDatePattern = #"list_date=([^"]+)"[^>]*>([^<]+)</a>"#
+        if let listRegex = try? NSRegularExpression(pattern: listDatePattern),
+           let listMatch = listRegex.firstMatch(in: rowContent, options: [], range: NSRange(rowContent.startIndex..<rowContent.endIndex, in: rowContent)) {
+            let listDateRange = Range(listMatch.range(at: 2), in: rowContent)!
+            listDate = String(rowContent[listDateRange])
+        }
+        
+        // Extract sold information
+        var soldDate = ""
+        var soldNet = ""
+        var daysToSell = ""
+        
+        // Look for sold_date link (indicates item is sold)
+        let soldDatePattern = #"sold_date=([^"&]+).*?>([^<]+)</a>"#
+        if let soldRegex = try? NSRegularExpression(pattern: soldDatePattern),
+           let soldMatch = soldRegex.firstMatch(in: rowContent, options: [], range: NSRange(rowContent.startIndex..<rowContent.endIndex, in: rowContent)) {
+            let soldDateRange = Range(soldMatch.range(at: 2), in: rowContent)!
+            soldDate = String(rowContent[soldDateRange])
+        }
+        
+        // Extract storage
+        var storage = ""
+        let storagePattern = #"storage=([^"]*)"[^>]*>([^<]*)</a>"#
+        if let storageRegex = try? NSRegularExpression(pattern: storagePattern),
+           let storageMatch = storageRegex.firstMatch(in: rowContent, options: [], range: NSRange(rowContent.startIndex..<rowContent.endIndex, in: rowContent)) {
+            let storageRange = Range(storageMatch.range(at: 2), in: rowContent)!
+            storage = String(rowContent[storageRange])
+        }
+        
+        // Extract numeric values by splitting cells and looking for patterns
+        let tdPattern = #"<td[^>]*>([^<]*)</td>"#
+        if let tdRegex = try? NSRegularExpression(pattern: tdPattern) {
+            let matches = tdRegex.matches(in: rowContent, options: [], range: NSRange(rowContent.startIndex..<rowContent.endIndex, in: rowContent))
+            for match in matches {
+                if match.numberOfRanges >= 2 {
+                    let cellRange = Range(match.range(at: 1), in: rowContent)!
+                    let cellContent = String(rowContent[cellRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    // Look for numeric patterns (days to sell or sold net)
+                    if let number = Double(cellContent), number > 0 {
+                        if cellContent.contains(".") && soldNet.isEmpty {
+                            soldNet = cellContent
+                        } else if !cellContent.contains(".") && daysToSell.isEmpty && number <= 1000 {
+                            daysToSell = cellContent
+                        }
+                    }
+                }
+            }
+        }
+        
+        let sold = !soldDate.isEmpty && soldDate != "NA"
+        let soldPrice = sold ? parsePrice(from: soldNet) : nil
+        let daysToSellInt = Int(daysToSell)
+        
+        print("💰 Sold: \(sold), SoldNet: \(soldNet), DaysToSell: \(daysToSell)")
+        
+        return ItemDetail(
+            id: itemId,
+            name: name,
+            sold: sold,
+            groupId: groupId,
+            categoryId: 0,
+            category: "Unknown",
+            returned: false,
+            storage: storage.isEmpty ? nil : storage,
+            listDate: listDate.isEmpty ? nil : listDate,
+            groupName: groupName,
+            purchaseDate: purchaseDate,
+            price: 0.0,
+            soldPrice: soldPrice,
+            shippingFee: nil,
+            netPrice: soldPrice,
+            soldDate: sold ? soldDate : nil,
+            daysToSell: daysToSellInt
+        )
+    }
+    
+    private func parsePrice(from priceString: String) -> Double {
+        // Remove currency symbols and parse
+        let cleanString = priceString.replacingOccurrences(of: "$", with: "")
+                                    .replacingOccurrences(of: ",", with: "")
+                                    .trimmingCharacters(in: .whitespacesAndNewlines)
+        return Double(cleanString) ?? 0.0
+    }
+    
+    // MARK: - Add Item
+    
+    func addItem(itemName: String, groupId: String, categoryId: Int, storage: String, listDate: String) async throws -> Bool {
+        guard let cookie = UserManager.shared.cookie else {
+            throw NetworkError.unauthorized
+        }
+        
+        let url = URL(string: "\(baseURL)/items/bought")!
+        var request = URLRequest(url: url)
+        
+        // Build form data
+        let parameters = [
+            "item-0": itemName,  // The backend expects item-0, item-1, etc.
+            "group": groupId,
+            "category": String(categoryId),
+            "storage": storage,
+            "list_date": listDate
+        ]
+        
+        let formData = parameters.map { key, value in
+            let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
+            let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
+            return "\(encodedKey)=\(encodedValue)"
+        }.joined(separator: "&")
+        
+        let bodyData = formData.data(using: .utf8)!
+        
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        // Handle cookie format - it might already include "session=" prefix
+        let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
+        request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+        request.setValue("\(bodyData.count)", forHTTPHeaderField: "Content-Length")
+        request.httpBody = bodyData
+        
+        print("🌐 Adding item to: \(url)")
+        print("📝 Form data: \(formData)")
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        print("📡 Add item response status: \(httpResponse.statusCode)")
+        
+        // Handle various success statuses
+        if httpResponse.statusCode == 200 || httpResponse.statusCode == 302 {
+            // Check if we got a login page
+            if let responseString = String(data: data, encoding: .utf8) {
+                if responseString.contains("<title>Login</title>") || responseString.contains("Please log in") {
+                    print("⚠️ Received login page when adding item")
+                    throw NetworkError.unauthorized
+                }
+                
+                // Check for any error messages in the response
+                if responseString.contains("error") || responseString.contains("Error") {
+                    print("⚠️ Response contains error: \(responseString.prefix(200))")
+                    // Still consider it a success if it's a 200/302 - might be a form validation issue
+                }
+                
+                print("✅ Item added successfully")
+                return true
+            }
+        }
+        
+        if httpResponse.statusCode == 500 {
+            let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NetworkError.serverError("Server error (500) - \(responseString)")
+        } else if httpResponse.statusCode == 400 {
+            let responseString = String(data: data, encoding: .utf8) ?? "Bad request"
+            throw NetworkError.serverError("Bad request (400) - \(responseString)")
+        } else if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+            throw NetworkError.unauthorized
+        } else {
+            let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode) - \(responseString)")
         }
     }

@@ -63,6 +63,7 @@ struct ItemDetail: Codable {
     let listDate: String?
     let groupName: String
     let purchaseDate: String
+    let price: Double  // List price
     
     // Sold item financial details (only when sold = true)
     let soldPrice: Double?
@@ -75,6 +76,7 @@ struct ItemDetail: Codable {
 // MARK: - Network Error
 enum NetworkError: Error {
     case invalidURL
+    case invalidResponse
     case noData
     case decodingError
     case serverError(String)
