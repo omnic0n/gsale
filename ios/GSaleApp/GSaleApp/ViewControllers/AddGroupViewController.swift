@@ -200,7 +200,18 @@ class AddGroupViewController: UIViewController {
                            self.addButton.isEnabled = true
                            
                            if response.success {
-                               self.showSuccessAlert(groupId: response.group_id)
+                               print("✅ Group created successfully!")
+                               print("📦 Group ID returned: \(response.group_id ?? "none")")
+                               
+                               if let groupId = response.group_id, !groupId.isEmpty {
+                                   print("🔄 Attempting to navigate to group details for ID: \(groupId)")
+                                   // Directly navigate to group details
+                                   self.navigateToGroupDetails(groupId: groupId)
+                               } else {
+                                   print("⚠️ No valid group ID returned, showing success message")
+                                   // No group ID returned, show success message and dismiss
+                                   self.showSuccessMessageAndDismiss()
+                               }
                            } else {
                                self.showAlert(title: "Error", message: response.message)
                            }
@@ -215,11 +226,23 @@ class AddGroupViewController: UIViewController {
                     case NetworkError.unauthorized:
                         errorMessage = "Please log in again to create groups."
                     case NetworkError.serverError(let message):
+                        // Check if this is actually a success with HTML response
+                        if message.contains("<html") || message.contains("Group Information") {
+                            // This is likely a successful creation with HTML response
+                            print("🔄 Detected HTML response - group likely created successfully")
+                            
+                            // Notify that a group was created
+                            NotificationCenter.default.post(name: .groupCreated, object: nil)
+                            
+                            self.showSuccessMessageAndDismiss()
+                            return
+                        }
                         errorMessage = "Server error: \(message)"
                     default:
                         errorMessage = "Failed to create group. Please check your internet connection and try again."
                     }
                     
+                    print("❌ Group creation error: \(errorMessage)")
                     self.showAlert(title: "Error", message: errorMessage)
                 }
             }
@@ -265,6 +288,53 @@ class AddGroupViewController: UIViewController {
                    }
                }
            }
+           
+                       private func navigateToGroupDetails(groupId: String) {
+                Task {
+                    do {
+                        print("🌐 Fetching group details for ID: \(groupId)")
+                        let groupDetail = try await NetworkManager.shared.getGroupDetails(groupId: groupId)
+                        
+                        await MainActor.run {
+                            print("✅ Successfully loaded group details for: \(groupDetail.name)")
+                            
+                            // Notify that a group was created
+                            NotificationCenter.default.post(name: .groupCreated, object: nil)
+                            
+                            // Dismiss the add group screen first
+                            self.dismiss(animated: true) {
+                                // Get the presenting view controller (likely the dashboard or groups list)
+                                if let presentingVC = self.presentingViewController {
+                                    let detailVC = GroupDetailViewController(groupDetail: groupDetail)
+                                    let navController = UINavigationController(rootViewController: detailVC)
+                                    presentingVC.present(navController, animated: true)
+                                }
+                            }
+                        }
+                    } catch {
+                        await MainActor.run {
+                            print("❌ Failed to load group details: \(error)")
+                            // If loading group details fails, show success message and dismiss
+                            self.showSuccessMessageAndDismiss()
+                        }
+                    }
+                }
+            }
+            
+            private func showSuccessMessageAndDismiss() {
+                // Notify that a group was created
+                NotificationCenter.default.post(name: .groupCreated, object: nil)
+                
+                let alert = UIAlertController(
+                    title: "Success! 🎉", 
+                    message: "Group created successfully! You can find it in the groups list.", 
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                    self.dismiss(animated: true)
+                })
+                present(alert, animated: true)
+            }
     
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)

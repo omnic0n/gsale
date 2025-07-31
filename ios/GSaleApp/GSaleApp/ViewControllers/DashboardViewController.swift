@@ -88,8 +88,14 @@ class DashboardViewController: UIViewController {
     @objc private func logoutTapped() {
         let alert = UIAlertController(title: "Logout", message: "Are you sure you want to logout?", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Logout", style: .destructive) { _ in
-            UserManager.shared.logout()
+        alert.addAction(UIAlertAction(title: "Logout (Keep Password)", style: .default) { _ in
+            // Clear session but keep saved credentials
+            UserManager.shared.cookie = nil
+            self.showLogin()
+        })
+        alert.addAction(UIAlertAction(title: "Logout (Clear All)", style: .destructive) { _ in
+            // Clear everything including saved password
+            UserManager.shared.clearAllData()
             self.showLogin()
         })
         present(alert, animated: true)

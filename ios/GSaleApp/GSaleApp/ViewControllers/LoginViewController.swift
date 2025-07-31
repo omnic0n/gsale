@@ -11,12 +11,20 @@ class LoginViewController: UIViewController {
     
     private let usernameTextField = UITextField()
     private let passwordTextField = UITextField()
+    private let savePasswordSwitch = UISwitch()
+    private let savePasswordLabel = UILabel()
     private let loginButton = UIButton(type: .system)
     private let activityIndicator = UIActivityIndicatorView(style: .large)
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        loadSavedCredentials()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        attemptAutoLogin()
     }
     
     private func setupUI() {
@@ -47,6 +55,14 @@ class LoginViewController: UIViewController {
         setupTextField(passwordTextField, placeholder: "Password", icon: "lock.fill")
         passwordTextField.isSecureTextEntry = true
         
+        savePasswordLabel.text = "Save Password"
+        savePasswordLabel.font = UIFont.systemFont(ofSize: 16)
+        savePasswordLabel.textColor = .label
+        savePasswordLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        savePasswordSwitch.translatesAutoresizingMaskIntoConstraints = false
+        savePasswordSwitch.onTintColor = .systemBlue
+        
         loginButton.setTitle("Login", for: .normal)
         loginButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         loginButton.backgroundColor = .systemBlue
@@ -63,6 +79,8 @@ class LoginViewController: UIViewController {
         contentView.addSubview(subtitleLabel)
         contentView.addSubview(usernameTextField)
         contentView.addSubview(passwordTextField)
+        contentView.addSubview(savePasswordLabel)
+        contentView.addSubview(savePasswordSwitch)
         contentView.addSubview(loginButton)
         contentView.addSubview(activityIndicator)
         
@@ -126,7 +144,13 @@ class LoginViewController: UIViewController {
             passwordTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             passwordTextField.heightAnchor.constraint(equalToConstant: 50),
             
-            loginButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 32),
+            savePasswordLabel.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 20),
+            savePasswordLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            
+            savePasswordSwitch.centerYAnchor.constraint(equalTo: savePasswordLabel.centerYAnchor),
+            savePasswordSwitch.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            
+            loginButton.topAnchor.constraint(equalTo: savePasswordLabel.bottomAnchor, constant: 24),
             loginButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             loginButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             loginButton.heightAnchor.constraint(equalToConstant: 50),
@@ -156,7 +180,14 @@ class LoginViewController: UIViewController {
                     self.loginButton.isEnabled = true
                     
                     if response.success {
-                        UserManager.shared.saveLoginData(from: response)
+                        let passwordToSave = self.savePasswordSwitch.isOn ? password : nil
+                        UserManager.shared.saveLoginData(
+                            cookie: response.cookie ?? "",
+                            username: response.username ?? username,
+                            userId: response.user_id,
+                            isAdmin: response.is_admin ?? false,
+                            password: passwordToSave
+                        )
                         self.showDashboard()
                     } else {
                         self.showAlert(title: "Login Failed", message: response.message)
@@ -188,6 +219,25 @@ class LoginViewController: UIViewController {
         let navController = UINavigationController(rootViewController: dashboardVC)
         navController.modalPresentationStyle = .fullScreen
         present(navController, animated: true)
+    }
+    
+    private func loadSavedCredentials() {
+        if let credentials = UserManager.shared.getStoredCredentials() {
+            usernameTextField.text = credentials.username
+            passwordTextField.text = credentials.password
+            savePasswordSwitch.isOn = true
+            print("📱 Loaded saved credentials for user: \(credentials.username)")
+        }
+    }
+    
+    private func attemptAutoLogin() {
+        // Only auto-login if user is already logged in (has valid session)
+        if UserManager.shared.isLoggedIn() {
+            print("🔄 User already logged in, showing dashboard")
+            showDashboard()
+        } else if UserManager.shared.hasStoredCredentials() {
+            print("🔄 Found saved credentials, but not logged in - user can manually login")
+        }
     }
     
     private func showAlert(title: String, message: String) {

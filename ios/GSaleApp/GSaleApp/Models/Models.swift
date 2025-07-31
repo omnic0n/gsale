@@ -39,6 +39,7 @@ struct GroupDetail: Codable {
     let totalSoldItems: Int
     let soldPrice: Double
     let items: [GroupItem]
+    let imageFilename: String?
 }
 
 struct GroupItem: Codable {
@@ -46,6 +47,29 @@ struct GroupItem: Codable {
     let name: String
     let price: Double
     let sold: Bool
+    let category: String?
+    let storage: String?
+}
+
+struct ItemDetail: Codable {
+    let id: String
+    let name: String
+    let sold: Bool
+    let groupId: String
+    let categoryId: Int
+    let category: String
+    let returned: Bool
+    let storage: String?
+    let listDate: String?
+    let groupName: String
+    let purchaseDate: String
+    
+    // Sold item financial details (only when sold = true)
+    let soldPrice: Double?
+    let shippingFee: Double?
+    let netPrice: Double?
+    let soldDate: String?
+    let daysToSell: Int?
 }
 
 // MARK: - Network Error
