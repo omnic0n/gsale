@@ -3,6 +3,15 @@
 {% block title %}Manage Categories{% endblock %}
 
 {% block content %}
+<style>
+/* Ensure modal is visible */
+.modal {
+    z-index: 1050 !important;
+}
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+</style>
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-8 offset-md-2">
@@ -183,7 +192,10 @@ $(document).ready(function() {
             }
             
             console.log('Showing modal...');
+            console.log('jQuery version:', $.fn.jquery);
+            console.log('Bootstrap modal available:', typeof $.fn.modal);
             $('#deleteModal').modal('show');
+            console.log('Modal show command executed');
         });
     });
 });
