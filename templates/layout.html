@@ -326,71 +326,72 @@
     </script>
     
     <script>
-      function hideDate(){
-        $('#date').hide();
-        $('#date').removeAttr('required');
-        $('#date').removeAttr('data-error');
-        $('#divDate').hide();
-        $('#divDate').removeAttr('required');
-        $('#divDate').removeAttr('data-error');
-      }
-      function showDate(){
-        $('#date').show();
-        $('#date').attr('required');
-        $('#date').attr('data-error');
-        $('#divDate').show();
-        $('#divDate').attr('required');
-        $('#divDate').attr('data-error');
-      }
-      function hideMonth(){
-        $('#month').hide();
-        $('#month').removeAttr('required');
-        $('#month').removeAttr('data-error');
-        $('#divMonth').hide();
-        $('#divMonth').removeAttr('required');
-        $('#divMonth').removeAttr('data-error');
-      }
-      function showMonth(){
-        $('#month').show();
-        $('#month').attr('required');
-        $('#month').attr('data-error');
-        $('#divMonth').show();
-        $('#divMonth').attr('required');
-        $('#divMonth').attr('data-error');
-      }
-      function hideYear(){
-        $('#year').hide();
-        $('#year').removeAttr('required', '');
-        $('#year').removeAttr('data-error', 'This field is required.');
-        $('#divYear').hide();
-        $('#divYear').removeAttr('required', '');
-        $('#divYear').removeAttr('data-error', 'This field is required.');
-      }
-      function showYear(){
-        $('#year').show();
-        $('#year').attr('required');
-        $('#year').attr('data-error');
-        $('#divYear').show();
-        $('#divYear').attr('required');
-        $('#divYear').attr('data-error');
-      }
-      function hideDay(){
-        $('#day').hide();
-        $('#day').removeAttr('required', '');
-        $('#day').removeAttr('data-error', 'This field is required.');
-        $('#divDay').hide();
-        $('#divDay').removeAttr('required', '');
-        $('#divDay').removeAttr('data-error', 'This field is required.');
-      }
-      function showDay(){
-        $('#day').show();
-        $('#day').attr('required');
-        $('#day').attr('data-error');
-        $('#divDay').show();
-        $('#divDay').attr('required');
-        $('#divDay').attr('data-error');
-      }
       $(document).ready(function() {
+        function hideDate(){
+          $('#date').hide();
+          $('#date').removeAttr('required');
+          $('#date').removeAttr('data-error');
+          $('#divDate').hide();
+          $('#divDate').removeAttr('required');
+          $('#divDate').removeAttr('data-error');
+        }
+        function showDate(){
+          $('#date').show();
+          $('#date').attr('required');
+          $('#date').attr('data-error');
+          $('#divDate').show();
+          $('#divDate').attr('required');
+          $('#divDate').attr('data-error');
+        }
+        function hideMonth(){
+          $('#month').hide();
+          $('#month').removeAttr('required');
+          $('#month').removeAttr('data-error');
+          $('#divMonth').hide();
+          $('#divMonth').removeAttr('required');
+          $('#divMonth').removeAttr('data-error');
+        }
+        function showMonth(){
+          $('#month').show();
+          $('#month').attr('required');
+          $('#month').attr('data-error');
+          $('#divMonth').show();
+          $('#divMonth').attr('required');
+          $('#divMonth').attr('data-error');
+        }
+        function hideYear(){
+          $('#year').hide();
+          $('#year').removeAttr('required', '');
+          $('#year').removeAttr('data-error', 'This field is required.');
+          $('#divYear').hide();
+          $('#divYear').removeAttr('required', '');
+          $('#divYear').removeAttr('data-error', 'This field is required.');
+        }
+        function showYear(){
+          $('#year').show();
+          $('#year').attr('required');
+          $('#year').attr('data-error');
+          $('#divYear').show();
+          $('#divYear').attr('required');
+          $('#divYear').attr('data-error');
+        }
+        function hideDay(){
+          $('#day').hide();
+          $('#day').removeAttr('required', '');
+          $('#day').removeAttr('data-error', 'This field is required.');
+          $('#divDay').hide();
+          $('#divDay').removeAttr('required', '');
+          $('#divDay').removeAttr('data-error', 'This field is required.');
+        }
+        function showDay(){
+          $('#day').show();
+          $('#day').attr('required');
+          $('#day').attr('data-error');
+          $('#divDay').show();
+          $('#divDay').attr('required');
+          $('#divDay').attr('data-error');
+        }
+        
         $('#type').prop("selectedIndex", {{ type_value }});
         {{ type_value }}
         hideMonth();
@@ -425,6 +426,12 @@
     <script>
       $(document).ready(function() {
           var addCount = 1;
+          
+          function GetDynamicTextBox(value, addCount) {
+              return '<div class="form-group" id="item_' + addCount + '">' + '<input name = "item' + addCount + '"type="text" value = "' + value + '" />' +
+              '</div>' ;
+          }
+          
           $("#addNewField").click(function() {
               var newInput = $("#itemList");
               newInput.append(GetDynamicTextBox("", addCount));
@@ -436,11 +443,6 @@
               $('#item_'+ addCount).remove();
           });
       });
-
-      function GetDynamicTextBox(value, addCount) {
-          return '<div class="form-group" id="item_' + addCount + '">' + '<input name = "item' + addCount + '"type="text" value = "' + value + '" />' +
-          '</div>' ;
-      }
     </script>
 
     <!-- Change Password Modal -->
