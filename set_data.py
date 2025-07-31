@@ -184,7 +184,7 @@ def update_category(category_id, category_name, user_id):
         cur.close()
 
 def delete_category(category_id, user_id):
-    """Delete a category and update all items to be unassigned"""
+    """Delete a category and update all items to be Uncategorized"""
     cur = mysql.connection.cursor()
     try:
         # Check if category is used by any items
@@ -193,15 +193,37 @@ def delete_category(category_id, user_id):
         affected_items = result['count']
         
         if affected_items > 0:
-            # Update all items to be unassigned (set category_id to NULL)
-            cur.execute("UPDATE items SET category_id = NULL WHERE category_id = %s", (category_id,))
-            updated_items = cur.rowcount
+            # Find the user's Uncategorized category
+            cur.execute("SELECT id FROM categories WHERE type = 'Uncategorized' AND user_id = %s", (user_id,))
+            uncategorized_result = cur.fetchone()
             
-            # Delete the category (only if it belongs to the user)
-            cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
-            mysql.connection.commit()
-            
-            return True, f"Category deleted successfully. {updated_items} items have been unassigned from this category."
+            if uncategorized_result:
+                uncategorized_id = uncategorized_result['id']
+                # Update all items to be Uncategorized
+                cur.execute("UPDATE items SET category_id = %s WHERE category_id = %s", (uncategorized_id, category_id))
+                updated_items = cur.rowcount
+                
+                # Delete the category (only if it belongs to the user)
+                cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
+                mysql.connection.commit()
+                
+                return True, f"Category deleted successfully. {updated_items} items have been moved to Uncategorized."
+            else:
+                # If no Uncategorized category exists, create one
+                import uuid
+                uncategorized_id = str(uuid.uuid4())
+                cur.execute("INSERT INTO categories (id, type, user_id) VALUES (%s, %s, %s)", 
+                           (uncategorized_id, 'Uncategorized', user_id))
+                
+                # Update all items to be Uncategorized
+                cur.execute("UPDATE items SET category_id = %s WHERE category_id = %s", (uncategorized_id, category_id))
+                updated_items = cur.rowcount
+                
+                # Delete the category (only if it belongs to the user)
+                cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
+                mysql.connection.commit()
+                
+                return True, f"Category deleted successfully. {updated_items} items have been moved to Uncategorized."
         else:
             # No items using this category, just delete it
             cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
