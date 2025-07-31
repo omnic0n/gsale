@@ -40,7 +40,7 @@ class ListForm(FlaskForm):
 class PurchaseForm(FlaskForm):
     itemList = FieldList(StringField(validators=[DataRequired()]), min_entries=0)
     group = SelectField('group', coerce=str)
-    category = SelectField('category', coerce=int)
+    category = SelectField('category', coerce=str)
     price = StringField('price')
     list_date = DateField('List Date',
                         default=datetime.today,
@@ -62,7 +62,7 @@ class ItemForm(FlaskForm):
     shipping_fee = StringField('shipping_fee')
     id = StringField('id')
     storage = StringField('storage')
-    category = SelectField('category', coerce=int)
+    category = SelectField('category', coerce=str)
     returned = SelectField('returned', coerce=int)
     sold = SelectField('sold', choices=[
         (0, 'No'),(1, 'Yes'), ('%', 'All')])
@@ -93,7 +93,7 @@ class ReportsForm(FlaskForm):
         (1,"Sunday"),(2, "Monday"),(3, "Tuesday"),(4, "Wednesday"),(5, "Thursday"),(6, "Friday"),(7, "Saturday")
     ])
     expense_type = SelectField('type', coerce=int)
-    category = SelectField('category', coerce=int)
+    category = SelectField('category', coerce=str)
     submit = SubmitField('Submit')
 
 

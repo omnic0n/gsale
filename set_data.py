@@ -151,6 +151,59 @@ def remove_case_data(id):
     mysql.connection.commit()
     cur.close()
 
+# Category Functions
+def add_category(category_name, user_id):
+    """Add a new category for a specific user"""
+    cur = mysql.connection.cursor()
+    try:
+        import uuid
+        category_id = str(uuid.uuid4())
+        cur.execute("INSERT INTO categories (id, type, user_id) VALUES (%s, %s, %s)", (category_id, category_name, user_id))
+        mysql.connection.commit()
+        return category_id
+    except Exception as e:
+        mysql.connection.rollback()
+        print(f"Error adding category: {e}")
+        return None
+    finally:
+        cur.close()
+
+def update_category(category_id, category_name, user_id):
+    """Update a category for a specific user"""
+    cur = mysql.connection.cursor()
+    try:
+        cur.execute("UPDATE categories SET type = %s WHERE id = %s AND user_id = %s", 
+                   (category_name, category_id, user_id))
+        mysql.connection.commit()
+        return cur.rowcount > 0
+    except Exception as e:
+        mysql.connection.rollback()
+        print(f"Error updating category: {e}")
+        return False
+    finally:
+        cur.close()
+
+def delete_category(category_id, user_id):
+    """Delete a category for a specific user (only if not used by any items)"""
+    cur = mysql.connection.cursor()
+    try:
+        # Check if category is used by any items
+        cur.execute("SELECT COUNT(*) as count FROM items WHERE category_id = %s", (category_id,))
+        result = cur.fetchone()
+        if result['count'] > 0:
+            return False, "Category is in use by items and cannot be deleted"
+        
+        # Delete the category
+        cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
+        mysql.connection.commit()
+        return True, "Category deleted successfully"
+    except Exception as e:
+        mysql.connection.rollback()
+        print(f"Error deleting category: {e}")
+        return False, f"Error deleting category: {e}"
+    finally:
+        cur.close()
+
 # Admin Functions
 def toggle_admin_status(user_id):
     """Toggle admin status for a user"""

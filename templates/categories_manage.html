@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Categories{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>Manage Your Categories</h2>
+            <p class="text-muted">Create and manage your custom categories for organizing items.</p>
+            
+            <!-- Add New Category Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Add New Category</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('manage_categories') }}">
+                        <input type="hidden" name="action" value="add">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <input type="text" name="category_name" class="form-control" 
+                                       placeholder="Enter category name" required>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary">Add Category</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Existing Categories -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Categories</h5>
+                </div>
+                <div class="card-body">
+                    {% if categories %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Category Name</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for category in categories %}
+                                    <tr>
+                                        <td>
+                                            <span class="category-name">{{ category.type }}</span>
+                                            <form method="POST" action="{{ url_for('manage_categories') }}" 
+                                                  class="edit-form d-none">
+                                                <input type="hidden" name="action" value="edit">
+                                                <input type="hidden" name="category_id" value="{{ category.id }}">
+                                                <div class="input-group">
+                                                    <input type="text" name="category_name" 
+                                                           class="form-control form-control-sm" 
+                                                           value="{{ category.type }}" required>
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn btn-success btn-sm">Save</button>
+                                                        <button type="button" class="btn btn-secondary btn-sm cancel-edit">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary edit-btn">Edit</button>
+                                                <button type="button" class="btn btn-outline-danger delete-btn" 
+                                                        data-category-id="{{ category.id }}" 
+                                                        data-category-name="{{ category.type }}">Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">No categories found. Add your first category above.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Delete</h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete the category "<span id="categoryName"></span>"?</p>
+                            <p class="text-warning"><small>This action cannot be undone.</small></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <form method="POST" action="{{ url_for('manage_categories') }}" style="display: inline;">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="category_id" id="deleteCategoryId">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit functionality
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const nameSpan = row.querySelector('.category-name');
+            const editForm = row.querySelector('.edit-form');
+            const btnGroup = row.querySelector('.btn-group');
+            
+            nameSpan.classList.add('d-none');
+            editForm.classList.remove('d-none');
+            btnGroup.classList.add('d-none');
+        });
+    });
+
+    // Cancel edit
+    document.querySelectorAll('.cancel-edit').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const nameSpan = row.querySelector('.category-name');
+            const editForm = row.querySelector('.edit-form');
+            const btnGroup = row.querySelector('.btn-group');
+            
+            nameSpan.classList.remove('d-none');
+            editForm.classList.add('d-none');
+            btnGroup.classList.remove('d-none');
+        });
+    });
+
+    // Delete functionality
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const categoryId = this.getAttribute('data-category-id');
+            const categoryName = this.getAttribute('data-category-name');
+            
+            document.getElementById('categoryName').textContent = categoryName;
+            document.getElementById('deleteCategoryId').value = categoryId;
+            
+            $('#deleteModal').modal('show');
+        });
+    });
+});
+</script>
+{% endblock %} 

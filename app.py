@@ -899,6 +899,55 @@ def cases_search():
     return render_template('cases_search.html', form=form)
 
 
+# Category Management Section
+@app.route('/categories', methods=["GET", "POST"])
+@login_required
+def manage_categories():
+    """Manage user's custom categories"""
+    
+    if request.method == "POST":
+        action = request.form.get('action')
+        
+        if action == 'add':
+            category_name = request.form.get('category_name', '').strip()
+            if category_name:
+                category_id = set_data.add_category(category_name, session.get('id'))
+                if category_id:
+                    flash('Category added successfully.', 'success')
+                else:
+                    flash('Failed to add category. Category name may already exist.', 'error')
+            else:
+                flash('Category name is required.', 'error')
+        
+        elif action == 'edit':
+            category_id = request.form.get('category_id')
+            category_name = request.form.get('category_name', '').strip()
+            if category_id and category_name:
+                success = set_data.update_category(category_id, category_name, session.get('id'))
+                if success:
+                    flash('Category updated successfully.', 'success')
+                else:
+                    flash('Failed to update category.', 'error')
+            else:
+                flash('Category ID and name are required.', 'error')
+        
+        elif action == 'delete':
+            category_id = request.form.get('category_id')
+            if category_id:
+                success, message = set_data.delete_category(category_id, session.get('id'))
+                if success:
+                    flash(message, 'success')
+                else:
+                    flash(message, 'error')
+            else:
+                flash('Category ID is required.', 'error')
+        
+        return redirect(url_for('manage_categories'))
+    
+    # Get user's categories
+    categories = get_data.get_all_from_categories()
+    return render_template('categories_manage.html', categories=categories)
+
 # Admin Section
 @app.route('/admin', methods=["GET", "POST"])
 @admin_required
