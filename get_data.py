@@ -392,6 +392,31 @@ def get_list_of_items_with_categories(category_id):
                     (category_id, session.get('id'), ))
         return list(cur.fetchall())
 
+def get_list_of_items_by_category(category_id):
+    """Get all items (sold and unsold) for a specific category with the same structure as get_list_of_items_purchased_by_date"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            i.id, 
+            i.name, 
+            i.sold,
+            i.group_id,
+            i.storage,
+            i.list_date,
+            s.date as sale_date,
+            (s.price - s.shipping_fee) AS net,
+            c.date as purchase_date,
+            c.name as group_name
+        FROM items i
+        INNER JOIN collection c ON i.group_id = c.id
+        LEFT JOIN sale s ON i.id = s.id
+        INNER JOIN categories cat ON i.category_id = cat.id
+        WHERE c.account = %s
+        AND cat.id = %s
+        ORDER BY c.date ASC
+    """, (session.get('id'), category_id))
+    return list(cur.fetchall())
+
 #Expense Data
 def get_expenses_choices():
     cur = mysql.connection.cursor()

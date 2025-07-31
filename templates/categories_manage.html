@@ -86,6 +86,11 @@
 .btn-close:hover {
     opacity: 0.7;
 }
+
+.category-link:hover {
+    text-decoration: underline !important;
+    opacity: 0.8;
+}
 </style>
 <div class="container mt-4">
     <div class="row">
@@ -134,7 +139,11 @@
                                     {% for category in categories %}
                                     <tr>
                                         <td>
-                                            <span class="category-name">{{ category.type }}</span>
+                                            <span class="category-name">
+                                                <a href="{{ url_for('list_items', category_id=category.id) }}" class="text-decoration-none text-primary fw-bold category-link">
+                                                    {{ category.type }}
+                                                </a>
+                                            </span>
                                             <form method="POST" action="{{ url_for('manage_categories') }}" 
                                                   class="edit-form d-none">
                                                 <input type="hidden" name="action" value="edit">

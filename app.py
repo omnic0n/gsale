@@ -681,7 +681,14 @@ def list_items():
     if storage is None:
         storage = "%"
 
-    items = get_data.get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage)
+    category_id = request.args.get('category_id', type = str)
+    
+    if category_id:
+        # If category_id is provided, filter items by category
+        items = get_data.get_list_of_items_by_category(category_id)
+    else:
+        # Otherwise, use the original function
+        items = get_data.get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage)
 
     return render_template('items_list.html', 
                             items=items)
