@@ -228,16 +228,14 @@ def delete_user(user_id):
             # Delete items in these groups
             cur.execute("DELETE FROM items WHERE group_id IN %s", (tuple(group_ids),))
             
-            # Delete locations for these groups
-            cur.execute("DELETE FROM location WHERE group_id IN %s", (tuple(group_ids),))
-            
             # Delete the collections
             cur.execute("DELETE FROM collection WHERE account = %s", (user_id,))
         
-
-        
         # Delete cases for this user
         cur.execute("DELETE FROM cases WHERE account = %s", (user_id,))
+        
+        # Delete expenses for this user
+        cur.execute("DELETE FROM expenses WHERE account = %s", (user_id,))
         
         # Finally delete the user account
         cur.execute("DELETE FROM accounts WHERE id = %s", (user_id,))
@@ -246,7 +244,12 @@ def delete_user(user_id):
         cur.close()
         return True
     except Exception as e:
-        print(f"Error deleting user: {e}")
+        print(f"Error deleting user {user_id}: {e}")
+        # Rollback on error
+        try:
+            mysql.connection.rollback()
+        except Exception as rollback_error:
+            print(f"Error during rollback: {rollback_error}")
         return False
 
 def create_user(details):
@@ -339,4 +342,20 @@ def link_google_account(user_id, google_id, name, picture=None):
         return user_id
     except Exception as e:
         print(f"Error linking Google account: {e}")
+        return None
+
+def add_group(name, description=""):
+    """Add a new group"""
+    try:
+        group_id = generate_uuid()
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO collection(id, name, description, date, price, account) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (group_id, name, description, datetime.now().date(), 0.00, session.get('id')))
+        mysql.connection.commit()
+        cur.close()
+        return group_id
+    except Exception as e:
+        print(f"Error adding group: {e}")
         return None

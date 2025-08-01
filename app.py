@@ -1015,6 +1015,11 @@ def admin_panel():
                 # Delete user (only if not the current admin)
                 user_id = request.form.get('user_id')
                 current_user_id = session.get('id')
+                
+                if not user_id:
+                    flash('User ID is required.', 'error')
+                    return redirect(url_for('admin_panel'))
+                
                 if user_id != current_user_id:
                     success = set_data.delete_user(user_id)
                     if success:
