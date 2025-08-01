@@ -32,6 +32,7 @@
             <th>Profit</th>
             <th>Average</th>
             <th>Date</th>
+            <th>Location</th>
             <th>Remove</th>
         </tr>
     </thead>
@@ -48,6 +49,15 @@
             <td>{{ group['net'] - group['price'] }}</td>
             <td>{% if group['sold_items'] > 0 %}{{ '%0.2f' % ( group['net'] / group['sold_items']) | float }}{% else %}0.00{% endif %}</td>
             <td>{{ group['date'] }}</td>
+            <td>
+                {% if group.get('location_address') %}
+                    <a href="https://maps.google.com/?q={{ group['location_address'] | urlencode }}" target="_blank" title="View on Google Maps">
+                        📍 {{ group['location_address'][:30] }}{% if group['location_address']|length > 30 %}...{% endif %}
+                    </a>
+                {% else %}
+                    <span style="color: #999;">-</span>
+                {% endif %}
+            </td>
             <td><a href="/groups/remove?id={{ group['id'] }}">Remove</td>
             </tr>
         {% set count.value = count.value + 1 %}

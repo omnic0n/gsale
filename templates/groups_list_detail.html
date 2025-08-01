@@ -126,6 +126,7 @@
             <th>Purchase Date</th>
             <th>Total Items</th>
             <th>Sold Items</th>
+            <th>Location</th>
             <th>Modify</th>
         </tr>
     </thead>
@@ -135,6 +136,15 @@
             <td><a href = "/groups/list?date={{ group_id[0]['date'] }}">{{ group_id[0]['date'] }}</a></td>
             <td>{{ total_items['total'] }}</td>
             <td>{{ total_sold_items['total'] }}</td>
+            <td>
+                {% if group_id[0].get('location_address') %}
+                    <a href="https://maps.google.com/?q={{ group_id[0]['location_address'] | urlencode }}" target="_blank" title="View on Google Maps">
+                        📍 {{ group_id[0]['location_address'] }}
+                    </a>
+                {% else %}
+                    <span style="color: #999;">No location set</span>
+                {% endif %}
+            </td>
             <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}">Modify Group</a></td>
         </tr>
     </tbody>

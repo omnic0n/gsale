@@ -24,6 +24,7 @@
                 <th>Profit</th>
                 <th>Average</th>
                 <th>Date</th>
+                <th>Location</th>
             </tr>
         </thead>
         <tbody id="resultsTableBody">
@@ -67,7 +68,7 @@ function displayResults(groups) {
     tbody.innerHTML = '';
     
     if (groups.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No groups found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No groups found</td></tr>';
         return;
     }
     
@@ -117,6 +118,19 @@ function displayResults(groups) {
         const dateCell = document.createElement('td');
         dateCell.textContent = group.date;
         
+        // Create location cell
+        const locationCell = document.createElement('td');
+        if (group.location_address) {
+            const locationLink = document.createElement('a');
+            locationLink.href = `https://maps.google.com/?q=${encodeURIComponent(group.location_address)}`;
+            locationLink.target = '_blank';
+            locationLink.title = 'View on Google Maps';
+            locationLink.innerHTML = `📍 ${group.location_address.length > 30 ? group.location_address.substring(0, 30) + '...' : group.location_address}`;
+            locationCell.appendChild(locationLink);
+        } else {
+            locationCell.innerHTML = '<span style="color: #999;">-</span>';
+        }
+        
         // Append all cells to row
         row.appendChild(nameCell);
         row.appendChild(totalCell);
@@ -127,6 +141,7 @@ function displayResults(groups) {
         row.appendChild(profitCell);
         row.appendChild(averageCell);
         row.appendChild(dateCell);
+        row.appendChild(locationCell);
         
         // Append row to tbody
         tbody.appendChild(row);

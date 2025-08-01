@@ -32,6 +32,7 @@ def get_all_from_group_and_items(date):
             c.price, 
             c.id,
             c.date,
+            c.location_address,
             COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
             COUNT(i.group_id) AS total_items,
             SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) AS sold_items
@@ -39,7 +40,7 @@ def get_all_from_group_and_items(date):
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
         WHERE c.date LIKE %s AND c.account = %s
-        GROUP BY c.id, c.name, c.price, c.date
+        GROUP BY c.id, c.name, c.price, c.date, c.location_address
         ORDER BY c.date
     """, (date, session.get('id')))
     return list(cur.fetchall())
@@ -53,6 +54,7 @@ def get_all_from_group_and_items_by_name(name):
             c.price, 
             c.id,
             c.date,
+            c.location_address,
             COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
             COUNT(i.group_id) AS total_items,
             SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) AS sold_items
@@ -60,7 +62,7 @@ def get_all_from_group_and_items_by_name(name):
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
         WHERE c.name LIKE %s AND c.account = %s
-        GROUP BY c.id, c.name, c.price, c.date
+        GROUP BY c.id, c.name, c.price, c.date, c.location_address
         ORDER BY c.date
     """, (name, session.get('id')))
     return list(cur.fetchall())

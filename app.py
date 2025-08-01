@@ -1080,7 +1080,8 @@ def api_groups_search():
                 'date': group['date'],
                 'net': group['net'],
                 'total_items': group['total_items'],
-                'sold_items': group['sold_items']
+                'sold_items': group['sold_items'],
+                'location_address': group.get('location_address')
             })
         
         return jsonify({'success': True, 'groups': results})
