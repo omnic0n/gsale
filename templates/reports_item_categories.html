@@ -3,102 +3,268 @@
 {% block content %}
 
 <div class="content-section">
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">Selection</legend>
-            <div class="form-group">
-                {{ form.category.label(class="form-control-label") }}
-                {% if form.category.errors %}
-                    {{ form.category(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.category.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ form.category(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
-        </fieldset>
-    <div class="form-group">
-        {{ form.submit(class="btn btn-outline-info") }}
+    <h2 class="border-bottom mb-4">Category Reports</h2>
+    
+    <!-- Pie Chart Container -->
+    <div class="chart-container mb-4">
+        <canvas id="categoryPieChart" width="400" height="400"></canvas>
     </div>
-    </form>
+    
+    <!-- Category Selection (hidden but kept for compatibility) -->
+    <div style="display: none;">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Selection</legend>
+                <div class="form-group">
+                    {{ form.category.label(class="form-control-label") }}
+                    {% if form.category.errors %}
+                        {{ form.category(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.category.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.category(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
 </div>
 
-{% set ns = namespace() %}
-{% set ns.category_id = '' %}
-{% set ns.total = 0 %}
-{% set ns.unsold = 0 %}
-{% set ns.sold = 0 %}
+<!-- Items Table Container -->
+<div id="itemsTableContainer" style="display: none;">
+    <h3 id="selectedCategoryTitle" class="border-bottom mb-3"></h3>
+    
+    {% set ns = namespace() %}
+    {% set ns.category_id = '' %}
+    {% set ns.total = 0 %}
+    {% set ns.unsold = 0 %}
+    {% set ns.sold = 0 %}
 
-<table class="blueTable">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Purchase Date</th>
-            <th>Sold Date</th>
-            <th>Days to sell</th>
-            <th>Group ID</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for item_category in item_categories %}
-        {% if item_category['sold'] %}
+    <table class="blueTable" id="itemsTable">
+        <thead>
             <tr>
-        {% else %}
-            <tr class="unsold">
-        {% endif %}
-                <td><a style = color:black href = "/items/describe?item={{ item_category['id'] }}">{{ item_category['name'] }}</td>
-                <td>{{ item_category['type'] }}</td>
-                <td>{{ item_category['date'] }}</td>
-                {% if item_category['sold'] %}
-                <td>{{ item_category['sales_date'] }}</td>
-                <td>{{ (item_category['sales_date'] - item_category['date']).days }}</td>
-                {% set ns.sold = ns.sold + 1 %}
-                {% else %}
-                <td>Unsold</td>
-                <td>{{ (now - item_category['date']).days }}</td>
-                {% set ns.unsold = ns.unsold + 1 %}
-                {% endif %}
-                <td><a style = color:black href = "/groups/detail?group_id={{ item_category['group_id'] }}">{{ item_category['group_id'] }}</td>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Purchase Date</th>
+                <th>Sold Date</th>
+                <th>Days to sell</th>
+                <th>Group Name</th>
             </tr>
-            {% set ns.total = ns.total + 1 %}
-    {% endfor %}
-    </tbody>
-</table>
-<BR>
-{% if ns.total != 0 %}
-<table class="blueTable">
-    <thead>
-        <tr>
-            <th></th>
-            <th>Count</th>
-            <th>Percent</th> 
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Total</td>
-            <td>{{ ns.total }}</td>
-            <td>100%</td>
-        </tr>
-        <tr>
-            <td>Sold</td>
-            <td>{{ ns.sold }}</td>
-            <td>{{ '%0.2f'| format((ns.sold / ns.total)*100) }}%</td>
-        </tr> 
-        <tr>
-            <td>Unsold</td>
-            <td>{{ ns.unsold }}</td>
-            <td>{{ '%0.2f'| format((ns.unsold / ns.total)*100) }}%</td>
-        </tr>     
-    </tbody>
-</table>
-<BR>
-<BR>
-{% endif %}
+        </thead>
+        <tbody id="itemsTableBody">
+        </tbody>
+    </table>
+    
+    <BR>
+    <div id="summaryTableContainer" style="display: none;">
+        <table class="blueTable" id="summaryTable">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Count</th>
+                    <th>Percent</th> 
+                </tr>
+            </thead>
+            <tbody id="summaryTableBody">
+            </tbody>
+        </table>
+    </div>
+    <BR>
+    <BR>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Category data from server
+const categoryData = {{ category_counts | tojson | safe }};
+let pieChart;
+
+// Initialize the pie chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('categoryPieChart').getContext('2d');
+    
+    // Prepare data for the pie chart
+    const labels = categoryData.map(cat => cat.type);
+    const data = categoryData.map(cat => cat.item_count);
+    const colors = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
+        '#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56'
+    ];
+    
+    // Create pie chart
+    pieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return label + ': ' + value + ' items (' + percentage + '%)';
+                        }
+                    }
+                }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const categoryId = categoryData[index].id;
+                    const categoryName = categoryData[index].type;
+                    loadCategoryItems(categoryId, categoryName);
+                }
+            }
+        }
+    });
+});
+
+// Function to load items for a selected category
+function loadCategoryItems(categoryId, categoryName) {
+    fetch(`/api/categories/${categoryId}/items`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayItems(data.items, categoryName);
+            } else {
+                console.error('Error loading items:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Function to display items in the table
+function displayItems(items, categoryName) {
+    const container = document.getElementById('itemsTableContainer');
+    const title = document.getElementById('selectedCategoryTitle');
+    const tbody = document.getElementById('itemsTableBody');
+    const summaryContainer = document.getElementById('summaryTableContainer');
+    const summaryTbody = document.getElementById('summaryTableBody');
+    
+    // Show container and set title
+    container.style.display = 'block';
+    title.textContent = categoryName + ' Items';
+    
+    // Clear existing table data
+    tbody.innerHTML = '';
+    summaryTbody.innerHTML = '';
+    
+    let total = 0;
+    let sold = 0;
+    let unsold = 0;
+    const now = new Date();
+    
+    // Populate items table
+    items.forEach(item => {
+        const row = document.createElement('tr');
+        if (!item.sold) {
+            row.className = 'unsold';
+        }
+        
+        const daysToSell = item.sold ? 
+            Math.floor((new Date(item.sales_date) - new Date(item.date)) / (1000 * 60 * 60 * 24)) :
+            Math.floor((now - new Date(item.date)) / (1000 * 60 * 60 * 24));
+        
+        row.innerHTML = 
+            '<td><a style="color:black" href="/items/describe?item=' + item.id + '">' + item.name + '</a></td>' +
+            '<td>' + item.type + '</td>' +
+            '<td>' + item.date + '</td>' +
+            '<td>' + (item.sold ? item.sales_date : 'Unsold') + '</td>' +
+            '<td>' + daysToSell + '</td>' +
+            '<td><a style="color:black" href="/groups/detail?group_id=' + item.group_id + '">' + item.group_name + '</a></td>';
+        
+        tbody.appendChild(row);
+        
+        total++;
+        if (item.sold) {
+            sold++;
+        } else {
+            unsold++;
+        }
+    });
+    
+    // Populate summary table
+    if (total > 0) {
+        summaryContainer.style.display = 'block';
+        
+        const totalRow = document.createElement('tr');
+        totalRow.innerHTML = 
+            '<td>Total</td>' +
+            '<td>' + total + '</td>' +
+            '<td>100%</td>';
+        summaryTbody.appendChild(totalRow);
+        
+        const soldRow = document.createElement('tr');
+        soldRow.innerHTML = 
+            '<td>Sold</td>' +
+            '<td>' + sold + '</td>' +
+            '<td>' + ((sold / total) * 100).toFixed(2) + '%</td>';
+        summaryTbody.appendChild(soldRow);
+        
+        const unsoldRow = document.createElement('tr');
+        unsoldRow.innerHTML = 
+            '<td>Unsold</td>' +
+            '<td>' + unsold + '</td>' +
+            '<td>' + ((unsold / total) * 100).toFixed(2) + '%</td>';
+        summaryTbody.appendChild(unsoldRow);
+    } else {
+        summaryContainer.style.display = 'none';
+    }
+}
+</script>
+
+<style>
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#categoryPieChart {
+    cursor: pointer;
+}
+
+#selectedCategoryTitle {
+    color: #333;
+    font-weight: 600;
+}
+</style>
+
 {% endblock content %}
 </HTML>

@@ -379,6 +379,7 @@ def get_list_of_items_with_categories(category_id):
                     items.name, 
                     items.sold,
                     items.group_id,
+                    collection.name as group_name,
                     categories.type,
                     categories.id AS category_id,
                     sale.date as sales_date,
@@ -564,6 +565,23 @@ def get_category_by_id(category_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM categories where id = %s", (category_id,))
     return cur.fetchone()
+
+def get_category_item_counts():
+    """Get the count of items in each category for the current user"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            c.id,
+            c.type,
+            COUNT(i.id) as item_count
+        FROM categories c
+        LEFT JOIN items i ON c.id = i.category_id
+        LEFT JOIN collection col ON i.group_id = col.id
+        WHERE c.user_id = %s AND (col.account = %s OR col.account IS NULL)
+        GROUP BY c.id, c.type
+        ORDER BY c.type
+    """, (session.get('id'), session.get('id')))
+    return list(cur.fetchall())
 
 
 

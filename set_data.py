@@ -320,23 +320,7 @@ def create_user(details):
         print(f"Error creating user: {e}")
         return False
 
-def change_user_password(user_id, new_password):
-    """Change a user's password"""
-    try:
-        import bcrypt
-        
-        # Hash the new password using bcrypt
-        salt = bcrypt.gensalt()
-        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), salt)
-        
-        cur = mysql.connection.cursor()
-        cur.execute("UPDATE accounts SET password = %s WHERE id = %s", (hashed_password, user_id))
-        mysql.connection.commit()
-        cur.close()
-        return True
-    except Exception as e:
-        print(f"Error changing password: {e}")
-        return False
+
 
 def create_google_user(google_id, email, name, picture=None):
     """Create a new user account via Google OAuth"""
