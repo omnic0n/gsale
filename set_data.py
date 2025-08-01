@@ -230,7 +230,18 @@ def delete_user(user_id):
         
         # First, get all the group IDs for this user
         cur.execute("SELECT id FROM collection WHERE account = %s", (user_id,))
-        group_ids = [row[0] for row in cur.fetchall()]
+        rows = cur.fetchall()
+        print(f"DEBUG: Raw rows from collection query: {rows}")
+        
+        # Handle both tuple and dict-like results
+        group_ids = []
+        for row in rows:
+            if hasattr(row, 'keys'):  # Dict-like object
+                group_ids.append(row['id'])
+            else:  # Tuple-like object
+                group_ids.append(row[0])
+        
+        print(f"DEBUG: Group IDs: {group_ids}")
         
         if group_ids:
             # Delete sales for items in these groups
