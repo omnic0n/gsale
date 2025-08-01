@@ -195,11 +195,11 @@ def google_callback():
         name = user_info.get('name', email)
         picture = user_info.get('picture')
         
-        # Check if email exists in accounts table and is active
+        # Check if email exists in accounts table
         existing_user = get_data.get_user_by_email(email)
         
         if not existing_user:
-            # Record the access attempt
+            # Record the access attempt for new users only
             set_data.record_access_attempt(
                 email=email,
                 google_id=google_id,
@@ -216,16 +216,7 @@ def google_callback():
         
         # Check if user is active
         if not existing_user.get('is_active', True):
-            # Record the access attempt
-            set_data.record_access_attempt(
-                email=email,
-                google_id=google_id,
-                name=name,
-                picture=picture,
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get('User-Agent')
-            )
-            
+            # Don't record access attempt for existing inactive users
             # Clear any existing session data
             session.clear()
             flash(f'Access denied. Your account has been deactivated. Please contact an administrator.', 'error')
