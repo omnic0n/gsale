@@ -195,6 +195,16 @@ def google_callback():
         name = user_info.get('name', email)
         picture = user_info.get('picture')
         
+        # Check if email is allowed (either by specific email or domain)
+        email_domain = email.split('@')[1].lower()
+        allowed_emails = app.config.get('ALLOWED_EMAILS', [])
+        allowed_domains = app.config.get('ALLOWED_DOMAINS', [])
+        
+        # Check if email is in allowed list or domain is allowed
+        if email not in allowed_emails and email_domain not in allowed_domains:
+            flash(f'Access denied. This email address is not authorized to access this application.', 'error')
+            return redirect(url_for('login'))
+        
         # Check if user exists in database by Google ID first
         user = get_data.get_user_by_google_id(google_id)
         
