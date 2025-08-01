@@ -2,41 +2,106 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-/* Ensure modal is properly visible */
-#editItemModal {
-    z-index: 1050 !important;
+/* Custom Modal Styles */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
-#editItemModal .modal-content {
-    background-color: white !important;
-    color: black !important;
-    z-index: 1055 !important;
+.custom-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
 }
 
-#editItemModal .modal-header,
-#editItemModal .modal-body,
-#editItemModal .modal-footer {
-    background-color: white !important;
-    color: black !important;
+.custom-modal-dialog {
+    position: relative;
+    z-index: 1055;
+    width: 90%;
+    max-width: 600px;
+    margin: 1.75rem auto;
 }
 
-#editItemModal .modal-title {
-    color: black !important;
+.custom-modal-content {
+    background: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    position: relative;
+    color: black;
 }
 
-#editItemModal .form-control {
+.custom-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: white;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: black;
+}
+
+.custom-modal-body {
+    padding: 1rem;
+    background-color: white;
+    color: black;
+}
+
+.custom-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    background-color: white;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: black;
+}
+
+.btn-close:hover {
+    opacity: 0.7;
+}
+
+.custom-modal .form-control {
     background-color: white !important;
     color: black !important;
     border: 1px solid #ced4da !important;
 }
 
-#editItemModal label {
+.custom-modal label {
     color: black !important;
     font-weight: bold;
-}
-
-.modal-backdrop {
-    z-index: 1040 !important;
 }
 </style>
 <h4>Group Information</h4>
@@ -171,18 +236,19 @@
 </center>
 {% endif %}
 
-<!-- Edit Item Modal -->
-<div class="modal fade" id="editItemModal" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel" aria-hidden="true" style="z-index: 1050;">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content" style="background-color: white; color: black;">
-            <div class="modal-header" style="background-color: white; color: black;">
-                <h5 class="modal-title" id="editItemModalLabel" style="color: black;">Edit Item</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+<!-- Custom Edit Item Modal -->
+<div id="editItemModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeEditModal()"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Edit Item</h5>
+                <button type="button" class="btn-close" onclick="closeEditModal()">
+                    <span>&times;</span>
                 </button>
             </div>
             <form id="editItemForm" method="POST" action="/items/modify_ajax">
-                <div class="modal-body">
+                <div class="custom-modal-body">
                     <input type="hidden" id="editItemId" name="id">
                     <input type="hidden" name="return_to" value="group_detail">
                     
@@ -242,8 +308,8 @@
                         <input type="number" step="0.01" class="form-control" id="editItemShippingFee" name="shipping_fee">
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <div class="custom-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -252,36 +318,37 @@
 </div>
 
 <script>
-// Ensure modal is properly styled
-document.addEventListener('DOMContentLoaded', function() {
-    // Fix modal backdrop issues
-    $('#editItemModal').on('show.bs.modal', function () {
-        // Force modal to be visible and properly styled
-        $(this).find('.modal-content').css({
-            'background-color': 'white',
-            'color': 'black',
-            'z-index': '1055'
-        });
-        $(this).find('.modal-header').css({
-            'background-color': 'white',
-            'color': 'black'
-        });
-        $(this).find('.modal-body').css({
-            'background-color': 'white',
-            'color': 'black'
-        });
-        $(this).find('.modal-footer').css({
-            'background-color': 'white',
-            'color': 'black'
-        });
-        
-        // Ensure backdrop is properly styled
-        $('.modal-backdrop').css({
-            'z-index': '1040'
-        });
-    });
+// Custom modal functions
+function openEditModal(itemId, name, groupId, storage, saleDate, price, shippingFee) {
+    console.log('Opening modal with data:', { itemId, name, groupId, storage, saleDate, price, shippingFee });
     
-    // Add event listeners to edit buttons
+    // Set form values
+    document.getElementById('editItemId').value = itemId;
+    document.getElementById('editItemName').value = name;
+    document.getElementById('editItemGroup').value = groupId;
+    document.getElementById('editItemStorage').value = storage || '';
+    document.getElementById('editItemReturned').value = '0'; // Default to False
+    document.getElementById('editItemListDate').value = new Date().toISOString().split('T')[0]; // Today's date
+    document.getElementById('editItemSaleDate').value = saleDate || '';
+    document.getElementById('editItemPrice').value = price || '';
+    document.getElementById('editItemShippingFee').value = shippingFee || '';
+    
+    // Set default category (first one)
+    const categorySelect = document.getElementById('editItemCategory');
+    if (categorySelect.options.length > 0) {
+        categorySelect.value = categorySelect.options[0].value;
+    }
+    
+    // Show modal
+    document.getElementById('editItemModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editItemModal').style.display = 'none';
+}
+
+// Add event listeners to edit buttons
+document.addEventListener('DOMContentLoaded', function() {
     console.log('Setting up edit button listeners...');
     document.querySelectorAll('.edit-item-btn').forEach(function(button) {
         console.log('Found edit button:', button);
@@ -299,29 +366,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Debug: log the data
             console.log('Item data:', { itemId, name, groupId, storage, saleDate, price, shippingFee });
             
-            // Set form values
-            document.getElementById('editItemId').value = itemId;
-            document.getElementById('editItemName').value = name;
-            document.getElementById('editItemGroup').value = groupId;
-            document.getElementById('editItemStorage').value = storage || '';
-            document.getElementById('editItemReturned').value = '0'; // Default to False
-            document.getElementById('editItemListDate').value = new Date().toISOString().split('T')[0]; // Today's date
-            document.getElementById('editItemSaleDate').value = saleDate || '';
-            document.getElementById('editItemPrice').value = price || '';
-            document.getElementById('editItemShippingFee').value = shippingFee || '';
-            
-            // Set default category (first one)
-            const categorySelect = document.getElementById('editItemCategory');
-            if (categorySelect.options.length > 0) {
-                categorySelect.value = categorySelect.options[0].value;
-            }
-            
-            // Show modal with proper styling
-            $('#editItemModal').modal({
-                backdrop: 'static',
-                keyboard: false,
-                show: true
-            });
+            // Open modal
+            openEditModal(itemId, name, groupId, storage, saleDate, price, shippingFee);
         });
     });
 });
@@ -342,7 +388,7 @@ document.getElementById('editItemForm').addEventListener('submit', function(e) {
             // Show success message
             alert('Item updated successfully!');
             // Close modal
-            $('#editItemModal').modal('hide');
+            closeEditModal();
             // Reload page to show updated data
             location.reload();
         } else {
