@@ -14,13 +14,14 @@ body {
 }
 
 .login, .register {
-    width: 400px;
+    width: 450px;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     margin: 100px auto;
     border-radius: 20px;
     border: 1px solid rgba(148, 163, 184, 0.1);
+    padding: 0 20px 20px 20px;
 }
 
 .login h1, .register h1 {
