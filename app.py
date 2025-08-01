@@ -1036,6 +1036,11 @@ def api_items_search():
         name = request.args.get('name', '')
         sold = request.args.get('sold', '')
         
+        # Handle "All Items" case (empty sold parameter)
+        if sold == '':
+            # Use '%' to match all sold statuses
+            sold = '%'
+        
         # Get search results
         items = get_data.get_list_of_items_with_name(name, sold)
         
