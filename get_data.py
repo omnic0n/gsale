@@ -123,7 +123,6 @@ def get_data_from_group_list(group_id):
                     collection.image,
                     collection.latitude,
                     collection.longitude,
-                    collection.location_name,
                     collection.location_address
                     FROM collection collection
                     WHERE collection.id = %s AND collection.account = %s""", (group_id, session.get('id')))

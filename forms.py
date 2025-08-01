@@ -16,7 +16,6 @@ class GroupForm(FlaskForm):
     # Location fields
     latitude = HiddenField('latitude')
     longitude = HiddenField('longitude')
-    location_name = StringField('location_name')
     location_address = StringField('location_address')
 
     listYear = SelectField('Year', default=datetime.now().year, choices=[
