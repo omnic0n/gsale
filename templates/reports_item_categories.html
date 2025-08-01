@@ -82,11 +82,15 @@
 
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
 <script>
 // Category data from server
 const categoryData = {{ category_counts | tojson | safe }};
 let pieChart;
+
+// Register the DataLabels plugin
+Chart.register(ChartDataLabels);
 
 // Initialize the pie chart
 document.addEventListener('DOMContentLoaded', function() {
@@ -137,6 +141,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             return label + ': ' + value + ' items (' + percentage + '%)';
                         }
                     }
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: function(value, context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return value + '\n(' + percentage + '%)';
+                    },
+                    textAlign: 'center'
                 }
             },
             onClick: function(event, elements) {
