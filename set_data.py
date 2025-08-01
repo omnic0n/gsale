@@ -359,6 +359,36 @@ def create_google_user(google_id, email, name, picture=None):
         print(f"Error creating Google user: {e}")
         return None
 
+def create_user_from_admin(email, name):
+    """Create a new user account from admin panel (without Google OAuth)"""
+    try:
+        # Generate UUID for the new user
+        user_id = generate_uuid()
+        
+        cur = mysql.connection.cursor()
+        
+        # Try to insert without password first (if migration has been run)
+        try:
+            cur.execute("""
+                INSERT INTO accounts(id, username, email, name, is_admin) 
+                VALUES (%s, %s, %s, %s, %s)
+            """, (user_id, email, email, name, 0))
+        except Exception as e:
+            # If that fails, the migration might not have been run
+            # Try with a dummy password (this is a fallback)
+            print(f"Warning: Google OAuth migration may not have been run. Using fallback method: {e}")
+            cur.execute("""
+                INSERT INTO accounts(id, username, email, password, name, is_admin) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (user_id, email, email, 'admin_created_user', name, 0))
+        
+        mysql.connection.commit()
+        cur.close()
+        return user_id
+    except Exception as e:
+        print(f"Error creating user from admin: {e}")
+        return None
+
 def link_google_account(user_id, google_id, name, picture=None):
     """Link a Google account to an existing user"""
     try:

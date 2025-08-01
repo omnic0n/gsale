@@ -991,7 +991,7 @@ def admin_panel():
                 
                 if attempt_id and email:
                     # Create a new user account for this email
-                    user_id = set_data.create_google_user(email, name=name)
+                    user_id = set_data.create_user_from_admin(email, name)
                     if user_id:
                         # Mark the attempt as approved
                         set_data.update_access_attempt_status(attempt_id, 'approved')
