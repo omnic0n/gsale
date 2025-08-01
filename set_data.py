@@ -214,6 +214,7 @@ def toggle_admin_status(user_id):
 
 def delete_user(user_id):
     """Delete a user account"""
+    print(f"DEBUG: Starting delete_user for user_id: {user_id}")
     try:
         # Check if MySQL connection is available
         if not mysql or not hasattr(mysql, 'connection') or not mysql.connection:
@@ -266,14 +267,17 @@ def delete_user(user_id):
         
         mysql.connection.commit()
         cur.close()
+        print(f"DEBUG: Successfully completed delete_user for user_id: {user_id}")
         return True
     except Exception as e:
         print(f"Error deleting user {user_id}: {e}")
+        print(f"Error type: {type(e)}")
+        print(f"Error details: {str(e)}")
         # Rollback on error
         try:
             mysql.connection.rollback()
-        except Exception:
-            pass
+        except Exception as rollback_error:
+            print(f"Rollback error: {rollback_error}")
         return False
 
 def create_user(details):
