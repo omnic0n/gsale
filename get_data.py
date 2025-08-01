@@ -734,6 +734,7 @@ def get_all_users():
                 id, 
                 username, 
                 email, 
+                name,
                 is_admin,
                 is_active,
                 CASE 
@@ -747,7 +748,7 @@ def get_all_users():
         
         # Convert to list of dictionaries if needed
         if result and not hasattr(result[0], 'keys'):
-            column_names = ['id', 'username', 'email', 'is_admin', 'is_active', 'is_current_user']
+            column_names = ['id', 'username', 'email', 'name', 'is_admin', 'is_active', 'is_current_user']
             result = [dict(zip(column_names, user)) for user in result]
         
         cur.close()

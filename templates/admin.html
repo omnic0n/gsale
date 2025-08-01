@@ -121,19 +121,29 @@
             
 
             
-            <!-- User Management Section -->
-            <div class="card">
-                <div class="card-header">
-                    <h3>User Management</h3>
+                    <!-- User Management Section -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>User Management</h3>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="userFilter" id="allUsers" value="all" checked>
+                    <label class="btn btn-outline-primary btn-sm" for="allUsers">All Users</label>
+                    
+                    <input type="radio" class="btn-check" name="userFilter" id="activeUsers" value="active">
+                    <label class="btn btn-outline-success btn-sm" for="activeUsers">Active Only</label>
+                    
+                    <input type="radio" class="btn-check" name="userFilter" id="inactiveUsers" value="inactive">
+                    <label class="btn btn-outline-danger btn-sm" for="inactiveUsers">Inactive Only</label>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="card-body">
                     {% if users %}
                         <div class="table-responsive">
-                            <table class="table table-striped">
+                            <table class="table table-striped" id="userTable">
                                 <thead>
                                     <tr>
-                                        <th>Username</th>
                                         <th>Email</th>
+                                        <th>Name</th>
                                         <th>Admin Status</th>
                                         <th>Status</th>
                                         <th>Current User</th>
@@ -143,8 +153,8 @@
                                 <tbody>
                                     {% for user in users %}
                                     <tr>
-                                        <td>{{ user.username or 'N/A' }}</td>
                                         <td>{{ user.email or 'N/A' }}</td>
+                                        <td>{{ user.name or 'N/A' }}</td>
                                         <td>
                                             {% if user.is_admin %}
                                                 <span class="badge bg-success">Admin</span>
@@ -184,7 +194,7 @@
                                                     <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                     <input type="hidden" name="action" value="delete_user">
                                                                                                     <button type="submit" class="btn btn-sm btn-danger" 
-                                                        onclick="console.log('Deactivate button clicked for user: {{ user.username }}'); return confirm('Are you sure you want to deactivate {{ user.username or 'this user' }}? They will no longer be able to log in.')">
+                                                        onclick="console.log('Deactivate button clicked for user: {{ user.email }}'); return confirm('Are you sure you want to deactivate {{ user.email or 'this user' }}? They will no longer be able to log in.')">
                                                     {% if user.is_active %}Deactivate User{% else %}Activate User{% endif %}
                                                 </button>
                                                 </form>
@@ -266,6 +276,42 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('input[name="userFilter"]');
+    const userRows = document.querySelectorAll('#userTable tbody tr');
+    
+    function filterUsers() {
+        const selectedFilter = document.querySelector('input[name="userFilter"]:checked').value;
+        
+        userRows.forEach(row => {
+            const statusCell = row.querySelector('td:nth-child(4)'); // Status column
+            const statusBadge = statusCell.querySelector('.badge');
+            
+            if (selectedFilter === 'all') {
+                row.style.display = '';
+            } else if (selectedFilter === 'active') {
+                if (statusBadge && statusBadge.textContent.includes('Active')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            } else if (selectedFilter === 'inactive') {
+                if (statusBadge && statusBadge.textContent.includes('Inactive')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('change', filterUsers);
+    });
+});
+</script>
 
 
 </script>
