@@ -57,11 +57,151 @@
                         {{ form.image(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
+                
+                <!-- Location Section -->
+                <div class="form-group">
+                    <label class="form-control-label">Location</label>
+                    <div class="form-group">
+                        {{ form.location_name.label(class="form-control-label") }}
+                        {{ form.location_name(class="form-control form-control-lg", placeholder="Enter location name (optional)") }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.location_address.label(class="form-control-label") }}
+                        {{ form.location_address(class="form-control form-control-lg", placeholder="Enter address (optional)") }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control-label">Select Location on Map</label>
+                        <div id="map" style="height: 400px; width: 100%; border: 1px solid #ccc; border-radius: 4px;"></div>
+                        <small class="form-text text-muted">Click on the map to set the location, or use the search box below.</small>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="searchBox" class="form-control form-control-lg" placeholder="Search for a location...">
+                    </div>
+                    {{ form.latitude() }}
+                    {{ form.longitude() }}
+                </div>
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
     </div>
-</script>
+
+    <!-- Google Maps API Script -->
+    <script>
+        let map;
+        let marker;
+        let searchBox;
+        let geocoder;
+
+        function initMap() {
+            // Initialize the map centered on a default location (you can change this)
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 40.7128, lng: -74.0060 }, // New York City as default
+                zoom: 10,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true,
+            });
+
+            geocoder = new google.maps.Geocoder();
+
+            // Create a search box
+            const input = document.getElementById("searchBox");
+            searchBox = new google.maps.places.SearchBox(input);
+
+            // Bias the SearchBox results towards current map's viewport
+            map.addListener("bounds_changed", () => {
+                searchBox.setBounds(map.getBounds());
+            });
+
+            // Listen for the event fired when the user selects a prediction
+            searchBox.addListener("places_changed", () => {
+                const places = searchBox.getPlaces();
+
+                if (places.length === 0) {
+                    return;
+                }
+
+                // Clear out the old markers
+                if (marker) {
+                    marker.setMap(null);
+                }
+
+                // For each place, get the icon, name and location
+                const bounds = new google.maps.LatLngBounds();
+
+                places.forEach((place) => {
+                    if (!place.geometry || !place.geometry.location) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+
+                    // Create a marker for this place
+                    marker = new google.maps.Marker({
+                        map,
+                        title: place.name,
+                        position: place.geometry.location,
+                    });
+
+                    // Set the location in the form
+                    document.getElementById("latitude").value = place.geometry.location.lat();
+                    document.getElementById("longitude").value = place.geometry.location.lng();
+                    
+                    // Set location name and address if available
+                    if (place.name) {
+                        document.getElementById("location_name").value = place.name;
+                    }
+                    if (place.formatted_address) {
+                        document.getElementById("location_address").value = place.formatted_address;
+                    }
+
+                    if (place.geometry.viewport) {
+                        bounds.union(place.geometry.viewport);
+                    } else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                map.fitBounds(bounds);
+            });
+
+            // Add click listener to map
+            map.addListener("click", (event) => {
+                const lat = event.latLng.lat();
+                const lng = event.latLng.lng();
+
+                // Clear existing marker
+                if (marker) {
+                    marker.setMap(null);
+                }
+
+                // Create new marker
+                marker = new google.maps.Marker({
+                    position: event.latLng,
+                    map: map,
+                });
+
+                // Set the location in the form
+                document.getElementById("latitude").value = lat;
+                document.getElementById("longitude").value = lng;
+
+                // Reverse geocode to get address
+                geocoder.geocode({ location: event.latLng }, (results, status) => {
+                    if (status === "OK") {
+                        if (results[0]) {
+                            document.getElementById("location_address").value = results[0].formatted_address;
+                        }
+                    }
+                });
+            });
+        }
+
+        // Initialize map when page loads
+        window.initMap = initMap;
+    </script>
+
+    <!-- Load Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initMap">
+    </script>
 {% endblock content %}

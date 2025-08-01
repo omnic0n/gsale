@@ -89,16 +89,59 @@ def remove_item_data(id):
 def set_group_add(group_name, details, image_id):
     group_id = generate_uuid()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO collection(id, name, date, price, image, account) VALUES (%s, %s, %s, %s, %s, %s)", 
-                (group_id, group_name, details['date'], details['price'], image_id, session.get('id')))
+    
+    # Get location data from details
+    latitude = details.get('latitude', None)
+    longitude = details.get('longitude', None)
+    location_name = details.get('location_name', None)
+    location_address = details.get('location_address', None)
+    
+    # Convert empty strings to None for database
+    if latitude == '':
+        latitude = None
+    if longitude == '':
+        longitude = None
+    if location_name == '':
+        location_name = None
+    if location_address == '':
+        location_address = None
+    
+    cur.execute("""
+        INSERT INTO collection(id, name, date, price, image, account, latitude, longitude, location_name, location_address) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (group_id, group_name, details['date'], details['price'], image_id, session.get('id'), 
+          latitude, longitude, location_name, location_address))
     mysql.connection.commit()
     cur.close()
     return group_id
 
 def set_group_modify(details, image_id):
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE collection SET name = %s, date = %s, price = %s, image = %s where id = %s AND account = %s", 
-                (details['name'], details['date'], details['price'], image_id, details['id'], session.get('id')))
+    
+    # Get location data from details
+    latitude = details.get('latitude', None)
+    longitude = details.get('longitude', None)
+    location_name = details.get('location_name', None)
+    location_address = details.get('location_address', None)
+    
+    # Convert empty strings to None for database
+    if latitude == '':
+        latitude = None
+    if longitude == '':
+        longitude = None
+    if location_name == '':
+        location_name = None
+    if location_address == '':
+        location_address = None
+    
+    cur.execute("""
+        UPDATE collection 
+        SET name = %s, date = %s, price = %s, image = %s, 
+            latitude = %s, longitude = %s, location_name = %s, location_address = %s 
+        WHERE id = %s AND account = %s
+    """, (details['name'], details['date'], details['price'], image_id, 
+          latitude, longitude, location_name, location_address,
+          details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
 

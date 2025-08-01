@@ -12,6 +12,12 @@ class GroupForm(FlaskForm):
                         validators=[DataRequired()], format='%Y-%m-%d')
     id = StringField('id')
     image = FileField('image')
+    
+    # Location fields
+    latitude = HiddenField('latitude')
+    longitude = HiddenField('longitude')
+    location_name = StringField('location_name')
+    location_address = StringField('location_address')
 
     listYear = SelectField('Year', default=datetime.now().year, choices=[
         (2021), (2022), (2023), (2024), (2025), ("All")
