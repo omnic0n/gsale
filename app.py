@@ -837,16 +837,10 @@ def group_detail():
     form.button.label.text = "List Items"
     form.id.data = id
 
-    quicksell = ButtonForm()
-    quicksell.button.label.text = "Quick Sell"
-    quicksell.id.data = id
-
     if request.method == "POST":
         details = request.form
         if details['button'] == "List Items":
             return redirect(url_for('bought_items',group=details['id']))
-        elif details['button'] == "Quick Sell":
-            return redirect(url_for('quick_sell',group=details['id']))
 
     # Get groups and categories for modal dropdowns
     groups = get_data.get_all_from_groups('%')
@@ -859,7 +853,6 @@ def group_detail():
                             total_sold_items=total_sold_items,
                             sold_price=sold_price,
                             form=form,
-                            quicksell=quicksell,
                             groups=groups,
                             categories=categories)
 
