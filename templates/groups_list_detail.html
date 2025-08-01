@@ -345,8 +345,8 @@ function openEditModal(itemId, name, groupId, categoryId, storage, saleDate, pri
     document.getElementById('editItemReturned').value = '0'; // Default to False
     document.getElementById('editItemListDate').value = new Date().toISOString().split('T')[0]; // Today's date
     document.getElementById('editItemSaleDate').value = saleDate || '';
-    document.getElementById('editItemPrice').value = price || '';
-    document.getElementById('editItemShippingFee').value = shippingFee || '';
+    document.getElementById('editItemPrice').value = price || '0';
+    document.getElementById('editItemShippingFee').value = shippingFee || '0';
     
     // Set the correct category
     const categorySelect = document.getElementById('editItemCategory');
