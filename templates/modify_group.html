@@ -104,22 +104,16 @@
         let geocoder;
 
         function initMap() {
-            console.log('initMap called');
-            
             // Check if there's existing location data
             const existingLat = {{ group_id[0].get('latitude') or 'null' }};
             const existingLng = {{ group_id[0].get('longitude') or 'null' }};
             
-            console.log('Existing coordinates:', existingLat, existingLng);
-            
             if (existingLat && existingLng && existingLat != 'null' && existingLng != 'null') {
                 // Use existing location data
                 const existingLocation = { lat: parseFloat(existingLat), lng: parseFloat(existingLng) };
-                console.log('Using existing location:', existingLocation);
                 initializeMapWithLocation(existingLocation, true);
             } else {
                 // No existing location, try to get user's current location
-                console.log('No existing location, trying geolocation...');
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
@@ -127,30 +121,23 @@
                                 lat: position.coords.latitude,
                                 lng: position.coords.longitude
                             };
-                            console.log('Using user location:', userLocation);
                             initializeMapWithLocation(userLocation, false);
                         },
                         (error) => {
-                            console.log("Geolocation failed:", error);
                             // Fallback to default location
                             const defaultLocation = { lat: 40.7128, lng: -74.0060 };
-                            console.log('Using default location:', defaultLocation);
                             initializeMapWithLocation(defaultLocation, false);
                         }
                     );
                 } else {
                     // Browser doesn't support geolocation
-                    console.log("Geolocation not supported");
                     const defaultLocation = { lat: 40.7128, lng: -74.0060 };
-                    console.log('Using default location:', defaultLocation);
                     initializeMapWithLocation(defaultLocation, false);
                 }
             }
         }
         
         function initializeMapWithLocation(location, isExistingLocation) {
-            console.log('initializeMapWithLocation called with:', location, isExistingLocation);
-            
             try {
                 map = new google.maps.Map(document.getElementById("map"), {
                     center: location,
@@ -159,8 +146,6 @@
                     streetViewControl: true,
                     fullscreenControl: true,
                 });
-                
-                console.log('Map created successfully');
                 
                 geocoder = new google.maps.Geocoder();
                 
@@ -171,8 +156,6 @@
                     title: isExistingLocation ? 'Group Location' : 'Your Location'
                 });
                 
-                console.log('Marker added successfully');
-                
                 // Set the location in the form if it's a new location
                 if (!isExistingLocation) {
                     document.getElementById("latitude").value = location.lat;
@@ -182,9 +165,6 @@
                     geocoder.geocode({ location: location }, (results, status) => {
                         if (status === "OK" && results[0]) {
                             document.getElementById("location_address").value = results[0].formatted_address;
-                            console.log('Address set:', results[0].formatted_address);
-                        } else {
-                            console.log('Geocoding failed:', status);
                         }
                     });
                 }
@@ -197,12 +177,9 @@
         }
         
         function initializeMapFeatures() {
-            console.log('initializeMapFeatures called');
-
             // Create a search box
             const input = document.getElementById("searchBox");
             searchBox = new google.maps.places.SearchBox(input);
-            console.log('SearchBox created');
 
             // Bias the SearchBox results towards current map's viewport
             map.addListener("bounds_changed", () => {
@@ -227,7 +204,6 @@
 
                 places.forEach((place) => {
                     if (!place.geometry || !place.geometry.location) {
-                        console.log("Returned place contains no geometry");
                         return;
                     }
 
@@ -300,9 +276,6 @@
     </script>
 
     <!-- Load Google Maps API -->
-    <script>
-        console.log('Google Maps API key:', '{{ google_maps_api_key }}');
-    </script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initMap">
     </script>
