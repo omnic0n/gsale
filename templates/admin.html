@@ -223,7 +223,7 @@
                                     <tr>
                                         <th>Email</th>
                                         <th>Name</th>
-                                        <th>Attempted At</th>
+                                        <th>Request Date</th>
                                         <th>IP Address</th>
                                         <th>Actions</th>
                                     </tr>
@@ -233,7 +233,7 @@
                                     <tr>
                                         <td>{{ attempt.email or 'N/A' }}</td>
                                         <td>{{ attempt.name or 'N/A' }}</td>
-                                        <td>{{ attempt.attempted_at.strftime('%Y-%m-%d %H:%M:%S') if attempt.attempted_at else 'N/A' }}</td>
+                                        <td>{{ attempt.attempted_at.strftime('%m/%d/%Y %I:%M %p') if attempt.attempted_at else 'N/A' }}</td>
                                         <td>{{ attempt.ip_address or 'N/A' }}</td>
                                         <td class="action-buttons">
                                             <div class="d-flex gap-1">
