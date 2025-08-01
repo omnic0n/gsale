@@ -143,31 +143,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 },
                 datalabels: {
-                    color: '#fff',
+                    color: '#333',
                     font: {
                         weight: 'bold',
-                        size: 10
+                        size: 11
                     },
                     formatter: function(value, context) {
-                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100).toFixed(1);
-                        // Only show labels for slices that are large enough
-                        if (percentage > 5) {
-                            return value + '\n(' + percentage + '%)';
-                        }
-                        return '';
+                        return value;
                     },
                     textAlign: 'center',
-                    anchor: 'center',
-                    align: 'center',
-                    offset: 0,
-                    clamp: true,
+                    anchor: 'end',
+                    align: 'end',
+                    offset: 10,
+                    clamp: false,
                     display: function(context) {
-                        const value = context.parsed;
-                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                        const percentage = ((value / total) * 100);
-                        // Only display labels for slices that are at least 5% of the total
-                        return percentage > 5;
+                        return true;
                     }
                 }
             },
