@@ -1022,28 +1022,18 @@ def admin_panel():
                 user_id = request.form.get('user_id')
                 current_user_id = session.get('id')
                 
-                print(f"DEBUG: Delete user action triggered")
-                print(f"DEBUG: Form data: {request.form}")
-                print(f"DEBUG: User ID: {user_id}")
-                print(f"DEBUG: Current user ID: {current_user_id}")
-                
                 if not user_id:
                     flash('User ID is required.', 'error')
-                    print("DEBUG: No user_id provided")
                     return redirect(url_for('admin_panel'))
                 
                 if user_id != current_user_id:
-                    print(f"DEBUG: Attempting to delete user {user_id}")
                     success = set_data.delete_user(user_id)
                     if success:
                         flash('User deleted successfully.', 'success')
-                        print(f"DEBUG: User {user_id} deleted successfully")
                     else:
                         flash('Failed to delete user.', 'error')
-                        print(f"DEBUG: Failed to delete user {user_id}")
                 else:
                     flash('Cannot delete your own account.', 'error')
-                    print(f"DEBUG: Attempted to delete own account: {user_id}")
                 return redirect(url_for('admin_panel'))
         
         # Ensure users is always a list to prevent KeyError: 0
