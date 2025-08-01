@@ -234,11 +234,11 @@ class NetworkManager {
         // Try different patterns for different table structures
         
         // Pattern 1: Groups list format (with count column)
-        // Looking for: <td>count</td><td><a href="/groups/list?group_id=uuid">name</td><td>total</td><td>sold</td>...
+        // Looking for: <td>count</td><td><a href="/groups/detail?group_id=uuid">name</td><td>total</td><td>sold</td>...
         let groupRowPatternWithCount = #"<td>(\d+)</td>\s*<td><a[^>]*href="[^"]*group_id=([^"]+)"[^>]*>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>"#
         
         // Pattern 2: Search results format (without count column)
-        // Looking for: <td><a href="/groups/list?group_id=uuid">name</td><td>total</td><td>sold</td>...
+        // Looking for: <td><a href="/groups/detail?group_id=uuid">name</td><td>total</td><td>sold</td>...
         let groupRowPatternWithoutCount = #"<td><a[^>]*href="[^"]*group_id=([^"]+)"[^>]*>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>"#
         
         print("🔍 Pattern 1 (with count): \(groupRowPatternWithCount)")
@@ -586,7 +586,7 @@ class NetworkManager {
     }
     
     func getGroupDetails(groupId: String) async throws -> GroupDetail {
-        let url = URL(string: "\(baseURL)/groups/list?group_id=\(groupId)")!
+        let url = URL(string: "\(baseURL)/groups/detail?group_id=\(groupId)")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
@@ -1922,7 +1922,7 @@ class NetworkManager {
         //   <td>DAYS_TO_SELL or NA</td>
         //   <td>SOLD_NET or 0</td>
         //   <td><a href="/items/list?storage=STORAGE">STORAGE</a></td>
-        //   <td><a href="/groups/list?group_id=GROUP_ID">GROUP_NAME</a></td>
+        //   <td><a href="/groups/detail?group_id=GROUP_ID">GROUP_NAME</a></td>
         //   <td><a href="/items/remove?id=ID">remove</a></td>
         // </tr>
         
@@ -2075,7 +2075,7 @@ class NetworkManager {
         print("📝 Found item: \(name) with ID: \(itemId)")
         
         // Extract group ID and name
-        let groupPattern = #"/groups/list\?group_id=([^"&]+)"[^>]*>([^<]+)</a>"#
+        let groupPattern = #"/groups/detail\?group_id=([^"&]+)"[^>]*>([^<]+)</a>"#
         var groupId = ""
         var groupName = ""
         if let groupRegex = try? NSRegularExpression(pattern: groupPattern),

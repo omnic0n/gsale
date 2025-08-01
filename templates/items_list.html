@@ -64,7 +64,7 @@
                 <td>0</td>
             {% endif %}
             <td><a href = "/items/list?storage={{ item['storage'] }}">{{ item['storage'] }}</a></td>
-            <td><a href = "/groups/list?group_id={{ item['group_id'] }}">{{ item['group_name'] }}</a></td>
+            <td><a href = "/groups/detail?group_id={{ item['group_id'] }}">{{ item['group_name'] }}</a></td>
             <td><a href= "/items/remove?id={{ item['id'] }}">remove</a></td>
             </tr>
         {% set count.value = count.value + 1 %}

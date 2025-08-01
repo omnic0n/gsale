@@ -63,7 +63,7 @@
             <td>{% if item['group_id'] == 1%}
                 None
                 {% elif item['group_id'] %}
-                <a href = "/groups/list?group_id={{ item['group_id'] }}">
+                <a href = "/groups/detail?group_id={{ item['group_id'] }}">
                 {{ item['group_name'] }}
                 </a>
                 {% endif %}
