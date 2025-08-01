@@ -216,6 +216,7 @@
                 data-item-id="{{ item['id'] }}"
                 data-item-name="{{ item['name'] }}"
                 data-group-id="{{ group_id[0]['id'] }}"
+                data-category-id="{{ item['category_id'] }}"
                 data-storage="{{ item['storage'] }}"
                 data-sale-date="{{ item['sale_date'] if item['sale_date'] else '' }}"
                 data-price="{{ item['gross'] if item['gross'] else '' }}"
@@ -319,8 +320,8 @@
 
 <script>
 // Custom modal functions
-function openEditModal(itemId, name, groupId, storage, saleDate, price, shippingFee) {
-    console.log('Opening modal with data:', { itemId, name, groupId, storage, saleDate, price, shippingFee });
+function openEditModal(itemId, name, groupId, categoryId, storage, saleDate, price, shippingFee) {
+    console.log('Opening modal with data:', { itemId, name, groupId, categoryId, storage, saleDate, price, shippingFee });
     
     // Set form values
     document.getElementById('editItemId').value = itemId;
@@ -333,9 +334,12 @@ function openEditModal(itemId, name, groupId, storage, saleDate, price, shipping
     document.getElementById('editItemPrice').value = price || '';
     document.getElementById('editItemShippingFee').value = shippingFee || '';
     
-    // Set default category (first one)
+    // Set the correct category
     const categorySelect = document.getElementById('editItemCategory');
-    if (categorySelect.options.length > 0) {
+    if (categoryId && categorySelect) {
+        categorySelect.value = categoryId;
+    } else if (categorySelect.options.length > 0) {
+        // Fallback to first category if no category_id provided
         categorySelect.value = categorySelect.options[0].value;
     }
     
@@ -358,16 +362,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const itemId = this.getAttribute('data-item-id');
             const name = this.getAttribute('data-item-name');
             const groupId = this.getAttribute('data-group-id');
+            const categoryId = this.getAttribute('data-category-id');
             const storage = this.getAttribute('data-storage');
             const saleDate = this.getAttribute('data-sale-date');
             const price = this.getAttribute('data-price');
             const shippingFee = this.getAttribute('data-shipping-fee');
             
             // Debug: log the data
-            console.log('Item data:', { itemId, name, groupId, storage, saleDate, price, shippingFee });
+            console.log('Item data:', { itemId, name, groupId, categoryId, storage, saleDate, price, shippingFee });
             
             // Open modal
-            openEditModal(itemId, name, groupId, storage, saleDate, price, shippingFee);
+            openEditModal(itemId, name, groupId, categoryId, storage, saleDate, price, shippingFee);
         });
     });
 });

@@ -204,6 +204,7 @@ def get_data_from_item_groups(group_id):
                     items.name, 
                     items.sold, 
                     items.id,
+                    items.category_id,
                     items.storage,
                     sale.price AS gross,
                     sale.shipping_fee AS shipping_fee,
@@ -214,7 +215,7 @@ def get_data_from_item_groups(group_id):
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN sale sale ON sale.id = items.id
                     WHERE items.group_id = %s AND collection.account = %s
-                    GROUP BY items.id, sale.date, sale.price, sale.shipping_fee
+                    GROUP BY items.id, items.category_id, sale.date, sale.price, sale.shipping_fee
                     ORDER BY sale.date""", (group_id, session.get('id')))
     return list(cur.fetchall())
 
