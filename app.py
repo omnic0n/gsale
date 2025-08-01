@@ -737,13 +737,7 @@ def items_search():
 @app.route('/groups/search', methods=["POST","GET"])
 @login_required
 def groups_search():
-    form = GroupForm()
-    
-    if request.method == "POST":
-        details = request.form
-        groups = get_data.get_all_from_group_and_items_by_name(details['name'])
-        return render_template('groups_search.html', groups=groups, form=form)
-    return render_template('groups_search.html', form=form)
+    return render_template('groups_search.html')
 
 #Describe Section
 @app.route('/items/describe',methods=["POST","GET"])
@@ -1058,6 +1052,33 @@ def api_items_search():
             })
         
         return jsonify({'success': True, 'items': results})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/groups/search', methods=['GET'])
+@login_required
+def api_groups_search():
+    """Real-time search API for groups"""
+    try:
+        name = request.args.get('name', '')
+        
+        # Get search results
+        groups = get_data.get_all_from_group_and_items_by_name(name)
+        
+        # Convert to JSON-serializable format
+        results = []
+        for group in groups:
+            results.append({
+                'id': group['id'],
+                'name': group['name'],
+                'price': group['price'],
+                'date': group['date'],
+                'net': group['net'],
+                'total_items': group['total_items'],
+                'sold_items': group['sold_items']
+            })
+        
+        return jsonify({'success': True, 'groups': results})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

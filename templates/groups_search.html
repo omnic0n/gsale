@@ -2,58 +2,147 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="content-section">
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">Search</legend>
-            <div class="form-group">
-                {{ form.name.label(class="form-control-label") }}
-                {% if form.name.errors %}
-                    {{ form.name(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.name.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ form.name(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
+    <fieldset class="form-group">
+        <legend class="border-bottom mb-4">Real-time Search</legend>
+        <div class="form-group">
+            <label for="searchName" class="form-control-label">Group Name</label>
+            <input type="text" id="searchName" class="form-control form-control-lg" placeholder="Start typing to search...">
+        </div>
     </fieldset>
-    <div class="form-group">
-        {{ form.submit(class="btn btn-outline-info") }}
-    </div>
-    </form>
 </div>
-<table class="blueTable">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Total</th>
-            <th>Sold</th> 
-            <th>Unsold</th>
-            <th>Purchase Total</th>
-            <th>Sold Total</th>
-            <th>Profit</th>
-            <th>Average</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for group in groups %}
+
+<div id="searchResults">
+    <table class="blueTable">
+        <thead>
             <tr>
-                <td><a href = "/groups/detail?group_id={{ group['id'] }}">{{ group['name'] }}</td>
-                <td>{{ group['total_items'] }}</td>
-                <td>{{ group['sold_items'] }}</td>
-                <td>{{ group['total_items'] - group['sold_items'] }}</td>
-                <td>{{ group['price'] }}</td>
-                <td>{{ group['net'] }}</td>
-                <td>{{ group['net'] - group['price'] }}</td>
-                <td>{% if group['sold_items'] > 0 %}{{ '%0.2f' % ( group['net'] / group['sold_items']) | float }}{% else %}0.00{% endif %}</td>
-                <td>{{ group['date'] }}</td>
+                <th>Name</th>
+                <th>Total</th>
+                <th>Sold</th> 
+                <th>Unsold</th>
+                <th>Purchase Total</th>
+                <th>Sold Total</th>
+                <th>Profit</th>
+                <th>Average</th>
+                <th>Date</th>
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody id="resultsTableBody">
+            <!-- Results will be populated here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+let searchTimeout;
+
+function performSearch() {
+    const name = document.getElementById('searchName').value;
+    
+    // Clear previous timeout
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout for 300ms delay
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/groups/search?name=${encodeURIComponent(name)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayResults(data.groups);
+                } else {
+                    console.error('Search error:', data.message);
+                    displayResults([]);
+                }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                displayResults([]);
+            });
+    }, 300);
+}
+
+function displayResults(groups) {
+    const tbody = document.getElementById('resultsTableBody');
+    tbody.innerHTML = '';
+    
+    if (groups.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No groups found</td></tr>';
+        return;
+    }
+    
+    groups.forEach(group => {
+        const row = document.createElement('tr');
+        
+        // Create name cell with link
+        const nameCell = document.createElement('td');
+        const nameLink = document.createElement('a');
+        nameLink.href = `/groups/detail?group_id=${group.id}`;
+        nameLink.textContent = group.name;
+        nameCell.appendChild(nameLink);
+        
+        // Create total items cell
+        const totalCell = document.createElement('td');
+        totalCell.textContent = group.total_items;
+        
+        // Create sold items cell
+        const soldCell = document.createElement('td');
+        soldCell.textContent = group.sold_items;
+        
+        // Create unsold items cell
+        const unsoldCell = document.createElement('td');
+        unsoldCell.textContent = group.total_items - group.sold_items;
+        
+        // Create purchase total cell
+        const purchaseCell = document.createElement('td');
+        purchaseCell.textContent = group.price;
+        
+        // Create sold total cell
+        const soldTotalCell = document.createElement('td');
+        soldTotalCell.textContent = group.net;
+        
+        // Create profit cell
+        const profitCell = document.createElement('td');
+        profitCell.textContent = group.net - group.price;
+        
+        // Create average cell
+        const averageCell = document.createElement('td');
+        if (group.sold_items > 0) {
+            averageCell.textContent = (group.net / group.sold_items).toFixed(2);
+        } else {
+            averageCell.textContent = '0.00';
+        }
+        
+        // Create date cell
+        const dateCell = document.createElement('td');
+        dateCell.textContent = group.date;
+        
+        // Append all cells to row
+        row.appendChild(nameCell);
+        row.appendChild(totalCell);
+        row.appendChild(soldCell);
+        row.appendChild(unsoldCell);
+        row.appendChild(purchaseCell);
+        row.appendChild(soldTotalCell);
+        row.appendChild(profitCell);
+        row.appendChild(averageCell);
+        row.appendChild(dateCell);
+        
+        // Append row to tbody
+        tbody.appendChild(row);
+    });
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('searchName');
+    
+    // Add input event listener for real-time search
+    nameInput.addEventListener('input', performSearch);
+    
+    // Don't perform initial search - wait for user input
+    // performSearch();
+});
+</script>
 {% endblock content %}
 </html>
