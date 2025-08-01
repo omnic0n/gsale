@@ -108,7 +108,17 @@
             <td>{{ item['net'] }}</td>
             <td>{{ item['shipping_fee'] }}</td>
             <td>{{ item['storage'] }}</td>
-            <td><a href="/items/modify?item={{ item['id'] }}&return_to=group_detail" class="btn btn-sm btn-outline-primary" style="min-width: 60px;">Edit</a></td>
+            <td><button type="button" class="btn btn-sm btn-outline-primary edit-item-btn" style="min-width: 60px;" 
+                data-item-id="{{ item['id'] }}"
+                data-item-name="{{ item['name'] }}"
+                data-group-id="{{ item['group_id'] }}"
+                data-category-id="{{ item['category_id'] }}"
+                data-storage="{{ item['storage'] }}"
+                data-returned="{{ item['returned'] }}"
+                data-list-date="{{ item['list_date'] }}"
+                data-sale-date="{{ item['sale_date'] if item['sale_date'] else '' }}"
+                data-price="{{ item['price'] if item['price'] else '' }}"
+                data-shipping-fee="{{ item['shipping_fee'] if item['shipping_fee'] else '' }}">Edit</button></td>
             <td><a href="/items/remove?id={{ item['id'] }}">remove</a></td>
         {% set ns.count = ns.count + 1 %}
         </tr>
@@ -124,5 +134,150 @@
 	</div>
 </center>
 {% endif %}
+
+<!-- Edit Item Modal -->
+<div class="modal fade" id="editItemModal" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editItemModalLabel">Edit Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editItemForm" method="POST" action="/items/modify_ajax">
+                <div class="modal-body">
+                    <input type="hidden" id="editItemId" name="id">
+                    <input type="hidden" name="return_to" value="group_detail">
+                    
+                    <div class="form-group">
+                        <label for="editItemName">Name</label>
+                        <input type="text" class="form-control" id="editItemName" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemGroup">Group</label>
+                        <select class="form-control" id="editItemGroup" name="group" required>
+                            {% for group in groups %}
+                            <option value="{{ group['id'] }}">{{ group['name'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemCategory">Category</label>
+                        <select class="form-control" id="editItemCategory" name="category" required>
+                            {% for category in categories %}
+                            <option value="{{ category['id'] }}">{{ category['type'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemStorage">Storage</label>
+                        <input type="text" class="form-control" id="editItemStorage" name="storage">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemReturned">Returned</label>
+                        <select class="form-control" id="editItemReturned" name="returned">
+                            <option value="0">False</option>
+                            <option value="1">True</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemListDate">List Date</label>
+                        <input type="date" class="form-control" id="editItemListDate" name="list_date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemSaleDate">Sale Date</label>
+                        <input type="date" class="form-control" id="editItemSaleDate" name="sale_date">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemPrice">Price</label>
+                        <input type="number" step="0.01" class="form-control" id="editItemPrice" name="price">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemShippingFee">Shipping Fee</label>
+                        <input type="number" step="0.01" class="form-control" id="editItemShippingFee" name="shipping_fee">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add event listeners to edit buttons
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.edit-item-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            // Get data from button attributes
+            const itemId = this.getAttribute('data-item-id');
+            const name = this.getAttribute('data-item-name');
+            const groupId = this.getAttribute('data-group-id');
+            const categoryId = this.getAttribute('data-category-id');
+            const storage = this.getAttribute('data-storage');
+            const returned = this.getAttribute('data-returned');
+            const listDate = this.getAttribute('data-list-date');
+            const saleDate = this.getAttribute('data-sale-date');
+            const price = this.getAttribute('data-price');
+            const shippingFee = this.getAttribute('data-shipping-fee');
+            
+            // Set form values
+            document.getElementById('editItemId').value = itemId;
+            document.getElementById('editItemName').value = name;
+            document.getElementById('editItemGroup').value = groupId;
+            document.getElementById('editItemCategory').value = categoryId;
+            document.getElementById('editItemStorage').value = storage;
+            document.getElementById('editItemReturned').value = returned;
+            document.getElementById('editItemListDate').value = listDate;
+            document.getElementById('editItemSaleDate').value = saleDate;
+            document.getElementById('editItemPrice').value = price;
+            document.getElementById('editItemShippingFee').value = shippingFee;
+            
+            // Show modal
+            $('#editItemModal').modal('show');
+        });
+    });
+});
+
+// Handle form submission
+document.getElementById('editItemForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/items/modify_ajax', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            alert('Item updated successfully!');
+            // Close modal
+            $('#editItemModal').modal('hide');
+            // Reload page to show updated data
+            location.reload();
+        } else {
+            alert('Error updating item: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating item. Please try again.');
+    });
+});
+</script>
 {% endblock content %}
 </html>

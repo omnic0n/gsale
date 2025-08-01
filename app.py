@@ -581,6 +581,35 @@ def modify_items():
     
     return render_template('modify_item.html', form=form, item=item, sale=sale, return_to=return_to)
 
+@app.route('/items/modify_ajax', methods=['POST'])
+@login_required
+def modify_items_ajax():
+    try:
+        details = request.form
+        item_id = details.get('id')
+        
+        # Check if item exists and belongs to current user
+        item = get_data.get_data_for_item_describe(item_id)
+        if not item:
+            return jsonify({
+                'success': False,
+                'message': 'Item not found or access denied.'
+            }), 404
+        
+        # Update item data
+        set_data.set_items_modify(details)
+        set_data.set_sale_data(details)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Item updated successfully!'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error updating item: {str(e)}'
+        }), 500
+
 @app.route('/items/remove',methods=["POST","GET"])
 @login_required
 def items_remove():
@@ -819,6 +848,10 @@ def group_detail():
         elif details['button'] == "Quick Sell":
             return redirect(url_for('quick_sell',group=details['id']))
 
+    # Get groups and categories for modal dropdowns
+    groups = get_data.get_all_from_groups('%')
+    categories = get_data.get_all_from_categories()
+    
     return render_template('groups_list_detail.html', 
                             group_id=group_id,
                             items=items,
@@ -826,7 +859,9 @@ def group_detail():
                             total_sold_items=total_sold_items,
                             sold_price=sold_price,
                             form=form,
-                            quicksell=quicksell)
+                            quicksell=quicksell,
+                            groups=groups,
+                            categories=categories)
 
 @app.route('/groups/remove',methods=["POST","GET"])
 @login_required
