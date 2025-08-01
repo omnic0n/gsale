@@ -1,7 +1,0 @@
-{% extends "layout.html" %}
-{% block content %}
-{% if location['latitude'] or location['longitude'] %}
-    <a href="/groups/describe?group_id={{ id }}">Groupgit</a>
-    <center>{{ googlemap("map", lat=location['latitude'], lng=location['longitude'], markers=[(location['latitude'], location['longitude'])], style="height:800px;width:800px")}}</center>
-{% endif %}
-{% endblock content %}

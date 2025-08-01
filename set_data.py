@@ -124,32 +124,7 @@ def set_modify_expense(details, price, milage, image_id):
     mysql.connection.commit()
     cur.close()
 
-#Cases
 
-def add_case_data(details):
-    cur = mysql.connection.cursor()
-    for item in details:
-        if item.startswith("item"):
-            item_id = generate_uuid()
-            cur.execute("INSERT INTO cases(id, name, platform,account) VALUES (%s, %s, %s, %s)", 
-                        (item_id, details[item],details['platform'],session.get('id'),))
-            mysql.connection.commit()
-    cur.close()
-
-def set_cases_modify(details):
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE cases SET name = %s, platform = %s where id = %s AND account = %s", 
-                (details['name'], details['platform'], details['id'], session.get('id')))
-    mysql.connection.commit()
-    cur.close()
-
-
-def remove_case_data(id):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM cases WHERE id = %s AND account = %s", 
-                (id, session.get('id')))
-    mysql.connection.commit()
-    cur.close()
 
 # Category Functions
 def add_category(category_name, user_id):

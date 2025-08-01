@@ -647,17 +647,6 @@ def get_group_profit(group_id):
     result = cur.fetchone()
     return result['price']
 
-#Location Data
-def get_location(group_id):
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT l.longitude, l.latitude 
-        FROM location l
-        INNER JOIN collection c ON l.group_id = c.id
-        WHERE l.group_id = %s AND c.account = %s
-    """, (group_id, session.get('id')))
-    return cur.fetchone()
-
 def get_location_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
     cur.execute("""SELECT
@@ -671,59 +660,6 @@ def get_location_from_date(start_date, end_date):
                    AND collection.account = %s
                    AND latitude != '' AND longitude != '' """,
                    (start_date, end_date, session.get('id')))
-    return list(cur.fetchall())
-
-#Platform Data
-def get_all_from_platforms():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM platform")
-    return list(cur.fetchall())
-
-#Cases
-def get_all_from_cases(platform):
-    if not platform:
-        platform = '%%'
-
-    cur = mysql.connection.cursor()
-    cur.execute("""
-                SELECT 
-                cases.name,
-                cases.id,
-                cases.platform as platform_id,
-                platform.name as platform_name
-                FROM cases
-                INNER JOIN platform platform on cases.platform = platform.id 
-                WHERE cases.account = %s 
-                AND
-                cases.platform LIKE %s
-                ORDER BY name ASC""", (session.get('id'),platform, ))
-    return list(cur.fetchall())
-
-def get_data_for_case_describe(case_id):
-    cur = mysql.connection.cursor()
-    cur.execute(""" SELECT 
-                    cases.id, 
-                    cases.name,
-                    platform.id as platform_id, 
-                    platform.name as platform_name
-                    from cases
-                    INNER JOIN platform platform on cases.platform = platform.id 
-                    WHERE cases.id = %s AND cases.account = %s""", (case_id, session.get('id')))
-    return list(cur.fetchall())
-
-def get_list_of_cases_with_name(name):
-    cur = mysql.connection.cursor()
-    cur.execute("""
-                SELECT 
-                cases.name,
-                cases.id,
-                cases.platform as platform_id,
-                platform.name as platform_name
-                FROM cases
-                INNER JOIN platform platform on cases.platform = platform.id 
-                WHERE cases.name like %s 
-                AND 
-                cases.account = %s""", ('%'+ name + '%', session.get('id'), ))
     return list(cur.fetchall())
 
 # Optimized Report Functions

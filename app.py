@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm, ButtonForm, CasesForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm, ButtonForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -838,75 +838,10 @@ def group_remove():
     set_data.remove_group_data(id)
     return redirect(url_for('groups_list'))
 
-@app.route('/location', methods=["GET"])
-@login_required
-def location():
-    id = request.args.get('group_id', type = str)
-    location = get_data.get_location(id)
-    return render_template('location.html', location=location, id=id)
 
 
-#Cases
-
-#List Section
-@app.route('/cases/list', methods=["POST","GET"])
-@login_required
-def cases_list():
-    platform = request.args.get('platform', type = int)
-
-    cases = get_data.get_all_from_cases(platform)
-    return render_template('cases_list.html', cases=cases)
-
-@app.route('/cases/add',methods=["POST","GET"])
-@login_required
-def cases_add():
-    platforms = get_data.get_all_from_platforms()
-
-    form = CasesForm()
-    form.platform.choices = [(platform['id'], platform['name']) for platform in platforms]
-    
-    if request.method == "POST":
-        details = request.form
-        set_data.add_case_data(details)
-        return redirect(url_for('cases_list'))
-    return render_template('case_add.html', form=form)
-
-@app.route('/cases/remove',methods=["POST","GET"])
-@login_required
-def cases_remove():
-    id = request.args.get('id', type = str)
-    set_data.remove_case_data(id)
-    return redirect(url_for('cases_list'))
-
-@app.route('/cases/modify',methods=["POST","GET"])
-@login_required
-def modify_case():
-    platforms = get_data.get_all_from_platforms()
-    id = request.args.get('id', type = str)
-    case = get_data.get_data_for_case_describe(id)
-
-    form = CasesForm()
-    form.platform.choices = [(platform['id'], platform['name']) for platform in platforms]
-    form.platform.data = case[0]['platform_id']
-
-    if request.method == "POST":
-        details = request.form
-        set_data.set_cases_modify(details)
-        return redirect(url_for('cases_list'))
-    return render_template('cases_modify.html', form=form, case=case)
 
 
-#Search Section
-@app.route('/cases/search', methods=["POST","GET"])
-@login_required
-def cases_search():
-    form = CasesForm()
-
-    if request.method == "POST":
-        details = request.form
-        cases = get_data.get_list_of_cases_with_name(details['name'])
-        return render_template('cases_search.html', form=form, cases=cases)
-    return render_template('cases_search.html', form=form)
 
 
 # Category Management Section
