@@ -224,7 +224,7 @@
                                                 </button>
                                                 
                                                 {% if not user.is_current_user %}
-                                                <form method="POST" style="display: inline;" onsubmit="console.log('Form submitted for user: {{ user.username }}');">
+                                                <form method="POST" action="/admin" style="display: inline;" onsubmit="console.log('Form submitted for user: {{ user.username }}');">
                                                     <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                     <input type="hidden" name="action" value="delete_user">
                                                     <button type="submit" class="btn btn-sm btn-danger" 

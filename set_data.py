@@ -223,7 +223,7 @@ def delete_user(user_id):
             
         # Test connection
         try:
-            mysql.connection.ping(reconnect=True)
+            mysql.connection.ping()
             print("DEBUG: MySQL connection is active")
         except Exception as e:
             print(f"DEBUG: MySQL connection ping failed: {e}")
