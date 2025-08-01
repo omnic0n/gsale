@@ -1,10 +1,20 @@
 {% extends "layout.html" %}
 {% block content %}
     <div class="content-section">
+        {% if return_to == 'group_detail' %}
+        <div class="mb-3">
+            <a href="{{ url_for('group_detail', group_id=item[0]['group_id']) }}" class="btn btn-outline-secondary">
+                ← Back to Group Detail
+            </a>
+        </div>
+        {% endif %}
         <form method="POST" action="">
             {{ form.hidden_tag() }}
+            {% if return_to %}
+            <input type="hidden" name="return_to" value="{{ return_to }}">
+            {% endif %}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Modify Group</legend>
+                <legend class="border-bottom mb-4">Modify Item</legend>
                 <div class="form-group">
                     {{ form.name.label(class="form-control-label") }}
                     {% if form.name.errors %}

@@ -545,6 +545,7 @@ def modify_items():
     groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
     id = request.args.get('item', type = str)
+    return_to = request.args.get('return_to', type = str)
     item = get_data.get_data_for_item_describe(id)
     
     # Check if item exists and belongs to current user
@@ -568,8 +569,17 @@ def modify_items():
         details = request.form
         set_data.set_items_modify(details)
         set_data.set_sale_data(details)
-        return redirect(url_for('describe_item',item=id))
-    return render_template('modify_item.html', form=form, item=item, sale=sale)
+        
+        # Redirect back to the appropriate page based on return_to parameter
+        return_to_from_form = details.get('return_to')
+        if return_to_from_form == 'group_detail' or return_to == 'group_detail':
+            flash('Item updated successfully!', 'success')
+            return redirect(url_for('group_detail', group_id=item[0]['group_id']))
+        else:
+            flash('Item updated successfully!', 'success')
+            return redirect(url_for('describe_item',item=id))
+    
+    return render_template('modify_item.html', form=form, item=item, sale=sale, return_to=return_to)
 
 @app.route('/items/remove',methods=["POST","GET"])
 @login_required
@@ -718,6 +728,7 @@ def groups_search():
 @login_required
 def describe_item():
     id = request.args.get('item', type = str)
+    return_to = request.args.get('return_to', type = str)
     item = get_data.get_data_for_item_describe(id)
     
     # Check if item exists and belongs to current user
@@ -751,7 +762,11 @@ def describe_item():
         elif details['button'] == "Remove Item":
             return redirect(url_for('items_remove',id=details['id']))
         elif details['button'] == "Modify Item":
-            return redirect(url_for('modify_items',item=details['id']))
+            # Pass return_to parameter to modify_items
+            modify_url = url_for('modify_items', item=details['id'])
+            if return_to:
+                modify_url += f'&return_to={return_to}'
+            return redirect(modify_url)
         elif details['button'] == "Mark as Available":
             return redirect(url_for('mark_sold',item=details['id'],sold=0))
         elif details['button'] == "Mark as Sold":
@@ -766,7 +781,8 @@ def describe_item():
                             form=form,
                             remove=remove,
                             modify=modify,
-                            availability=availability)
+                            availability=availability,
+                            return_to=return_to)
 
 
 

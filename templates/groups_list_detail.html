@@ -85,6 +85,7 @@
             <th>Net</th>
             <th>Shipping Fee</th>
             <th>Storage</th>
+            <th>Edit</th>
             <th>Remove</th>
         </tr>
     </thead>
@@ -95,7 +96,7 @@
         <tr>
             <td>{{ ns.count }}</td>
             <td>
-                <a href = "/items/describe?item={{ item['id'] }}">
+                <a href = "/items/describe?item={{ item['id'] }}&return_to=group_detail">
                     {% if item['sold'] %}<b>{{ item['name'] }}</b>
                     {% else %}{{ item['name'] }}
                     {% endif %}
@@ -107,6 +108,7 @@
             <td>{{ item['net'] }}</td>
             <td>{{ item['shipping_fee'] }}</td>
             <td>{{ item['storage'] }}</td>
+            <td><a href="/items/modify?item={{ item['id'] }}&return_to=group_detail" class="btn btn-sm btn-outline-primary" style="min-width: 60px;">Edit</a></td>
             <td><a href="/items/remove?id={{ item['id'] }}">remove</a></td>
         {% set ns.count = ns.count + 1 %}
         </tr>
