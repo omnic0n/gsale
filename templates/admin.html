@@ -125,16 +125,22 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3>User Management</h3>
-                <div class="btn-group" role="group">
-                    <input type="radio" class="btn-check" name="userFilter" id="activeUsers" value="active" checked>
-                    <label class="btn btn-outline-success btn-sm" for="activeUsers">
-                        <i class="fas fa-user-check"></i> Active Users
-                    </label>
-                    
-                    <input type="radio" class="btn-check" name="userFilter" id="inactiveUsers" value="inactive">
-                    <label class="btn btn-outline-danger btn-sm" for="inactiveUsers">
-                        <i class="fas fa-user-times"></i> Inactive Users
-                    </label>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="userSearch" placeholder="Search by email...">
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-success btn-sm active" id="activeUsers">
+                            <i class="fas fa-user-check"></i> Active Users
+                        </button>
+                        
+                        <button type="button" class="btn btn-danger btn-sm" id="inactiveUsers">
+                            <i class="fas fa-user-times"></i> Inactive Users
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -147,13 +153,12 @@
                                         <th>Name</th>
                                         <th>Admin Status</th>
                                         <th>Status</th>
-                                        <th>Current User</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for user in users %}
-                                    <tr>
+                                    <tr {% if user.is_current_user %}class="table-secondary"{% endif %}>
                                         <td>{{ user.email or 'N/A' }}</td>
                                         <td>{{ user.name or 'N/A' }}</td>
                                         <td>
@@ -168,11 +173,6 @@
                                                 <span class="badge bg-success">Active</span>
                                             {% else %}
                                                 <span class="badge bg-danger">Inactive</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if user.is_current_user %}
-                                                <span class="text-primary">{{ user.is_current_user }}</span>
                                             {% endif %}
                                         </td>
                                         <td class="action-buttons">
@@ -191,14 +191,16 @@
                                                 </form>
                                                 
                                                 {% if not user.is_current_user %}
-                                                <form method="POST" action="/admin" style="display: inline;" onsubmit="console.log('Form submitted for user: {{ user.username }}');">
+                                                <form method="POST" action="/admin" style="display: inline;" onsubmit="console.log('Form submitted for user: {{ user.email }}');">
                                                     <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                     <input type="hidden" name="action" value="delete_user">
-                                                                                                    <button type="submit" class="btn btn-sm btn-danger" 
-                                                        onclick="console.log('Deactivate button clicked for user: {{ user.email }}'); return confirm('Are you sure you want to deactivate {{ user.email or 'this user' }}? They will no longer be able to log in.')">
-                                                    {% if user.is_active %}Deactivate User{% else %}Activate User{% endif %}
-                                                </button>
+                                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                                            onclick="console.log('Deactivate button clicked for user: {{ user.email }}'); return confirm('Are you sure you want to deactivate {{ user.email or 'this user' }}? They will no longer be able to log in.')">
+                                                        {% if user.is_active %}Deactivate User{% else %}Activate User{% endif %}
+                                                    </button>
                                                 </form>
+                                                {% else %}
+                                                <span class="text-muted small">Current User</span>
                                                 {% endif %}
                                             </div>
                                         </td>
@@ -280,35 +282,62 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const filterButtons = document.querySelectorAll('input[name="userFilter"]');
+    const activeButton = document.getElementById('activeUsers');
+    const inactiveButton = document.getElementById('inactiveUsers');
+    const searchInput = document.getElementById('userSearch');
     const userRows = document.querySelectorAll('#userTable tbody tr');
     
-    function filterUsers() {
-        const selectedFilter = document.querySelector('input[name="userFilter"]:checked').value;
+    let currentFilter = 'active';
+    
+    function filterUsers(filterType) {
+        currentFilter = filterType;
+        
+        // Update button states
+        activeButton.classList.remove('active');
+        inactiveButton.classList.remove('active');
+        
+        if (filterType === 'active') {
+            activeButton.classList.add('active');
+        } else if (filterType === 'inactive') {
+            inactiveButton.classList.add('active');
+        }
+        
+        applyFilters();
+    }
+    
+    function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
         
         userRows.forEach(row => {
+            const emailCell = row.querySelector('td:nth-child(1)'); // Email column
             const statusCell = row.querySelector('td:nth-child(4)'); // Status column
             const statusBadge = statusCell.querySelector('.badge');
             
-            if (selectedFilter === 'active') {
-                if (statusBadge && statusBadge.textContent.includes('Active')) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            } else if (selectedFilter === 'inactive') {
-                if (statusBadge && statusBadge.textContent.includes('Inactive')) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+            const email = emailCell.textContent.toLowerCase();
+            const matchesSearch = searchTerm === '' || email.includes(searchTerm);
+            
+            let matchesFilter = false;
+            if (currentFilter === 'active') {
+                matchesFilter = statusBadge && statusBadge.textContent.includes('Active');
+            } else if (currentFilter === 'inactive') {
+                matchesFilter = statusBadge && statusBadge.textContent.includes('Inactive');
+            }
+            
+            if (matchesSearch && matchesFilter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
             }
         });
     }
     
-    filterButtons.forEach(button => {
-        button.addEventListener('change', filterUsers);
-    });
+    // Set initial state to show active users
+    filterUsers('active');
+    
+    // Event listeners
+    activeButton.addEventListener('click', () => filterUsers('active'));
+    inactiveButton.addEventListener('click', () => filterUsers('inactive'));
+    searchInput.addEventListener('input', applyFilters);
 });
 </script>
 
