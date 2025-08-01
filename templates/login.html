@@ -55,10 +55,44 @@
 				color: #666;
 				font-size: 14px;
 			}
+			
+			.flash-message {
+				background: white;
+				border: 2px solid #e74c3c;
+				border-radius: 8px;
+				padding: 15px;
+				margin-bottom: 20px;
+				text-align: center;
+				font-weight: 500;
+				box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+			}
+			
+			.flash-message.error {
+				border-color: #e74c3c;
+				color: #e74c3c;
+				background-color: #fdf2f2;
+			}
+			
+			.flash-message.success {
+				border-color: #27ae60;
+				color: #27ae60;
+				background-color: #f0f9f4;
+			}
 		</style>
 	</head>
 	<body>
 		<div class="login">
+			<!-- Flash Messages -->
+			{% with messages = get_flashed_messages(with_categories=true) %}
+				{% if messages %}
+					{% for category, message in messages %}
+						<div class="flash-message {% if category == 'error' %}error{% elif category == 'success' %}success{% endif %}">
+							{{ message }}
+						</div>
+					{% endfor %}
+				{% endif %}
+			{% endwith %}
+			
 			<h1>Login</h1>
 			<div class="links">
 				<a href="{{ url_for('login') }}" class="active">Login</a>
@@ -73,17 +107,6 @@
 			<div class="divider">
 				<span>or</span>
 			</div>
-			
-			<!-- Flash Messages -->
-			{% with messages = get_flashed_messages(with_categories=true) %}
-				{% if messages %}
-					{% for category, message in messages %}
-						<div class="msg {% if category == 'error' %}error{% elif category == 'success' %}success{% endif %}">
-							{{ message }}
-						</div>
-					{% endfor %}
-				{% endif %}
-			{% endwith %}
 			
 			<!-- Traditional Login Form -->
 			<form action="{{ url_for('login') }}" method="post">
