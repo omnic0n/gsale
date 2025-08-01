@@ -955,53 +955,8 @@ def admin_panel():
         
         if request.method == "POST":
             action = request.form.get('action')
-            if action == 'add_user':
-                # Add new user
-                username = request.form.get('username')
-                email = request.form.get('email')
-                password = request.form.get('password')
-                confirm_password = request.form.get('confirm_password')
-                is_admin = request.form.get('is_admin') == 'on'
-                
-                # Validate input
-                if not username or not email or not password:
-                    flash('All fields are required.', 'error')
-                    return redirect(url_for('admin_panel'))
-                
-                if password != confirm_password:
-                    flash('Passwords do not match.', 'error')
-                    return redirect(url_for('admin_panel'))
-                
-                if len(password) < 6:
-                    flash('Password must be at least 6 characters long.', 'error')
-                    return redirect(url_for('admin_panel'))
-                
-                # Check if username or email already exists
-                cur = mysql.connection.cursor()
-                cur.execute("SELECT id FROM accounts WHERE username = %s OR email = %s", (username, email))
-                existing_user = cur.fetchone()
-                cur.close()
-                
-                if existing_user:
-                    flash('Username or email already exists.', 'error')
-                    return redirect(url_for('admin_panel'))
-                
-                # Create user
-                user_details = {
-                    'username': username,
-                    'email': email,
-                    'password': password,
-                    'is_admin': is_admin
-                }
-                
-                success = set_data.create_user(user_details)
-                if success:
-                    flash('User created successfully.', 'success')
-                else:
-                    flash('Failed to create user.', 'error')
-                return redirect(url_for('admin_panel'))
             
-            elif action == 'toggle_admin':
+            if action == 'toggle_admin':
                 # Toggle admin status
                 user_id = request.form.get('user_id')
                 success = set_data.toggle_admin_status(user_id)
@@ -1009,33 +964,6 @@ def admin_panel():
                     flash('Admin status updated successfully.', 'success')
                 else:
                     flash('Failed to update admin status.', 'error')
-                return redirect(url_for('admin_panel'))
-            
-            elif action == 'change_password':
-                # Change user password
-                user_id = request.form.get('user_id')
-                new_password = request.form.get('new_password')
-                confirm_password = request.form.get('confirm_new_password')
-                
-                # Validate input
-                if not new_password or not confirm_password:
-                    flash('Password fields are required.', 'error')
-                    return redirect(url_for('admin_panel'))
-                
-                if new_password != confirm_password:
-                    flash('Passwords do not match.', 'error')
-                    return redirect(url_for('admin_panel'))
-                
-                if len(new_password) < 6:
-                    flash('Password must be at least 6 characters long.', 'error')
-                    return redirect(url_for('admin_panel'))
-                
-                # Change password
-                success = set_data.change_user_password(user_id, new_password)
-                if success:
-                    flash('Password changed successfully.', 'success')
-                else:
-                    flash('Failed to change password.', 'error')
                 return redirect(url_for('admin_panel'))
             
             elif action == 'delete_user':

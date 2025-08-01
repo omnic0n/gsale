@@ -119,54 +119,7 @@
         <div class="col-md-12">
             <h1 class="mb-4">Admin Panel</h1>
             
-            <!-- Add User Section -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3>Add New User</h3>
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        <input type="hidden" name="action" value="add_user">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="username" name="username" required minlength="3" maxlength="50">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" required maxlength="120">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="password" name="password" required minlength="6" maxlength="100">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="confirm_password" class="form-label">Confirm Password</label>
-                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6" maxlength="100">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="is_admin" name="is_admin">
-                                <label class="form-check-label" for="is_admin">
-                                    Grant Admin Privileges
-                                </label>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-success">Add User</button>
-                    </form>
-                </div>
-            </div>
+
             
             <!-- User Management Section -->
             <div class="card">
@@ -217,11 +170,6 @@
                                                         {% endif %}
                                                     </button>
                                                 </form>
-                                                
-                                                <button type="button" class="btn btn-sm btn-primary" 
-                                                        onclick="openAdminChangePasswordModal('{{ user.id or '' }}', '{{ user.username or 'this user' }}')">
-                                                    Change Password
-                                                </button>
                                                 
                                                 {% if not user.is_current_user %}
                                                 <form method="POST" action="/admin" style="display: inline;" onsubmit="console.log('Form submitted for user: {{ user.username }}');">
@@ -311,103 +259,6 @@
     </div>
 </div>
 
-<!-- Change Password Modal -->
-<div id="changePasswordModal" class="custom-modal" style="display: none;">
-    <div class="custom-modal-backdrop" onclick="closeAdminChangePasswordModal()"></div>
-    <div class="custom-modal-dialog">
-        <div class="custom-modal-content">
-            <div class="custom-modal-header">
-                <h5 class="custom-modal-title">Change Password</h5>
-                <button type="button" class="btn-close" onclick="closeAdminChangePasswordModal()" aria-label="Close">×</button>
-            </div>
-            <form method="POST" id="adminChangePasswordForm" action="/admin">
-                <div class="custom-modal-body">
-                    <input type="hidden" name="action" value="change_password">
-                    <input type="hidden" name="user_id" id="changePasswordUserId">
-                    <p>Change password for user: <strong id="changePasswordUsername"></strong></p>
-                    <div class="mb-3">
-                        <label for="new_password" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="new_password" name="new_password" required minlength="6" maxlength="100">
-                    </div>
-                    <div class="mb-3">
-                        <label for="confirm_new_password" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirm_new_password" name="confirm_new_password" required minlength="6" maxlength="100">
-                    </div>
-                </div>
-                <div class="custom-modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeAdminChangePasswordModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Change Password</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<script>
-// Password confirmation validation for add user form
-document.getElementById('confirm_password').addEventListener('input', function() {
-    const password = document.getElementById('password').value;
-    const confirmPassword = this.value;
-    
-    if (password !== confirmPassword) {
-        this.setCustomValidity('Passwords do not match');
-    } else {
-        this.setCustomValidity('');
-    }
-});
-
-document.getElementById('password').addEventListener('input', function() {
-    const confirmPassword = document.getElementById('confirm_password');
-    if (confirmPassword.value) {
-        if (this.value !== confirmPassword.value) {
-            confirmPassword.setCustomValidity('Passwords do not match');
-        } else {
-            confirmPassword.setCustomValidity('');
-        }
-    }
-});
-
-// Password confirmation validation for change password form
-document.getElementById('confirm_new_password').addEventListener('input', function() {
-    const password = document.getElementById('new_password').value;
-    const confirmPassword = this.value;
-    
-    if (password !== confirmPassword) {
-        this.setCustomValidity('Passwords do not match');
-    } else {
-        this.setCustomValidity('');
-    }
-});
-
-document.getElementById('new_password').addEventListener('input', function() {
-    const confirmPassword = document.getElementById('confirm_new_password');
-    if (confirmPassword.value) {
-        if (this.value !== confirmPassword.value) {
-            confirmPassword.setCustomValidity('Passwords do not match');
-        } else {
-            confirmPassword.setCustomValidity('');
-        }
-    }
-});
-
-// Function to open admin change password modal
-function openAdminChangePasswordModal(userId, username) {
-    document.getElementById('changePasswordUserId').value = userId;
-    document.getElementById('changePasswordUsername').textContent = username;
-    document.getElementById('new_password').value = '';
-    document.getElementById('confirm_new_password').value = '';
-    document.getElementById('new_password').setCustomValidity('');
-    document.getElementById('confirm_new_password').setCustomValidity('');
-    
-    // Show the custom modal
-    document.getElementById('changePasswordModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
-}
-
-// Function to close admin modal manually
-function closeAdminChangePasswordModal() {
-    document.getElementById('changePasswordModal').style.display = 'none';
-    document.body.style.overflow = ''; // Restore scrolling
-}
 </script>
 {% endblock %} 

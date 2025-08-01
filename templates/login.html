@@ -33,28 +33,7 @@
 				font-size: 18px;
 			}
 			
-			.divider {
-				text-align: center;
-				margin: 20px 0;
-				position: relative;
-			}
-			
-			.divider::before {
-				content: '';
-				position: absolute;
-				top: 50%;
-				left: 0;
-				right: 0;
-				height: 1px;
-				background: #ddd;
-			}
-			
-			.divider span {
-				background: white;
-				padding: 0 10px;
-				color: #666;
-				font-size: 14px;
-			}
+
 			
 			.flash-message {
 				background: white;
@@ -101,27 +80,6 @@
 				<i class="fab fa-google"></i>
 				Sign in with Google
 			</a>
-			
-			<div class="divider">
-				<span>or</span>
-			</div>
-			
-			<!-- Traditional Login Form -->
-			<form action="{{ url_for('login') }}" method="post">
-				{% if request.args.get('next') %}
-				<input type="hidden" name="next" value="{{ request.args.get('next') }}">
-				{% endif %}
-				<label for="username">
-					<i class="fas fa-user"></i>
-				</label>
-				<input type="text" name="username" placeholder="Username" id="username" required>
-				<label for="password">
-					<i class="fas fa-lock"></i>
-				</label>
-				<input type="password" name="password" placeholder="Password" id="password" required>
-				<div class="msg">{{ msg }}</div>
-				<input type="submit" value="Login">
-			</form>
 		</div>
 	</body>
 </html>
