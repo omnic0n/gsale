@@ -116,7 +116,6 @@
       <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
           <a class="navbar-brand" href="/">
-            <small class="d-block user-welcome">Welcome, {{ session['username'] }}</small>
           </a>
           
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
@@ -608,5 +607,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    
+    <!-- Footer with login info -->
+    <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: white; text-align: center; padding: 5px; font-size: 12px; z-index: 1000;">
+      <small>Logged in as: {{ session.get('username', 'Unknown') }}</small>
+    </footer>
   </body>
 </html>
