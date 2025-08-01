@@ -945,6 +945,18 @@ def manage_categories():
     return render_template('categories_manage.html', categories=categories)
 
 # Admin Section
+@app.context_processor
+def inject_pending_requests():
+    """Inject pending requests count into all templates for admin notification"""
+    if session.get('loggedin') and session.get('is_admin'):
+        try:
+            pending_attempts = set_data.get_pending_access_attempts()
+            return {'pending_requests_count': len(pending_attempts)}
+        except Exception as e:
+            print(f"Error getting pending requests count: {e}")
+            return {'pending_requests_count': 0}
+    return {'pending_requests_count': 0}
+
 @app.route('/admin', methods=["GET", "POST"])
 @admin_required
 def admin_panel():

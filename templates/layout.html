@@ -174,7 +174,14 @@
                
                {% if session.get('is_admin') %}
                <div class="nav-item nav-link">
-                 <a href="/admin" class="nav-link">Admin</a>
+                 <a href="/admin" class="nav-link position-relative">
+                   Admin
+                   {% if pending_requests_count > 0 %}
+                   <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em; transform: translate(-50%, -50%);">
+                     {{ pending_requests_count }}
+                   </span>
+                   {% endif %}
+                 </a>
                </div>
                {% endif %}
               </div>
