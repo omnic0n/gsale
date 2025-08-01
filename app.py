@@ -732,14 +732,7 @@ def list_items():
 @app.route('/items/search', methods=["POST","GET"])
 @login_required
 def items_search():
-    form = ItemForm()
-
-    if request.method == "POST":
-        details = request.form
-        print(details)
-        items = get_data.get_list_of_items_with_name(details['name'],details['sold'])
-        return render_template('items_search.html', form=form, items=items)
-    return render_template('items_search.html', form=form)
+    return render_template('items_search.html')
 
 @app.route('/groups/search', methods=["POST","GET"])
 @login_required
@@ -1035,6 +1028,34 @@ def admin_panel():
         return redirect(url_for('index'))
 
 # JSON API endpoints for iOS app
+@app.route('/api/items/search', methods=['GET'])
+@login_required
+def api_items_search():
+    """Real-time search API for items"""
+    try:
+        name = request.args.get('name', '')
+        sold = request.args.get('sold', '')
+        
+        # Get search results
+        items = get_data.get_list_of_items_with_name(name, sold)
+        
+        # Convert to JSON-serializable format
+        results = []
+        for item in items:
+            results.append({
+                'id': item['id'],
+                'name': item['name'],
+                'sold': item['sold'],
+                'storage': item['storage'],
+                'net': item['net'],
+                'group_id': item['group_id'],
+                'group_name': item['group_name']
+            })
+        
+        return jsonify({'success': True, 'items': results})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/api/groups', methods=['GET'])
 @login_required
 def api_groups():

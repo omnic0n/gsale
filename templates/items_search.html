@@ -2,77 +2,148 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="content-section">
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">Search</legend>
-            <div class="form-group">
-                {{ form.name.label(class="form-control-label") }}
-                {% if form.name.errors %}
-                    {{ form.name(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.name.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ form.name(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
-            <div class="form-group">
-                {{ form.sold.label(class="form-control-label") }}
-                {% if form.sold.errors %}
-                    {{ form.sold(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.sold.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ form.sold(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
+    <fieldset class="form-group">
+        <legend class="border-bottom mb-4">Real-time Search</legend>
+        <div class="form-group">
+            <label for="searchName" class="form-control-label">Item Name</label>
+            <input type="text" id="searchName" class="form-control form-control-lg" placeholder="Start typing to search...">
+        </div>
+        <div class="form-group">
+            <label for="searchSold" class="form-control-label">Sold Status</label>
+            <select id="searchSold" class="form-control form-control-lg">
+                <option value="">All Items</option>
+                <option value="0">Available</option>
+                <option value="1">Sold</option>
+            </select>
+        </div>
     </fieldset>
-    <div class="form-group">
-        {{ form.submit(class="btn btn-outline-info") }}
-    </div>
-    </form>
 </div>
-<table class="blueTable">
-    <thead>
-        <tr>
-            <th>Name</th> 
-            <th>Sold</th>
-            <th>Group</th>
-            <th>Net</th>
-            <th>Storage</th> 
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in items %}
-        <tr>
-            {% if item['sold'] == 0 %}
-                {% set color = 'black' %}
-            {% elif item['sold'] == 2 %}
-                {% set color = 'green' %}
-            {% else %}
-                {% set color = 'red' %}
-            {% endif %}
-            <td><a style = color:{{ color }} href = "/items/describe?item={{ item['id'] }}">{{ item['name'] }}</td>
-            <td>{% if item['sold'] == 0 %}False{% else %}True{% endif %}</td>
-            <td>{% if item['group_id'] == 1%}
-                None
-                {% elif item['group_id'] %}
-                <a href = "/groups/detail?group_id={{ item['group_id'] }}">
-                {{ item['group_name'] }}
-                </a>
-                {% endif %}
-            </td>
-            <td>{{ item['net'] }}</td>
-            <td>{{ item['storage'] }}</td>
+
+<div id="searchResults">
+    <table class="blueTable">
+        <thead>
+            <tr>
+                <th>Name</th> 
+                <th>Sold</th>
+                <th>Group</th>
+                <th>Net</th>
+                <th>Storage</th> 
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody id="resultsTableBody">
+            <!-- Results will be populated here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+let searchTimeout;
+
+function performSearch() {
+    const name = document.getElementById('searchName').value;
+    const sold = document.getElementById('searchSold').value;
+    
+    // Clear previous timeout
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout for 300ms delay
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/items/search?name=${encodeURIComponent(name)}&sold=${encodeURIComponent(sold)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayResults(data.items);
+                } else {
+                    console.error('Search error:', data.message);
+                    displayResults([]);
+                }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                displayResults([]);
+            });
+    }, 300);
+}
+
+function displayResults(items) {
+    const tbody = document.getElementById('resultsTableBody');
+    tbody.innerHTML = '';
+    
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No items found</td></tr>';
+        return;
+    }
+    
+    items.forEach(item => {
+        const row = document.createElement('tr');
+        
+        // Determine color based on sold status
+        let color = 'black';
+        if (item.sold == 0) {
+            color = 'black';
+        } else if (item.sold == 2) {
+            color = 'green';
+        } else {
+            color = 'red';
+        }
+        
+        // Create name cell with link
+        const nameCell = document.createElement('td');
+        const nameLink = document.createElement('a');
+        nameLink.href = `/items/describe?item=${item.id}`;
+        nameLink.style.color = color;
+        nameLink.textContent = item.name;
+        nameCell.appendChild(nameLink);
+        
+        // Create sold status cell
+        const soldCell = document.createElement('td');
+        soldCell.textContent = item.sold == 0 ? 'False' : 'True';
+        
+        // Create group cell
+        const groupCell = document.createElement('td');
+        if (item.group_id == 1) {
+            groupCell.textContent = 'None';
+        } else if (item.group_id) {
+            const groupLink = document.createElement('a');
+            groupLink.href = `/groups/detail?group_id=${item.group_id}`;
+            groupLink.textContent = item.group_name;
+            groupCell.appendChild(groupLink);
+        }
+        
+        // Create net cell
+        const netCell = document.createElement('td');
+        netCell.textContent = item.net;
+        
+        // Create storage cell
+        const storageCell = document.createElement('td');
+        storageCell.textContent = item.storage;
+        
+        // Append all cells to row
+        row.appendChild(nameCell);
+        row.appendChild(soldCell);
+        row.appendChild(groupCell);
+        row.appendChild(netCell);
+        row.appendChild(storageCell);
+        
+        // Append row to tbody
+        tbody.appendChild(row);
+    });
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('searchName');
+    const soldSelect = document.getElementById('searchSold');
+    
+    // Add input event listener for real-time search
+    nameInput.addEventListener('input', performSearch);
+    soldSelect.addEventListener('change', performSearch);
+    
+    // Perform initial search to show all items
+    performSearch();
+});
+</script>
 {% endblock content %}
 </html>
