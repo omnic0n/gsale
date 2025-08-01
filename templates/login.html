@@ -95,9 +95,6 @@
 		
 		<div class="login">
 			<h1>Login</h1>
-			<div class="links">
-				<a href="{{ url_for('login') }}" class="active">Login</a>
-			</div>
 			
 			<!-- Google Sign-In Button -->
 			<a href="{{ url_for('google_login', next=request.args.get('next', '')) }}" class="google-login-btn">
