@@ -21,7 +21,12 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Required for session functionality
 
 # Initialize the extension
-app.config.from_object("config.ProductionConfig")
+try:
+    app.config.from_object("config.ProductionConfig")
+except Exception as e:
+    print(f"Warning: Could not load ProductionConfig, using default config: {e}")
+    # Set default configuration
+    app.config['GOOGLE_MAPS_API_KEY'] = "YOUR_GOOGLE_MAPS_API_KEY"
 
 # Initialize MySQL with proper error handling
 try:
