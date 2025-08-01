@@ -241,6 +241,7 @@ def google_callback():
         session['loggedin'] = True
         session['id'] = user_id
         session['username'] = user.get('name', email)  # Use name from accounts table, fallback to email
+        session['email'] = email  # Store email separately for footer display
         session['is_admin'] = user.get('is_admin', False) if user else False
         
         # Redirect to next page or index

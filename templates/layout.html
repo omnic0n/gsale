@@ -610,7 +610,7 @@
     
     <!-- Footer with login info -->
     <footer style="position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: white; text-align: center; padding: 5px; font-size: 12px; z-index: 1000;">
-      <small>Logged in as: {{ session.get('username', 'Unknown') }}</small>
+      <small>Logged in as: {{ session.get('email', 'Unknown') }}</small>
     </footer>
   </body>
 </html>

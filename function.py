@@ -51,6 +51,7 @@ def login_data(username, password, ip):
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account.get('name', account['username'])  # Use name if available, fallback to username
+            session['email'] = account['email']  # Store email for footer display
             session['is_admin'] = account['is_admin']
             f = open("/var/log/gsale/success.log", "a")
             f.write(ip + " - " + username + "\n")
