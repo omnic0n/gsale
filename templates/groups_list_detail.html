@@ -93,6 +93,7 @@
         {% set ns = namespace() %}
         {% set ns.count = 1 %}
         {% for item in items %}
+        <!-- Debug: {{ item }} -->
         <tr>
             <td>{{ ns.count }}</td>
             <td>
@@ -111,13 +112,10 @@
             <td><button type="button" class="btn btn-sm btn-outline-primary edit-item-btn" style="min-width: 60px;" 
                 data-item-id="{{ item['id'] }}"
                 data-item-name="{{ item['name'] }}"
-                data-group-id="{{ item['group_id'] }}"
-                data-category-id="{{ item['category_id'] }}"
+                data-group-id="{{ group_id[0]['id'] }}"
                 data-storage="{{ item['storage'] }}"
-                data-returned="{{ item['returned'] }}"
-                data-list-date="{{ item['list_date'] }}"
                 data-sale-date="{{ item['sale_date'] if item['sale_date'] else '' }}"
-                data-price="{{ item['price'] if item['price'] else '' }}"
+                data-price="{{ item['gross'] if item['gross'] else '' }}"
                 data-shipping-fee="{{ item['shipping_fee'] if item['shipping_fee'] else '' }}">Edit</button></td>
             <td><a href="/items/remove?id={{ item['id'] }}">remove</a></td>
         {% set ns.count = ns.count + 1 %}
@@ -216,33 +214,45 @@
 </div>
 
 <script>
-// Add event listeners to edit buttons
+// Ensure modal is properly styled
 document.addEventListener('DOMContentLoaded', function() {
+    // Fix modal backdrop issues
+    $('#editItemModal').on('show.bs.modal', function () {
+        $(this).find('.modal-content').css('background-color', 'white');
+        $(this).find('.modal-content').css('color', 'black');
+    });
+    
+    // Add event listeners to edit buttons
     document.querySelectorAll('.edit-item-btn').forEach(function(button) {
         button.addEventListener('click', function() {
             // Get data from button attributes
             const itemId = this.getAttribute('data-item-id');
             const name = this.getAttribute('data-item-name');
             const groupId = this.getAttribute('data-group-id');
-            const categoryId = this.getAttribute('data-category-id');
             const storage = this.getAttribute('data-storage');
-            const returned = this.getAttribute('data-returned');
-            const listDate = this.getAttribute('data-list-date');
             const saleDate = this.getAttribute('data-sale-date');
             const price = this.getAttribute('data-price');
             const shippingFee = this.getAttribute('data-shipping-fee');
+            
+            // Debug: log the data
+            console.log('Item data:', { itemId, name, groupId, storage, saleDate, price, shippingFee });
             
             // Set form values
             document.getElementById('editItemId').value = itemId;
             document.getElementById('editItemName').value = name;
             document.getElementById('editItemGroup').value = groupId;
-            document.getElementById('editItemCategory').value = categoryId;
-            document.getElementById('editItemStorage').value = storage;
-            document.getElementById('editItemReturned').value = returned;
-            document.getElementById('editItemListDate').value = listDate;
-            document.getElementById('editItemSaleDate').value = saleDate;
-            document.getElementById('editItemPrice').value = price;
-            document.getElementById('editItemShippingFee').value = shippingFee;
+            document.getElementById('editItemStorage').value = storage || '';
+            document.getElementById('editItemReturned').value = '0'; // Default to False
+            document.getElementById('editItemListDate').value = new Date().toISOString().split('T')[0]; // Today's date
+            document.getElementById('editItemSaleDate').value = saleDate || '';
+            document.getElementById('editItemPrice').value = price || '';
+            document.getElementById('editItemShippingFee').value = shippingFee || '';
+            
+            // Set default category (first one)
+            const categorySelect = document.getElementById('editItemCategory');
+            if (categorySelect.options.length > 0) {
+                categorySelect.value = categorySelect.options[0].value;
+            }
             
             // Show modal
             $('#editItemModal').modal('show');
