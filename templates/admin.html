@@ -228,7 +228,7 @@
                                                     <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                     <input type="hidden" name="action" value="delete_user">
                                                     <button type="submit" class="btn btn-sm btn-danger" 
-                                                            onclick="return confirm('Are you sure you want to delete {{ user.username or 'this user' }}? This action cannot be undone.')">
+                                                            onclick="console.log('Delete button clicked for user: {{ user.username }}'); return confirm('Are you sure you want to delete {{ user.username or 'this user' }}? This action cannot be undone.')">
                                                         Delete User
                                                     </button>
                                                 </form>

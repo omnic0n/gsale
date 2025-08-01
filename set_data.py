@@ -214,15 +214,19 @@ def toggle_admin_status(user_id):
 
 def delete_user(user_id):
     """Delete a user account"""
+    print(f"DEBUG: delete_user function called with user_id: {user_id}")
     try:
         # Check if MySQL connection is available
         if not mysql or not hasattr(mysql, 'connection') or not mysql.connection:
+            print("DEBUG: MySQL connection not available")
             return False
             
         # Test connection
         try:
             mysql.connection.ping(reconnect=True)
-        except Exception:
+            print("DEBUG: MySQL connection is active")
+        except Exception as e:
+            print(f"DEBUG: MySQL connection ping failed: {e}")
             return False
             
         cur = mysql.connection.cursor()
@@ -230,20 +234,24 @@ def delete_user(user_id):
         # First, get all the group IDs for this user
         cur.execute("SELECT id FROM collection WHERE account = %s", (user_id,))
         group_ids = [row[0] for row in cur.fetchall()]
+        print(f"DEBUG: Found {len(group_ids)} groups for user {user_id}")
         
         if group_ids:
+            print(f"DEBUG: Deleting sales for groups: {group_ids}")
             # Delete sales for items in these groups
             if len(group_ids) == 1:
                 cur.execute("DELETE s FROM sale s INNER JOIN items i ON s.id = i.id WHERE i.group_id = %s", (group_ids[0],))
             else:
                 cur.execute("DELETE s FROM sale s INNER JOIN items i ON s.id = i.id WHERE i.group_id IN %s", (tuple(group_ids),))
             
+            print(f"DEBUG: Deleting items for groups: {group_ids}")
             # Delete items in these groups
             if len(group_ids) == 1:
                 cur.execute("DELETE FROM items WHERE group_id = %s", (group_ids[0],))
             else:
                 cur.execute("DELETE FROM items WHERE group_id IN %s", (tuple(group_ids),))
             
+            print(f"DEBUG: Deleting collections for user: {user_id}")
             # Delete the collections
             cur.execute("DELETE FROM collection WHERE account = %s", (user_id,))
         
@@ -262,10 +270,12 @@ def delete_user(user_id):
             pass
         
         # Finally delete the user account
+        print(f"DEBUG: Deleting user account: {user_id}")
         cur.execute("DELETE FROM accounts WHERE id = %s", (user_id,))
         
         mysql.connection.commit()
         cur.close()
+        print(f"DEBUG: Successfully deleted user {user_id}")
         return True
     except Exception as e:
         print(f"Error deleting user {user_id}: {e}")
