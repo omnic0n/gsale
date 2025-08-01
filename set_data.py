@@ -214,7 +214,6 @@ def toggle_admin_status(user_id):
 
 def delete_user(user_id):
     """Delete a user account"""
-    print(f"DEBUG: Starting delete_user for user_id: {user_id}")
     try:
         # Check if MySQL connection is available
         if not mysql or not hasattr(mysql, 'connection') or not mysql.connection:
@@ -231,7 +230,6 @@ def delete_user(user_id):
         # First, get all the group IDs for this user
         cur.execute("SELECT id FROM collection WHERE account = %s", (user_id,))
         rows = cur.fetchall()
-        print(f"DEBUG: Raw rows from collection query: {rows}")
         
         # Handle both tuple and dict-like results
         group_ids = []
@@ -240,8 +238,6 @@ def delete_user(user_id):
                 group_ids.append(row['id'])
             else:  # Tuple-like object
                 group_ids.append(row[0])
-        
-        print(f"DEBUG: Group IDs: {group_ids}")
         
         if group_ids:
             # Delete sales for items in these groups
@@ -278,7 +274,6 @@ def delete_user(user_id):
         
         mysql.connection.commit()
         cur.close()
-        print(f"DEBUG: Successfully completed delete_user for user_id: {user_id}")
         return True
     except Exception as e:
         print(f"Error deleting user {user_id}: {e}")

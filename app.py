@@ -922,18 +922,14 @@ def manage_categories():
 def admin_panel():
     """Admin panel for managing users and system settings"""
     
-    print(f"DEBUG: Admin panel accessed with method: {request.method}")
-    if request.method == "POST":
-        print(f"DEBUG: POST request received")
-        print(f"DEBUG: Form data: {request.form}")
-        action = request.form.get('action')
-        print(f"DEBUG: Action: {action}")
+
     
     try:
         # Get all users for admin management
         users = get_data.get_all_users()
         
         if request.method == "POST":
+            action = request.form.get('action')
             if action == 'add_user':
                 # Add new user
                 username = request.form.get('username')
