@@ -136,7 +136,8 @@ def google_login():
     state = hashlib.sha256(os.urandom(32)).hexdigest()
     session['oauth_state'] = state
     
-    # Build Google OAuth URL
+    # Build Google OAuth URL with explicit HTTPS redirect URI
+    redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
     google_auth_url = (
         'https://accounts.google.com/o/oauth2/v2/auth?'
         'client_id={}&'
@@ -146,7 +147,7 @@ def google_login():
         'state={}'
     ).format(
         app.config['GOOGLE_CLIENT_ID'],
-        url_for('google_callback', _external=True),
+        redirect_uri,
         state
     )
     
@@ -174,7 +175,7 @@ def google_callback():
             'client_secret': app.config['GOOGLE_CLIENT_SECRET'],
             'code': code,
             'grant_type': 'authorization_code',
-            'redirect_uri': url_for('google_callback', _external=True)
+            'redirect_uri': 'https://gsale.levimylesllc.com/google-callback'
         }
         
         token_response = requests.post(token_url, data=token_data)
