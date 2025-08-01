@@ -728,11 +728,7 @@ def get_all_users():
         
         cur = mysql.connection.cursor()
         
-        # Test query to check if accounts table exists and is accessible
-        cur.execute("SELECT COUNT(*) as count FROM accounts")
-        count_result = cur.fetchone()
-        print(f"Found {count_result['count'] if count_result else 0} users in database")
-        
+        # Get all users for admin management
         cur.execute("""
             SELECT 
                 id, 
@@ -747,20 +743,11 @@ def get_all_users():
             ORDER BY username
         """, (current_user_id,))
         result = list(cur.fetchall())
-        print(f"Retrieved {len(result)} users for admin panel")
         
-        # Debug: Check the structure of the first result
-        if result:
-            first_user = result[0]
-            print(f"First user type: {type(first_user)}")
-            print(f"First user keys: {first_user.keys() if hasattr(first_user, 'keys') else 'No keys (not a dict)'}")
-            print(f"First user: {first_user}")
-            
-            # If the result is not a dictionary, convert it to a list of dictionaries
-            if not hasattr(first_user, 'keys'):
-                print("Converting tuple results to dictionaries")
-                column_names = ['id', 'username', 'email', 'is_admin', 'is_current_user']
-                result = [dict(zip(column_names, user)) for user in result]
+        # Convert to list of dictionaries if needed
+        if result and not hasattr(result[0], 'keys'):
+            column_names = ['id', 'username', 'email', 'is_admin', 'is_current_user']
+            result = [dict(zip(column_names, user)) for user in result]
         
         cur.close()
         return result
