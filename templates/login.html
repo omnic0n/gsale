@@ -74,6 +74,17 @@
 				<span>or</span>
 			</div>
 			
+			<!-- Flash Messages -->
+			{% with messages = get_flashed_messages(with_categories=true) %}
+				{% if messages %}
+					{% for category, message in messages %}
+						<div class="msg {% if category == 'error' %}error{% elif category == 'success' %}success{% endif %}">
+							{{ message }}
+						</div>
+					{% endfor %}
+				{% endif %}
+			{% endwith %}
+			
 			<!-- Traditional Login Form -->
 			<form action="{{ url_for('login') }}" method="post">
 				{% if request.args.get('next') %}

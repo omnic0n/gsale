@@ -202,6 +202,8 @@ def google_callback():
         
         # Check if email is in allowed list or domain is allowed
         if email not in allowed_emails and email_domain not in allowed_domains:
+            # Clear any existing session data
+            session.clear()
             flash(f'Access denied. This email address is not authorized to access this application.', 'error')
             return redirect(url_for('login'))
         
