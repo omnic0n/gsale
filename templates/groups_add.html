@@ -91,6 +91,9 @@
         let geocoder;
 
         function initMap() {
+            // Initialize geocoder first
+            geocoder = new google.maps.Geocoder();
+            
             // Initialize the map with geolocation to get user's current location
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -155,8 +158,6 @@
         }
         
         function initializeMapFeatures() {
-            geocoder = new google.maps.Geocoder();
-
             // Create a search box
             const input = document.getElementById("searchBox");
             searchBox = new google.maps.places.SearchBox(input);
