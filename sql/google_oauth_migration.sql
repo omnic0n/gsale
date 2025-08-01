@@ -1,6 +1,9 @@
 -- Migration to add Google OAuth support to accounts table
 -- Run this script to update your existing database
 
+-- Make password field nullable for Google OAuth users
+ALTER TABLE `accounts` MODIFY COLUMN `password` varchar(255) NULL;
+
 -- Add Google OAuth columns to accounts table
 ALTER TABLE `accounts` 
 ADD COLUMN `google_id` varchar(100) DEFAULT NULL AFTER `email`,

@@ -37,10 +37,12 @@ This guide will help you set up Google OAuth for your GSale application.
    - Name: GSale Web App
    - Authorized JavaScript origins: 
      - `http://localhost:5000` (for development)
-     - `https://yourdomain.com` (for production)
+     - `http://gsale.levimylesllc.com` (for production)
+     - `https://gsale.levimylesllc.com` (for production, if using HTTPS)
    - Authorized redirect URIs:
      - `http://localhost:5000/google-callback` (for development)
-     - `https://yourdomain.com/google-callback` (for production)
+     - `http://gsale.levimylesllc.com/google-callback` (for production)
+     - `https://gsale.levimylesllc.com/google-callback` (for production, if using HTTPS)
    - Click "Create"
 
 5. Copy the Client ID and Client Secret

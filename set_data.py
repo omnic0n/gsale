@@ -299,10 +299,22 @@ def create_google_user(google_id, email, name, picture=None):
         user_id = generate_uuid()
         
         cur = mysql.connection.cursor()
-        cur.execute("""
-            INSERT INTO accounts(id, username, email, google_id, name, picture, is_admin) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (user_id, email, email, google_id, name, picture, 0))
+        
+        # Try to insert without password first (if migration has been run)
+        try:
+            cur.execute("""
+                INSERT INTO accounts(id, username, email, google_id, name, picture, is_admin) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (user_id, email, email, google_id, name, picture, 0))
+        except Exception as e:
+            # If that fails, the migration might not have been run
+            # Try with a dummy password (this is a fallback)
+            print(f"Warning: Google OAuth migration may not have been run. Using fallback method: {e}")
+            cur.execute("""
+                INSERT INTO accounts(id, username, email, password, google_id, name, picture, is_admin) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (user_id, email, email, 'google_oauth_user', google_id, name, picture, 0))
+        
         mysql.connection.commit()
         cur.close()
         return user_id
