@@ -82,18 +82,18 @@
 		</style>
 	</head>
 	<body>
+		<!-- Flash Messages -->
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					<div class="flash-message {% if category == 'error' %}error{% elif category == 'success' %}success{% endif %}">
+						{{ message }}
+					</div>
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
+		
 		<div class="login">
-			<!-- Flash Messages -->
-			{% with messages = get_flashed_messages(with_categories=true) %}
-				{% if messages %}
-					{% for category, message in messages %}
-						<div class="flash-message {% if category == 'error' %}error{% elif category == 'success' %}success{% endif %}">
-							{{ message }}
-						</div>
-					{% endfor %}
-				{% endif %}
-			{% endwith %}
-			
 			<h1>Login</h1>
 			<div class="links">
 				<a href="{{ url_for('login') }}" class="active">Login</a>
