@@ -412,10 +412,11 @@ def get_list_of_items_by_category(category_id, sold_status="all"):
                 c.name as group_name
             FROM items i
             INNER JOIN collection c ON i.group_id = c.id
-            INNER JOIN sale s ON i.id = s.id
+            LEFT JOIN sale s ON i.id = s.id
             INNER JOIN categories cat ON i.category_id = cat.id
             WHERE c.account = %s
             AND cat.id = %s
+            AND i.sold = 1
             ORDER BY c.date ASC
         """, (session.get('id'), category_id))
     elif sold_status == "not_sold":
@@ -438,7 +439,7 @@ def get_list_of_items_by_category(category_id, sold_status="all"):
             INNER JOIN categories cat ON i.category_id = cat.id
             WHERE c.account = %s
             AND cat.id = %s
-            AND s.date IS NULL
+            AND i.sold = 0
             ORDER BY c.date ASC
         """, (session.get('id'), category_id))
     else:
@@ -471,31 +472,7 @@ def get_list_of_items_by_sold_status(sold_status, sold_date="%", purchase_date="
     cur = mysql.connection.cursor()
     
     if sold_status == "sold":
-        # Only sold items - use INNER JOIN
-        cur.execute("""
-            SELECT 
-                i.id, 
-                i.name, 
-                i.sold,
-                i.group_id,
-                i.storage,
-                i.list_date,
-                s.date as sale_date,
-                (s.price - s.shipping_fee) AS net,
-                c.date as purchase_date,
-                c.name as group_name
-            FROM items i
-            INNER JOIN collection c ON i.group_id = c.id
-            INNER JOIN sale s ON i.id = s.id
-            WHERE c.account = %s
-            AND s.date LIKE %s 
-            AND c.date LIKE %s
-            AND i.list_date LIKE %s
-            AND i.storage LIKE %s
-            ORDER BY c.date ASC
-        """, (session.get('id'), sold_date, purchase_date, list_date, storage))
-    elif sold_status == "not_sold":
-        # Only not sold items - use LEFT JOIN and filter for NULL sale_date
+        # Only sold items - filter by items.sold = 1
         cur.execute("""
             SELECT 
                 i.id, 
@@ -512,14 +489,39 @@ def get_list_of_items_by_sold_status(sold_status, sold_date="%", purchase_date="
             INNER JOIN collection c ON i.group_id = c.id
             LEFT JOIN sale s ON i.id = s.id
             WHERE c.account = %s
-            AND s.date IS NULL
+            AND i.sold = 1
+            AND s.date LIKE %s 
+            AND c.date LIKE %s
+            AND i.list_date LIKE %s
+            AND i.storage LIKE %s
+            ORDER BY c.date ASC
+        """, (session.get('id'), sold_date, purchase_date, list_date, storage))
+    elif sold_status == "not_sold":
+        # Only not sold items - filter by items.sold = 0
+        cur.execute("""
+            SELECT 
+                i.id, 
+                i.name, 
+                i.sold,
+                i.group_id,
+                i.storage,
+                i.list_date,
+                s.date as sale_date,
+                (s.price - s.shipping_fee) AS net,
+                c.date as purchase_date,
+                c.name as group_name
+            FROM items i
+            INNER JOIN collection c ON i.group_id = c.id
+            LEFT JOIN sale s ON i.id = s.id
+            WHERE c.account = %s
+            AND i.sold = 0
             AND c.date LIKE %s
             AND i.list_date LIKE %s
             AND i.storage LIKE %s
             ORDER BY c.date ASC
         """, (session.get('id'), purchase_date, list_date, storage))
     else:
-        # All items - use LEFT JOIN
+        # All items - no sold status filter
         cur.execute("""
             SELECT 
                 i.id, 
