@@ -215,6 +215,16 @@ def toggle_admin_status(user_id):
 def delete_user(user_id):
     """Delete a user account"""
     try:
+        # Check if MySQL connection is available
+        if not mysql or not hasattr(mysql, 'connection') or not mysql.connection:
+            return False
+            
+        # Test connection
+        try:
+            mysql.connection.ping(reconnect=True)
+        except Exception:
+            return False
+            
         cur = mysql.connection.cursor()
         
         # First, get all the group IDs for this user
@@ -223,19 +233,33 @@ def delete_user(user_id):
         
         if group_ids:
             # Delete sales for items in these groups
-            cur.execute("DELETE s FROM sale s INNER JOIN items i ON s.id = i.id WHERE i.group_id IN %s", (tuple(group_ids),))
+            if len(group_ids) == 1:
+                cur.execute("DELETE s FROM sale s INNER JOIN items i ON s.id = i.id WHERE i.group_id = %s", (group_ids[0],))
+            else:
+                cur.execute("DELETE s FROM sale s INNER JOIN items i ON s.id = i.id WHERE i.group_id IN %s", (tuple(group_ids),))
             
             # Delete items in these groups
-            cur.execute("DELETE FROM items WHERE group_id IN %s", (tuple(group_ids),))
+            if len(group_ids) == 1:
+                cur.execute("DELETE FROM items WHERE group_id = %s", (group_ids[0],))
+            else:
+                cur.execute("DELETE FROM items WHERE group_id IN %s", (tuple(group_ids),))
             
             # Delete the collections
             cur.execute("DELETE FROM collection WHERE account = %s", (user_id,))
         
-        # Delete cases for this user
-        cur.execute("DELETE FROM cases WHERE account = %s", (user_id,))
+        # Delete cases for this user (if table exists)
+        try:
+            cur.execute("DELETE FROM cases WHERE account = %s", (user_id,))
+        except Exception:
+            # Continue with deletion even if cases table doesn't exist
+            pass
         
-        # Delete expenses for this user
-        cur.execute("DELETE FROM expenses WHERE account = %s", (user_id,))
+        # Delete expenses for this user (if table exists)
+        try:
+            cur.execute("DELETE FROM expenses WHERE account = %s", (user_id,))
+        except Exception:
+            # Continue with deletion even if expenses table doesn't exist
+            pass
         
         # Finally delete the user account
         cur.execute("DELETE FROM accounts WHERE id = %s", (user_id,))
@@ -248,8 +272,8 @@ def delete_user(user_id):
         # Rollback on error
         try:
             mysql.connection.rollback()
-        except Exception as rollback_error:
-            print(f"Error during rollback: {rollback_error}")
+        except Exception:
+            pass
         return False
 
 def create_user(details):
