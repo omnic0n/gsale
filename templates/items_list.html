@@ -55,7 +55,7 @@
             <td><a href = "/items/list?purchase_date={{ item['purchase_date'] }}">{{ item['purchase_date'] }}</a></td>
             <td><a href = "/items/list?list_date={{ item['list_date'] }}">{{ item['list_date'] }}</a></td>
             {% if item['sold'] %}
-                <td><a href = "/items/list?sold_date={{ item['sale_date'] }}&sold=1">{{ item['sale_date'] }}</a></td>
+                <td><a href = "/items/list?sold_date={{ item['sale_date'] }}&sold_status=sold">{{ item['sale_date'] }}</a></td>
                 <td>{{ (item['sale_date'] - item['list_date']).days }}</td>
                 <td>{{ item['net']}}</td>
             {% else %}

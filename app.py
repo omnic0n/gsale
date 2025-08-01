@@ -669,9 +669,7 @@ def list_items():
     if purchase_date is None:
         purchase_date = "%"
 
-    sold = request.args.get('sold', type = int)
-    if sold is None:
-        sold = "%"
+
 
     list_date = request.args.get('list_date', type = str)
     if list_date is None:
