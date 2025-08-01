@@ -384,7 +384,7 @@ def add_group(name, description=""):
         group_id = generate_uuid()
         cur = mysql.connection.cursor()
         cur.execute("""
-            INSERT INTO collection(id, name, description, date, price, account) 
+            INSERT INTO collection(id, name, description, date, price, account)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (group_id, name, description, datetime.now().date(), 0.00, session.get('id')))
         mysql.connection.commit()
@@ -393,3 +393,51 @@ def add_group(name, description=""):
     except Exception as e:
         print(f"Error adding group: {e}")
         return None
+
+def record_access_attempt(email, google_id=None, name=None, picture=None, ip_address=None, user_agent=None):
+    """Record an access attempt from an unauthorized user"""
+    try:
+        attempt_id = generate_uuid()
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO access_attempts(id, email, google_id, name, picture, ip_address, user_agent)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (attempt_id, email, google_id, name, picture, ip_address, user_agent))
+        mysql.connection.commit()
+        cur.close()
+        return attempt_id
+    except Exception as e:
+        print(f"Error recording access attempt: {e}")
+        return None
+
+def get_pending_access_attempts():
+    """Get all pending access attempts"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT * FROM access_attempts 
+            WHERE status = 'pending' 
+            ORDER BY attempted_at DESC
+        """)
+        result = list(cur.fetchall())
+        cur.close()
+        return result
+    except Exception as e:
+        print(f"Error getting pending access attempts: {e}")
+        return []
+
+def update_access_attempt_status(attempt_id, status):
+    """Update the status of an access attempt"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE access_attempts 
+            SET status = %s 
+            WHERE id = %s
+        """, (status, attempt_id))
+        mysql.connection.commit()
+        cur.close()
+        return True
+    except Exception as e:
+        print(f"Error updating access attempt status: {e}")
+        return False

@@ -246,6 +246,66 @@
                 </div>
             </div>
             
+            <!-- Access Attempts Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Pending Access Requests</h3>
+                </div>
+                <div class="card-body">
+                    {% if pending_attempts %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Name</th>
+                                        <th>Attempted At</th>
+                                        <th>IP Address</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attempt in pending_attempts %}
+                                    <tr>
+                                        <td>{{ attempt.email or 'N/A' }}</td>
+                                        <td>{{ attempt.name or 'N/A' }}</td>
+                                        <td>{{ attempt.attempted_at.strftime('%Y-%m-%d %H:%M:%S') if attempt.attempted_at else 'N/A' }}</td>
+                                        <td>{{ attempt.ip_address or 'N/A' }}</td>
+                                        <td class="action-buttons">
+                                            <div class="d-flex gap-1">
+                                                <form method="POST" style="display: inline;">
+                                                    <input type="hidden" name="attempt_id" value="{{ attempt.id }}">
+                                                    <input type="hidden" name="email" value="{{ attempt.email }}">
+                                                    <input type="hidden" name="name" value="{{ attempt.name }}">
+                                                    <input type="hidden" name="action" value="approve_access">
+                                                    <button type="submit" class="btn btn-sm btn-success" 
+                                                            onclick="return confirm('Are you sure you want to approve access for {{ attempt.email }}?')">
+                                                        Approve Access
+                                                    </button>
+                                                </form>
+                                                
+                                                <form method="POST" style="display: inline;">
+                                                    <input type="hidden" name="attempt_id" value="{{ attempt.id }}">
+                                                    <input type="hidden" name="email" value="{{ attempt.email }}">
+                                                    <input type="hidden" name="action" value="deny_access">
+                                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                                            onclick="return confirm('Are you sure you want to deny access for {{ attempt.email }}?')">
+                                                        Deny Access
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No pending access requests.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
 
         </div>
     </div>

@@ -202,6 +202,16 @@ def google_callback():
         
         # Check if email is in allowed list or domain is allowed
         if email not in allowed_emails and email_domain not in allowed_domains:
+            # Record the access attempt
+            set_data.record_access_attempt(
+                email=email,
+                google_id=google_id,
+                name=name,
+                picture=picture,
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get('User-Agent')
+            )
+            
             # Clear any existing session data
             session.clear()
             flash(f'Access denied. This email address is not authorized to access this application.', 'error')
@@ -940,6 +950,9 @@ def admin_panel():
         # Get all users for admin management
         users = get_data.get_all_users()
         
+        # Get pending access attempts
+        pending_attempts = set_data.get_pending_access_attempts()
+        
         if request.method == "POST":
             action = request.form.get('action')
             if action == 'add_user':
@@ -1043,11 +1056,40 @@ def admin_panel():
                 else:
                     flash('Cannot delete your own account.', 'error')
                 return redirect(url_for('admin_panel'))
+            
+            elif action == 'approve_access':
+                # Approve access for a pending user
+                attempt_id = request.form.get('attempt_id')
+                email = request.form.get('email')
+                name = request.form.get('name')
+                
+                if attempt_id and email:
+                    # Add email to allowed list (you might want to add to database instead)
+                    # For now, we'll just mark as approved
+                    success = set_data.update_access_attempt_status(attempt_id, 'approved')
+                    if success:
+                        flash(f'Access approved for {email}. You may need to manually add this email to the allowed list.', 'success')
+                    else:
+                        flash('Failed to approve access.', 'error')
+                return redirect(url_for('admin_panel'))
+            
+            elif action == 'deny_access':
+                # Deny access for a pending user
+                attempt_id = request.form.get('attempt_id')
+                email = request.form.get('email')
+                
+                if attempt_id:
+                    success = set_data.update_access_attempt_status(attempt_id, 'denied')
+                    if success:
+                        flash(f'Access denied for {email}.', 'success')
+                    else:
+                        flash('Failed to deny access.', 'error')
+                return redirect(url_for('admin_panel'))
         
         # Ensure users is always a list to prevent KeyError: 0
         if not users:
             users = [{'id': '1', 'username': 'Admin', 'email': 'admin@example.com', 'is_admin': 1, 'is_current_user': 'Current User'}]
-        return render_template('admin.html', users=users)
+        return render_template('admin.html', users=users, pending_attempts=pending_attempts)
     
     except Exception as e:
         # Log the error for debugging
