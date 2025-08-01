@@ -112,6 +112,11 @@ pip install -r requirements.txt
 4. **"Invalid state parameter" error**
    - This is a security feature. Try refreshing the page and logging in again
 
+5. **"Duplicate entry for key 'accounts.email'" error**
+   - This happens when a user already exists with the same email
+   - The system will automatically link the Google account to the existing user
+   - If the linking fails, check that the database migration has been run
+
 ### Security Notes:
 
 - Never commit your `.env` file to version control

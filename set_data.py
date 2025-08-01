@@ -321,3 +321,22 @@ def create_google_user(google_id, email, name, picture=None):
     except Exception as e:
         print(f"Error creating Google user: {e}")
         return None
+
+def link_google_account(user_id, google_id, name, picture=None):
+    """Link a Google account to an existing user"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Update the existing user with Google OAuth information
+        cur.execute("""
+            UPDATE accounts 
+            SET google_id = %s, name = %s, picture = %s 
+            WHERE id = %s
+        """, (google_id, name, picture, user_id))
+        
+        mysql.connection.commit()
+        cur.close()
+        return user_id
+    except Exception as e:
+        print(f"Error linking Google account: {e}")
+        return None

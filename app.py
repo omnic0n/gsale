@@ -194,15 +194,26 @@ def google_callback():
         name = user_info.get('name', email)
         picture = user_info.get('picture')
         
-        # Check if user exists in database
+        # Check if user exists in database by Google ID first
         user = get_data.get_user_by_google_id(google_id)
         
         if not user:
-            # Create new user
-            user_id = set_data.create_google_user(google_id, email, name, picture)
-            if not user_id:
-                flash('Failed to create user account.', 'error')
-                return redirect(url_for('login'))
+            # Check if user exists by email (for existing users who want to link Google account)
+            existing_user = get_data.get_user_by_email(email)
+            
+            if existing_user:
+                # User exists with this email but no Google ID - link the accounts
+                user_id = set_data.link_google_account(existing_user['id'], google_id, name, picture)
+                if not user_id:
+                    flash('Failed to link Google account to existing user.', 'error')
+                    return redirect(url_for('login'))
+                user = existing_user  # Use existing user data
+            else:
+                # Create new user
+                user_id = set_data.create_google_user(google_id, email, name, picture)
+                if not user_id:
+                    flash('Failed to create user account.', 'error')
+                    return redirect(url_for('login'))
         else:
             user_id = user['id']
         

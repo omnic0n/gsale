@@ -773,12 +773,24 @@ def get_all_users():
 
 def get_user_by_google_id(google_id):
     """Get user by Google ID"""
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM accounts WHERE google_id = %s", (google_id,))
-    return cur.fetchone()
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM accounts WHERE google_id = %s", (google_id,))
+        result = cur.fetchone()
+        cur.close()
+        return result
+    except Exception as e:
+        print(f"Error getting user by Google ID: {e}")
+        return None
 
 def get_user_by_email(email):
     """Get user by email"""
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM accounts WHERE username = %s", (email,))
-    return cur.fetchone()
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM accounts WHERE email = %s", (email,))
+        result = cur.fetchone()
+        cur.close()
+        return result
+    except Exception as e:
+        print(f"Error getting user by email: {e}")
+        return None
