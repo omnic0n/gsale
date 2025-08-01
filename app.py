@@ -240,7 +240,7 @@ def google_callback():
         # Log user in
         session['loggedin'] = True
         session['id'] = user_id
-        session['username'] = email
+        session['username'] = user.get('name', email)  # Use name from accounts table, fallback to email
         session['is_admin'] = user.get('is_admin', False) if user else False
         
         # Redirect to next page or index

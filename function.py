@@ -50,7 +50,7 @@ def login_data(username, password, ip):
         if account and bcrypt.checkpw(password.encode('utf8'), account['password'].encode('UTF_8')):
             session['loggedin'] = True
             session['id'] = account['id']
-            session['username'] = account['username']
+            session['username'] = account.get('name', account['username'])  # Use name if available, fallback to username
             session['is_admin'] = account['is_admin']
             f = open("/var/log/gsale/success.log", "a")
             f.write(ip + " - " + username + "\n")
