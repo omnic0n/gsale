@@ -450,13 +450,17 @@ def record_access_attempt(email, google_id=None, name=None, picture=None, ip_add
         return None
 
 def get_pending_access_attempts():
-    """Get all pending access attempts"""
+    """Get all pending access attempts with request counts"""
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
-            SELECT * FROM access_attempts 
-            WHERE status = 'pending' 
-            ORDER BY attempted_at DESC
+            SELECT 
+                a.*,
+                (SELECT COUNT(*) FROM access_attempts WHERE email = a.email) as total_requests,
+                (SELECT COUNT(*) FROM access_attempts WHERE email = a.email AND status = 'denied') as denied_requests
+            FROM access_attempts a
+            WHERE a.status = 'pending' 
+            ORDER BY a.attempted_at DESC
         """)
         result = list(cur.fetchall())
         cur.close()

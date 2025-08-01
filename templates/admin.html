@@ -224,6 +224,7 @@
                                         <th>Email</th>
                                         <th>Name</th>
                                         <th>Request Date</th>
+                                        <th>Request History</th>
                                         <th>IP Address</th>
                                         <th>Actions</th>
                                     </tr>
@@ -234,6 +235,12 @@
                                         <td>{{ attempt.email or 'N/A' }}</td>
                                         <td>{{ attempt.name or 'N/A' }}</td>
                                         <td>{{ attempt.attempted_at.strftime('%m/%d/%Y %I:%M %p') if attempt.attempted_at else 'N/A' }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ attempt.total_requests or 1 }}</span>
+                                            {% if attempt.denied_requests and attempt.denied_requests > 0 %}
+                                            <span class="badge bg-danger ms-1">{{ attempt.denied_requests }} denied</span>
+                                            {% endif %}
+                                        </td>
                                         <td>{{ attempt.ip_address or 'N/A' }}</td>
                                         <td class="action-buttons">
                                             <div class="d-flex gap-1">
