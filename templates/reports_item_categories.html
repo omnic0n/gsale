@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         size: 11
                     },
                     formatter: function(value, context) {
-                        return value;
+                        return context.dataset.data[context.dataIndex];
                     },
                     textAlign: 'center',
                     anchor: 'end',
