@@ -1,6 +1,44 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
+<style>
+/* Ensure modal is properly visible */
+#editItemModal {
+    z-index: 1050 !important;
+}
+
+#editItemModal .modal-content {
+    background-color: white !important;
+    color: black !important;
+    z-index: 1055 !important;
+}
+
+#editItemModal .modal-header,
+#editItemModal .modal-body,
+#editItemModal .modal-footer {
+    background-color: white !important;
+    color: black !important;
+}
+
+#editItemModal .modal-title {
+    color: black !important;
+}
+
+#editItemModal .form-control {
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #ced4da !important;
+}
+
+#editItemModal label {
+    color: black !important;
+    font-weight: bold;
+}
+
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+</style>
 <h4>Group Information</h4>
 <table class="blueTable">
     <thead>
@@ -134,11 +172,11 @@
 {% endif %}
 
 <!-- Edit Item Modal -->
-<div class="modal fade" id="editItemModal" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel" aria-hidden="true">
+<div class="modal fade" id="editItemModal" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel" aria-hidden="true" style="z-index: 1050;">
     <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editItemModalLabel">Edit Item</h5>
+        <div class="modal-content" style="background-color: white; color: black;">
+            <div class="modal-header" style="background-color: white; color: black;">
+                <h5 class="modal-title" id="editItemModalLabel" style="color: black;">Edit Item</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -218,13 +256,37 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Fix modal backdrop issues
     $('#editItemModal').on('show.bs.modal', function () {
-        $(this).find('.modal-content').css('background-color', 'white');
-        $(this).find('.modal-content').css('color', 'black');
+        // Force modal to be visible and properly styled
+        $(this).find('.modal-content').css({
+            'background-color': 'white',
+            'color': 'black',
+            'z-index': '1055'
+        });
+        $(this).find('.modal-header').css({
+            'background-color': 'white',
+            'color': 'black'
+        });
+        $(this).find('.modal-body').css({
+            'background-color': 'white',
+            'color': 'black'
+        });
+        $(this).find('.modal-footer').css({
+            'background-color': 'white',
+            'color': 'black'
+        });
+        
+        // Ensure backdrop is properly styled
+        $('.modal-backdrop').css({
+            'z-index': '1040'
+        });
     });
     
     // Add event listeners to edit buttons
+    console.log('Setting up edit button listeners...');
     document.querySelectorAll('.edit-item-btn').forEach(function(button) {
+        console.log('Found edit button:', button);
         button.addEventListener('click', function() {
+            console.log('Edit button clicked!');
             // Get data from button attributes
             const itemId = this.getAttribute('data-item-id');
             const name = this.getAttribute('data-item-name');
@@ -254,8 +316,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 categorySelect.value = categorySelect.options[0].value;
             }
             
-            // Show modal
-            $('#editItemModal').modal('show');
+            // Show modal with proper styling
+            $('#editItemModal').modal({
+                backdrop: 'static',
+                keyboard: false,
+                show: true
+            });
         });
     });
 });
