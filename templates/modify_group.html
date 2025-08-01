@@ -108,19 +108,75 @@
         let geocoder;
 
         function initMap() {
-            // Initialize the map centered on existing location or default
-            const defaultLat = {{ group_id[0].get('latitude', 40.7128) }};
-            const defaultLng = {{ group_id[0].get('longitude', -74.0060) }};
+            // Check if there's existing location data
+            const existingLat = {{ group_id[0].get('latitude', 'null') }};
+            const existingLng = {{ group_id[0].get('longitude', 'null') }};
             
+            if (existingLat && existingLng && existingLat != 'null' && existingLng != 'null') {
+                // Use existing location data
+                const existingLocation = { lat: parseFloat(existingLat), lng: parseFloat(existingLng) };
+                initializeMapWithLocation(existingLocation, true);
+            } else {
+                // No existing location, try to get user's current location
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const userLocation = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            initializeMapWithLocation(userLocation, false);
+                        },
+                        (error) => {
+                            console.log("Geolocation failed:", error);
+                            // Fallback to default location
+                            initializeMapWithLocation({ lat: 40.7128, lng: -74.0060 }, false);
+                        }
+                    );
+                } else {
+                    // Browser doesn't support geolocation
+                    console.log("Geolocation not supported");
+                    initializeMapWithLocation({ lat: 40.7128, lng: -74.0060 }, false);
+                }
+            }
+        }
+        
+        function initializeMapWithLocation(location, isExistingLocation) {
             map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: defaultLat, lng: defaultLng },
-                zoom: 10,
+                center: location,
+                zoom: isExistingLocation ? 15 : 12,
                 mapTypeControl: true,
                 streetViewControl: true,
                 fullscreenControl: true,
             });
-
+            
             geocoder = new google.maps.Geocoder();
+            
+            // Add marker for the location
+            marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: isExistingLocation ? 'Group Location' : 'Your Location'
+            });
+            
+            // Set the location in the form if it's a new location
+            if (!isExistingLocation) {
+                document.getElementById("latitude").value = location.lat;
+                document.getElementById("longitude").value = location.lng;
+                
+                // Reverse geocode to get address
+                geocoder.geocode({ location: location }, (results, status) => {
+                    if (status === "OK" && results[0]) {
+                        document.getElementById("location_address").value = results[0].formatted_address;
+                    }
+                });
+            }
+            
+            // Initialize other map features
+            initializeMapFeatures();
+        }
+        
+        function initializeMapFeatures() {
 
             // Create a search box
             const input = document.getElementById("searchBox");
@@ -210,20 +266,6 @@
                     }
                 });
             });
-
-            // If there's existing location data, show marker
-            const existingLat = {{ group_id[0].get('latitude', 'null') }};
-            const existingLng = {{ group_id[0].get('longitude', 'null') }};
-            
-            if (existingLat && existingLng && existingLat != 'null' && existingLng != 'null') {
-                const position = { lat: parseFloat(existingLat), lng: parseFloat(existingLng) };
-                marker = new google.maps.Marker({
-                    position: position,
-                    map: map,
-                });
-                map.setCenter(position);
-                map.setZoom(15);
-            }
         }
 
         // Initialize map when page loads

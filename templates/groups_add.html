@@ -95,7 +95,59 @@
         let geocoder;
 
         function initMap() {
-            // Initialize the map centered on a default location (you can change this)
+            // Initialize the map with geolocation to get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Initialize map with user's location
+                        map = new google.maps.Map(document.getElementById("map"), {
+                            center: userLocation,
+                            zoom: 15,
+                            mapTypeControl: true,
+                            streetViewControl: true,
+                            fullscreenControl: true,
+                        });
+                        
+                        // Add a marker at user's location
+                        marker = new google.maps.Marker({
+                            position: userLocation,
+                            map: map,
+                            title: 'Your Location'
+                        });
+                        
+                        // Set the location in the form
+                        document.getElementById("latitude").value = userLocation.lat;
+                        document.getElementById("longitude").value = userLocation.lng;
+                        
+                        // Reverse geocode to get address
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById("location_address").value = results[0].formatted_address;
+                            }
+                        });
+                        
+                        // Initialize other map features
+                        initializeMapFeatures();
+                    },
+                    (error) => {
+                        console.log("Geolocation failed:", error);
+                        // Fallback to default location (New York)
+                        initializeMapWithDefault();
+                    }
+                );
+            } else {
+                // Browser doesn't support geolocation
+                console.log("Geolocation not supported");
+                initializeMapWithDefault();
+            }
+        }
+        
+        function initializeMapWithDefault() {
             map = new google.maps.Map(document.getElementById("map"), {
                 center: { lat: 40.7128, lng: -74.0060 }, // New York City as default
                 zoom: 10,
@@ -103,7 +155,10 @@
                 streetViewControl: true,
                 fullscreenControl: true,
             });
-
+            initializeMapFeatures();
+        }
+        
+        function initializeMapFeatures() {
             geocoder = new google.maps.Geocoder();
 
             // Create a search box
