@@ -1,0 +1,126 @@
+<html>
+{% extends "layout.html" %}
+{% block content %}
+<h4>Group Information</h4>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Name</th> 
+            <th>Purchase Date</th>
+            <th>Total Items</th>
+            <th>Sold Items</th>
+            <th>Modify</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ group_id[0]['name'] }}</td>
+            <td><a href = "/groups/list?date={{ group_id[0]['date'] }}">{{ group_id[0]['date'] }}</a></td>
+            <td>{{ total_items['total'] }}</td>
+            <td>{{ total_sold_items['total'] }}</td>
+            <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}">Modify Group</a></td>
+        </tr>
+    </tbody>
+</table>
+<BR>
+<BR>
+<h4>Monetary Information</h4>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th>Purchase</th>
+            <th>Sale</th>
+            <th>Average Sale</th>
+            <th>Profit</th>
+            <th>ROI</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>${{ group_id[0]['price'] }}</td>
+            <td>${{ sold_price }}</td>
+            <td>{% if total_items['total'] %}
+                ${{ "%.2f"|format(sold_price/total_items['total']) }}
+                {% endif %}
+            </td>
+            <td>${{ sold_price - group_id[0]['price'] }}</td>
+            <td>{% if group_id[0]['price'] != 0 %}
+                {{ ((sold_price/group_id[0]['price']) * 100)| round }}%
+                {% else %}
+                0
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<br>
+<table width="100%">
+    <td align="left">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.button(class="btn btn-outline-info") }}
+        </div>
+        </form>
+    </td>
+    <td align="right">
+        <form method="POST" action="">
+            {{ quicksell.hidden_tag() }}
+        <div class="form-group">
+            {{ quicksell.button(class="btn btn-outline-info") }}
+        </div>
+        </form>
+    </td>
+</table>
+<br>
+<table class="blueTable">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Name</th> 
+            <th>Sold Date</th>
+            <th>Days to Sell</th>
+            <th>Gross</th>
+            <th>Net</th>
+            <th>Shipping Fee</th>
+            <th>Storage</th>
+            <th>Remove</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set ns = namespace() %}
+        {% set ns.count = 1 %}
+        {% for item in items %}
+        <tr>
+            <td>{{ ns.count }}</td>
+            <td>
+                <a href = "/items/describe?item={{ item['id'] }}">
+                    {% if item['sold'] %}<b>{{ item['name'] }}</b>
+                    {% else %}{{ item['name'] }}
+                    {% endif %}
+                </a>
+            </td>
+            <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['sale_date'] }}{% endif %}</td>
+            <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['days_to_sell'] }}{% endif %}</td>
+            <td>{{ item['gross'] }}</td>
+            <td>{{ item['net'] }}</td>
+            <td>{{ item['shipping_fee'] }}</td>
+            <td>{{ item['storage'] }}</td>
+            <td><a href="/items/remove?id={{ item['id'] }}">remove</a></td>
+        {% set ns.count = ns.count + 1 %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if group_id[0]['image'] %}
+<br>
+<br>
+<center>
+	<div>
+		<img src="{{ url_for('static', filename='uploads/' + group_id[0]['image']) }}" width=75% height=auto>
+	</div>
+</center>
+{% endif %}
+{% endblock content %}
+</html>
