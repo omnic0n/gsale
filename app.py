@@ -211,7 +211,7 @@ def google_callback():
             
             # Clear any existing session data
             session.clear()
-            flash(f'Access denied. This email address is not authorized to access this application.', 'error')
+            flash(f'Access denied. This email address is not authorized to access this application. A request was sent to the admin to add your account.', 'error')
             return redirect(url_for('login'))
         
         # Check if user is active
