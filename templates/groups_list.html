@@ -52,20 +52,37 @@
             </tr>
         {% set count.value = count.value + 1 %}
         {% endfor %}
-        <tr style="background-color:#FFFFFF">
-            <td></td>
-            <td>Totals</td>
-            <td>{{ ns.total_items }}</td>
-            <td>{{ ns.sold_items }}</td>
-            <td>{{ ns.total_items - ns.sold_items}}</td>
-            <td>{{ ns.price }}</td>
-            <td>{{ ns.profit }}</td>
-            <td>{{ ns.profit - ns.price }}</td>
-            <td>{% if ns.sold_items > 0 %}{{ '%0.2f' % (ns.profit / ns.sold_items) | float }}{% else %}0.00{% endif %}</td>
-            <td></td>
-            <td></td>
-        </tr>
     </tbody>
 </table>
+
+<!-- Totals Table -->
+<div style="margin-top: 20px;">
+    <table class="blueTable">
+        <thead>
+            <tr>
+                <th>Summary</th>
+                <th>Total Items</th>
+                <th>Sold Items</th>
+                <th>Unsold Items</th>
+                <th>Purchase Total</th>
+                <th>Sold Total</th>
+                <th>Profit</th>
+                <th>Average</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="background-color:#FFFFFF">
+                <td>Totals</td>
+                <td>{{ ns.total_items }}</td>
+                <td>{{ ns.sold_items }}</td>
+                <td>{{ ns.total_items - ns.sold_items}}</td>
+                <td>{{ ns.price }}</td>
+                <td>{{ ns.profit }}</td>
+                <td>{{ ns.profit - ns.price }}</td>
+                <td>{% if ns.sold_items > 0 %}{{ '%0.2f' % (ns.profit / ns.sold_items) | float }}{% else %}0.00{% endif %}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 {% endblock content %}
 </html>
