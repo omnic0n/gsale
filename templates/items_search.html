@@ -141,8 +141,8 @@ document.addEventListener('DOMContentLoaded', function() {
     nameInput.addEventListener('input', performSearch);
     soldSelect.addEventListener('change', performSearch);
     
-    // Perform initial search to show all items
-    performSearch();
+    // Don't perform initial search - wait for user input
+    // performSearch();
 });
 </script>
 {% endblock content %}
