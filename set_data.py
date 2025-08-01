@@ -232,7 +232,12 @@ def toggle_user_status(user_id):
         result = cur.fetchone()
         
         if result:
-            current_status = result[0] if hasattr(result, 'keys') else result[0]
+            # Handle both tuple and dict-like results
+            if hasattr(result, 'keys'):  # Dict-like object
+                current_status = result['is_active']
+            else:  # Tuple-like object
+                current_status = result[0]
+            
             new_status = 0 if current_status else 1
             
             # Toggle the status
