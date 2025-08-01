@@ -573,11 +573,11 @@ def get_category_item_counts():
         SELECT 
             c.id,
             c.type,
-            COUNT(i.id) as item_count
+            COUNT(CASE WHEN col.account = %s THEN i.id ELSE NULL END) as item_count
         FROM categories c
         LEFT JOIN items i ON c.id = i.category_id
         LEFT JOIN collection col ON i.group_id = col.id
-        WHERE c.user_id = %s AND (col.account = %s OR col.account IS NULL)
+        WHERE c.user_id = %s
         GROUP BY c.id, c.type
         ORDER BY c.type
     """, (session.get('id'), session.get('id')))
