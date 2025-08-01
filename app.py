@@ -485,7 +485,7 @@ def display_image(filename):
 @login_required
 def modify_group():
     id = request.args.get('group_id', type = str)
-    group_id = get_data.get_data_from_group_describe(id)
+    group_id = get_data.get_data_from_group_list(id)
 
     form = GroupForm()
 
