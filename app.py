@@ -515,7 +515,7 @@ def group_add():
         
         try:
             group_id = set_data.set_group_add(group_name, details, image_id)
-            return redirect(url_for('describe_group',group_id=group_id))
+            return redirect(url_for('list_group',group_id=group_id))
         except KeyError as e:
             return jsonify({
                 'success': False,
@@ -557,7 +557,7 @@ def modify_group():
         else:
             image_id = group_id[0]['image']
         set_data.set_group_modify(details, image_id)
-        return redirect(url_for('describe_group',group_id=details['id']))
+        return redirect(url_for('list_group',group_id=details['id']))
     return render_template('modify_group.html', group_id=group_id, form=form)
 
 @app.route('/items/mark_sold',methods=["POST","GET"])
@@ -597,7 +597,7 @@ def bought_items():
             flash('Group not found or access denied.', 'error')
             return redirect(url_for('index'))
         set_data.set_bought_items(details)
-        return redirect(url_for('describe_group',group_id=group_data['id']))
+        return redirect(url_for('list_group',group_id=group_data['id']))
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/modify',methods=["POST","GET"])
@@ -644,7 +644,7 @@ def items_remove():
         return redirect(url_for('index'))
     
     set_data.remove_item_data(id)
-    return redirect(url_for('describe_group',group_id=item['group_id']))
+    return redirect(url_for('list_group',group_id=item['group_id']))
 
 
 @app.route('/items/quick_sell',methods=["POST","GET"])
@@ -831,11 +831,11 @@ def describe_item():
 
 
 
-@app.route('/groups/describe', methods=["POST","GET"])
+@app.route('/groups/list', methods=["POST","GET"])
 @login_required
-def describe_group():
+def list_group():
     id = request.args.get('group_id', type = str)
-    group_id = get_data.get_data_from_group_describe(id)
+    group_id = get_data.get_data_from_group_list(id)
     
     # Check if group exists and belongs to current user
     if not group_id:
@@ -864,7 +864,7 @@ def describe_group():
         elif details['button'] == "Quick Sell":
             return redirect(url_for('quick_sell',group=details['id']))
 
-    return render_template('groups_describe.html', 
+    return render_template('groups_list_detail.html', 
                             group_id=group_id,
                             items=items,
                             total_items=total_items,

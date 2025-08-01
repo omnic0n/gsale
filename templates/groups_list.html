@@ -39,7 +39,7 @@
         {% set count = namespace(value=1) %} {% set ns = namespace() %} {% set ns.total_items = 0 %} {% set ns.sold_items = 0 %} {% set ns.price = 0 %} {% set ns.profit = 0 %} {% for group in groups %}
         <tr>
             <td>{{ count.value }}</td>
-            <td><a href="/groups/describe?group_id={{ group['id'] }}">{{ group['name'] }}</a></td>
+            <td><a href="/groups/list?group_id={{ group['id'] }}">{{ group['name'] }}</a></td>
             <td>{{ group['total_items'] }}</td>{% set ns.total_items = ns.total_items + group['total_items'] %}
             <td>{{ group['sold_items'] }}</td>{% set ns.sold_items = ns.sold_items + group['sold_items'] %}
             <td>{{ group['total_items'] - group['sold_items'] }}</td>

@@ -113,7 +113,7 @@ def get_purchased_from_day(day, year):
     """, (day, start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
-def get_data_from_group_describe(group_id):
+def get_data_from_group_list(group_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
                     collection.name, 
