@@ -682,13 +682,16 @@ def list_items():
         storage = "%"
 
     category_id = request.args.get('category_id', type = str)
+    sold_status = request.args.get('sold_status', type = str)
+    if sold_status is None:
+        sold_status = "all"
     
     if category_id:
-        # If category_id is provided, filter items by category
-        items = get_data.get_list_of_items_by_category(category_id)
+        # If category_id is provided, filter items by category and sold status
+        items = get_data.get_list_of_items_by_category(category_id, sold_status)
     else:
-        # Otherwise, use the original function
-        items = get_data.get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_date, storage)
+        # Use the new sold status filtering function
+        items = get_data.get_list_of_items_by_sold_status(sold_status, sold_date, purchase_date, list_date, storage)
 
     return render_template('items_list.html', 
                             items=items)

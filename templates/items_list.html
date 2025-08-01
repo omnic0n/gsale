@@ -1,6 +1,36 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
+<div class="container mt-3">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <form method="GET" action="{{ url_for('list_items') }}" class="d-flex">
+                <select name="sold_status" class="form-select me-2" onchange="this.form.submit()">
+                    <option value="all" {% if request.args.get('sold_status', 'all') == 'all' %}selected{% endif %}>All Items</option>
+                    <option value="sold" {% if request.args.get('sold_status') == 'sold' %}selected{% endif %}>Sold Items</option>
+                    <option value="not_sold" {% if request.args.get('sold_status') == 'not_sold' %}selected{% endif %}>Not Sold Items</option>
+                </select>
+                <!-- Preserve other URL parameters -->
+                {% if request.args.get('category_id') %}
+                    <input type="hidden" name="category_id" value="{{ request.args.get('category_id') }}">
+                {% endif %}
+                {% if request.args.get('sold_date') %}
+                    <input type="hidden" name="sold_date" value="{{ request.args.get('sold_date') }}">
+                {% endif %}
+                {% if request.args.get('purchase_date') %}
+                    <input type="hidden" name="purchase_date" value="{{ request.args.get('purchase_date') }}">
+                {% endif %}
+                {% if request.args.get('list_date') %}
+                    <input type="hidden" name="list_date" value="{{ request.args.get('list_date') }}">
+                {% endif %}
+                {% if request.args.get('storage') %}
+                    <input type="hidden" name="storage" value="{{ request.args.get('storage') }}">
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
 <table class="blueTable">
     <thead>
         <tr>
