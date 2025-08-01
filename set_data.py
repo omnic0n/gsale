@@ -109,20 +109,7 @@ def remove_group_data(id):
     mysql.connection.commit()
     cur.close()
 
-#Expense Data
-def set_expense(name, details, image_id, expense_type):
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO expenses(name, date, price, image, type, account) VALUES (%s, %s, %s, %s, %s, %s)", 
-                (name, details['date'], details['price'], image_id, expense_type, session.get('id')))
-    mysql.connection.commit()
-    cur.close()
 
-def set_modify_expense(details, price, milage, image_id):
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE expenses SET name = %s, date = %s, price = %s, milage = %s, type = %s, image = %s where id = %s AND account = %s", 
-                (details['name'], details['date'], price, milage, details['expense_type'], image_id, details['id'], session.get('id')))
-    mysql.connection.commit()
-    cur.close()
 
 
 
@@ -247,8 +234,7 @@ def delete_user(user_id):
             # Delete the collections
             cur.execute("DELETE FROM collection WHERE account = %s", (user_id,))
         
-        # Delete expenses for this user
-        cur.execute("DELETE FROM expenses WHERE account = %s", (user_id,))
+
         
         # Delete cases for this user
         cur.execute("DELETE FROM cases WHERE account = %s", (user_id,))

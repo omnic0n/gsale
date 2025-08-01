@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ExpenseForm, ButtonForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -334,21 +334,7 @@ def reports_categories():
         return render_template('reports_item_categories.html', form=form, item_categories=item_categories, now=datetime.now().date())
     return render_template('reports_item_categories.html', form=form)
 
-@app.route('/reports/expenses',methods=["GET", "POST"])
-@login_required
-def reports_expenses():
-    expense_choices = get_data.get_expenses_choices()
 
-    form = ReportsForm()
-    form.expense_type.choices = [(expense_choice['id'], expense_choice['type']) for expense_choice in expense_choices]
-   
-    if request.method == "POST":
-        details = request.form
-        start_date, end_date = function.set_dates(details)
-        expense_type = int(details['expense_type'])
-        expenses_dates = get_data.get_expenses_from_date(start_date, end_date, expense_type)
-        return render_template('reports_expenses.html', form=form, expenses_dates=expenses_dates, expense_type=expense_type)
-    return render_template('reports_expenses.html', form=form)
 
 @app.route('/reports/locations',methods=["GET", "POST"])
 @login_required
@@ -413,72 +399,14 @@ def group_add():
 def display_image(filename):
     return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
-@app.route('/expense/gas',methods=["POST","GET"])
-@login_required
-def expense_gas():
-    form = ExpenseForm()
-    if request.method == "POST":
-        details = request.form
-        name = "%s-gas" % (details['date'])
-        image_id = files.upload_image(request.files['image'])
-        set_data.set_expense(name, details, image_id, 1)
-        return redirect(url_for('list_expense'))
-    return render_template('expense_gas.html', form=form)
-
-@app.route('/expense/item',methods=["POST","GET"])
-@login_required
-def expense_item():
-    form = ExpenseForm()
-
-    if request.method == "POST":
-        details = request.form
-        name = "%s-%s" % (details['date'], details['name'])
-        image_id = files.upload_image(request.files['image'])
-        set_data.set_expense(name, details, image_id, 2)
-        return redirect(url_for('list_expense'))
-    return render_template('expense_item.html', form=form)
-
-@app.route('/expense/store',methods=["POST","GET"])
-@login_required
-def expense_store():
-    form = ExpenseForm()
-
-    if request.method == "POST":
-        details = request.form
-        name = "%s-ebay-store" % (details['date'])
-        image_id = files.upload_image(request.files['image'])
-        set_data.set_expense(name, details, image_id, 3)
-        return redirect(url_for('list_expense'))
-    return render_template('expense_store.html', form=form)
 
 
-@app.route('/expense/modify',methods=["POST","GET"])
-@login_required
-def modify_expense():
-    id = request.args.get('id', type = str)
-    expense = get_data.get_data_for_expense_describe(id)
-    expense_choices = get_data.get_expenses_choices()
- 
-    form = ExpenseForm()
-    form.expense_type.choices = [(expense_choice['id'], expense_choice['type']) for expense_choice in expense_choices]
-    form.expense_type.data = expense[0]['type']
 
-    if request.method == "POST":
-        details = request.form
-        if(request.files['image']):
-            image_id = files.upload_image(request.files['image'])
-        else:
-            image_id = expense[0]['image']
 
-        if(expense[0]['type'] == 1):
-            price = 0
-            milage = details['milage']
-        else:
-            price = details['price']
-            milage = 0
-        set_data.set_modify_expense(details, price, milage, image_id)
-        return redirect(url_for('describe_expense',id=details['id']))
-    return render_template('modify_expense.html', expense=expense, form=form)
+
+
+
+
 
 @app.route('/groups/modify',methods=["POST","GET"])
 @login_required
@@ -634,12 +562,6 @@ def sold_items():
     return render_template('items_sold.html', form=form)
 
 #List Section
-@app.route('/expense/list', methods=["POST","GET"])
-@login_required
-def list_expense():
-    date = request.args.get('date', type = str)
-    expenses = get_data.get_all_from_expenses(date)
-    return render_template('expenses_list.html', expenses=expenses)
 
 @app.route('/groups/list', methods=["POST","GET"])
 @login_required
@@ -773,19 +695,7 @@ def describe_item():
                             modify=modify,
                             availability=availability)
 
-@app.route('/expense/describe')
-@login_required
-def describe_expense():
-    id = request.args.get('id', type = str)
-    expense = get_data.get_data_for_expense_describe(id)
-    
-    # Check if expense exists and belongs to current user
-    if not expense:
-        flash('Expense not found or access denied.', 'error')
-        return redirect(url_for('index'))
-    
-    return render_template('expense_describe.html', 
-                            expense=expense)
+
 
 @app.route('/groups/describe', methods=["POST","GET"])
 @login_required

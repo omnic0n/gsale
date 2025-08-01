@@ -546,48 +546,7 @@ def get_list_of_items_by_sold_status(sold_status, sold_date="%", purchase_date="
     
     return list(cur.fetchall())
 
-#Expense Data
-def get_expenses_choices():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM expenses_choices")
-    return list(cur.fetchall())
 
-def get_expenses_from_date(start_date, end_date, type):
-    """Optimized expenses report query"""
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT * FROM expenses
-        WHERE date BETWEEN %s AND %s
-        AND type = %s
-        AND account = %s
-        ORDER BY date
-    """, (start_date, end_date, type, session.get('id')))
-    return list(cur.fetchall())
-
-def get_all_from_expenses_date(start_date, end_date):
-    cur = mysql.connection.cursor()
-    cur.execute("""SELECT 
-				    * FROM expenses
-                    WHERE date >= %s AND date <= %s
-                    AND expenses.account = %s
-					ORDER BY date""",
-                    (start_date, end_date, session.get('id'), ))
-    return list(cur.fetchall())
-
-def get_all_from_expenses(date):
-    cur = mysql.connection.cursor()
-    if not date:
-        cur.execute("SELECT * FROM expenses WHERE expenses.account = %s ORDER BY name ASC", (session.get('id'), ))
-    else:
-        cur.execute("SELECT * FROM expenses WHERE date LIKE %s AND expenses.account = %s ORDER BY name ASC", (date, session.get('id'), ))
-    return list(cur.fetchall())
-
-def get_data_for_expense_describe(id):
-    cur = mysql.connection.cursor()
-    cur.execute(""" SELECT 
-                    * FROM expenses
-                    WHERE id = %s AND account = %s""", (id, session.get('id')))
-    return list(cur.fetchall())
 
 #Category Data
 def get_all_from_categories():
@@ -714,23 +673,7 @@ def get_combined_sales_summary(start_date, end_date):
     """, (start_date, end_date, session.get('id')))
     return list(cur.fetchall())
 
-def get_expense_summary_by_type(start_date, end_date):
-    """Optimized expense summary grouped by type"""
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT 
-            type,
-            COUNT(*) as expense_count,
-            SUM(CASE WHEN type = 1 THEN milage ELSE price END) as total_amount,
-            AVG(CASE WHEN type = 1 THEN milage ELSE price END) as avg_amount,
-            MIN(date) as first_expense,
-            MAX(date) as last_expense
-        FROM expenses
-        WHERE date BETWEEN %s AND %s AND account = %s
-        GROUP BY type
-        ORDER BY type
-    """, (start_date, end_date, session.get('id')))
-    return list(cur.fetchall())
+
 
 # Admin Functions
 def check_admin_status(user_id):

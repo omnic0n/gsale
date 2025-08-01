@@ -18,18 +18,7 @@ class GroupForm(FlaskForm):
     ])
     submit = SubmitField('Submit')
 
-class ExpenseForm(FlaskForm):
-    name = StringField('name',
-                           validators=[DataRequired()])
-    price = StringField('price')
-    date = DateField('date',
-                        default=datetime.today,
-                        validators=[DataRequired()], format='%Y-%m-%d')
-    id = StringField('id')
-    expense_type = SelectField('expense_type', coerce=int)
-    milage = StringField('milage')
-    image = FileField('image')
-    submit = SubmitField('Submit')
+
 
 class ListForm(FlaskForm):
     start = DateField('start', format='%Y-%m-%d')
@@ -92,7 +81,7 @@ class ReportsForm(FlaskForm):
     day = SelectField('Day', choices=[
         (1,"Sunday"),(2, "Monday"),(3, "Tuesday"),(4, "Wednesday"),(5, "Thursday"),(6, "Friday"),(7, "Saturday")
     ])
-    expense_type = SelectField('type', coerce=int)
+
     category = SelectField('category', coerce=str)
     submit = SubmitField('Submit')
 
