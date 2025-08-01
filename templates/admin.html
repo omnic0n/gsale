@@ -135,6 +135,7 @@
                                         <th>Username</th>
                                         <th>Email</th>
                                         <th>Admin Status</th>
+                                        <th>Status</th>
                                         <th>Current User</th>
                                         <th>Actions</th>
                                     </tr>
@@ -149,6 +150,13 @@
                                                 <span class="badge bg-success">Admin</span>
                                             {% else %}
                                                 <span class="badge bg-secondary">User</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
                                             {% endif %}
                                         </td>
                                         <td>
@@ -175,10 +183,10 @@
                                                 <form method="POST" action="/admin" style="display: inline;" onsubmit="console.log('Form submitted for user: {{ user.username }}');">
                                                     <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                     <input type="hidden" name="action" value="delete_user">
-                                                    <button type="submit" class="btn btn-sm btn-danger" 
-                                                            onclick="console.log('Delete button clicked for user: {{ user.username }}'); return confirm('Are you sure you want to delete {{ user.username or 'this user' }}? This action cannot be undone.')">
-                                                        Delete User
-                                                    </button>
+                                                                                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                                        onclick="console.log('Deactivate button clicked for user: {{ user.username }}'); return confirm('Are you sure you want to deactivate {{ user.username or 'this user' }}? They will no longer be able to log in.')">
+                                                    {% if user.is_active %}Deactivate User{% else %}Activate User{% endif %}
+                                                </button>
                                                 </form>
                                                 {% endif %}
                                             </div>

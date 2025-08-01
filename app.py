@@ -195,7 +195,7 @@ def google_callback():
         name = user_info.get('name', email)
         picture = user_info.get('picture')
         
-        # Check if email exists in accounts table
+        # Check if email exists in accounts table and is active
         existing_user = get_data.get_user_by_email(email)
         
         if not existing_user:
@@ -212,6 +212,23 @@ def google_callback():
             # Clear any existing session data
             session.clear()
             flash(f'Access denied. This email address is not authorized to access this application.', 'error')
+            return redirect(url_for('login'))
+        
+        # Check if user is active
+        if not existing_user.get('is_active', True):
+            # Record the access attempt
+            set_data.record_access_attempt(
+                email=email,
+                google_id=google_id,
+                name=name,
+                picture=picture,
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get('User-Agent')
+            )
+            
+            # Clear any existing session data
+            session.clear()
+            flash(f'Access denied. Your account has been deactivated. Please contact an administrator.', 'error')
             return redirect(url_for('login'))
         
         # Check if user exists in database by Google ID first
@@ -965,7 +982,7 @@ def admin_panel():
                 return redirect(url_for('admin_panel'))
             
             elif action == 'delete_user':
-                # Delete user (only if not the current admin)
+                # Deactivate/Activate user (only if not the current admin)
                 user_id = request.form.get('user_id')
                 current_user_id = session.get('id')
                 
@@ -974,13 +991,13 @@ def admin_panel():
                     return redirect(url_for('admin_panel'))
                 
                 if user_id != current_user_id:
-                    success = set_data.delete_user(user_id)
+                    success = set_data.toggle_user_status(user_id)
                     if success:
-                        flash('User deleted successfully.', 'success')
+                        flash('User status updated successfully.', 'success')
                     else:
-                        flash('Failed to delete user.', 'error')
+                        flash('Failed to update user status.', 'error')
                 else:
-                    flash('Cannot delete your own account.', 'error')
+                    flash('Cannot modify your own account status.', 'error')
                 return redirect(url_for('admin_panel'))
             
             elif action == 'approve_access':

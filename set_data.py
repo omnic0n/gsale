@@ -212,8 +212,8 @@ def toggle_admin_status(user_id):
         print(f"Error toggling admin status: {e}")
         return False
 
-def delete_user(user_id):
-    """Delete a user account"""
+def toggle_user_status(user_id):
+    """Toggle user activation status (activate/deactivate)"""
     try:
         # Check if MySQL connection is available
         if not mysql or not hasattr(mysql, 'connection') or not mysql.connection:
@@ -227,56 +227,24 @@ def delete_user(user_id):
             
         cur = mysql.connection.cursor()
         
-        # First, get all the group IDs for this user
-        cur.execute("SELECT id FROM collection WHERE account = %s", (user_id,))
-        rows = cur.fetchall()
+        # Get current status
+        cur.execute("SELECT is_active FROM accounts WHERE id = %s", (user_id,))
+        result = cur.fetchone()
         
-        # Handle both tuple and dict-like results
-        group_ids = []
-        for row in rows:
-            if hasattr(row, 'keys'):  # Dict-like object
-                group_ids.append(row['id'])
-            else:  # Tuple-like object
-                group_ids.append(row[0])
-        
-        if group_ids:
-            # Delete sales for items in these groups
-            if len(group_ids) == 1:
-                cur.execute("DELETE s FROM sale s INNER JOIN items i ON s.id = i.id WHERE i.group_id = %s", (group_ids[0],))
-            else:
-                cur.execute("DELETE s FROM sale s INNER JOIN items i ON s.id = i.id WHERE i.group_id IN %s", (tuple(group_ids),))
+        if result:
+            current_status = result[0] if hasattr(result, 'keys') else result[0]
+            new_status = 0 if current_status else 1
             
-            # Delete items in these groups
-            if len(group_ids) == 1:
-                cur.execute("DELETE FROM items WHERE group_id = %s", (group_ids[0],))
-            else:
-                cur.execute("DELETE FROM items WHERE group_id IN %s", (tuple(group_ids),))
+            # Toggle the status
+            cur.execute("UPDATE accounts SET is_active = %s WHERE id = %s", (new_status, user_id))
             
-            # Delete the collections
-            cur.execute("DELETE FROM collection WHERE account = %s", (user_id,))
-        
-        # Delete cases for this user (if table exists)
-        try:
-            cur.execute("DELETE FROM cases WHERE account = %s", (user_id,))
-        except Exception:
-            # Continue with deletion even if cases table doesn't exist
-            pass
-        
-        # Delete expenses for this user (if table exists)
-        try:
-            cur.execute("DELETE FROM expenses WHERE account = %s", (user_id,))
-        except Exception:
-            # Continue with deletion even if expenses table doesn't exist
-            pass
-        
-        # Finally delete the user account
-        cur.execute("DELETE FROM accounts WHERE id = %s", (user_id,))
-        
-        mysql.connection.commit()
-        cur.close()
-        return True
+            mysql.connection.commit()
+            cur.close()
+            return True
+        else:
+            return False
     except Exception as e:
-        print(f"Error deleting user {user_id}: {e}")
+        print(f"Error toggling user status {user_id}: {e}")
         print(f"Error type: {type(e)}")
         print(f"Error details: {str(e)}")
         # Rollback on error
@@ -285,6 +253,42 @@ def delete_user(user_id):
         except Exception as rollback_error:
             print(f"Rollback error: {rollback_error}")
         return False
+
+def deactivate_user(user_id):
+    """Deactivate a user account instead of deleting it"""
+    try:
+        # Check if MySQL connection is available
+        if not mysql or not hasattr(mysql, 'connection') or not mysql.connection:
+            return False
+            
+        # Test connection
+        try:
+            mysql.connection.ping()
+        except Exception:
+            return False
+            
+        cur = mysql.connection.cursor()
+        
+        # Simply deactivate the user account
+        cur.execute("UPDATE accounts SET is_active = 0 WHERE id = %s", (user_id,))
+        
+        mysql.connection.commit()
+        cur.close()
+        return True
+    except Exception as e:
+        print(f"Error deactivating user {user_id}: {e}")
+        print(f"Error type: {type(e)}")
+        print(f"Error details: {str(e)}")
+        # Rollback on error
+        try:
+            mysql.connection.rollback()
+        except Exception as rollback_error:
+            print(f"Rollback error: {rollback_error}")
+        return False
+
+def delete_user(user_id):
+    """Delete a user account (keeping for backward compatibility)"""
+    return deactivate_user(user_id)
 
 def create_user(details):
     """Create a new user account"""

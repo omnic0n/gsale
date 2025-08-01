@@ -48,6 +48,13 @@ def login_data(username, password, ip):
         account = cursor.fetchone()
 
         if account and bcrypt.checkpw(password.encode('utf8'), account['password'].encode('UTF_8')):
+            # Check if user is active
+            if not account.get('is_active', True):
+                f = open("/var/log/gsale/fail.log", "a")
+                f.write(ip + " - " + username + " (deactivated account)" + "\n")
+                f.close()
+                return 'Account has been deactivated. Please contact an administrator.'
+            
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account.get('name', account['username'])  # Use name if available, fallback to username
