@@ -291,3 +291,21 @@ def change_user_password(user_id, new_password):
     except Exception as e:
         print(f"Error changing password: {e}")
         return False
+
+def create_google_user(google_id, email, name, picture=None):
+    """Create a new user account via Google OAuth"""
+    try:
+        # Generate UUID for the new user
+        user_id = generate_uuid()
+        
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO accounts(id, username, email, google_id, name, picture, is_admin) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, email, email, google_id, name, picture, 0))
+        mysql.connection.commit()
+        cur.close()
+        return user_id
+    except Exception as e:
+        print(f"Error creating Google user: {e}")
+        return None

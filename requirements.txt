@@ -2,4 +2,7 @@ Flask==2.3.3
 Flask-WTF==1.1.1
 WTForms==3.0.1
 Flask-MySQLdb==1.0.1
-Werkzeug==2.3.7 
+Werkzeug==2.3.7
+requests==2.31.0
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0 

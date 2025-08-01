@@ -8,6 +8,9 @@ from urllib.parse import unquote
 import random, os, math
 import hashlib
 import json
+import requests
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 import get_data, set_data
 import files
@@ -125,6 +128,97 @@ def login():
                 return redirect(next_page)
             return redirect(url_for('index'))    
     return render_template('login.html', msg=msg)
+
+@app.route('/google-login')
+def google_login():
+    """Initiate Google OAuth login"""
+    # Generate state parameter for security
+    state = hashlib.sha256(os.urandom(32)).hexdigest()
+    session['oauth_state'] = state
+    
+    # Build Google OAuth URL
+    google_auth_url = (
+        'https://accounts.google.com/o/oauth2/v2/auth?'
+        'client_id={}&'
+        'response_type=code&'
+        'scope=openid%20email%20profile&'
+        'redirect_uri={}&'
+        'state={}'
+    ).format(
+        app.config['GOOGLE_CLIENT_ID'],
+        url_for('google_callback', _external=True),
+        state
+    )
+    
+    return redirect(google_auth_url)
+
+@app.route('/google-callback')
+def google_callback():
+    """Handle Google OAuth callback"""
+    # Verify state parameter
+    if request.args.get('state') != session.get('oauth_state'):
+        flash('Invalid state parameter. Please try again.', 'error')
+        return redirect(url_for('login'))
+    
+    # Get authorization code
+    code = request.args.get('code')
+    if not code:
+        flash('Authorization code not received.', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        # Exchange code for tokens
+        token_url = 'https://oauth2.googleapis.com/token'
+        token_data = {
+            'client_id': app.config['GOOGLE_CLIENT_ID'],
+            'client_secret': app.config['GOOGLE_CLIENT_SECRET'],
+            'code': code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': url_for('google_callback', _external=True)
+        }
+        
+        token_response = requests.post(token_url, data=token_data)
+        token_response.raise_for_status()
+        tokens = token_response.json()
+        
+        # Get user info from Google
+        userinfo_url = 'https://www.googleapis.com/oauth2/v2/userinfo'
+        headers = {'Authorization': f"Bearer {tokens['access_token']}"}
+        userinfo_response = requests.get(userinfo_url, headers=headers)
+        userinfo_response.raise_for_status()
+        user_info = userinfo_response.json()
+        
+        # Extract user data
+        google_id = user_info['id']
+        email = user_info['email']
+        name = user_info.get('name', email)
+        picture = user_info.get('picture')
+        
+        # Check if user exists in database
+        user = get_data.get_user_by_google_id(google_id)
+        
+        if not user:
+            # Create new user
+            user_id = set_data.create_google_user(google_id, email, name, picture)
+            if not user_id:
+                flash('Failed to create user account.', 'error')
+                return redirect(url_for('login'))
+        else:
+            user_id = user['id']
+        
+        # Log user in
+        session['loggedin'] = True
+        session['id'] = user_id
+        session['username'] = email
+        session['is_admin'] = user.get('is_admin', False) if user else False
+        
+        # Redirect to next page or index
+        next_page = request.args.get('next') or url_for('index')
+        return redirect(next_page)
+        
+    except Exception as e:
+        flash(f'Google login failed: {str(e)}', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():

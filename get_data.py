@@ -770,3 +770,15 @@ def get_all_users():
             cur.close()
         # Return a safe default structure to prevent KeyError: 0
         return [{'id': '1', 'username': 'Admin', 'email': 'admin@example.com', 'is_admin': 1, 'is_current_user': 'Current User'}]
+
+def get_user_by_google_id(google_id):
+    """Get user by Google ID"""
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM accounts WHERE google_id = %s", (google_id,))
+    return cur.fetchone()
+
+def get_user_by_email(email):
+    """Get user by email"""
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM accounts WHERE username = %s", (email,))
+    return cur.fetchone()
