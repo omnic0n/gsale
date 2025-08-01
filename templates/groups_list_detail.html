@@ -139,10 +139,10 @@
             <td>
                 {% if group_id[0].get('location_address') %}
                     <a href="https://maps.google.com/?q={{ group_id[0]['location_address'] | urlencode }}" target="_blank" title="View on Google Maps">
-                        📍 {{ group_id[0]['location_address'] }}
+                        📍 <span style="font-size: 0.9em;">{{ group_id[0]['location_address'].split(',')[:-1] | join(', ') if ',' in group_id[0]['location_address'] else group_id[0]['location_address'] }}</span>
                     </a>
                 {% else %}
-                    <span style="color: #999;">No location set</span>
+                    <span style="color: #999; font-size: 0.9em;">No location set</span>
                 {% endif %}
             </td>
             <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}">Modify Group</a></td>

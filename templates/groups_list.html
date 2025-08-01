@@ -52,10 +52,10 @@
             <td>
                 {% if group.get('location_address') %}
                     <a href="https://maps.google.com/?q={{ group['location_address'] | urlencode }}" target="_blank" title="View on Google Maps">
-                        📍 {{ group['location_address'][:30] }}{% if group['location_address']|length > 30 %}...{% endif %}
+                        📍 <span style="font-size: 0.85em;">{{ (group['location_address'].split(',')[:-1] | join(', '))[:25] }}{% if (group['location_address'].split(',')[:-1] | join(', '))|length > 25 %}...{% endif %}</span>
                     </a>
                 {% else %}
-                    <span style="color: #999;">-</span>
+                    <span style="color: #999; font-size: 0.85em;">-</span>
                 {% endif %}
             </td>
             <td><a href="/groups/remove?id={{ group['id'] }}">Remove</td>

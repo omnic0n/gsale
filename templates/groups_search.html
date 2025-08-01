@@ -125,10 +125,16 @@ function displayResults(groups) {
             locationLink.href = `https://maps.google.com/?q=${encodeURIComponent(group.location_address)}`;
             locationLink.target = '_blank';
             locationLink.title = 'View on Google Maps';
-            locationLink.innerHTML = `📍 ${group.location_address.length > 30 ? group.location_address.substring(0, 30) + '...' : group.location_address}`;
+            
+            // Remove country (last part after comma) and limit to 25 characters
+            const addressParts = group.location_address.split(',');
+            const addressWithoutCountry = addressParts.slice(0, -1).join(', ');
+            const displayAddress = addressWithoutCountry.length > 25 ? addressWithoutCountry.substring(0, 25) + '...' : addressWithoutCountry;
+            
+            locationLink.innerHTML = `📍 <span style="font-size: 0.85em;">${displayAddress}</span>`;
             locationCell.appendChild(locationLink);
         } else {
-            locationCell.innerHTML = '<span style="color: #999;">-</span>';
+            locationCell.innerHTML = '<span style="color: #999; font-size: 0.85em;">-</span>';
         }
         
         // Append all cells to row
