@@ -107,8 +107,8 @@
             console.log('initMap called');
             
             // Check if there's existing location data
-            const existingLat = {{ group_id[0].get('latitude', 'null') }};
-            const existingLng = {{ group_id[0].get('longitude', 'null') }};
+            const existingLat = {{ group_id[0].get('latitude') or 'null' }};
+            const existingLng = {{ group_id[0].get('longitude') or 'null' }};
             
             console.log('Existing coordinates:', existingLat, existingLng);
             
