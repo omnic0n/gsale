@@ -725,14 +725,8 @@ def list_items():
         # Use the new sold status filtering function
         items = get_data.get_list_of_items_by_sold_status(sold_status, sold_date, purchase_date, list_date, storage)
 
-    # Get groups and categories for modal dropdowns
-    groups = get_data.get_all_from_groups('%')
-    categories = get_data.get_all_from_categories()
-    
     return render_template('items_list.html', 
-                            items=items,
-                            groups=groups,
-                            categories=categories)
+                            items=items)
 
 #Search Section
 @app.route('/items/search', methods=["POST","GET"])
