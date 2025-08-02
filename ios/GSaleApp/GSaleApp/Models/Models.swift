@@ -4,7 +4,7 @@ import Foundation
 struct LoginResponse: Codable {
     let success: Bool
     let message: String
-    let cookie: String?
+    var cookie: String?
     let user_id: Int?
     let username: String?
     let is_admin: Bool?

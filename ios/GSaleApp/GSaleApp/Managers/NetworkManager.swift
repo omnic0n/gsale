@@ -1,6 +1,6 @@
 import Foundation
 import UIKit
-import AuthenticationServices
+import WebKit
 
 enum NetworkError: Error {
     case invalidURL
@@ -10,18 +10,33 @@ enum NetworkError: Error {
     case unauthorized
 }
 
-class NetworkManager {
+class NetworkManager: NSObject {
     static let shared = NetworkManager()
     
     private let baseURL = "https://gsale.levimylesllc.com"
     private let session: URLSession
     
-    private init() {
-        print("🚀 NetworkManager initialized with default session configuration")
+    // MARK: - Login Delegate for Cookie Extraction
+    private class LoginDelegate: NSObject, URLSessionTaskDelegate {
+        var capturedCookie: String?
         
-        // Use default session configuration
-        self.session = URLSession.shared
-        print("✅ NetworkManager session created successfully")
+        func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+            // Extract session cookie from Set-Cookie header
+            if let setCookieHeader = response.allHeaderFields["Set-Cookie"] as? String {
+                self.capturedCookie = NetworkManager.extractSessionValue(from: setCookieHeader)
+                print("🍪 Captured session cookie: \(self.capturedCookie ?? "none")")
+            }
+            
+            // Allow the redirect to continue
+            completionHandler(request)
+        }
+    }
+    
+    private override init() {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
+        self.session = URLSession(configuration: config)
     }
     
     // MARK: - Login
@@ -54,21 +69,6 @@ class NetworkManager {
         print("🔍 Request body bytes: \(bodyData.count)")
         
         // Create a custom delegate to handle redirects and capture cookies
-        class LoginDelegate: NSObject, URLSessionTaskDelegate {
-            var capturedCookie: String?
-            
-            func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
-                // Capture Set-Cookie header from redirect response
-                if let setCookieHeader = response.allHeaderFields["Set-Cookie"] as? String {
-                    capturedCookie = setCookieHeader
-                    print("🍪 Captured Set-Cookie from redirect: \(setCookieHeader)")
-                }
-                
-                // Don't follow the redirect
-                completionHandler(nil)
-            }
-        }
-        
         let delegate = LoginDelegate()
         let config = URLSessionConfiguration.default
         let sessionWithDelegate = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
@@ -109,7 +109,7 @@ class NetworkManager {
             if let cookie = sessionCookie {
                 // Parse Set-Cookie header to extract session value
                 // Format: "session=<value>; HttpOnly; Path=/"
-                if let sessionValue = extractSessionValue(from: cookie) {
+                if let sessionValue = NetworkManager.extractSessionValue(from: cookie) {
                     let cleanCookie = "session=\(sessionValue)"
                     
                     // Login successful - create a response
@@ -141,7 +141,7 @@ class NetworkManager {
         throw NetworkError.unauthorized
     }
     
-    private func extractSessionValue(from setCookieHeader: String) -> String? {
+    private static func extractSessionValue(from setCookieHeader: String) -> String? {
         // Parse Set-Cookie header to extract session value
         // Format: "session=<value>; HttpOnly; Path=/" or just "session=<value>"
         
@@ -171,156 +171,35 @@ class NetworkManager {
     
     // MARK: - Google OAuth
     func initiateGoogleSignIn() async throws -> LoginResponse {
-        // Generate state parameter for security
-        let state = generateRandomState()
-        
-        // Build Google OAuth URL
-        let clientId = "590112997511-br4ard89e970bsbe94hbp7gmhoifd0gv.apps.googleusercontent.com"
-        let redirectUri = "gsaleapp://oauth-callback" // Custom URL scheme for iOS
-        let scope = "openid%20email%20profile"
-        
-        let googleAuthURL = "https://accounts.google.com/o/oauth2/v2/auth?" +
-                           "client_id=\(clientId)&" +
-                           "response_type=code&" +
-                           "scope=\(scope)&" +
-                           "redirect_uri=\(redirectUri)&" +
-                           "state=\(state)"
-        
-        guard let url = URL(string: googleAuthURL) else {
-            throw NetworkError.invalidURL
-        }
-        
-        print("🔗 Starting Google OAuth with URL: \(googleAuthURL)")
-        
-        // Use ASWebAuthenticationSession for OAuth flow
         return try await withCheckedThrowingContinuation { continuation in
-            let session = ASWebAuthenticationSession(
-                url: url,
-                callbackURLScheme: "gsaleapp"
-            ) { callbackURL, error in
-                if let error = error {
-                    continuation.resume(throwing: NetworkError.serverError(error.localizedDescription))
-                    return
-                }
-                
-                guard let callbackURL = callbackURL else {
-                    continuation.resume(throwing: NetworkError.noData)
-                    return
-                }
-                
-                // Handle the OAuth callback
-                Task {
-                    do {
-                        let response = try await self.handleOAuthCallback(callbackURL)
+            Task { @MainActor in
+                // Create and present the OAuth web view
+                let oauthViewController = OAuthWebViewController()
+                oauthViewController.baseURL = self.baseURL
+                oauthViewController.completion = { result in
+                    switch result {
+                    case .success(let response):
                         continuation.resume(returning: response)
-                    } catch {
+                    case .failure(let error):
                         continuation.resume(throwing: error)
                     }
                 }
-            }
-            
-            // Present the authentication session
-            session.presentationContextProvider = AuthenticationSessionPresentationProvider()
-            session.prefersEphemeralWebBrowserSession = false
-            session.start()
-        }
-    }
-    
-    private func generateRandomState() -> String {
-        let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        return String((0..<32).map { _ in characters.randomElement()! })
-    }
-    
-    private func handleOAuthCallback(_ callbackURL: URL) async throws -> LoginResponse {
-        guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
-              let queryItems = components.queryItems else {
-            throw NetworkError.serverError("Invalid callback URL")
-        }
-        
-        // Check for error
-        if let error = queryItems.first(where: { $0.name == "error" })?.value {
-            throw NetworkError.serverError("OAuth error: \(error)")
-        }
-        
-        // Get authorization code
-        guard let code = queryItems.first(where: { $0.name == "code" })?.value else {
-            throw NetworkError.serverError("No authorization code received")
-        }
-        
-        // Exchange code for tokens with our backend
-        return try await exchangeCodeForTokens(code: code)
-    }
-    
-    private func exchangeCodeForTokens(code: String) async throws -> LoginResponse {
-        let url = URL(string: "\(baseURL)/google-callback")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
-        
-        let body = "code=\(code)&mobile=true"
-        request.httpBody = body.data(using: .utf8)
-        
-        print("🔄 Exchanging OAuth code with backend: \(url)")
-        print("📝 Request body: \(body)")
-        
-        let (data, response) = try await session.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.serverError("Invalid response")
-        }
-        
-        print("📡 OAuth exchange response status: \(httpResponse.statusCode)")
-        
-        if httpResponse.statusCode == 200 {
-            // Parse JSON response
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw NetworkError.decodingError
-            }
-            
-            print("📄 OAuth response JSON: \(json)")
-            
-            let success = json["success"] as? Bool ?? false
-            let message = json["message"] as? String ?? "Unknown error"
-            
-            if success {
-                let username = json["username"] as? String ?? ""
-                let userId = json["user_id"] as? Int ?? 0
-                let isAdmin = json["is_admin"] as? Bool ?? false
                 
-                // Extract session cookie from response headers
-                var sessionCookie: String? = nil
-                if let setCookieHeader = httpResponse.allHeaderFields["Set-Cookie"] as? String {
-                    sessionCookie = extractSessionValue(from: setCookieHeader)
-                    print("🍪 Extracted session cookie from OAuth response")
+                // Present the OAuth view controller
+                guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                      let window = windowScene.windows.first,
+                      let rootViewController = window.rootViewController else {
+                    continuation.resume(throwing: NetworkError.serverError("No root view controller found"))
+                    return
                 }
                 
-                return LoginResponse(
-                    success: true,
-                    message: message,
-                    cookie: sessionCookie.map { "session=\($0)" },
-                    user_id: userId,
-                    username: username,
-                    is_admin: isAdmin
-                )
-            } else {
-                return LoginResponse(
-                    success: false,
-                    message: message,
-                    cookie: nil,
-                    user_id: nil,
-                    username: nil,
-                    is_admin: nil
-                )
+                let navController = UINavigationController(rootViewController: oauthViewController)
+                rootViewController.present(navController, animated: true)
             }
         }
-        
-        // Handle error response
-        let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-        print("❌ OAuth exchange failed: \(responseString)")
-        
-        throw NetworkError.serverError("Google authentication failed")
     }
+    
+
     
     // MARK: - Groups
     func getGroups() async throws -> [Group] {
@@ -2428,13 +2307,136 @@ class NetworkManager {
     }
 } 
 
-// MARK: - ASWebAuthenticationPresentationContextProviding
-class AuthenticationSessionPresentationProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
-    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            return window
+
+
+// MARK: - OAuth Web View Controller
+class OAuthWebViewController: UIViewController, WKNavigationDelegate {
+    private var webView: WKWebView!
+    var baseURL: String = ""
+    var completion: ((Result<LoginResponse, Error>) -> Void)?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        title = "Sign in with Google"
+        view.backgroundColor = .systemBackground
+        
+        // Setup navigation bar
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .cancel,
+            target: self,
+            action: #selector(cancelTapped)
+        )
+        
+        // Setup web view
+        let config = WKWebViewConfiguration()
+        config.websiteDataStore = WKWebsiteDataStore.nonPersistent() // Use incognito mode
+        
+        webView = WKWebView(frame: view.bounds, configuration: config)
+        webView.navigationDelegate = self
+        webView.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(webView)
+        
+        NSLayoutConstraint.activate([
+            webView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        // Start OAuth flow
+        startOAuthFlow()
+    }
+    
+    private func startOAuthFlow() {
+        let oauthURL = "\(baseURL)/google-login?mobile=true"
+        
+        guard let url = URL(string: oauthURL) else {
+            completion?(.failure(NetworkError.invalidURL))
+            return
         }
-        return ASPresentationAnchor()
+        
+        print("🔄 Starting OAuth flow: \(oauthURL)")
+        
+        var request = URLRequest(url: url)
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        
+        webView.load(request)
+    }
+    
+    @objc private func cancelTapped() {
+        completion?(.failure(NetworkError.serverError("User cancelled authentication")))
+        dismiss(animated: true)
+    }
+    
+    // MARK: - WKNavigationDelegate
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        guard let url = webView.url else { return }
+        
+        print("🌐 WebView loaded: \(url.absoluteString)")
+        
+        // Check if we've reached the success page
+        if url.path.contains("mobile_oauth_success") {
+            print("✅ OAuth success page detected")
+            
+            // Extract session ID from the page
+            webView.evaluateJavaScript("document.getElementById('session-data').textContent") { result, error in
+                if let sessionId = result as? String, !sessionId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    print("🍪 Extracted session ID: \(sessionId)")
+                    
+                    // Extract username from the page
+                    webView.evaluateJavaScript("document.querySelector('h1').nextElementSibling.textContent") { usernameResult, _ in
+                        let username = (usernameResult as? String)?.components(separatedBy: "\n").first?.replacingOccurrences(of: "Welcome, ", with: "").replacingOccurrences(of: "!", with: "") ?? "User"
+                        
+                        let response = LoginResponse(
+                            success: true,
+                            message: "Login successful",
+                            cookie: "session=\(sessionId.trimmingCharacters(in: .whitespacesAndNewlines))",
+                            user_id: nil,
+                            username: username,
+                            is_admin: false
+                        )
+                        
+                        DispatchQueue.main.async {
+                            self.completion?(.success(response))
+                            self.dismiss(animated: true)
+                        }
+                    }
+                } else {
+                    print("❌ Could not extract session ID")
+                    DispatchQueue.main.async {
+                        self.completion?(.failure(NetworkError.serverError("Could not extract session information")))
+                        self.dismiss(animated: true)
+                    }
+                }
+            }
+        }
+        // Check if we've reached the error page
+        else if url.path.contains("mobile_oauth_error") {
+            print("❌ OAuth error page detected")
+            
+            webView.evaluateJavaScript("document.querySelector('.error-details').textContent") { result, error in
+                let errorMessage = (result as? String) ?? "Authentication failed"
+                
+                DispatchQueue.main.async {
+                    self.completion?(.failure(NetworkError.serverError(errorMessage)))
+                    self.dismiss(animated: true)
+                }
+            }
+        }
+    }
+    
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        print("❌ WebView navigation failed: \(error)")
+        completion?(.failure(error))
+        dismiss(animated: true)
+    }
+    
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        print("❌ WebView provisional navigation failed: \(error)")
+        completion?(.failure(error))
+        dismiss(animated: true)
     }
 }

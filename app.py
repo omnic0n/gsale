@@ -153,15 +153,15 @@ def google_login():
     user_agent = request.headers.get('User-Agent', '').lower()
     is_mobile_request = 'gsaleapp' in user_agent or 'mobile' in request.args
     
-    # Determine redirect URI based on request type
+    # Store mobile flag in session for callback
     if is_mobile_request:
-        redirect_uri = 'gsaleapp://oauth-callback'
+        session['is_mobile_oauth'] = True
+    
+    # Always use web redirect URI for Google OAuth compliance
+    if request.host.startswith('127.0.0.1') or request.host.startswith('localhost'):
+        redirect_uri = 'http://127.0.0.1:5000/google-callback'
     else:
-        # For web requests, use localhost for testing
-        if request.host.startswith('127.0.0.1') or request.host.startswith('localhost'):
-            redirect_uri = 'http://127.0.0.1:5000/google-callback'
-        else:
-            redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
+        redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
     
     google_auth_url = (
         'https://accounts.google.com/o/oauth2/v2/auth?'
@@ -181,36 +181,30 @@ def google_login():
 @app.route('/google-callback', methods=['GET', 'POST'])
 def google_callback():
     """Handle Google OAuth callback"""
-    # Check if this is a mobile request based on User-Agent or referrer
-    user_agent = request.headers.get('User-Agent', '').lower()
-    is_mobile_request = 'gsaleapp' in user_agent or 'mobile' in request.args
+    # Check if this is a mobile request based on session flag
+    is_mobile_request = session.get('is_mobile_oauth', False)
     
-    # Verify state parameter (skip for mobile POST requests that don't have session state)
-    if request.method == 'GET' and not is_mobile_request:
-        if request.args.get('state') != session.get('oauth_state'):
-            flash('Invalid state parameter. Please try again.', 'error')
-            return redirect(url_for('login'))
+    # Verify state parameter
+    if request.args.get('state') != session.get('oauth_state'):
+        flash('Invalid state parameter. Please try again.', 'error')
+        return redirect(url_for('login'))
     
     # Get authorization code
-    code = request.args.get('code') if request.method == 'GET' else request.form.get('code')
+    code = request.args.get('code')
     if not code:
         error_msg = 'Authorization code not received.'
         if is_mobile_request:
-            return jsonify({'success': False, 'message': error_msg}), 400
+            return render_template('mobile_oauth_error.html', error=error_msg)
         else:
             flash(error_msg, 'error')
             return redirect(url_for('login'))
     
     try:
-        # Determine redirect URI based on request type and environment
-        if is_mobile_request:
-            redirect_uri = 'gsaleapp://oauth-callback'
+        # Always use web redirect URI for Google OAuth compliance
+        if request.host.startswith('127.0.0.1') or request.host.startswith('localhost'):
+            redirect_uri = 'http://127.0.0.1:5000/google-callback'
         else:
-            # Check if this is a localhost request
-            if request.host.startswith('127.0.0.1') or request.host.startswith('localhost'):
-                redirect_uri = 'http://127.0.0.1:5000/google-callback'
-            else:
-                redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
+            redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
         
         # Exchange code for tokens
         token_url = 'https://oauth2.googleapis.com/token'
@@ -244,80 +238,65 @@ def google_callback():
         
         if not existing_user:
             # Record the access attempt for new users only
-            set_data.record_access_attempt(
-                email=email,
-                google_id=google_id,
-                name=name,
-                picture=picture,
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get('User-Agent')
-            )
+            try:
+                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                cursor.execute('INSERT INTO access_attempts (email, successful, attempt_time) VALUES (%s, %s, NOW())', (email, False))
+                mysql.connection.commit()
+                cursor.close()
+            except Exception as e:
+                print(f"Error recording access attempt: {e}")
             
-            # Clear any existing session data
-            session.clear()
-            flash(f'Access denied. This email address is not authorized to access this application. A request was sent to the admin to add your account.', 'error')
-            return redirect(url_for('login'))
-        
-        # Check if user is active
-        if not existing_user.get('is_active', True):
-            # Don't record access attempt for existing inactive users
-            # Clear any existing session data
-            session.clear()
-            flash(f'Access denied. Your account has been deactivated. Please contact an administrator.', 'error')
-            return redirect(url_for('login'))
-        
-        # Check if user exists in database by Google ID first
-        user = get_data.get_user_by_google_id(google_id)
-        
-        if not user:
-            # Check if user exists by email (for existing users who want to link Google account)
-            existing_user = get_data.get_user_by_email(email)
-            
-            if existing_user:
-                # User exists with this email but no Google ID - link the accounts
-                user_id = set_data.link_google_account(existing_user['id'], google_id, name, picture)
-                if not user_id:
-                    flash('Failed to link Google account to existing user.', 'error')
-                    return redirect(url_for('login'))
-                user = existing_user  # Use existing user data
-            else:
-                # Create new user
-                user_id = set_data.create_google_user(google_id, email, name, picture)
-                if not user_id:
-                    flash('Failed to create user account.', 'error')
+            # Create new user account
+            print(f"Creating new account for {email}")
+            user_id = set_data.create_user_account(email, name, google_id, picture)
+            if not user_id:
+                error_msg = 'Failed to create user account. Please try again.'
+                if is_mobile_request:
+                    return render_template('mobile_oauth_error.html', error=error_msg)
+                else:
+                    flash(error_msg, 'error')
                     return redirect(url_for('login'))
         else:
-            user_id = user['id']
+            user_id = existing_user['id']
+            user = existing_user
+            
+            # Update Google ID if not set
+            if not existing_user.get('google_id'):
+                set_data.update_user_google_id(user_id, google_id)
         
         # Log user in
         session['loggedin'] = True
         session['id'] = user_id
-        session['username'] = user.get('name', email)  # Use name from accounts table, fallback to email
-        session['email'] = email  # Store email separately for footer display
-        session['is_admin'] = user.get('is_admin', False) if user else False
+        session['username'] = user.get('name', email) if 'user' in locals() else name
+        session['email'] = email
+        session['is_admin'] = user.get('is_admin', False) if 'user' in locals() else False
+        
+        # Clear OAuth session data
+        session.pop('oauth_state', None)
+        session.pop('is_mobile_oauth', None)
         
         # Handle response based on request type
         if is_mobile_request:
-            # For mobile, return JSON response with session info and cookie
-            response = jsonify({
-                'success': True,
-                'message': 'Login successful',
-                'username': user.get('name', email),
-                'user_id': user_id,
-                'is_admin': user.get('is_admin', False) if user else False
-            })
-            # Set the session cookie for the mobile app
-            response.set_cookie('session', session.sid, httponly=True, path='/')
-            return response
+            # For mobile, show success page with instructions to return to app
+            return render_template('mobile_oauth_success.html', 
+                                 username=session['username'],
+                                 session_id=session.sid)
         else:
             # For web, redirect to home or next page
+            flash('Login successful!', 'success')
             next_page = request.args.get('next') or url_for('index')
             return redirect(next_page)
-        
+            
     except Exception as e:
-        error_msg = f'Google login failed: {str(e)}'
+        print(f"OAuth error: {e}")
+        error_msg = f'Authentication failed: {str(e)}'
+        
+        # Clear OAuth session data on error
+        session.pop('oauth_state', None)
+        session.pop('is_mobile_oauth', None)
+        
         if is_mobile_request:
-            return jsonify({'success': False, 'message': error_msg}), 500
+            return render_template('mobile_oauth_error.html', error=error_msg)
         else:
             flash(error_msg, 'error')
             return redirect(url_for('login'))
