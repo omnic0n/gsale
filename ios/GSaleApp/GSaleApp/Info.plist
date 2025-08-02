@@ -11,6 +11,11 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.levimyles.gsale.ios</string>
 
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GSale needs access to your location to automatically set the location for new groups and provide location-based features.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>GSale needs access to your location to automatically set the location for new groups and provide location-based features.</string>
+	
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

@@ -40,6 +40,22 @@ struct GroupDetail: Codable {
     let soldPrice: Double
     let items: [GroupItem]
     let imageFilename: String?
+    
+    // Location fields
+    let latitude: Double?
+    let longitude: Double?
+    let locationAddress: String?
+}
+
+// MARK: - Location Model
+struct Location {
+    let latitude: Double
+    let longitude: Double
+    let address: String?
+    
+    var isValid: Bool {
+        return latitude != 0 && longitude != 0
+    }
 }
 
 struct GroupItem: Codable {

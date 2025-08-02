@@ -943,7 +943,10 @@ class NetworkManager: NSObject {
             totalSoldItems: soldItems,
             soldPrice: soldPrice,
             items: items,
-            imageFilename: imageFilename
+            imageFilename: imageFilename,
+            latitude: nil, // TODO: Parse location from HTML if available
+            longitude: nil, // TODO: Parse location from HTML if available  
+            locationAddress: nil // TODO: Parse location from HTML if available
         )
     }
     
@@ -1654,7 +1657,7 @@ class NetworkManager: NSObject {
         print("✅ Group removed successfully - status: \(httpResponse.statusCode)")
     }
     
-    func addGroup(name: String, price: Double, date: Date, image: UIImage? = nil) async throws -> AddGroupResponse {
+    func addGroup(name: String, price: Double, date: Date, image: UIImage? = nil, location: Location? = nil) async throws -> AddGroupResponse {
         let url = URL(string: "\(baseURL)/groups/create")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -1681,9 +1684,20 @@ class NetworkManager: NSObject {
         let nameEncoded = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name
         let priceEncoded = String(format: "%.2f", price).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(format: "%.2f", price)
         
-        // For now, use simple form data without image to test
-        // TODO: Implement proper multipart form data for image upload
-        let body = "date=\(dateEncoded)&name=\(nameEncoded)&price=\(priceEncoded)"
+        // Create form data including location if provided
+        var body = "date=\(dateEncoded)&name=\(nameEncoded)&price=\(priceEncoded)"
+        
+        if let location = location {
+            let latitudeEncoded = String(location.latitude).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(location.latitude)
+            let longitudeEncoded = String(location.longitude).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(location.longitude)
+            
+            body += "&latitude=\(latitudeEncoded)&longitude=\(longitudeEncoded)"
+            
+            if let address = location.address {
+                let addressEncoded = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? address
+                body += "&location_address=\(addressEncoded)"
+            }
+        }
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpBody = body.data(using: .utf8)
         

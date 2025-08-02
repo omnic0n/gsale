@@ -169,7 +169,8 @@ def google_login():
         'response_type=code&'
         'scope=openid%20email%20profile&'
         'redirect_uri={}&'
-        'state={}'
+        'state={}&'
+        'prompt=select_account'
     ).format(
         app.config['GOOGLE_CLIENT_ID'],
         redirect_uri,

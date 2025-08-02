@@ -464,7 +464,10 @@ class GroupDetailViewController: UIViewController {
             totalSoldItems: groupDetail.totalSoldItems,
             soldPrice: groupDetail.soldPrice,
             items: items,
-            imageFilename: groupDetail.imageFilename
+            imageFilename: groupDetail.imageFilename,
+            latitude: groupDetail.latitude,
+            longitude: groupDetail.longitude,
+            locationAddress: groupDetail.locationAddress
         )
         
         // Update the groupDetail property

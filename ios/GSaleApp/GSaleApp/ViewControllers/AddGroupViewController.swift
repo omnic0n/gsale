@@ -1,7 +1,9 @@
 import UIKit
 import PhotosUI
+import CoreLocation
+import MapKit
 
-class AddGroupViewController: UIViewController {
+class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate {
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -11,16 +13,34 @@ class AddGroupViewController: UIViewController {
     private let priceTextField = UITextField()
     private let datePicker = UIDatePicker()
     private let dateLabel = UILabel()
+    
+    // Location section
+    private let locationLabel = UILabel()
+    private let locationAddressTextField = UITextField()
+    private let mapView = MKMapView()
+    private let useCurrentLocationButton = UIButton(type: .system)
+    private let locationManager = CLLocationManager()
+    
     private let imageView = UIImageView()
     private let selectImageButton = UIButton(type: .system)
     private let addButton = UIButton(type: .system)
     private let activityIndicator = UIActivityIndicatorView(style: .large)
     
     private var selectedImage: UIImage?
+    private var selectedLocation: Location?
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupLocationManager()
         setupUI()
+    }
+    
+    private func setupLocationManager() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        
+        // Request location permission
+        locationManager.requestWhenInUseAuthorization()
     }
     
     private func setupUI() {
@@ -62,6 +82,35 @@ class AddGroupViewController: UIViewController {
         dateLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         
+        // Location UI setup
+        locationLabel.text = "Location:"
+        locationLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        locationLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        locationAddressTextField.placeholder = "Address will be auto-populated from your location"
+        locationAddressTextField.font = UIFont.systemFont(ofSize: 16)
+        locationAddressTextField.borderStyle = .roundedRect
+        locationAddressTextField.backgroundColor = .secondarySystemBackground
+        locationAddressTextField.translatesAutoresizingMaskIntoConstraints = false
+        
+        mapView.delegate = self
+        mapView.showsUserLocation = true
+        mapView.userTrackingMode = .none
+        mapView.layer.cornerRadius = 8
+        mapView.layer.borderWidth = 1
+        mapView.layer.borderColor = UIColor.systemGray4.cgColor
+        mapView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add tap gesture to map for location selection
+        let mapTapGesture = UITapGestureRecognizer(target: self, action: #selector(mapTapped(_:)))
+        mapView.addGestureRecognizer(mapTapGesture)
+        
+        useCurrentLocationButton.setTitle("📍 Use Current Location", for: .normal)
+        useCurrentLocationButton.titleLabel?.font = UIFont.systemFont(ofSize: 16)
+        useCurrentLocationButton.setTitleColor(.systemBlue, for: .normal)
+        useCurrentLocationButton.translatesAutoresizingMaskIntoConstraints = false
+        useCurrentLocationButton.addTarget(self, action: #selector(useCurrentLocationTapped), for: .touchUpInside)
+        
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .systemGray6
         imageView.layer.cornerRadius = 8
@@ -91,6 +140,10 @@ class AddGroupViewController: UIViewController {
         contentView.addSubview(priceTextField)
         contentView.addSubview(dateLabel)
         contentView.addSubview(datePicker)
+        contentView.addSubview(locationLabel)
+        contentView.addSubview(locationAddressTextField)
+        contentView.addSubview(mapView)
+        contentView.addSubview(useCurrentLocationButton)
         contentView.addSubview(imageView)
         contentView.addSubview(selectImageButton)
         contentView.addSubview(addButton)
@@ -134,7 +187,25 @@ class AddGroupViewController: UIViewController {
             datePicker.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             datePicker.centerYAnchor.constraint(equalTo: dateLabel.centerYAnchor),
             
-            imageView.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 20),
+            // Location constraints
+            locationLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 30),
+            locationLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            locationLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            
+            locationAddressTextField.topAnchor.constraint(equalTo: locationLabel.bottomAnchor, constant: 10),
+            locationAddressTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            locationAddressTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            locationAddressTextField.heightAnchor.constraint(equalToConstant: 50),
+            
+            mapView.topAnchor.constraint(equalTo: locationAddressTextField.bottomAnchor, constant: 10),
+            mapView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            mapView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            mapView.heightAnchor.constraint(equalToConstant: 200),
+            
+            useCurrentLocationButton.topAnchor.constraint(equalTo: mapView.bottomAnchor, constant: 10),
+            useCurrentLocationButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            
+            imageView.topAnchor.constraint(equalTo: useCurrentLocationButton.bottomAnchor, constant: 20),
             imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             imageView.heightAnchor.constraint(equalToConstant: 120),
@@ -192,7 +263,8 @@ class AddGroupViewController: UIViewController {
                     name: name,
                     price: price,
                     date: datePicker.date,
-                    image: selectedImage // This can be nil
+                    image: selectedImage, // This can be nil
+                    location: selectedLocation // Include location if available
                 )
                 
                                        await MainActor.run {
@@ -336,6 +408,97 @@ class AddGroupViewController: UIViewController {
                 present(alert, animated: true)
             }
     
+    // MARK: - Location Methods
+    
+    @objc private func useCurrentLocationTapped() {
+        guard CLLocationManager.locationServicesEnabled() else {
+            showAlert(title: "Location Services Disabled", message: "Please enable location services in Settings to use this feature.")
+            return
+        }
+        
+        switch locationManager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.requestLocation()
+        case .denied, .restricted:
+            showAlert(title: "Location Permission Denied", message: "Please enable location access in Settings to use current location.")
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        @unknown default:
+            break
+        }
+    }
+    
+    @objc private func mapTapped(_ gesture: UITapGestureRecognizer) {
+        let touchPoint = gesture.location(in: mapView)
+        let coordinate = mapView.convert(touchPoint, toCoordinateFrom: mapView)
+        
+        setLocation(coordinate: coordinate)
+    }
+    
+    private func setLocation(coordinate: CLLocationCoordinate2D) {
+        // Clear existing annotations
+        mapView.removeAnnotations(mapView.annotations)
+        
+        // Add new annotation
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        annotation.title = "Selected Location"
+        mapView.addAnnotation(annotation)
+        
+        // Center map on the location
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
+        mapView.setRegion(region, animated: true)
+        
+        // Reverse geocode to get address
+        let geocoder = CLGeocoder()
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+            DispatchQueue.main.async {
+                if let placemark = placemarks?.first {
+                    let address = self?.formatAddress(from: placemark) ?? "Unknown Address"
+                    self?.locationAddressTextField.text = address
+                    
+                    // Store the selected location
+                    self?.selectedLocation = Location(
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude,
+                        address: address
+                    )
+                } else {
+                    self?.locationAddressTextField.text = "Unknown Address"
+                    self?.selectedLocation = Location(
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude,
+                        address: nil
+                    )
+                }
+            }
+        }
+    }
+    
+    private func formatAddress(from placemark: CLPlacemark) -> String {
+        var addressComponents: [String] = []
+        
+        if let streetNumber = placemark.subThoroughfare {
+            addressComponents.append(streetNumber)
+        }
+        if let streetName = placemark.thoroughfare {
+            addressComponents.append(streetName)
+        }
+        if let city = placemark.locality {
+            addressComponents.append(city)
+        }
+        if let state = placemark.administrativeArea {
+            addressComponents.append(state)
+        }
+        if let postalCode = placemark.postalCode {
+            addressComponents.append(postalCode)
+        }
+        
+        return addressComponents.joined(separator: ", ")
+    }
+    
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
@@ -359,4 +522,32 @@ extension AddGroupViewController: PHPickerViewControllerDelegate {
             }
         }
     }
-} 
+}
+
+// MARK: - CLLocationManagerDelegate
+extension AddGroupViewController {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        setLocation(coordinate: location.coordinate)
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location error: \(error.localizedDescription)")
+        showAlert(title: "Location Error", message: "Failed to get current location. Please try again or select location manually on the map.")
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            // Permission granted, can request location
+            break
+        case .denied, .restricted:
+            showAlert(title: "Location Permission Required", message: "Location access is required to automatically set the group location. You can still select a location manually on the map.")
+        case .notDetermined:
+            // Will be handled when user taps "Use Current Location"
+            break
+        @unknown default:
+            break
+        }
+    }
+}
