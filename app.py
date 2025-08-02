@@ -110,12 +110,20 @@ def login():
     # Output message if something goes wrong...
     msg = ''
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        addr = request.environ['HTTP_X_FORWARDED_FOR'].split(',')
+        # Get client IP address - handle both local development and production
+        if 'HTTP_X_FORWARDED_FOR' in request.environ:
+            # Production environment with proxy/load balancer
+            addr = request.environ['HTTP_X_FORWARDED_FOR'].split(',')
+            client_ip = addr[0].strip()
+        else:
+            # Local development environment
+            client_ip = request.environ.get('REMOTE_ADDR', '127.0.0.1')
+        
         # Create variables for easy access
         username = request.form['username']
         password = request.form['password']
         # Check if account exists using MySQL
-        msg = function.login_data(username=username, password=password, ip=addr[0])
+        msg = function.login_data(username=username, password=password, ip=client_ip)
         if 'loggedin' in session:
             # Redirect to the next page if specified, otherwise go to index
             next_page = request.form.get('next') or request.args.get('next')
@@ -141,8 +149,20 @@ def google_login():
     state = hashlib.sha256(os.urandom(32)).hexdigest()
     session['oauth_state'] = state
     
-    # Build Google OAuth URL with explicit HTTPS redirect URI
-    redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
+    # Check if this is a mobile request
+    user_agent = request.headers.get('User-Agent', '').lower()
+    is_mobile_request = 'gsaleapp' in user_agent or 'mobile' in request.args
+    
+    # Determine redirect URI based on request type
+    if is_mobile_request:
+        redirect_uri = 'gsaleapp://oauth-callback'
+    else:
+        # For web requests, use localhost for testing
+        if request.host.startswith('127.0.0.1') or request.host.startswith('localhost'):
+            redirect_uri = 'http://127.0.0.1:5000/google-callback'
+        else:
+            redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
+    
     google_auth_url = (
         'https://accounts.google.com/o/oauth2/v2/auth?'
         'client_id={}&'
@@ -182,11 +202,15 @@ def google_callback():
             return redirect(url_for('login'))
     
     try:
-        # Determine redirect URI based on request type
+        # Determine redirect URI based on request type and environment
         if is_mobile_request:
             redirect_uri = 'gsaleapp://oauth-callback'
         else:
-            redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
+            # Check if this is a localhost request
+            if request.host.startswith('127.0.0.1') or request.host.startswith('localhost'):
+                redirect_uri = 'http://127.0.0.1:5000/google-callback'
+            else:
+                redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
         
         # Exchange code for tokens
         token_url = 'https://oauth2.googleapis.com/token'
@@ -274,16 +298,19 @@ def google_callback():
         
         # Handle response based on request type
         if is_mobile_request:
-            # For mobile, return JSON response with session info
-            return jsonify({
+            # For mobile, return JSON response with session info and cookie
+            response = jsonify({
                 'success': True,
                 'message': 'Login successful',
                 'username': user.get('name', email),
                 'user_id': user_id,
                 'is_admin': user.get('is_admin', False) if user else False
             })
+            # Set the session cookie for the mobile app
+            response.set_cookie('session', session.sid, httponly=True, path='/')
+            return response
         else:
-            # For web, redirect to next page or index
+            # For web, redirect to home or next page
             next_page = request.args.get('next') or url_for('index')
             return redirect(next_page)
         
