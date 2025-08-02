@@ -210,22 +210,29 @@ class NetworkManager: NSObject {
                 
                 // Check if this is our success callback
                 if callbackURL.absoluteString.contains("oauth-success") {
-                    // Extract username from the callback URL
+                    // Extract username and session token from the callback URL
                     var username = "User"
+                    var sessionToken: String?
+                    
                     if let urlComponents = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
-                       let queryItems = urlComponents.queryItems,
-                       let usernameParam = queryItems.first(where: { $0.name == "username" })?.value {
-                        username = usernameParam
+                       let queryItems = urlComponents.queryItems {
+                        username = queryItems.first(where: { $0.name == "username" })?.value ?? "User"
+                        sessionToken = queryItems.first(where: { $0.name == "session_token" })?.value
                     }
                     
-                    // Now make a request to get the session cookie
+                    guard let token = sessionToken else {
+                        print("❌ No session token in callback URL")
+                        continuation.resume(throwing: NetworkError.serverError("No session token received"))
+                        return
+                    }
+                    
+                    // Exchange session token for session cookie
                     Task {
                         do {
-                            let successURL = URL(string: "\(self.baseURL)/mobile_oauth_success")!
-                            let response = try await self.extractSessionFromSuccessPage(successURL, username: username)
+                            let response = try await self.exchangeSessionToken(token, username: username)
                             continuation.resume(returning: response)
                         } catch {
-                            print("❌ Failed to extract session: \(error)")
+                            print("❌ Failed to exchange session token: \(error)")
                             continuation.resume(throwing: error)
                         }
                     }
@@ -248,6 +255,61 @@ class NetworkManager: NSObject {
                     continuation.resume(throwing: NetworkError.serverError("Failed to start authentication session"))
                 }
             }
+        }
+    }
+    
+    private func exchangeSessionToken(_ token: String, username: String) async throws -> LoginResponse {
+        print("🔄 Exchanging session token for session cookie")
+        
+        let url = URL(string: "\(baseURL)/mobile_session_exchange")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        
+        let requestBody = ["session_token": token]
+        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.noData
+        }
+        
+        print("📡 Session exchange response status: \(httpResponse.statusCode)")
+        
+        if httpResponse.statusCode == 200 {
+            do {
+                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                
+                if let success = json?["success"] as? Bool, success,
+                   let sessionCookie = json?["session_cookie"] as? String,
+                   let responseUsername = json?["username"] as? String {
+                    
+                    print("✅ Session token exchange successful")
+                    
+                    let loginResponse = LoginResponse(
+                        success: true,
+                        message: "Login successful",
+                        cookie: "session=\(sessionCookie)",
+                        user_id: json?["user_id"] as? Int,
+                        username: responseUsername,
+                        is_admin: json?["is_admin"] as? Bool ?? false
+                    )
+                    
+                    return loginResponse
+                } else {
+                    let errorMessage = json?["error"] as? String ?? "Session exchange failed"
+                    throw NetworkError.serverError(errorMessage)
+                }
+            } catch {
+                print("❌ Failed to parse session exchange response: \(error)")
+                throw NetworkError.decodingError
+            }
+        } else {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Session exchange failed"
+            print("❌ Session exchange failed: \(errorMessage)")
+            throw NetworkError.serverError(errorMessage)
         }
     }
     

@@ -188,6 +188,35 @@ def mobile_oauth_success():
         return render_template('mobile_oauth_error.html', 
                              error='Not authenticated'), 401
 
+# Temporary storage for session tokens (in production, use Redis or database)
+mobile_sessions = {}
+
+@app.route('/mobile_session_exchange', methods=['POST'])
+def mobile_session_exchange():
+    """Exchange mobile session token for session information"""
+    data = request.get_json()
+    if not data or 'session_token' not in data:
+        return jsonify({'success': False, 'error': 'Missing session token'}), 400
+    
+    session_token = data['session_token']
+    
+    # Look up the session information by token
+    if session_token in mobile_sessions:
+        session_info = mobile_sessions[session_token]
+        
+        # Remove the token after use (one-time use)
+        del mobile_sessions[session_token]
+        
+        return jsonify({
+            'success': True,
+            'session_cookie': session_info['session_cookie'],
+            'username': session_info['username'],
+            'user_id': session_info.get('user_id'),
+            'is_admin': session_info.get('is_admin', False)
+        })
+    else:
+        return jsonify({'success': False, 'error': 'Invalid or expired session token'}), 401
+
 @app.route('/google-callback', methods=['GET', 'POST'])
 def google_callback():
     """Handle Google OAuth callback"""
@@ -288,9 +317,21 @@ def google_callback():
         # Handle response based on request type
         if is_mobile_request:
             # For mobile, show success page with instructions to return to app
-            # The iOS app will extract the session cookie from the response headers
+            # Generate a session token that represents the current session
+            import secrets
+            session_token = secrets.token_urlsafe(32)
+            
+            # Store session information with the token for later retrieval
+            mobile_sessions[session_token] = {
+                'session_cookie': app.session_interface.get_signing_serializer(app).dumps(dict(session)),
+                'username': session['username'],
+                'user_id': session.get('id'),
+                'is_admin': session.get('is_admin', False)
+            }
+            
             return render_template('mobile_oauth_success.html', 
-                                 username=session['username'])
+                                 username=session['username'],
+                                 session_token=session_token)
         else:
             # For web, redirect to home or next page
             flash('Login successful!', 'success')

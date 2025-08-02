@@ -57,6 +57,10 @@
         .return-button:hover {
             background: #0056CC;
         }
+        
+        .session-info {
+            display: none;
+        }
     </style>
 </head>
 
@@ -68,10 +72,19 @@
             Welcome, {{ username }}!<br> Redirecting back to the app...
         </div>
 
+        <!-- Hidden session info for JavaScript to access -->
+        <div id="session-info" class="session-info" data-username="{{ username }}" data-session-token="{{ session_token }}"></div>
+
         <script>
-            // Automatically redirect to the custom URL scheme to close the session
+            // Get session information from the hidden div
+            const sessionInfo = document.getElementById('session-info');
+            const username = sessionInfo.getAttribute('data-username');
+            const sessionToken = sessionInfo.getAttribute('data-session-token');
+
+            // Automatically redirect to the custom URL scheme with session info
             setTimeout(() => {
-                window.location.href = 'gsale.levimylesllc.com://oauth-success?username={{ username|urlencode }}';
+                const callbackURL = `gsale.levimylesllc.com://oauth-success?username=${encodeURIComponent(username)}&session_token=${encodeURIComponent(sessionToken)}`;
+                window.location.href = callbackURL;
             }, 1000);
 
             // Fallback: try to close the window after a delay
@@ -83,7 +96,8 @@
             if (window.ReactNativeWebView) {
                 window.ReactNativeWebView.postMessage(JSON.stringify({
                     type: 'oauth_success',
-                    username: '{{ username }}'
+                    username: username,
+                    session_token: sessionToken
                 }));
             }
         </script>
