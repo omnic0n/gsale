@@ -208,17 +208,30 @@ class NetworkManager: NSObject {
                 
                 print("✅ OAuth callback received: \(callbackURL)")
                 
-                // The callback means authentication completed, now check for session
-                Task {
-                    do {
-                        // Check the mobile success page for session information
-                        let successURL = URL(string: "\(self.baseURL)/mobile_oauth_success")!
-                        let response = try await self.extractSessionFromSuccessPage(successURL)
-                        continuation.resume(returning: response)
-                    } catch {
-                        print("❌ Failed to extract session: \(error)")
-                        continuation.resume(throwing: error)
+                // Check if this is our success callback
+                if callbackURL.absoluteString.contains("oauth-success") {
+                    // Extract username from the callback URL
+                    var username = "User"
+                    if let urlComponents = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+                       let queryItems = urlComponents.queryItems,
+                       let usernameParam = queryItems.first(where: { $0.name == "username" })?.value {
+                        username = usernameParam
                     }
+                    
+                    // Now make a request to get the session cookie
+                    Task {
+                        do {
+                            let successURL = URL(string: "\(self.baseURL)/mobile_oauth_success")!
+                            let response = try await self.extractSessionFromSuccessPage(successURL, username: username)
+                            continuation.resume(returning: response)
+                        } catch {
+                            print("❌ Failed to extract session: \(error)")
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                } else {
+                    print("❌ Unexpected callback URL: \(callbackURL)")
+                    continuation.resume(throwing: NetworkError.serverError("Unexpected callback URL"))
                 }
             }
             
@@ -238,7 +251,7 @@ class NetworkManager: NSObject {
         }
     }
     
-    private func extractSessionFromSuccessPage(_ url: URL) async throws -> LoginResponse {
+    private func extractSessionFromSuccessPage(_ url: URL, username: String? = nil) async throws -> LoginResponse {
         print("🔍 Extracting session from success page: \(url)")
         
         // Make a request to the success page to extract session information
@@ -271,9 +284,8 @@ class NetworkManager: NSObject {
             }
         }
         
-        // Parse HTML to extract username
-        let html = String(data: data, encoding: .utf8) ?? ""
-        let username = extractUsernameFromHTML(html)
+        // Use provided username or parse from HTML
+        let finalUsername = username ?? extractUsernameFromHTML(String(data: data, encoding: .utf8) ?? "")
         
         guard let finalSessionCookie = sessionCookie else {
             throw NetworkError.serverError("No session cookie found")
@@ -284,7 +296,7 @@ class NetworkManager: NSObject {
             message: "Login successful",
             cookie: "session=\(finalSessionCookie)",
             user_id: nil,
-            username: username,
+            username: finalUsername,
             is_admin: false
         )
         

@@ -65,11 +65,16 @@
         <div class="success-icon">✅</div>
         <h1>Login Successful!</h1>
         <div class="message">
-            Welcome, {{ username }}!<br> You can now close this page and return to the GSale app.
+            Welcome, {{ username }}!<br> Redirecting back to the app...
         </div>
 
         <script>
-            // Auto-close after a delay
+            // Automatically redirect to the custom URL scheme to close the session
+            setTimeout(() => {
+                window.location.href = 'gsale.levimylesllc.com://oauth-success?username={{ username|urlencode }}';
+            }, 1000);
+
+            // Fallback: try to close the window after a delay
             setTimeout(() => {
                 window.close();
             }, 3000);
