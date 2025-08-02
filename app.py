@@ -158,21 +158,36 @@ def google_login():
     
     return redirect(google_auth_url)
 
-@app.route('/google-callback')
+@app.route('/google-callback', methods=['GET', 'POST'])
 def google_callback():
     """Handle Google OAuth callback"""
-    # Verify state parameter
-    if request.args.get('state') != session.get('oauth_state'):
-        flash('Invalid state parameter. Please try again.', 'error')
-        return redirect(url_for('login'))
+    # Check if this is a mobile request based on User-Agent or referrer
+    user_agent = request.headers.get('User-Agent', '').lower()
+    is_mobile_request = 'gsaleapp' in user_agent or 'mobile' in request.args
+    
+    # Verify state parameter (skip for mobile POST requests that don't have session state)
+    if request.method == 'GET' and not is_mobile_request:
+        if request.args.get('state') != session.get('oauth_state'):
+            flash('Invalid state parameter. Please try again.', 'error')
+            return redirect(url_for('login'))
     
     # Get authorization code
-    code = request.args.get('code')
+    code = request.args.get('code') if request.method == 'GET' else request.form.get('code')
     if not code:
-        flash('Authorization code not received.', 'error')
-        return redirect(url_for('login'))
+        error_msg = 'Authorization code not received.'
+        if is_mobile_request:
+            return jsonify({'success': False, 'message': error_msg}), 400
+        else:
+            flash(error_msg, 'error')
+            return redirect(url_for('login'))
     
     try:
+        # Determine redirect URI based on request type
+        if is_mobile_request:
+            redirect_uri = 'gsaleapp://oauth-callback'
+        else:
+            redirect_uri = 'https://gsale.levimylesllc.com/google-callback'
+        
         # Exchange code for tokens
         token_url = 'https://oauth2.googleapis.com/token'
         token_data = {
@@ -180,7 +195,7 @@ def google_callback():
             'client_secret': app.config['GOOGLE_CLIENT_SECRET'],
             'code': code,
             'grant_type': 'authorization_code',
-            'redirect_uri': 'https://gsale.levimylesllc.com/google-callback'
+            'redirect_uri': redirect_uri
         }
         
         token_response = requests.post(token_url, data=token_data)
@@ -257,13 +272,28 @@ def google_callback():
         session['email'] = email  # Store email separately for footer display
         session['is_admin'] = user.get('is_admin', False) if user else False
         
-        # Redirect to next page or index
-        next_page = request.args.get('next') or url_for('index')
-        return redirect(next_page)
+        # Handle response based on request type
+        if is_mobile_request:
+            # For mobile, return JSON response with session info
+            return jsonify({
+                'success': True,
+                'message': 'Login successful',
+                'username': user.get('name', email),
+                'user_id': user_id,
+                'is_admin': user.get('is_admin', False) if user else False
+            })
+        else:
+            # For web, redirect to next page or index
+            next_page = request.args.get('next') or url_for('index')
+            return redirect(next_page)
         
     except Exception as e:
-        flash(f'Google login failed: {str(e)}', 'error')
-        return redirect(url_for('login'))
+        error_msg = f'Google login failed: {str(e)}'
+        if is_mobile_request:
+            return jsonify({'success': False, 'message': error_msg}), 500
+        else:
+            flash(error_msg, 'error')
+            return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():

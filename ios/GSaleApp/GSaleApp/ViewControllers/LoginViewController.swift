@@ -1,4 +1,5 @@
 import UIKit
+import AuthenticationServices
 
 class LoginViewController: UIViewController {
     
@@ -8,6 +9,10 @@ class LoginViewController: UIViewController {
     private let logoImageView = UIImageView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
+    
+    // Google Sign-In button
+    private let googleSignInButton = UIButton(type: .system)
+    private let orDividerLabel = UILabel()
     
     private let usernameTextField = UITextField()
     private let passwordTextField = UITextField()
@@ -51,6 +56,16 @@ class LoginViewController: UIViewController {
         subtitleLabel.textAlignment = .center
         subtitleLabel.textColor = .secondaryLabel
         
+        // Setup Google Sign-In Button
+        setupGoogleSignInButton()
+        
+        // Setup OR divider
+        orDividerLabel.text = "or"
+        orDividerLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        orDividerLabel.textAlignment = .center
+        orDividerLabel.textColor = .secondaryLabel
+        orDividerLabel.translatesAutoresizingMaskIntoConstraints = false
+        
         setupTextField(usernameTextField, placeholder: "Username", icon: "person.fill")
         setupTextField(passwordTextField, placeholder: "Password", icon: "lock.fill")
         passwordTextField.isSecureTextEntry = true
@@ -77,6 +92,8 @@ class LoginViewController: UIViewController {
         contentView.addSubview(logoImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
+        contentView.addSubview(googleSignInButton)
+        contentView.addSubview(orDividerLabel)
         contentView.addSubview(usernameTextField)
         contentView.addSubview(passwordTextField)
         contentView.addSubview(savePasswordLabel)
@@ -85,6 +102,53 @@ class LoginViewController: UIViewController {
         contentView.addSubview(activityIndicator)
         
         setupConstraints()
+    }
+    
+    private func setupGoogleSignInButton() {
+        var config = UIButton.Configuration.filled()
+        config.title = "Sign in with Google"
+        config.baseBackgroundColor = UIColor(red: 66/255, green: 133/255, blue: 244/255, alpha: 1.0) // Google Blue
+        config.baseForegroundColor = .white
+        config.cornerStyle = .fixed
+        config.background.cornerRadius = 12
+        
+        // Add Google icon
+        if let googleIcon = UIImage(systemName: "globe") {
+            config.image = googleIcon
+            config.imagePadding = 10
+            config.imagePlacement = .leading
+        }
+        
+        googleSignInButton.configuration = config
+        googleSignInButton.translatesAutoresizingMaskIntoConstraints = false
+        googleSignInButton.addTarget(self, action: #selector(googleSignInTapped), for: .touchUpInside)
+    }
+    
+    @objc private func googleSignInTapped() {
+        Task {
+            do {
+                let response = try await NetworkManager.shared.initiateGoogleSignIn()
+                
+                await MainActor.run {
+                    if response.success {
+                        UserManager.shared.saveLoginData(
+                            cookie: response.cookie ?? "",
+                            username: response.username ?? "",
+                            userId: response.user_id,
+                            isAdmin: response.is_admin ?? false,
+                            password: nil
+                        )
+                        presentDashboard()
+                    } else {
+                        showAlert(title: "Google Sign-In Failed", message: response.message)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    showAlert(title: "Google Sign-In Error", message: error.localizedDescription)
+                }
+            }
+        }
     }
     
     private func setupTextField(_ textField: UITextField, placeholder: String, icon: String) {
@@ -134,7 +198,16 @@ class LoginViewController: UIViewController {
             subtitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             subtitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
-            usernameTextField.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 40),
+            googleSignInButton.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 40),
+            googleSignInButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            googleSignInButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            googleSignInButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            orDividerLabel.topAnchor.constraint(equalTo: googleSignInButton.bottomAnchor, constant: 20),
+            orDividerLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            orDividerLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            
+            usernameTextField.topAnchor.constraint(equalTo: orDividerLabel.bottomAnchor, constant: 40),
             usernameTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             usernameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             usernameTextField.heightAnchor.constraint(equalToConstant: 50),
@@ -199,12 +272,16 @@ class LoginViewController: UIViewController {
                     self.loginButton.isEnabled = true
                     
                     let errorMessage: String
-                    switch error {
-                    case NetworkError.unauthorized:
-                        errorMessage = "Invalid username or password. Please check your credentials."
-                    case NetworkError.serverError(let message):
-                        errorMessage = "Server error: \(message)"
-                    default:
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .unauthorized:
+                            errorMessage = "Invalid username or password. Please check your credentials."
+                        case .serverError(let message):
+                            errorMessage = "Server error: \(message)"
+                        default:
+                            errorMessage = "Login failed. Please check your internet connection and try again."
+                        }
+                    } else {
                         errorMessage = "Login failed. Please check your internet connection and try again."
                     }
                     
@@ -244,5 +321,17 @@ class LoginViewController: UIViewController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+    
+    private func presentDashboard() {
+        let dashboardVC = DashboardViewController()
+        let navController = UINavigationController(rootViewController: dashboardVC)
+        
+        // Replace the root view controller
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            window.rootViewController = navController
+            window.makeKeyAndVisible()
+        }
     }
 } 

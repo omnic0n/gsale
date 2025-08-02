@@ -1,5 +1,14 @@
 import Foundation
 import UIKit
+import AuthenticationServices
+
+enum NetworkError: Error {
+    case invalidURL
+    case noData
+    case decodingError
+    case serverError(String)
+    case unauthorized
+}
 
 class NetworkManager {
     static let shared = NetworkManager()
@@ -158,6 +167,159 @@ class NetworkManager {
         
         print("❌ Could not extract session value from: \(setCookieHeader)")
         return nil
+    }
+    
+    // MARK: - Google OAuth
+    func initiateGoogleSignIn() async throws -> LoginResponse {
+        // Generate state parameter for security
+        let state = generateRandomState()
+        
+        // Build Google OAuth URL
+        let clientId = "590112997511-br4ard89e970bsbe94hbp7gmhoifd0gv.apps.googleusercontent.com"
+        let redirectUri = "gsaleapp://oauth-callback" // Custom URL scheme for iOS
+        let scope = "openid%20email%20profile"
+        
+        let googleAuthURL = "https://accounts.google.com/o/oauth2/v2/auth?" +
+                           "client_id=\(clientId)&" +
+                           "response_type=code&" +
+                           "scope=\(scope)&" +
+                           "redirect_uri=\(redirectUri)&" +
+                           "state=\(state)"
+        
+        guard let url = URL(string: googleAuthURL) else {
+            throw NetworkError.invalidURL
+        }
+        
+        print("🔗 Starting Google OAuth with URL: \(googleAuthURL)")
+        
+        // Use ASWebAuthenticationSession for OAuth flow
+        return try await withCheckedThrowingContinuation { continuation in
+            let session = ASWebAuthenticationSession(
+                url: url,
+                callbackURLScheme: "gsaleapp"
+            ) { callbackURL, error in
+                if let error = error {
+                    continuation.resume(throwing: NetworkError.serverError(error.localizedDescription))
+                    return
+                }
+                
+                guard let callbackURL = callbackURL else {
+                    continuation.resume(throwing: NetworkError.noData)
+                    return
+                }
+                
+                // Handle the OAuth callback
+                Task {
+                    do {
+                        let response = try await self.handleOAuthCallback(callbackURL)
+                        continuation.resume(returning: response)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+            
+            // Present the authentication session
+            session.presentationContextProvider = AuthenticationSessionPresentationProvider()
+            session.prefersEphemeralWebBrowserSession = false
+            session.start()
+        }
+    }
+    
+    private func generateRandomState() -> String {
+        let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return String((0..<32).map { _ in characters.randomElement()! })
+    }
+    
+    private func handleOAuthCallback(_ callbackURL: URL) async throws -> LoginResponse {
+        guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems else {
+            throw NetworkError.serverError("Invalid callback URL")
+        }
+        
+        // Check for error
+        if let error = queryItems.first(where: { $0.name == "error" })?.value {
+            throw NetworkError.serverError("OAuth error: \(error)")
+        }
+        
+        // Get authorization code
+        guard let code = queryItems.first(where: { $0.name == "code" })?.value else {
+            throw NetworkError.serverError("No authorization code received")
+        }
+        
+        // Exchange code for tokens with our backend
+        return try await exchangeCodeForTokens(code: code)
+    }
+    
+    private func exchangeCodeForTokens(code: String) async throws -> LoginResponse {
+        let url = URL(string: "\(baseURL)/google-callback")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        
+        let body = "code=\(code)&mobile=true"
+        request.httpBody = body.data(using: .utf8)
+        
+        print("🔄 Exchanging OAuth code with backend: \(url)")
+        print("📝 Request body: \(body)")
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.serverError("Invalid response")
+        }
+        
+        print("📡 OAuth exchange response status: \(httpResponse.statusCode)")
+        
+        if httpResponse.statusCode == 200 {
+            // Parse JSON response
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                throw NetworkError.decodingError
+            }
+            
+            print("📄 OAuth response JSON: \(json)")
+            
+            let success = json["success"] as? Bool ?? false
+            let message = json["message"] as? String ?? "Unknown error"
+            
+            if success {
+                let username = json["username"] as? String ?? ""
+                let userId = json["user_id"] as? Int ?? 0
+                let isAdmin = json["is_admin"] as? Bool ?? false
+                
+                // Extract session cookie from response headers
+                var sessionCookie: String? = nil
+                if let setCookieHeader = httpResponse.allHeaderFields["Set-Cookie"] as? String {
+                    sessionCookie = extractSessionValue(from: setCookieHeader)
+                    print("🍪 Extracted session cookie from OAuth response")
+                }
+                
+                return LoginResponse(
+                    success: true,
+                    message: message,
+                    cookie: sessionCookie.map { "session=\($0)" },
+                    user_id: userId,
+                    username: username,
+                    is_admin: isAdmin
+                )
+            } else {
+                return LoginResponse(
+                    success: false,
+                    message: message,
+                    cookie: nil,
+                    user_id: nil,
+                    username: nil,
+                    is_admin: nil
+                )
+            }
+        }
+        
+        // Handle error response
+        let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
+        print("❌ OAuth exchange failed: \(responseString)")
+        
+        throw NetworkError.serverError("Google authentication failed")
     }
     
     // MARK: - Groups
@@ -1804,7 +1966,7 @@ class NetworkManager {
         let (data, response) = try await session.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
+            throw NetworkError.noData
         }
         
         print("📡 Items list response status: \(httpResponse.statusCode)")
@@ -2226,7 +2388,7 @@ class NetworkManager {
         let (data, response) = try await session.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
+            throw NetworkError.noData
         }
         
         print("📡 Add item response status: \(httpResponse.statusCode)")
@@ -2265,3 +2427,14 @@ class NetworkManager {
         }
     }
 } 
+
+// MARK: - ASWebAuthenticationPresentationContextProviding
+class AuthenticationSessionPresentationProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            return window
+        }
+        return ASPresentationAnchor()
+    }
+}

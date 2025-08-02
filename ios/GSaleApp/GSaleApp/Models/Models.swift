@@ -80,16 +80,6 @@ struct Category: Codable {
     let userId: String?
 }
 
-// MARK: - Network Error
-enum NetworkError: Error {
-    case invalidURL
-    case invalidResponse
-    case noData
-    case decodingError
-    case serverError(String)
-    case unauthorized
-}
-
 // MARK: - API Response
 struct APIResponse<T: Codable>: Codable {
     let success: Bool

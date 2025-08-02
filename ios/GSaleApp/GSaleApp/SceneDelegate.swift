@@ -9,36 +9,82 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
-        // Create window if not already created by AppDelegate
-        if window == nil {
-            window = UIWindow(windowScene: windowScene)
-        }
+        window = UIWindow(windowScene: windowScene)
         
-        // Set up the window if AppDelegate hasn't done it yet
-        if window?.rootViewController == nil {
-            let testVC = UIViewController()
-            testVC.view.backgroundColor = .systemBlue
-            testVC.title = "GSale Test"
-            
-            let testLabel = UILabel()
-            testLabel.text = "GSale App is Working! 🎉"
-            testLabel.textAlignment = .center
-            testLabel.textColor = .white
-            testLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-            testLabel.translatesAutoresizingMaskIntoConstraints = false
-            
-            testVC.view.addSubview(testLabel)
-            
-            NSLayoutConstraint.activate([
-                testLabel.centerXAnchor.constraint(equalTo: testVC.view.centerXAnchor),
-                testLabel.centerYAnchor.constraint(equalTo: testVC.view.centerYAnchor)
-            ])
-            
-            let navController = UINavigationController(rootViewController: testVC)
+        // Check if user is already logged in
+        if UserManager.shared.isLoggedIn() {
+            print("🔄 User already logged in, showing dashboard")
+            let dashboardVC = DashboardViewController()
+            let navController = UINavigationController(rootViewController: dashboardVC)
             window?.rootViewController = navController
+        } else {
+            print("🔐 User not logged in, showing login screen")
+            let loginVC = LoginViewController()
+            window?.rootViewController = loginVC
         }
         
         window?.makeKeyAndVisible()
+        
+        // Handle URL if app was launched with one
+        if let urlContext = connectionOptions.urlContexts.first {
+            handleIncomingURL(urlContext.url)
+        }
+    }
+    
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        // Handle OAuth callback URLs
+        guard let url = URLContexts.first?.url else { return }
+        handleIncomingURL(url)
+    }
+    
+    private func handleIncomingURL(_ url: URL) {
+        print("🔗 Handling incoming URL: \(url)")
+        
+        // Check if this is an OAuth callback
+        if url.scheme == "gsaleapp" && url.host == "oauth-callback" {
+            handleOAuthCallback(url: url)
+        }
+    }
+    
+    private func handleOAuthCallback(url: URL) {
+        print("🔄 Processing OAuth callback: \(url)")
+        
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems else {
+            showOAuthError("Invalid callback URL")
+            return
+        }
+        
+        // Check for error
+        if let error = queryItems.first(where: { $0.name == "error" })?.value {
+            showOAuthError("OAuth error: \(error)")
+            return
+        }
+        
+        // This callback will be handled by ASWebAuthenticationSession
+        // The NetworkManager will process the response
+        print("✅ OAuth callback received successfully")
+    }
+    
+    private func showOAuthError(_ message: String) {
+        print("❌ OAuth Error: \(message)")
+        
+        DispatchQueue.main.async {
+            if let topViewController = self.window?.rootViewController {
+                let alert = UIAlertController(title: "Authentication Error", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                topViewController.present(alert, animated: true)
+            }
+        }
+    }
+    
+    private func showDashboard() {
+        DispatchQueue.main.async {
+            let dashboardVC = DashboardViewController()
+            let navController = UINavigationController(rootViewController: dashboardVC)
+            self.window?.rootViewController = navController
+            self.window?.makeKeyAndVisible()
+        }
     }
 
     func sceneDidDisconnect(_ scene: UIScene) { }

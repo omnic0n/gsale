@@ -338,12 +338,10 @@ class AddItemViewController: UIViewController {
                             showAlert(title: "Authentication Error", message: "Please log in again.")
                         case .serverError(let message):
                             showAlert(title: "Server Error", message: message)
-                        case .invalidResponse:
-                            showAlert(title: "Error", message: "Invalid response from server.")
+                        case .noData:
+                            showAlert(title: "Error", message: "No response from server.")
                         case .invalidURL:
                             showAlert(title: "Error", message: "Invalid URL.")
-                        case .noData:
-                            showAlert(title: "Error", message: "No data received from server.")
                         case .decodingError:
                             showAlert(title: "Error", message: "Failed to decode response.")
                         }
