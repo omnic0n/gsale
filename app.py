@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
 from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm
 from upload_function import *
@@ -278,9 +278,9 @@ def google_callback():
         # Handle response based on request type
         if is_mobile_request:
             # For mobile, show success page with instructions to return to app
+            # The iOS app will extract the session cookie from the response headers
             return render_template('mobile_oauth_success.html', 
-                                 username=session['username'],
-                                 session_id=session.sid)
+                                 username=session['username'])
         else:
             # For web, redirect to home or next page
             flash('Login successful!', 'success')

@@ -41,18 +41,6 @@
             line-height: 1.5;
         }
         
-        .session-data {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            font-family: monospace;
-            font-size: 12px;
-            word-break: break-all;
-            display: none;
-        }
-        
         .return-button {
             background: #007AFF;
             color: white;
@@ -80,11 +68,6 @@
             Welcome, {{ username }}!<br> You can now close this page and return to the GSale app.
         </div>
 
-        <!-- Hidden session data for the app to extract -->
-        <div id="session-data" class="session-data">
-            {{ session_id }}
-        </div>
-
         <script>
             // Auto-close after a delay
             setTimeout(() => {
@@ -95,7 +78,6 @@
             if (window.ReactNativeWebView) {
                 window.ReactNativeWebView.postMessage(JSON.stringify({
                     type: 'oauth_success',
-                    session_id: '{{ session_id }}',
                     username: '{{ username }}'
                 }));
             }

@@ -1,13 +1,13 @@
 import Foundation
 import UIKit
-import WebKit
+import AuthenticationServices
 
 enum NetworkError: Error {
     case invalidURL
     case noData
     case decodingError
-    case serverError(String)
     case unauthorized
+    case serverError(String)
 }
 
 class NetworkManager: NSObject {
@@ -15,6 +15,7 @@ class NetworkManager: NSObject {
     
     private let baseURL = "https://gsale.levimylesllc.com"
     private let session: URLSession
+    private let presentationProvider = AuthenticationSessionPresentationProvider()
     
     // MARK: - Login Delegate for Cookie Extraction
     private class LoginDelegate: NSObject, URLSessionTaskDelegate {
@@ -171,35 +172,133 @@ class NetworkManager: NSObject {
     
     // MARK: - Google OAuth
     func initiateGoogleSignIn() async throws -> LoginResponse {
+        let googleOAuthURL = "\(baseURL)/google-login?mobile=true"
+        
+        guard let url = URL(string: googleOAuthURL) else {
+            throw NetworkError.invalidURL
+        }
+        
+        print("🔄 Initiating Google OAuth: \(googleOAuthURL)")
+        
         return try await withCheckedThrowingContinuation { continuation in
-            Task { @MainActor in
-                // Create and present the OAuth web view
-                let oauthViewController = OAuthWebViewController()
-                oauthViewController.baseURL = self.baseURL
-                oauthViewController.completion = { result in
-                    switch result {
-                    case .success(let response):
-                        continuation.resume(returning: response)
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
-                    }
-                }
-                
-                // Present the OAuth view controller
-                guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                      let window = windowScene.windows.first,
-                      let rootViewController = window.rootViewController else {
-                    continuation.resume(throwing: NetworkError.serverError("No root view controller found"))
+            let session = ASWebAuthenticationSession(
+                url: url,
+                callbackURLScheme: "https"
+            ) { callbackURL, error in
+                if let error = error {
+                    print("❌ OAuth session error: \(error)")
+                    continuation.resume(throwing: NetworkError.serverError(error.localizedDescription))
                     return
                 }
                 
-                let navController = UINavigationController(rootViewController: oauthViewController)
-                rootViewController.present(navController, animated: true)
+                guard let callbackURL = callbackURL else {
+                    print("❌ No callback URL received")
+                    continuation.resume(throwing: NetworkError.noData)
+                    return
+                }
+                
+                print("✅ OAuth callback received: \(callbackURL)")
+                
+                // Check if we got redirected to our success page
+                if callbackURL.absoluteString.contains("mobile_oauth_success") {
+                    // Extract session ID from URL parameters or make request to get session
+                    Task {
+                        do {
+                            let response = try await self.extractSessionFromSuccessPage(callbackURL)
+                            continuation.resume(returning: response)
+                        } catch {
+                            print("❌ Failed to extract session: \(error)")
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                } else if callbackURL.absoluteString.contains("mobile_oauth_error") {
+                    continuation.resume(throwing: NetworkError.serverError("OAuth authentication failed"))
+                } else {
+                    continuation.resume(throwing: NetworkError.serverError("Unexpected callback URL"))
+                }
+            }
+            
+            // Set presentation context provider and start session on main actor
+            Task { @MainActor in
+                session.presentationContextProvider = self.presentationProvider
+                session.prefersEphemeralWebBrowserSession = false
+                session.start()
             }
         }
     }
     
-
+    private func extractSessionFromSuccessPage(_ url: URL) async throws -> LoginResponse {
+        print("🔍 Extracting session from success page: \(url)")
+        
+        // Make a request to the success page to extract session information
+        var request = URLRequest(url: url)
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.noData
+        }
+        
+        print("📡 Success page response status: \(httpResponse.statusCode)")
+        
+        // Extract session cookie from response headers
+        var sessionCookie: String? = nil
+        if let setCookieHeader = httpResponse.allHeaderFields["Set-Cookie"] as? String {
+            sessionCookie = NetworkManager.extractSessionValue(from: setCookieHeader)
+            print("🍪 Extracted session cookie: \(sessionCookie ?? "none")")
+        }
+        
+        // If no Set-Cookie header, try to extract from existing cookies
+        if sessionCookie == nil, let cookies = HTTPCookieStorage.shared.cookies(for: url) {
+            for cookie in cookies {
+                if cookie.name == "session" {
+                    sessionCookie = cookie.value
+                    print("🍪 Found existing session cookie: \(sessionCookie ?? "none")")
+                    break
+                }
+            }
+        }
+        
+        // Parse HTML to extract username
+        let html = String(data: data, encoding: .utf8) ?? ""
+        let username = extractUsernameFromHTML(html)
+        
+        guard let finalSessionCookie = sessionCookie else {
+            throw NetworkError.serverError("No session cookie found")
+        }
+        
+        let loginResponse = LoginResponse(
+            success: true,
+            message: "Login successful",
+            cookie: "session=\(finalSessionCookie)",
+            user_id: nil,
+            username: username,
+            is_admin: false
+        )
+        
+        print("✅ Google OAuth login successful")
+        return loginResponse
+    }
+    
+    private func extractUsernameFromHTML(_ html: String) -> String {
+        // Extract username from "Welcome, [username]!" text
+        let pattern = #"Welcome,\s*([^!]+)!"#
+        
+        do {
+            let regex = try NSRegularExpression(pattern: pattern, options: [])
+            let range = NSRange(html.startIndex..<html.endIndex, in: html)
+            
+            if let match = regex.firstMatch(in: html, options: [], range: range),
+               let usernameRange = Range(match.range(at: 1), in: html) {
+                return String(html[usernameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        } catch {
+            print("❌ Failed to extract username: \(error)")
+        }
+        
+        return "User"
+    }
     
     // MARK: - Groups
     func getGroups() async throws -> [Group] {
@@ -2307,136 +2406,13 @@ class NetworkManager: NSObject {
     }
 } 
 
-
-
-// MARK: - OAuth Web View Controller
-class OAuthWebViewController: UIViewController, WKNavigationDelegate {
-    private var webView: WKWebView!
-    var baseURL: String = ""
-    var completion: ((Result<LoginResponse, Error>) -> Void)?
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        title = "Sign in with Google"
-        view.backgroundColor = .systemBackground
-        
-        // Setup navigation bar
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .cancel,
-            target: self,
-            action: #selector(cancelTapped)
-        )
-        
-        // Setup web view
-        let config = WKWebViewConfiguration()
-        config.websiteDataStore = WKWebsiteDataStore.nonPersistent() // Use incognito mode
-        
-        webView = WKWebView(frame: view.bounds, configuration: config)
-        webView.navigationDelegate = self
-        webView.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(webView)
-        
-        NSLayoutConstraint.activate([
-            webView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-        
-        // Start OAuth flow
-        startOAuthFlow()
-    }
-    
-    private func startOAuthFlow() {
-        let oauthURL = "\(baseURL)/google-login?mobile=true"
-        
-        guard let url = URL(string: oauthURL) else {
-            completion?(.failure(NetworkError.invalidURL))
-            return
+// MARK: - Presentation Context Provider
+class AuthenticationSessionPresentationProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            fatalError("No window found for OAuth presentation")
         }
-        
-        print("🔄 Starting OAuth flow: \(oauthURL)")
-        
-        var request = URLRequest(url: url)
-        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
-        
-        webView.load(request)
-    }
-    
-    @objc private func cancelTapped() {
-        completion?(.failure(NetworkError.serverError("User cancelled authentication")))
-        dismiss(animated: true)
-    }
-    
-    // MARK: - WKNavigationDelegate
-    
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        guard let url = webView.url else { return }
-        
-        print("🌐 WebView loaded: \(url.absoluteString)")
-        
-        // Check if we've reached the success page
-        if url.path.contains("mobile_oauth_success") {
-            print("✅ OAuth success page detected")
-            
-            // Extract session ID from the page
-            webView.evaluateJavaScript("document.getElementById('session-data').textContent") { result, error in
-                if let sessionId = result as? String, !sessionId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    print("🍪 Extracted session ID: \(sessionId)")
-                    
-                    // Extract username from the page
-                    webView.evaluateJavaScript("document.querySelector('h1').nextElementSibling.textContent") { usernameResult, _ in
-                        let username = (usernameResult as? String)?.components(separatedBy: "\n").first?.replacingOccurrences(of: "Welcome, ", with: "").replacingOccurrences(of: "!", with: "") ?? "User"
-                        
-                        let response = LoginResponse(
-                            success: true,
-                            message: "Login successful",
-                            cookie: "session=\(sessionId.trimmingCharacters(in: .whitespacesAndNewlines))",
-                            user_id: nil,
-                            username: username,
-                            is_admin: false
-                        )
-                        
-                        DispatchQueue.main.async {
-                            self.completion?(.success(response))
-                            self.dismiss(animated: true)
-                        }
-                    }
-                } else {
-                    print("❌ Could not extract session ID")
-                    DispatchQueue.main.async {
-                        self.completion?(.failure(NetworkError.serverError("Could not extract session information")))
-                        self.dismiss(animated: true)
-                    }
-                }
-            }
-        }
-        // Check if we've reached the error page
-        else if url.path.contains("mobile_oauth_error") {
-            print("❌ OAuth error page detected")
-            
-            webView.evaluateJavaScript("document.querySelector('.error-details').textContent") { result, error in
-                let errorMessage = (result as? String) ?? "Authentication failed"
-                
-                DispatchQueue.main.async {
-                    self.completion?(.failure(NetworkError.serverError(errorMessage)))
-                    self.dismiss(animated: true)
-                }
-            }
-        }
-    }
-    
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        print("❌ WebView navigation failed: \(error)")
-        completion?(.failure(error))
-        dismiss(animated: true)
-    }
-    
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        print("❌ WebView provisional navigation failed: \(error)")
-        completion?(.failure(error))
-        dismiss(animated: true)
+        return window
     }
 }
