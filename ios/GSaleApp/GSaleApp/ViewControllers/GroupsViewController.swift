@@ -24,8 +24,19 @@ class GroupsViewController: UIViewController {
     private var currentSearchTerm = ""
     
     // Year filtering
-    private let availableYears = ["All", "2021", "2022", "2023", "2024", "2025"]
-    private var selectedYear = "All"
+    private let availableYears: [String] = {
+        let currentYear = Calendar.current.component(.year, from: Date())
+        var years = ["All"]
+        // Add years from 2021 to current year + 1
+        for year in 2021...(currentYear + 1) {
+            years.append(String(year))
+        }
+        return years
+    }()
+    private var selectedYear: String = {
+        let currentYear = Calendar.current.component(.year, from: Date())
+        return String(currentYear)
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -60,7 +71,7 @@ class GroupsViewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = .systemBackground
-        title = "Groups"
+        title = selectedYear == "All" ? "Groups" : "Groups (\(selectedYear))"
         
         navigationItem.rightBarButtonItems = [addButton, searchButton]
         addButton.target = self

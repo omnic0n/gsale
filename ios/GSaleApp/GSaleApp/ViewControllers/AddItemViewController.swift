@@ -1,6 +1,6 @@
 import UIKit
 
-class AddItemViewController: UIViewController {
+class AddItemViewController: UIViewController, UITextFieldDelegate {
     
     // UI Elements
     private let scrollView = UIScrollView()
@@ -48,6 +48,7 @@ class AddItemViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
+        setupKeyboardDismissal()
         loadCategories()
     }
     
@@ -322,7 +323,8 @@ class AddItemViewController: UIViewController {
                     if success {
                         // Post notification to refresh group details
                         NotificationCenter.default.post(name: .itemAdded, object: nil)
-                        showSuccessAndDismiss()
+                        // Just dismiss without showing success popup
+                        dismiss(animated: true)
                     } else {
                         showAlert(title: "Error", message: "Failed to add item. Please try again.")
                     }
@@ -390,18 +392,89 @@ class AddItemViewController: UIViewController {
         }
     }
     
-    private func showSuccessAndDismiss() {
-        let alert = UIAlertController(title: "Success", message: "Item added successfully!", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            self.dismiss(animated: true)
-        })
-        present(alert, animated: true)
-    }
     
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+    
+    // MARK: - Keyboard Dismissal
+    
+    private func setupKeyboardDismissal() {
+        // Add tap gesture to dismiss keyboard when tapping outside text fields
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+        
+        // Set up text field delegates for return key handling
+        nameTextField.delegate = self
+        storageTextField.delegate = self
+        
+        // Set up keyboard notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+    
+    @objc private func keyboardWillShow(_ notification: Notification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        guard let animationDuration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+        
+        let keyboardHeight = keyboardFrame.height
+        let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+        
+        UIView.animate(withDuration: animationDuration) {
+            self.scrollView.contentInset = contentInsets
+            self.scrollView.scrollIndicatorInsets = contentInsets
+        }
+    }
+    
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let animationDuration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+        
+        UIView.animate(withDuration: animationDuration) {
+            self.scrollView.contentInset = .zero
+            self.scrollView.scrollIndicatorInsets = .zero
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    // MARK: - UITextFieldDelegate
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if textField == nameTextField {
+            storageTextField.becomeFirstResponder()
+        } else if textField == storageTextField {
+            textField.resignFirstResponder()
+        } else {
+            textField.resignFirstResponder()
+        }
+        return true
+    }
+    
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        // Scroll to the text field when it becomes active to ensure it's visible
+        let textFieldFrame = view.convert(textField.frame, from: textField.superview)
+        let visibleRect = CGRect(x: 0, y: textFieldFrame.origin.y - 50, width: scrollView.frame.width, height: textFieldFrame.height + 100)
+        scrollView.scrollRectToVisible(visibleRect, animated: true)
     }
 }
 

@@ -13,11 +13,12 @@ class GroupDetailViewController: UIViewController {
     private let totalItemsLabel = UILabel()
     private let soldItemsLabel = UILabel()
     private let soldPriceLabel = UILabel()
+    private let profitLabel = UILabel()
     
     private let modifyButton = UIButton(type: .system)
     private let addItemButton = UIButton(type: .system)
-    private let refreshItemsButton = UIButton(type: .system)
     private let deleteButton = UIButton(type: .system)
+    private let locationButton = UIButton(type: .system)
     
     private let itemsTableView = UITableView()
     private let itemsLabel = UILabel()
@@ -118,6 +119,11 @@ class GroupDetailViewController: UIViewController {
         soldPriceLabel.numberOfLines = 0
         soldPriceLabel.translatesAutoresizingMaskIntoConstraints = false
         
+        profitLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        profitLabel.textAlignment = .center
+        profitLabel.numberOfLines = 0
+        profitLabel.translatesAutoresizingMaskIntoConstraints = false
+        
         // Enhanced button styling
         setupButton(modifyButton, title: "✏️ Modify Group", backgroundColor: .systemBlue)
         modifyButton.addTarget(self, action: #selector(modifyButtonTapped), for: .touchUpInside)
@@ -125,11 +131,23 @@ class GroupDetailViewController: UIViewController {
         setupButton(addItemButton, title: "➕ Add Item", backgroundColor: .systemGreen)
         addItemButton.addTarget(self, action: #selector(addItemButtonTapped), for: .touchUpInside)
         
-        setupButton(refreshItemsButton, title: "🔄 Refresh Items", backgroundColor: .systemTeal)
-        refreshItemsButton.addTarget(self, action: #selector(refreshItemsButtonTapped), for: .touchUpInside)
-        
         setupButton(deleteButton, title: "🗑️ Delete Group", backgroundColor: .systemRed)
         deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+        
+        // Setup location button - only show if location data exists
+        if let locationAddress = groupDetail.locationAddress, !locationAddress.isEmpty {
+            setupButton(locationButton, title: "📍 \(locationAddress)", backgroundColor: .systemPurple)
+            locationButton.addTarget(self, action: #selector(locationButtonTapped), for: .touchUpInside)
+            locationButton.titleLabel?.numberOfLines = 0
+            locationButton.titleLabel?.textAlignment = .center
+        } else if let latitude = groupDetail.latitude, let longitude = groupDetail.longitude, 
+                  latitude != 0, longitude != 0 {
+            let coordinates = String(format: "📍 %.6f, %.6f", latitude, longitude)
+            setupButton(locationButton, title: coordinates, backgroundColor: .systemPurple)
+            locationButton.addTarget(self, action: #selector(locationButtonTapped), for: .touchUpInside)
+            locationButton.titleLabel?.numberOfLines = 0
+            locationButton.titleLabel?.textAlignment = .center
+        }
         
         // Items setup - Enhanced styling
         itemsLabel.text = "📦 Items (\(groupDetail.items.count))"
@@ -164,12 +182,18 @@ class GroupDetailViewController: UIViewController {
         statsView.addSubview(totalItemsLabel)
         statsView.addSubview(soldItemsLabel)
         statsView.addSubview(soldPriceLabel)
+        statsView.addSubview(profitLabel)
         
         contentView.addSubview(headerView)
         contentView.addSubview(modifyButton)
         contentView.addSubview(addItemButton)
-        contentView.addSubview(refreshItemsButton)
         contentView.addSubview(deleteButton)
+        
+        // Only add location button if there's location data
+        if hasLocationData() {
+            contentView.addSubview(locationButton)
+        }
+        
         contentView.addSubview(itemsLabel)
         contentView.addSubview(itemsTableView)
         
@@ -276,6 +300,9 @@ class GroupDetailViewController: UIViewController {
             soldPriceLabel.topAnchor.constraint(equalTo: soldItemsLabel.bottomAnchor, constant: 8),
             soldPriceLabel.centerXAnchor.constraint(equalTo: statsView.centerXAnchor),
             
+            profitLabel.topAnchor.constraint(equalTo: soldPriceLabel.bottomAnchor, constant: 8),
+            profitLabel.centerXAnchor.constraint(equalTo: statsView.centerXAnchor),
+            
             modifyButton.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 32),
             modifyButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             modifyButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
@@ -286,17 +313,28 @@ class GroupDetailViewController: UIViewController {
             addItemButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             addItemButton.heightAnchor.constraint(equalToConstant: 56),
             
-            refreshItemsButton.topAnchor.constraint(equalTo: addItemButton.bottomAnchor, constant: 16),
-            refreshItemsButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            refreshItemsButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            refreshItemsButton.heightAnchor.constraint(equalToConstant: 56),
-            
-            deleteButton.topAnchor.constraint(equalTo: refreshItemsButton.bottomAnchor, constant: 16),
+            deleteButton.topAnchor.constraint(equalTo: addItemButton.bottomAnchor, constant: 16),
             deleteButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             deleteButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             deleteButton.heightAnchor.constraint(equalToConstant: 56),
-            
-            itemsLabel.topAnchor.constraint(equalTo: deleteButton.bottomAnchor, constant: 40),
+        ])
+        
+        // Conditionally add location button constraints
+        var itemsLabelTopAnchor: NSLayoutYAxisAnchor = deleteButton.bottomAnchor
+        var itemsLabelTopConstant: CGFloat = 40
+        
+        if hasLocationData() {
+            NSLayoutConstraint.activate([
+                locationButton.topAnchor.constraint(equalTo: deleteButton.bottomAnchor, constant: 16),
+                locationButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+                locationButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+                locationButton.heightAnchor.constraint(equalToConstant: 56),
+            ])
+            itemsLabelTopAnchor = locationButton.bottomAnchor
+        }
+        
+        NSLayoutConstraint.activate([
+            itemsLabel.topAnchor.constraint(equalTo: itemsLabelTopAnchor, constant: itemsLabelTopConstant),
             itemsLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             itemsLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
@@ -321,6 +359,25 @@ class GroupDetailViewController: UIViewController {
         totalItemsLabel.text = "📦 Total Items: \(groupDetail.totalItems)"
         soldItemsLabel.text = "💰 Sold Items: \(groupDetail.totalSoldItems)"
         soldPriceLabel.text = "💵 Sold Price: $\(String(format: "%.2f", groupDetail.soldPrice))"
+        
+        // Calculate and display profit (sold price - purchase price)
+        let profit = groupDetail.soldPrice - groupDetail.price
+        let profitColor: UIColor
+        let profitIcon: String
+        
+        if profit > 0 {
+            profitColor = .systemGreen
+            profitIcon = "📈"
+        } else if profit < 0 {
+            profitColor = .systemRed
+            profitIcon = "📉"
+        } else {
+            profitColor = .systemGray
+            profitIcon = "➖"
+        }
+        
+        profitLabel.textColor = profitColor
+        profitLabel.text = "\(profitIcon) Profit: $\(String(format: "%.2f", profit))"
         
         // Check if we have items, if not load them immediately
         if !groupDetail.items.isEmpty {
@@ -357,11 +414,6 @@ class GroupDetailViewController: UIViewController {
         present(navController, animated: true)
     }
     
-    @objc private func refreshItemsButtonTapped() {
-        print("🔘 Refresh Items button tapped for group: \(groupDetail.name)")
-        loadActualItems()
-    }
-    
     @objc private func itemWasAdded() {
         print("📬 Received item added notification - refreshing items")
         loadActualItemsSimple()
@@ -391,6 +443,55 @@ class GroupDetailViewController: UIViewController {
     @objc private func deleteButtonTapped() {
         print("🔘 Delete button tapped for group: \(groupDetail.name)")
         showDeleteConfirmation()
+    }
+    
+    @objc private func locationButtonTapped() {
+        print("📍 Location button tapped for group: \(groupDetail.name)")
+        openLocationInMaps()
+    }
+    
+    private func openLocationInMaps() {
+        // Check if we have coordinates or at least an address
+        let hasCoordinates = groupDetail.latitude != nil && groupDetail.longitude != nil && 
+                           groupDetail.latitude != 0 && groupDetail.longitude != 0
+        let hasAddress = groupDetail.locationAddress != nil && !groupDetail.locationAddress!.isEmpty
+        
+        guard hasCoordinates || hasAddress else {
+            showAlert(title: "Location Error", message: "No valid location data available for this group.")
+            return
+        }
+        
+        // Create the URL for maps
+        let address: String
+        if let locationAddress = groupDetail.locationAddress, !locationAddress.isEmpty {
+            address = locationAddress
+        } else if let latitude = groupDetail.latitude, let longitude = groupDetail.longitude {
+            address = "\(latitude),\(longitude)"
+        } else {
+            showAlert(title: "Location Error", message: "No valid location data available for this group.")
+            return
+        }
+        
+        let encodedAddress = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? address
+        
+        // Try Google Maps app first, then fall back to other options
+        if let googleMapsURL = URL(string: "comgooglemaps://?q=\(encodedAddress)"),
+           UIApplication.shared.canOpenURL(googleMapsURL) {
+            print("📱 Opening in Google Maps app")
+            UIApplication.shared.open(googleMapsURL)
+        } else if let googleMapsWebURL = URL(string: "https://maps.google.com/?q=\(encodedAddress)") {
+            print("🌐 Opening in Google Maps web")
+            UIApplication.shared.open(googleMapsWebURL)
+        } else if hasCoordinates, let latitude = groupDetail.latitude, let longitude = groupDetail.longitude,
+                  let appleMapsURL = URL(string: "http://maps.apple.com/?q=\(latitude),\(longitude)") {
+            print("🍎 Opening in Apple Maps with coordinates")
+            UIApplication.shared.open(appleMapsURL)
+        } else if let appleMapsURL = URL(string: "http://maps.apple.com/?q=\(encodedAddress)") {
+            print("🍎 Opening in Apple Maps with address")
+            UIApplication.shared.open(appleMapsURL)
+        } else {
+            showAlert(title: "Maps Error", message: "Unable to open maps application.")
+        }
     }
     
     private func loadActualItems() {
@@ -655,6 +756,14 @@ class GroupDetailViewController: UIViewController {
         UIView.animate(withDuration: 0.3) {
             self.view.layoutIfNeeded()
         }
+    }
+    
+    private func hasLocationData() -> Bool {
+        let hasCoordinates = groupDetail.latitude != nil && groupDetail.longitude != nil && groupDetail.latitude != 0 && groupDetail.longitude != 0
+        let hasAddress = groupDetail.locationAddress != nil && !groupDetail.locationAddress!.isEmpty
+        let hasLocation = hasCoordinates || hasAddress
+        print("📍 hasLocationData check - Lat: \(groupDetail.latitude ?? 0), Long: \(groupDetail.longitude ?? 0), Address: \(groupDetail.locationAddress ?? "nil"), HasCoords: \(hasCoordinates), HasAddress: \(hasAddress), Result: \(hasLocation)")
+        return hasLocation
     }
 }
 

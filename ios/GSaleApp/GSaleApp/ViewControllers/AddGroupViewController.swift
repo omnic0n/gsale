@@ -2,8 +2,9 @@ import UIKit
 import PhotosUI
 import CoreLocation
 import MapKit
+import AVFoundation
 
-class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate {
+class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -33,14 +34,94 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
         super.viewDidLoad()
         setupLocationManager()
         setupUI()
+        setupKeyboardDismissal()
+    }
+    
+    private func setupKeyboardDismissal() {
+        // Add tap gesture to dismiss keyboard when tapping outside text fields
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+        
+        // Set up text field delegates for return key handling
+        nameTextField.delegate = self
+        priceTextField.delegate = self
+        locationAddressTextField.delegate = self
+        
+        // Set up keyboard notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+    
+    @objc private func keyboardWillShow(_ notification: Notification) {
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        guard let animationDuration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+        
+        let keyboardHeight = keyboardFrame.height
+        let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+        
+        UIView.animate(withDuration: animationDuration) {
+            self.scrollView.contentInset = contentInsets
+            self.scrollView.scrollIndicatorInsets = contentInsets
+        }
+    }
+    
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let animationDuration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+        
+        UIView.animate(withDuration: animationDuration) {
+            self.scrollView.contentInset = .zero
+            self.scrollView.scrollIndicatorInsets = .zero
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         
-        // Request location permission
+        // Request location permission and automatically get current location
         locationManager.requestWhenInUseAuthorization()
+        
+        // Automatically request current location if we have permission
+        if CLLocationManager.locationServicesEnabled() {
+            switch locationManager.authorizationStatus {
+            case .authorizedWhenInUse, .authorizedAlways:
+                requestCurrentLocation()
+            case .notDetermined:
+                // Will be handled in didChangeAuthorization delegate method
+                break
+            default:
+                // Set placeholder text to indicate location is optional
+                locationAddressTextField.placeholder = "Location (optional) - tap 'Use Current Location' or select on map"
+            }
+        }
+    }
+    
+    private func requestCurrentLocation() {
+        locationAddressTextField.placeholder = "Getting current location..."
+        useCurrentLocationButton.setTitle("📍 Getting Location...", for: .normal)
+        useCurrentLocationButton.isEnabled = false
+        
+        locationManager.requestLocation()
     }
     
     private func setupUI() {
@@ -87,7 +168,7 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
         locationLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         locationLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        locationAddressTextField.placeholder = "Address will be auto-populated from your location"
+        locationAddressTextField.placeholder = "Detecting current location..."
         locationAddressTextField.font = UIFont.systemFont(ofSize: 16)
         locationAddressTextField.borderStyle = .roundedRect
         locationAddressTextField.backgroundColor = .secondarySystemBackground
@@ -229,6 +310,68 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
     }
     
     @objc private func selectImageTapped() {
+        let alertController = UIAlertController(title: "Select Image", message: "Choose how you'd like to add an image", preferredStyle: .actionSheet)
+        
+        // Camera option
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            let cameraAction = UIAlertAction(title: "📷 Take Photo", style: .default) { _ in
+                self.checkCameraPermissionAndPresent()
+            }
+            alertController.addAction(cameraAction)
+        }
+        
+        // Photo Library option
+        let libraryAction = UIAlertAction(title: "📱 Choose from Library", style: .default) { _ in
+            self.presentPhotoLibrary()
+        }
+        alertController.addAction(libraryAction)
+        
+        // Cancel option
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        alertController.addAction(cancelAction)
+        
+        // For iPad support
+        if let popover = alertController.popoverPresentationController {
+            popover.sourceView = selectImageButton
+            popover.sourceRect = selectImageButton.bounds
+        }
+        
+        present(alertController, animated: true)
+    }
+    
+    private func checkCameraPermissionAndPresent() {
+        let cameraAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
+        
+        switch cameraAuthorizationStatus {
+        case .authorized:
+            presentCamera()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self.presentCamera()
+                    } else {
+                        self.showCameraPermissionDeniedAlert()
+                    }
+                }
+            }
+        case .denied, .restricted:
+            showCameraPermissionDeniedAlert()
+        @unknown default:
+            showCameraPermissionDeniedAlert()
+        }
+    }
+    
+    private func presentCamera() {
+        let imagePickerController = UIImagePickerController()
+        imagePickerController.sourceType = .camera
+        imagePickerController.mediaTypes = ["public.image"]
+        imagePickerController.allowsEditing = true
+        imagePickerController.delegate = self
+        present(imagePickerController, animated: true)
+    }
+    
+    private func presentPhotoLibrary() {
         var configuration = PHPickerConfiguration()
         configuration.filter = .images
         configuration.selectionLimit = 1
@@ -236,6 +379,24 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
         present(picker, animated: true)
+    }
+    
+    private func showCameraPermissionDeniedAlert() {
+        let alert = UIAlertController(
+            title: "Camera Access Required",
+            message: "Please enable camera access in Settings to take photos for your groups.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        present(alert, animated: true)
     }
     
     @objc private func addGroupTapped() {
@@ -280,9 +441,10 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                                    // Directly navigate to group details
                                    self.navigateToGroupDetails(groupId: groupId)
                                } else {
-                                   print("⚠️ No valid group ID returned, showing success message")
-                                   // No group ID returned, show success message and dismiss
-                                   self.showSuccessMessageAndDismiss()
+                                   print("⚠️ No valid group ID returned, dismissing without popup")
+                                   // No group ID returned, just dismiss and notify groups list to refresh
+                                   NotificationCenter.default.post(name: .groupCreated, object: nil)
+                                   self.dismiss(animated: true)
                                }
                            } else {
                                self.showAlert(title: "Error", message: response.message)
@@ -303,10 +465,9 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                             // This is likely a successful creation with HTML response
                             print("🔄 Detected HTML response - group likely created successfully")
                             
-                            // Notify that a group was created
+                            // Notify that a group was created and dismiss
                             NotificationCenter.default.post(name: .groupCreated, object: nil)
-                            
-                            self.showSuccessMessageAndDismiss()
+                            self.dismiss(animated: true)
                             return
                         }
                         errorMessage = "Server error: \(message)"
@@ -386,27 +547,15 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                     } catch {
                         await MainActor.run {
                             print("❌ Failed to load group details: \(error)")
-                            // If loading group details fails, show success message and dismiss
-                            self.showSuccessMessageAndDismiss()
+                            // If loading group details fails, just dismiss without popup
+                            NotificationCenter.default.post(name: .groupCreated, object: nil)
+                            self.dismiss(animated: true)
                         }
                     }
                 }
             }
             
-            private func showSuccessMessageAndDismiss() {
-                // Notify that a group was created
-                NotificationCenter.default.post(name: .groupCreated, object: nil)
-                
-                let alert = UIAlertController(
-                    title: "Success! 🎉", 
-                    message: "Group created successfully! You can find it in the groups list.", 
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-                    self.dismiss(animated: true)
-                })
-                present(alert, animated: true)
-            }
+
     
     // MARK: - Location Methods
     
@@ -458,6 +607,7 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                 if let placemark = placemarks?.first {
                     let address = self?.formatAddress(from: placemark) ?? "Unknown Address"
                     self?.locationAddressTextField.text = address
+                    self?.locationAddressTextField.placeholder = "Tap to edit address"
                     
                     // Store the selected location
                     self?.selectedLocation = Location(
@@ -465,13 +615,20 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                         longitude: coordinate.longitude,
                         address: address
                     )
+                    
+                    print("📍 Location set: \(address)")
+                    print("📍 Coordinates: \(coordinate.latitude), \(coordinate.longitude)")
                 } else {
-                    self?.locationAddressTextField.text = "Unknown Address"
+                    let coordinateString = String(format: "%.6f, %.6f", coordinate.latitude, coordinate.longitude)
+                    self?.locationAddressTextField.text = coordinateString
+                    self?.locationAddressTextField.placeholder = "Address not found - coordinates used"
                     self?.selectedLocation = Location(
                         latitude: coordinate.latitude,
                         longitude: coordinate.longitude,
                         address: nil
                     )
+                    
+                    print("📍 Location set with coordinates only: \(coordinateString)")
                 }
             }
         }
@@ -506,6 +663,31 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
     }
 }
 
+// MARK: - UIImagePickerControllerDelegate
+extension AddGroupViewController {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
+        
+        // Try to get the edited image first, then the original
+        var selectedImage: UIImage?
+        if let editedImage = info[.editedImage] as? UIImage {
+            selectedImage = editedImage
+        } else if let originalImage = info[.originalImage] as? UIImage {
+            selectedImage = originalImage
+        }
+        
+        if let image = selectedImage {
+            self.selectedImage = image
+            self.imageView.image = image
+            self.selectImageButton.setTitle("Change Image", for: .normal)
+        }
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
+    }
+}
+
 extension AddGroupViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
@@ -528,26 +710,64 @@ extension AddGroupViewController: PHPickerViewControllerDelegate {
 extension AddGroupViewController {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+        
+        // Reset button state
+        useCurrentLocationButton.setTitle("📍 Use Current Location", for: .normal)
+        useCurrentLocationButton.isEnabled = true
+        
         setLocation(coordinate: location.coordinate)
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location error: \(error.localizedDescription)")
+        
+        // Reset button state
+        useCurrentLocationButton.setTitle("📍 Use Current Location", for: .normal)
+        useCurrentLocationButton.isEnabled = true
+        locationAddressTextField.placeholder = "Location (optional) - tap 'Use Current Location' or select on map"
+        
         showAlert(title: "Location Error", message: "Failed to get current location. Please try again or select location manually on the map.")
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:
-            // Permission granted, can request location
-            break
+            // Permission granted, automatically request current location
+            requestCurrentLocation()
         case .denied, .restricted:
+            locationAddressTextField.placeholder = "Location (optional) - select on map or enter manually"
+            useCurrentLocationButton.setTitle("📍 Use Current Location", for: .normal)
+            useCurrentLocationButton.isEnabled = true
             showAlert(title: "Location Permission Required", message: "Location access is required to automatically set the group location. You can still select a location manually on the map.")
         case .notDetermined:
             // Will be handled when user taps "Use Current Location"
             break
         @unknown default:
+            locationAddressTextField.placeholder = "Location (optional) - select on map or enter manually"
+            useCurrentLocationButton.setTitle("📍 Use Current Location", for: .normal)
+            useCurrentLocationButton.isEnabled = true
             break
         }
+    }
+    // MARK: - UITextFieldDelegate
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if textField == nameTextField {
+            priceTextField.becomeFirstResponder()
+        } else if textField == priceTextField {
+            locationAddressTextField.becomeFirstResponder()
+        } else if textField == locationAddressTextField {
+            textField.resignFirstResponder()
+        } else {
+            textField.resignFirstResponder()
+        }
+        return true
+    }
+    
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        // Scroll to the text field when it becomes active to ensure it's visible
+        let textFieldFrame = view.convert(textField.frame, from: textField.superview)
+        let visibleRect = CGRect(x: 0, y: textFieldFrame.origin.y - 50, width: scrollView.frame.width, height: textFieldFrame.height + 100)
+        scrollView.scrollRectToVisible(visibleRect, animated: true)
     }
 }

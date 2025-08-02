@@ -484,12 +484,11 @@ class NetworkManager: NSObject {
                     let nameRange = Range(match.range(at: 3), in: responseString)!
                     let totalItemsRange = Range(match.range(at: 4), in: responseString)!
                     let soldItemsRange = Range(match.range(at: 5), in: responseString)!
-                    let unsoldItemsRange = Range(match.range(at: 6), in: responseString)!
-                    let priceRange = Range(match.range(at: 7), in: responseString)!
-                    let netRange = Range(match.range(at: 8), in: responseString)!
-                    let profitRange = Range(match.range(at: 9), in: responseString)!
-                    let averageRange = Range(match.range(at: 10), in: responseString)!
-                    let dateRange = Range(match.range(at: 11), in: responseString)!
+                    let priceRange = Range(match.range(at: 6), in: responseString)!
+                    let netRange = Range(match.range(at: 7), in: responseString)!
+                    let profitRange = Range(match.range(at: 8), in: responseString)!
+                    let averageRange = Range(match.range(at: 9), in: responseString)!
+                    let dateRange = Range(match.range(at: 10), in: responseString)!
                     
                     let count = String(responseString[countRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                     let groupIdStr = String(responseString[groupIdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -848,6 +847,11 @@ class NetworkManager: NSObject {
         let responseString = String(data: data, encoding: .utf8) ?? ""
         print("📄 Group details response length: \(responseString.count)")
         
+        // Debug: Print first 1000 characters of response to see structure
+        let previewLength = min(2000, responseString.count)
+        let responsePreview = String(responseString.prefix(previewLength))
+        print("📄 Response preview: \(responsePreview)")
+        
         // Parse group information from the HTML
         var groupName = "Group \(groupId)"
         var groupDate = "2024-01-01"
@@ -856,29 +860,63 @@ class NetworkManager: NSObject {
         var soldItems = 0
         var soldPrice = 0.0
         var items: [GroupItem] = []
+        var imageFilename: String? = nil
+        var latitude: Double? = nil
+        var longitude: Double? = nil
+        var locationAddress: String? = nil
         
         // Extract group info from the first table
         // Looking for: <td>2025-07-30-Test</td><td><a href = "/groups/list?date=2025-07-30">2025-07-30</a></td><td>0</td><td>0</td>
-        let groupInfoPattern = #"<td>([^<]+)</td>\s*<td><a[^>]*>([^<]+)</a></td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>"#
+        let groupInfoPattern = #"<td>([^<]+)</td>\s*<td><a[^>]*>([^<]+)</a></td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>(.*?)</td>"#
         
         do {
             let groupInfoRegex = try NSRegularExpression(pattern: groupInfoPattern, options: [.dotMatchesLineSeparators])
             let range = NSRange(responseString.startIndex..<responseString.endIndex, in: responseString)
             let matches = groupInfoRegex.matches(in: responseString, options: [], range: range)
             
+            print("🔍 Found \(matches.count) group info matches with pattern")
+            
             for match in matches {
-                if match.numberOfRanges >= 5 {
+                if match.numberOfRanges >= 6 { // Updated to 6 to include location column
                     let nameRange = Range(match.range(at: 1), in: responseString)!
                     let dateRange = Range(match.range(at: 2), in: responseString)!
                     let totalRange = Range(match.range(at: 3), in: responseString)!
                     let soldRange = Range(match.range(at: 4), in: responseString)!
+                    let locationRange = Range(match.range(at: 5), in: responseString)!
                     
                     groupName = String(responseString[nameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                     groupDate = String(responseString[dateRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                     totalItems = Int(String(responseString[totalRange]).trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
                     soldItems = Int(String(responseString[soldRange]).trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
                     
+                    // Parse location data from the 5th column
+                    let locationHTML = String(responseString[locationRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    print("📍 Location HTML: \(locationHTML)")
+                    
+                    // Extract location address from the HTML
+                    // Looking for patterns like: <a href="...">📍 <span>Address</span></a> or "No location set"
+                    if locationHTML.contains("📍") && !locationHTML.contains("No location set") {
+                        // Try to extract the address from the span or link content
+                        let addressPattern = #"<span[^>]*>([^<]+)</span>"#
+                        do {
+                            let addressRegex = try NSRegularExpression(pattern: addressPattern, options: [])
+                            let addressRange = NSRange(locationHTML.startIndex..<locationHTML.endIndex, in: locationHTML)
+                            if let addressMatch = addressRegex.firstMatch(in: locationHTML, options: [], range: addressRange) {
+                                if let range = Range(addressMatch.range(at: 1), in: locationHTML) {
+                                    let address = String(locationHTML[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+                                    if !address.isEmpty {
+                                        locationAddress = address
+                                        print("📍 Extracted location address: \(locationAddress ?? "nil")")
+                                    }
+                                }
+                            }
+                        } catch {
+                            print("❌ Error parsing location address: \(error)")
+                        }
+                    }
+                    
                     print("📦 Found group info: \(groupName), Date: \(groupDate), Total: \(totalItems), Sold: \(soldItems)")
+                    print("📍 Final location values - Address: \(locationAddress ?? "nil"), Lat: \(latitude ?? 0), Long: \(longitude ?? 0)")
                     break
                 }
             }
@@ -915,7 +953,6 @@ class NetworkManager: NSObject {
         // Note: Mock items removed - only showing real items from getItemsForGroup() call
         
         // Parse image filename if present
-        var imageFilename: String? = nil
         let imagePattern = #"<img[^>]*src="[^"]*\/static\/uploads\/([^"]+)"[^>]*>"#
         
         do {
@@ -944,9 +981,9 @@ class NetworkManager: NSObject {
             soldPrice: soldPrice,
             items: items,
             imageFilename: imageFilename,
-            latitude: nil, // TODO: Parse location from HTML if available
-            longitude: nil, // TODO: Parse location from HTML if available  
-            locationAddress: nil // TODO: Parse location from HTML if available
+            latitude: latitude,
+            longitude: longitude,
+            locationAddress: locationAddress
         )
     }
     
@@ -1684,26 +1721,84 @@ class NetworkManager: NSObject {
         let nameEncoded = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name
         let priceEncoded = String(format: "%.2f", price).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(format: "%.2f", price)
         
-        // Create form data including location if provided
-        var body = "date=\(dateEncoded)&name=\(nameEncoded)&price=\(priceEncoded)"
-        
-        if let location = location {
-            let latitudeEncoded = String(location.latitude).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(location.latitude)
-            let longitudeEncoded = String(location.longitude).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(location.longitude)
+        // Create multipart form data if image is provided, otherwise use URL-encoded form data
+        if let image = image {
+            // Use multipart form data for image upload
+            let boundary = "Boundary-\(UUID().uuidString)"
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
             
-            body += "&latitude=\(latitudeEncoded)&longitude=\(longitudeEncoded)"
+            var formData = Data()
             
-            if let address = location.address {
-                let addressEncoded = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? address
-                body += "&location_address=\(addressEncoded)"
+            // Add text fields
+            formData.append("--\(boundary)\r\n".data(using: .utf8)!)
+            formData.append("Content-Disposition: form-data; name=\"date\"\r\n\r\n".data(using: .utf8)!)
+            formData.append("\(dateString)\r\n".data(using: .utf8)!)
+            
+            formData.append("--\(boundary)\r\n".data(using: .utf8)!)
+            formData.append("Content-Disposition: form-data; name=\"name\"\r\n\r\n".data(using: .utf8)!)
+            formData.append("\(name)\r\n".data(using: .utf8)!)
+            
+            formData.append("--\(boundary)\r\n".data(using: .utf8)!)
+            formData.append("Content-Disposition: form-data; name=\"price\"\r\n\r\n".data(using: .utf8)!)
+            formData.append("\(String(format: "%.2f", price))\r\n".data(using: .utf8)!)
+            
+            // Add location fields if provided
+            if let location = location {
+                formData.append("--\(boundary)\r\n".data(using: .utf8)!)
+                formData.append("Content-Disposition: form-data; name=\"latitude\"\r\n\r\n".data(using: .utf8)!)
+                formData.append("\(location.latitude)\r\n".data(using: .utf8)!)
+                
+                formData.append("--\(boundary)\r\n".data(using: .utf8)!)
+                formData.append("Content-Disposition: form-data; name=\"longitude\"\r\n\r\n".data(using: .utf8)!)
+                formData.append("\(location.longitude)\r\n".data(using: .utf8)!)
+                
+                if let address = location.address {
+                    formData.append("--\(boundary)\r\n".data(using: .utf8)!)
+                    formData.append("Content-Disposition: form-data; name=\"location_address\"\r\n\r\n".data(using: .utf8)!)
+                    formData.append("\(address)\r\n".data(using: .utf8)!)
+                }
             }
+            
+            // Add image file
+            if let imageData = image.jpegData(compressionQuality: 0.8) {
+                formData.append("--\(boundary)\r\n".data(using: .utf8)!)
+                formData.append("Content-Disposition: form-data; name=\"image\"; filename=\"group_image.jpg\"\r\n".data(using: .utf8)!)
+                formData.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+                formData.append(imageData)
+                formData.append("\r\n".data(using: .utf8)!)
+            }
+            
+            // End boundary
+            formData.append("--\(boundary)--\r\n".data(using: .utf8)!)
+            
+            request.httpBody = formData
+        } else {
+            // Use URL-encoded form data when no image
+            var body = "date=\(dateEncoded)&name=\(nameEncoded)&price=\(priceEncoded)"
+            
+            if let location = location {
+                let latitudeEncoded = String(location.latitude).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(location.latitude)
+                let longitudeEncoded = String(location.longitude).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(location.longitude)
+                
+                body += "&latitude=\(latitudeEncoded)&longitude=\(longitudeEncoded)"
+                
+                if let address = location.address {
+                    let addressEncoded = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? address
+                    body += "&location_address=\(addressEncoded)"
+                }
+            }
+            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+            request.httpBody = body.data(using: .utf8)
         }
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.httpBody = body.data(using: .utf8)
         
         print("🌐 Making add group request to: \(url)")
         print("📝 Request data: name=\(name), price=\(price), date=\(dateString)")
         print("📷 Image included: \(image != nil)")
+        if let location = location {
+            print("📍 Location data: lat=\(location.latitude), long=\(location.longitude), address=\(location.address ?? "nil")")
+        } else {
+            print("📍 No location data provided")
+        }
         print("📋 Request headers: \(request.allHTTPHeaderFields ?? [:])")
         
         let (data, response) = try await session.data(for: request)
@@ -2067,11 +2162,10 @@ class NetworkManager: NSObject {
         print("📄 Items HTML preview (first 500 chars): \(responseString.prefix(500))")
         let items = parseItemsFromHTML(responseString)
         
-        // Fetch categories for all items
-        print("🔄 Fetching categories for \(items.count) items...")
-        let itemsWithCategories = await fetchCategoriesForItems(items)
+        // Skip category fetching for better performance - items list doesn't need detailed categories
+        print("📋 Parsed \(items.count) items (skipping detailed category fetching for performance)")
         
-        return itemsWithCategories
+        return items
     }
     
     // MARK: - Category Fetching for Items
