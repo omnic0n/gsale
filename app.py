@@ -178,6 +178,16 @@ def google_login():
     
     return redirect(google_auth_url)
 
+@app.route('/mobile_oauth_success')
+def mobile_oauth_success():
+    """Direct route for mobile OAuth success page"""
+    if 'loggedin' in session and session['loggedin']:
+        return render_template('mobile_oauth_success.html', 
+                             username=session.get('username', 'User'))
+    else:
+        return render_template('mobile_oauth_error.html', 
+                             error='Not authenticated'), 401
+
 @app.route('/google-callback', methods=['GET', 'POST'])
 def google_callback():
     """Handle Google OAuth callback"""

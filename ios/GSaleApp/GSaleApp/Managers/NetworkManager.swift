@@ -183,11 +183,20 @@ class NetworkManager: NSObject {
         return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
                 url: url,
-                callbackURLScheme: "https"
+                callbackURLScheme: "gsale.levimylesllc.com"
             ) { callbackURL, error in
                 if let error = error {
+                    let nsError = error as NSError
                     print("❌ OAuth session error: \(error)")
-                    continuation.resume(throwing: NetworkError.serverError(error.localizedDescription))
+                    print("❌ Error code: \(nsError.code), domain: \(nsError.domain)")
+                    
+                    // Check for specific error types
+                    if nsError.code == 1 {
+                        print("❌ User cancelled authentication or session failed to start")
+                        continuation.resume(throwing: NetworkError.serverError("Authentication was cancelled"))
+                    } else {
+                        continuation.resume(throwing: NetworkError.serverError(error.localizedDescription))
+                    }
                     return
                 }
                 
@@ -199,22 +208,17 @@ class NetworkManager: NSObject {
                 
                 print("✅ OAuth callback received: \(callbackURL)")
                 
-                // Check if we got redirected to our success page
-                if callbackURL.absoluteString.contains("mobile_oauth_success") {
-                    // Extract session ID from URL parameters or make request to get session
-                    Task {
-                        do {
-                            let response = try await self.extractSessionFromSuccessPage(callbackURL)
-                            continuation.resume(returning: response)
-                        } catch {
-                            print("❌ Failed to extract session: \(error)")
-                            continuation.resume(throwing: error)
-                        }
+                // The callback means authentication completed, now check for session
+                Task {
+                    do {
+                        // Check the mobile success page for session information
+                        let successURL = URL(string: "\(self.baseURL)/mobile_oauth_success")!
+                        let response = try await self.extractSessionFromSuccessPage(successURL)
+                        continuation.resume(returning: response)
+                    } catch {
+                        print("❌ Failed to extract session: \(error)")
+                        continuation.resume(throwing: error)
                     }
-                } else if callbackURL.absoluteString.contains("mobile_oauth_error") {
-                    continuation.resume(throwing: NetworkError.serverError("OAuth authentication failed"))
-                } else {
-                    continuation.resume(throwing: NetworkError.serverError("Unexpected callback URL"))
                 }
             }
             
@@ -222,7 +226,14 @@ class NetworkManager: NSObject {
             Task { @MainActor in
                 session.presentationContextProvider = self.presentationProvider
                 session.prefersEphemeralWebBrowserSession = false
-                session.start()
+                
+                print("🚀 Starting authentication session...")
+                let started = session.start()
+                print("📱 Authentication session started: \(started)")
+                
+                if !started {
+                    continuation.resume(throwing: NetworkError.serverError("Failed to start authentication session"))
+                }
             }
         }
     }
