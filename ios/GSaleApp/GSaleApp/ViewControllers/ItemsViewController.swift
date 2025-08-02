@@ -152,13 +152,11 @@ class ItemsViewController: UIViewController {
                     self.applyFilters()
                     self.loadingIndicator.stopAnimating()
                     self.refreshControl.endRefreshing()
-                    print("📋 Loaded \(items.count) items")
                 }
             } catch {
                 await MainActor.run {
                     self.loadingIndicator.stopAnimating()
                     self.refreshControl.endRefreshing()
-                    print("❌ Failed to load items: \(error)")
                     self.showAlert(title: "Error", message: "Failed to load items. Please try again.")
                 }
             }
@@ -166,12 +164,9 @@ class ItemsViewController: UIViewController {
     }
     
     private func applyFilters() {
-        print("🔍 DEBUG: Starting applyFilters with \(allItems.count) total items")
-        print("🔍 DEBUG: Current filter: \(currentFilter.rawValue)")
         
         // Debug: Print all items and their sold status
         for (index, item) in allItems.enumerated() {
-            print("🔍 DEBUG: Item \(index): '\(item.name)' - sold: \(item.sold)")
         }
         
         // First apply status filter
@@ -180,13 +175,10 @@ class ItemsViewController: UIViewController {
         switch currentFilter {
         case .all:
             statusFilteredItems = allItems
-            print("🔍 DEBUG: All filter - keeping all \(allItems.count) items")
         case .sold:
             statusFilteredItems = allItems.filter { $0.sold }
-            print("🔍 DEBUG: Sold filter - found \(statusFilteredItems.count) sold items")
         case .unsold:
             statusFilteredItems = allItems.filter { !$0.sold }
-            print("🔍 DEBUG: Unsold filter - found \(statusFilteredItems.count) unsold items")
         }
         
         // Then apply search filter if there's search text
@@ -199,11 +191,9 @@ class ItemsViewController: UIViewController {
                 item.category.lowercased().contains(searchText.lowercased()) ||
                 (item.storage?.lowercased().contains(searchText.lowercased()) ?? false)
             }
-            print("🔍 DEBUG: Applied search '\(searchText)' - \(filteredItems.count) items match")
         }
         
         tableView.reloadData()
-        print("📊 Applied filter: \(currentFilter.rawValue) - showing \(filteredItems.count) of \(allItems.count) items")
     }
     
     private func filterContentForSearchText(_ searchText: String) {
@@ -284,7 +274,6 @@ class ItemsViewController: UIViewController {
             } catch {
                 await MainActor.run {
                     self.loadingIndicator.stopAnimating()
-                    print("❌ Failed to remove item: \(error)")
                     self.showAlert(title: "Error", message: "Failed to remove item. Please try again.")
                 }
             }

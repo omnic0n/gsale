@@ -433,15 +433,11 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                            self.addButton.isEnabled = true
                            
                            if response.success {
-                               print("✅ Group created successfully!")
-                               print("📦 Group ID returned: \(response.group_id ?? "none")")
                                
                                if let groupId = response.group_id, !groupId.isEmpty {
-                                   print("🔄 Attempting to navigate to group details for ID: \(groupId)")
                                    // Directly navigate to group details
                                    self.navigateToGroupDetails(groupId: groupId)
                                } else {
-                                   print("⚠️ No valid group ID returned, dismissing without popup")
                                    // No group ID returned, just dismiss and notify groups list to refresh
                                    NotificationCenter.default.post(name: .groupCreated, object: nil)
                                    self.dismiss(animated: true)
@@ -463,7 +459,6 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                         // Check if this is actually a success with HTML response
                         if message.contains("<html") || message.contains("Group Information") {
                             // This is likely a successful creation with HTML response
-                            print("🔄 Detected HTML response - group likely created successfully")
                             
                             // Notify that a group was created and dismiss
                             NotificationCenter.default.post(name: .groupCreated, object: nil)
@@ -475,7 +470,6 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                         errorMessage = "Failed to create group. Please check your internet connection and try again."
                     }
                     
-                    print("❌ Group creation error: \(errorMessage)")
                     self.showAlert(title: "Error", message: errorMessage)
                 }
             }
@@ -525,11 +519,9 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                        private func navigateToGroupDetails(groupId: String) {
                 Task {
                     do {
-                        print("🌐 Fetching group details for ID: \(groupId)")
                         let groupDetail = try await NetworkManager.shared.getGroupDetails(groupId: groupId)
                         
                         await MainActor.run {
-                            print("✅ Successfully loaded group details for: \(groupDetail.name)")
                             
                             // Notify that a group was created
                             NotificationCenter.default.post(name: .groupCreated, object: nil)
@@ -546,7 +538,6 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                         }
                     } catch {
                         await MainActor.run {
-                            print("❌ Failed to load group details: \(error)")
                             // If loading group details fails, just dismiss without popup
                             NotificationCenter.default.post(name: .groupCreated, object: nil)
                             self.dismiss(animated: true)
@@ -616,8 +607,6 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                         address: address
                     )
                     
-                    print("📍 Location set: \(address)")
-                    print("📍 Coordinates: \(coordinate.latitude), \(coordinate.longitude)")
                 } else {
                     let coordinateString = String(format: "%.6f, %.6f", coordinate.latitude, coordinate.longitude)
                     self?.locationAddressTextField.text = coordinateString
@@ -628,7 +617,6 @@ class AddGroupViewController: UIViewController, CLLocationManagerDelegate, MKMap
                         address: nil
                     )
                     
-                    print("📍 Location set with coordinates only: \(coordinateString)")
                 }
             }
         }
@@ -719,7 +707,6 @@ extension AddGroupViewController {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location error: \(error.localizedDescription)")
         
         // Reset button state
         useCurrentLocationButton.setTitle("📍 Use Current Location", for: .normal)

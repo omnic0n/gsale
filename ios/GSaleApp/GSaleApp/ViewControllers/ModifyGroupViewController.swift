@@ -164,7 +164,6 @@ class ModifyGroupViewController: UIViewController {
                 self.dateTextField.text = groupDetail.date
             }
         } catch {
-            print("❌ Failed to load group data: \(error)")
             // Keep the default values if loading fails
         }
     }

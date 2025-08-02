@@ -25,7 +25,6 @@ class NetworkManager: NSObject {
             // Extract session cookie from Set-Cookie header
             if let setCookieHeader = response.allHeaderFields["Set-Cookie"] as? String {
                 self.capturedCookie = NetworkManager.extractSessionValue(from: setCookieHeader)
-                print("🍪 Captured session cookie: \(self.capturedCookie ?? "none")")
             }
             
             // Allow the redirect to continue
@@ -52,8 +51,6 @@ class NetworkManager: NSObject {
         
         // Debug: Check the exact bytes being sent
         let bodyData = body.data(using: .utf8)!
-        print("🔍 Body data bytes: \(Array(bodyData))")
-        print("🔍 Body data as string: \(String(data: bodyData, encoding: .utf8) ?? "invalid")")
         
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -62,12 +59,6 @@ class NetworkManager: NSObject {
         request.setValue("\(bodyData.count)", forHTTPHeaderField: "Content-Length")
         request.httpBody = bodyData
         
-        print("🌐 Making login request to: \(url)")
-        print("📝 HTTP Method: \(request.httpMethod ?? "unknown")")
-        print("📝 Request body: \(body)")
-        print("📋 Request headers: \(request.allHTTPHeaderFields ?? [:])")
-        print("📏 Request body length: \(body.count)")
-        print("🔍 Request body bytes: \(bodyData.count)")
         
         // Create a custom delegate to handle redirects and capture cookies
         let delegate = LoginDelegate()
@@ -82,16 +73,11 @@ class NetworkManager: NSObject {
         
         // Debug: Check if we got redirected
         if let url = httpResponse.url {
-            print("📍 Final URL after redirects: \(url)")
         }
         
         // Debug: Check if we got any response data
         let responseDataString = String(data: data, encoding: .utf8) ?? "No response data"
-        print("📄 Response data length: \(data.count)")
-        print("📄 Response data preview: \(String(responseDataString.prefix(200)))")
         
-        print("📡 Response status: \(httpResponse.statusCode)")
-        print("📋 All response headers: \(httpResponse.allHeaderFields)")
         
         // Check if we got a redirect (successful login)
         if httpResponse.statusCode == 302 {
@@ -102,7 +88,6 @@ class NetworkManager: NSObject {
             if sessionCookie == nil {
                 if let setCookieHeader = httpResponse.allHeaderFields["Set-Cookie"] as? String {
                     sessionCookie = setCookieHeader
-                    print("🍪 Found Set-Cookie in response headers: \(setCookieHeader)")
                 }
             }
             
@@ -123,21 +108,16 @@ class NetworkManager: NSObject {
                         is_admin: false
                     )
                     
-                    print("🔐 Login successful - cookie: \(cleanCookie)")
                     return loginResponse
                 } else {
-                    print("❌ Failed to extract session value from cookie: \(cookie)")
                 }
             }
             
-            print("❌ No valid session cookie found in login response")
             throw NetworkError.unauthorized
         }
         
         // If we get here, login failed
         let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-        print("❌ Login failed. Status: \(httpResponse.statusCode)")
-        print("❌ Login failed. Response: \(responseString)")
         
         throw NetworkError.unauthorized
     }
@@ -146,7 +126,6 @@ class NetworkManager: NSObject {
         // Parse Set-Cookie header to extract session value
         // Format: "session=<value>; HttpOnly; Path=/" or just "session=<value>"
         
-        print("🔍 Parsing Set-Cookie header: \(setCookieHeader)")
         
         // Look for session=<value> pattern
         let sessionPattern = #"session=([^;]+)"#
@@ -158,15 +137,12 @@ class NetworkManager: NSObject {
             if let match = regex.firstMatch(in: setCookieHeader, options: [], range: range) {
                 if let sessionValueRange = Range(match.range(at: 1), in: setCookieHeader) {
                     let sessionValue = String(setCookieHeader[sessionValueRange])
-                    print("✅ Extracted session value: \(sessionValue)")
                     return sessionValue
                 }
             }
         } catch {
-            print("❌ Regex error: \(error)")
         }
         
-        print("❌ Could not extract session value from: \(setCookieHeader)")
         return nil
     }
     
@@ -178,7 +154,6 @@ class NetworkManager: NSObject {
             throw NetworkError.invalidURL
         }
         
-        print("🔄 Initiating Google OAuth: \(googleOAuthURL)")
         
         return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
@@ -187,12 +162,9 @@ class NetworkManager: NSObject {
             ) { callbackURL, error in
                 if let error = error {
                     let nsError = error as NSError
-                    print("❌ OAuth session error: \(error)")
-                    print("❌ Error code: \(nsError.code), domain: \(nsError.domain)")
                     
                     // Check for specific error types
                     if nsError.code == 1 {
-                        print("❌ User cancelled authentication or session failed to start")
                         continuation.resume(throwing: NetworkError.serverError("Authentication was cancelled"))
                     } else {
                         continuation.resume(throwing: NetworkError.serverError(error.localizedDescription))
@@ -201,12 +173,10 @@ class NetworkManager: NSObject {
                 }
                 
                 guard let callbackURL = callbackURL else {
-                    print("❌ No callback URL received")
                     continuation.resume(throwing: NetworkError.noData)
                     return
                 }
                 
-                print("✅ OAuth callback received: \(callbackURL)")
                 
                 // Check if this is our success callback
                 if callbackURL.absoluteString.contains("oauth-success") {
@@ -221,7 +191,6 @@ class NetworkManager: NSObject {
                     }
                     
                     guard let token = sessionToken else {
-                        print("❌ No session token in callback URL")
                         continuation.resume(throwing: NetworkError.serverError("No session token received"))
                         return
                     }
@@ -232,12 +201,10 @@ class NetworkManager: NSObject {
                             let response = try await self.exchangeSessionToken(token, username: username)
                             continuation.resume(returning: response)
                         } catch {
-                            print("❌ Failed to exchange session token: \(error)")
                             continuation.resume(throwing: error)
                         }
                     }
                 } else {
-                    print("❌ Unexpected callback URL: \(callbackURL)")
                     continuation.resume(throwing: NetworkError.serverError("Unexpected callback URL"))
                 }
             }
@@ -247,9 +214,7 @@ class NetworkManager: NSObject {
                 session.presentationContextProvider = self.presentationProvider
                 session.prefersEphemeralWebBrowserSession = false
                 
-                print("🚀 Starting authentication session...")
                 let started = session.start()
-                print("📱 Authentication session started: \(started)")
                 
                 if !started {
                     continuation.resume(throwing: NetworkError.serverError("Failed to start authentication session"))
@@ -259,7 +224,6 @@ class NetworkManager: NSObject {
     }
     
     private func exchangeSessionToken(_ token: String, username: String) async throws -> LoginResponse {
-        print("🔄 Exchanging session token for session cookie")
         
         let url = URL(string: "\(baseURL)/mobile_session_exchange")!
         var request = URLRequest(url: url)
@@ -276,7 +240,6 @@ class NetworkManager: NSObject {
             throw NetworkError.noData
         }
         
-        print("📡 Session exchange response status: \(httpResponse.statusCode)")
         
         if httpResponse.statusCode == 200 {
             do {
@@ -286,7 +249,6 @@ class NetworkManager: NSObject {
                    let sessionCookie = json?["session_cookie"] as? String,
                    let responseUsername = json?["username"] as? String {
                     
-                    print("✅ Session token exchange successful")
                     
                     let loginResponse = LoginResponse(
                         success: true,
@@ -303,18 +265,15 @@ class NetworkManager: NSObject {
                     throw NetworkError.serverError(errorMessage)
                 }
             } catch {
-                print("❌ Failed to parse session exchange response: \(error)")
                 throw NetworkError.decodingError
             }
         } else {
             let errorMessage = String(data: data, encoding: .utf8) ?? "Session exchange failed"
-            print("❌ Session exchange failed: \(errorMessage)")
             throw NetworkError.serverError(errorMessage)
         }
     }
     
     private func extractSessionFromSuccessPage(_ url: URL, username: String? = nil) async throws -> LoginResponse {
-        print("🔍 Extracting session from success page: \(url)")
         
         // Make a request to the success page to extract session information
         var request = URLRequest(url: url)
@@ -326,13 +285,11 @@ class NetworkManager: NSObject {
             throw NetworkError.noData
         }
         
-        print("📡 Success page response status: \(httpResponse.statusCode)")
         
         // Extract session cookie from response headers
         var sessionCookie: String? = nil
         if let setCookieHeader = httpResponse.allHeaderFields["Set-Cookie"] as? String {
             sessionCookie = NetworkManager.extractSessionValue(from: setCookieHeader)
-            print("🍪 Extracted session cookie: \(sessionCookie ?? "none")")
         }
         
         // If no Set-Cookie header, try to extract from existing cookies
@@ -340,7 +297,6 @@ class NetworkManager: NSObject {
             for cookie in cookies {
                 if cookie.name == "session" {
                     sessionCookie = cookie.value
-                    print("🍪 Found existing session cookie: \(sessionCookie ?? "none")")
                     break
                 }
             }
@@ -362,7 +318,6 @@ class NetworkManager: NSObject {
             is_admin: false
         )
         
-        print("✅ Google OAuth login successful")
         return loginResponse
     }
     
@@ -379,7 +334,6 @@ class NetworkManager: NSObject {
                 return String(html[usernameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
             }
         } catch {
-            print("❌ Failed to extract username: \(error)")
         }
         
         return "User"
@@ -394,13 +348,10 @@ class NetworkManager: NSObject {
         // Set up session cookies for authentication
         if let cookie = UserManager.shared.cookie {
             request.setValue(cookie, forHTTPHeaderField: "Cookie")
-            print("🍪 Sending cookie: \(cookie)")
         } else {
-            print("⚠️ No cookie found - user not logged in")
             throw NetworkError.unauthorized
         }
         
-        print("🌐 Making groups list request to: \(url)")
         
         let (data, response) = try await session.data(for: request)
         
@@ -408,7 +359,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Groups list response status: \(httpResponse.statusCode)")
         
         if httpResponse.statusCode == 401 {
             throw NetworkError.unauthorized
@@ -416,26 +366,20 @@ class NetworkManager: NSObject {
         
         guard httpResponse.statusCode == 200 else {
             let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("❌ Groups list request failed. Response: \(responseString)")
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
         }
         
         // Parse HTML response to extract group data
         let responseString = String(data: data, encoding: .utf8) ?? ""
-        print("📄 Response body length: \(responseString.count)")
         
         // Quick test to see if we're getting any response
         if responseString.isEmpty {
-            print("❌ Empty response received")
             return []
         }
         
-        print("✅ Received response with \(responseString.count) characters")
         
         // Debug: Check if this looks like a login page
         if responseString.contains("login") || responseString.contains("Login") {
-            print("⚠️ Response appears to be a login page - user may not be authenticated")
-            print("📄 Login page content: \(String(responseString.prefix(500)))")
             throw NetworkError.unauthorized
         }
         
@@ -443,11 +387,8 @@ class NetworkManager: NSObject {
         if let sampleStart = responseString.range(of: "<tbody>")?.lowerBound {
             let sampleEnd = responseString.index(sampleStart, offsetBy: min(1000, responseString.count - responseString.distance(from: responseString.startIndex, to: sampleStart)))
             let sample = String(responseString[sampleStart..<sampleEnd])
-            print("📄 HTML sample starting from <tbody>: \(sample)")
         }
         
-        print("🔍 Starting HTML parsing...")
-        print("📄 HTML length: \(responseString.count)")
         
         // Use the shared parsing method
         return parseGroupsFromHTML(responseString)
@@ -466,8 +407,6 @@ class NetworkManager: NSObject {
         // Looking for: <td><a href="/groups/detail?group_id=uuid">name</td><td>total</td><td>sold</td>...
         let groupRowPatternWithoutCount = #"<td><a[^>]*href="[^"]*group_id=([^"]+)"[^>]*>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>\s*<td>([^<]+)</td>"#
         
-        print("🔍 Pattern 1 (with count): \(groupRowPatternWithCount)")
-        print("🔍 Pattern 2 (without count): \(groupRowPatternWithoutCount)")
         
         // Try pattern 1: Groups list format (with count column)
         do {
@@ -475,7 +414,6 @@ class NetworkManager: NSObject {
             let range = NSRange(responseString.startIndex..<responseString.endIndex, in: responseString)
             let matches = regex.matches(in: responseString, options: [], range: range)
             
-            print("🔍 Found \(matches.count) potential group rows (with count)")
             
             for (index, match) in matches.enumerated() {
                 if match.numberOfRanges >= 11 {
@@ -501,7 +439,6 @@ class NetworkManager: NSObject {
                     let average = String(responseString[averageRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                     let date = String(responseString[dateRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                     
-                    print("🔍 Row \(index): Count=\(count), ID=\(groupIdStr), Name=\(name), Total=\(totalItems), Sold=\(soldItems), Price=\(price), Net=\(net), Date=\(date)")
                     
                     // Skip header rows, totals row, or empty rows
                     if name.lowercased() == "name" || name.lowercased() == "totals" || name.isEmpty {
@@ -517,24 +454,20 @@ class NetworkManager: NSObject {
                             updated_at: date
                         )
                         groups.append(group)
-                        print("✅ Added group: \(name) (ID: \(groupIdStr), Date: \(date), Total: \(totalItems), Sold: \(soldItems))")
                     }
                 }
             }
         } catch {
-            print("❌ Error with regex (with count): \(error)")
         }
         
         // If no groups found with count pattern, try pattern 2: Search results format (without count)
         if groups.isEmpty {
-            print("🔄 Trying search results pattern (without count)...")
             
             do {
                 let regex = try NSRegularExpression(pattern: groupRowPatternWithoutCount, options: [.dotMatchesLineSeparators])
                 let range = NSRange(responseString.startIndex..<responseString.endIndex, in: responseString)
                 let matches = regex.matches(in: responseString, options: [], range: range)
                 
-                print("🔍 Found \(matches.count) potential group rows (without count)")
                 
                 for (index, match) in matches.enumerated() {
                     if match.numberOfRanges >= 10 {
@@ -559,7 +492,6 @@ class NetworkManager: NSObject {
                         let average = String(responseString[averageRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                         let date = String(responseString[dateRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                         
-                        print("🔍 Search Row \(index): ID=\(groupIdStr), Name=\(name), Total=\(totalItems), Sold=\(soldItems), Price=\(price), Net=\(net), Date=\(date)")
                         
                         // Skip header rows, totals row, or empty rows
                         if name.lowercased() == "name" || name.lowercased() == "totals" || name.isEmpty {
@@ -575,18 +507,15 @@ class NetworkManager: NSObject {
                                 updated_at: date
                             )
                             groups.append(group)
-                            print("✅ Added search group: \(name) (ID: \(groupIdStr), Date: \(date), Total: \(totalItems), Sold: \(soldItems))")
                         }
                     }
                 }
             } catch {
-                print("❌ Error with regex (without count): \(error)")
             }
         }
         
         // If still no groups found, try an even simpler approach
         if groups.isEmpty {
-            print("🔄 Trying very simple group link detection...")
             
             // Just look for any group links
             let simplePattern = #"group_id=([^"]+)"[^>]*>([^<]+)"#
@@ -596,7 +525,6 @@ class NetworkManager: NSObject {
                 let range = NSRange(responseString.startIndex..<responseString.endIndex, in: responseString)
                 let matches = regex.matches(in: responseString, options: [], range: range)
                 
-                print("🔍 Found \(matches.count) simple group links")
                 
                 for (index, match) in matches.enumerated() {
                     if match.numberOfRanges >= 3 {
@@ -606,7 +534,6 @@ class NetworkManager: NSObject {
                         let groupIdStr = String(responseString[groupIdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                         let name = String(responseString[nameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                         
-                        print("🔍 Simple Link \(index): ID=\(groupIdStr), Name=\(name)")
                         
                         if !groupIdStr.isEmpty && !name.isEmpty && !name.lowercased().contains("describe") {
                             let group = Group(
@@ -617,18 +544,15 @@ class NetworkManager: NSObject {
                                 updated_at: "2024-01-01"
                             )
                             groups.append(group)
-                            print("✅ Added simple group: \(name) (ID: \(groupIdStr))")
                         }
                     }
                 }
             } catch {
-                print("❌ Error with simple regex: \(error)")
             }
         }
         
         // If no groups found with complex regex, try simpler approach
         if groups.isEmpty {
-            print("🔄 Trying simpler parsing approach...")
             
             // Look for group links with a simpler pattern
             let simpleGroupPattern = #"group_id=([^"]+)"[^>]*>([^<]+)</a>"#
@@ -638,7 +562,6 @@ class NetworkManager: NSObject {
                 let range = NSRange(responseString.startIndex..<responseString.endIndex, in: responseString)
                 let matches = simpleRegex.matches(in: responseString, options: [], range: range)
                 
-                print("🔍 Found \(matches.count) simple group matches")
                 
                 for (index, match) in matches.enumerated() {
                     if match.numberOfRanges >= 3 {
@@ -648,7 +571,6 @@ class NetworkManager: NSObject {
                         let groupIdStr = String(responseString[groupIdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                         let name = String(responseString[nameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                         
-                        print("🔍 Simple match \(index): ID=\(groupIdStr), Name=\(name)")
                         
                         if !groupIdStr.isEmpty && !name.isEmpty && name != "Name" {
                             let group = Group(
@@ -659,21 +581,16 @@ class NetworkManager: NSObject {
                                 updated_at: "2024-01-01"
                             )
                             groups.append(group)
-                            print("✅ Added simple group: \(name) (ID: \(groupIdStr))")
                         }
                     }
                 }
             } catch {
-                print("❌ Error with simple regex: \(error)")
             }
         }
         
-        print("✅ Returning \(groups.count) groups from HTML parsing")
         
         // If still no groups found, log the issue
         if groups.isEmpty {
-            print("❌ No groups found in HTML response")
-            print("📄 HTML preview: \(String(responseString.prefix(1000)))")
         }
         
         return groups
@@ -702,8 +619,6 @@ class NetworkManager: NSObject {
         let formData = "listYear=\(year.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         request.httpBody = formData.data(using: .utf8)
         
-        print("📅 Loading groups for year: '\(year)'")
-        print("📝 Form data: \(formData)")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -711,7 +626,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Groups by year response status: \(httpResponse.statusCode)")
         
         guard httpResponse.statusCode == 200 else {
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
@@ -726,7 +640,6 @@ class NetworkManager: NSObject {
             throw NetworkError.unauthorized
         }
         
-        print("📄 Year filter HTML response length: \(htmlString.count)")
         
         // Parse groups from the response (should be groups list format)
         return parseGroupsFromHTML(htmlString)
@@ -746,8 +659,6 @@ class NetworkManager: NSObject {
         
         // Handle cookie format properly
         let cookieHeader = cookie.contains("session=") ? cookie : "session=\(cookie)"
-        print("🍪 Raw cookie from UserManager: '\(cookie)'")
-        print("🍪 Formatted cookie header: '\(cookieHeader)'")
         request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
@@ -757,10 +668,6 @@ class NetworkManager: NSObject {
         let formData = "name=\(searchTerm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         request.httpBody = formData.data(using: .utf8)
         
-        print("🔍 Searching groups with term: '\(searchTerm)'")
-        print("🍪 Search request cookie header: \(request.value(forHTTPHeaderField: "Cookie") ?? "None")")
-        print("🌐 Search request URL: \(url)")
-        print("📝 Search request body: \(formData)")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -768,7 +675,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Search groups response status: \(httpResponse.statusCode)")
         
         guard httpResponse.statusCode == 200 else {
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
@@ -783,12 +689,9 @@ class NetworkManager: NSObject {
             throw NetworkError.unauthorized
         }
         
-        print("📄 Search HTML response length: \(htmlString.count)")
-        print("📄 Search HTML preview: \(String(htmlString.prefix(500)))")
         
         // Check specifically if this is a login page
         if htmlString.contains("<title>Login</title>") || htmlString.contains("class=\"login\"") {
-            print("❌ Search returned login page - authentication failed")
             throw NetworkError.unauthorized
         }
         
@@ -796,15 +699,11 @@ class NetworkManager: NSObject {
         if let tableStart = htmlString.range(of: "<tbody>"),
            let tableEnd = htmlString.range(of: "</tbody>") {
             let tableContent = String(htmlString[tableStart.upperBound..<tableEnd.lowerBound])
-            print("🔍 Extracted table content length: \(tableContent.count)")
-            print("🔍 Table content: \(tableContent)")
         } else {
-            print("❌ Could not find <tbody> tags in HTML")
         }
         
         // Parse groups from the search results table (same structure as groups/list)
         let searchResults = parseGroupsFromHTML(htmlString)
-        print("🔍 Search found \(searchResults.count) groups")
         
         return searchResults
     }
@@ -817,13 +716,10 @@ class NetworkManager: NSObject {
         // Set up session cookies for authentication
         if let cookie = UserManager.shared.cookie {
             request.setValue(cookie, forHTTPHeaderField: "Cookie")
-            print("🍪 Sending cookie: \(cookie)")
         } else {
-            print("⚠️ No cookie found - user not logged in")
             throw NetworkError.unauthorized
         }
         
-        print("🌐 Making group details request to: \(url)")
         
         let (data, response) = try await session.data(for: request)
         
@@ -831,7 +727,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Group details response status: \(httpResponse.statusCode)")
         
         if httpResponse.statusCode == 401 {
             throw NetworkError.unauthorized
@@ -839,18 +734,15 @@ class NetworkManager: NSObject {
         
         guard httpResponse.statusCode == 200 else {
             let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("❌ Group details request failed. Response: \(responseString)")
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
         }
         
         // Parse HTML response to extract group details
         let responseString = String(data: data, encoding: .utf8) ?? ""
-        print("📄 Group details response length: \(responseString.count)")
         
         // Debug: Print first 1000 characters of response to see structure
         let previewLength = min(2000, responseString.count)
         let responsePreview = String(responseString.prefix(previewLength))
-        print("📄 Response preview: \(responsePreview)")
         
         // Parse group information from the HTML
         var groupName = "Group \(groupId)"
@@ -874,7 +766,6 @@ class NetworkManager: NSObject {
             let range = NSRange(responseString.startIndex..<responseString.endIndex, in: responseString)
             let matches = groupInfoRegex.matches(in: responseString, options: [], range: range)
             
-            print("🔍 Found \(matches.count) group info matches with pattern")
             
             for match in matches {
                 if match.numberOfRanges >= 6 { // Updated to 6 to include location column
@@ -891,7 +782,6 @@ class NetworkManager: NSObject {
                     
                     // Parse location data from the 5th column
                     let locationHTML = String(responseString[locationRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-                    print("📍 Location HTML: \(locationHTML)")
                     
                     // Extract location address from the HTML
                     // Looking for patterns like: <a href="...">📍 <span>Address</span></a> or "No location set"
@@ -906,22 +796,17 @@ class NetworkManager: NSObject {
                                     let address = String(locationHTML[range]).trimmingCharacters(in: .whitespacesAndNewlines)
                                     if !address.isEmpty {
                                         locationAddress = address
-                                        print("📍 Extracted location address: \(locationAddress ?? "nil")")
                                     }
                                 }
                             }
                         } catch {
-                            print("❌ Error parsing location address: \(error)")
                         }
                     }
                     
-                    print("📦 Found group info: \(groupName), Date: \(groupDate), Total: \(totalItems), Sold: \(soldItems)")
-                    print("📍 Final location values - Address: \(locationAddress ?? "nil"), Lat: \(latitude ?? 0), Long: \(longitude ?? 0)")
                     break
                 }
             }
         } catch {
-            print("❌ Error parsing group info: \(error)")
         }
         
         // Extract monetary information
@@ -942,12 +827,10 @@ class NetworkManager: NSObject {
                     groupPrice = Double(String(responseString[purchaseRange]).replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: "")) ?? 0.0
                     soldPrice = Double(String(responseString[saleRange]).replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: "")) ?? 0.0
                     
-                    print("💰 Found monetary info: Purchase: $\(groupPrice), Sale: $\(soldPrice)")
                     break
                 }
             }
         } catch {
-            print("❌ Error parsing monetary info: \(error)")
         }
         
         // Note: Mock items removed - only showing real items from getItemsForGroup() call
@@ -962,13 +845,10 @@ class NetworkManager: NSObject {
             if let imageMatch = imageRegex.firstMatch(in: responseString, options: [], range: imageRange) {
                 if let filenameRange = Range(imageMatch.range(at: 1), in: responseString) {
                     imageFilename = String(responseString[filenameRange])
-                    print("📸 Found group image: \(imageFilename!)")
                 }
             } else {
-                print("📷 No image found for group \(groupId)")
             }
         } catch {
-            print("❌ Error parsing image: \(error)")
         }
 
         return GroupDetail(
@@ -995,13 +875,10 @@ class NetworkManager: NSObject {
         // Set up session cookies for authentication
         if let cookie = UserManager.shared.cookie {
             request.setValue(cookie, forHTTPHeaderField: "Cookie")
-            print("🍪 Sending cookie: \(cookie)")
         } else {
-            print("⚠️ No cookie found - user not logged in")
             throw NetworkError.unauthorized
         }
         
-        print("🌐 Making items list request to: \(url)")
         
         let (data, response) = try await session.data(for: request)
         
@@ -1009,7 +886,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Items list response status: \(httpResponse.statusCode)")
         
         if httpResponse.statusCode == 401 {
             throw NetworkError.unauthorized
@@ -1017,13 +893,11 @@ class NetworkManager: NSObject {
         
         guard httpResponse.statusCode == 200 else {
             let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("❌ Items list request failed. Response: \(responseString)")
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
         }
         
         // Parse HTML response to extract items
         let responseString = String(data: data, encoding: .utf8) ?? ""
-        print("📄 Items list response length: \(responseString.count)")
         
         var items: [GroupItem] = []
         
@@ -1034,14 +908,12 @@ class NetworkManager: NSObject {
         if let tableStart = responseString.range(of: "<table")?.lowerBound {
             let tableEnd = responseString.index(tableStart, offsetBy: min(3000, responseString.count - responseString.distance(from: responseString.startIndex, to: tableStart)))
             let tableContent = String(responseString[tableStart..<tableEnd])
-            print("📄 Table content: \(tableContent)")
         }
         
         // Also look for tbody content
         if let tbodyStart = responseString.range(of: "<tbody>")?.lowerBound {
             let tbodyEnd = responseString.index(tbodyStart, offsetBy: min(2000, responseString.count - responseString.distance(from: responseString.startIndex, to: tbodyStart)))
             let tbodyContent = String(responseString[tbodyStart..<tbodyEnd])
-            print("📄 Tbody content: \(tbodyContent)")
         }
         
         // Try a simpler approach: find all table rows first, then parse each one
@@ -1052,7 +924,6 @@ class NetworkManager: NSObject {
             let range = NSRange(responseString.startIndex..<responseString.endIndex, in: responseString)
             let rowMatches = rowRegex.matches(in: responseString, options: [], range: range)
             
-            print("🔍 Found \(rowMatches.count) table rows")
             
             for (index, rowMatch) in rowMatches.enumerated() {
                 let rowRange = Range(rowMatch.range, in: responseString)!
@@ -1063,14 +934,12 @@ class NetworkManager: NSObject {
                     continue
                 }
                 
-                print("🔍 Processing row \(index): \(String(rowContent.prefix(200)))...")
                 
                 // Extract item data from this row
                 if let itemId = extractItemId(from: rowContent),
                    let itemName = extractItemName(from: rowContent),
                    let groupIdFromRow = extractGroupId(from: rowContent) {
                     
-                    print("🔍 Found item: ID=\(itemId), Name=\(itemName), Group=\(groupIdFromRow)")
                     
                     // Only include items that belong to the specified group
                     if groupIdFromRow == groupId {
@@ -1092,17 +961,13 @@ class NetworkManager: NSObject {
                             storage: storage
                         )
                         items.append(item)
-                        print("📦 Added item for group \(groupId): \(itemName) (Storage: \(storage ?? "N/A"), Category: \(category ?? "N/A"), Sold: \(isSold), Price: $\(price))")
                     } else {
-                        print("⏭️ Skipping item \(itemName) - belongs to group \(groupIdFromRow), not \(groupId)")
                     }
                 }
             }
         } catch {
-            print("❌ Error parsing table rows: \(error)")
         }
         
-        print("✅ Returning \(items.count) items for group \(groupId)")
         return items
     }
     
@@ -1218,12 +1083,10 @@ class NetworkManager: NSObject {
     
     private func getCategoryFromItemDescribe(itemId: String) -> String? {
         guard let cookie = UserManager.shared.cookie else {
-            print("❌ No session cookie available for category fetch")
             return nil
         }
         
         guard let url = URL(string: "\(baseURL)/items/describe?item=\(itemId)") else {
-            print("❌ Invalid URL for item describe")
             return nil
         }
         
@@ -1236,10 +1099,6 @@ class NetworkManager: NSObject {
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue("*/*", forHTTPHeaderField: "Accept")
         
-        print("🔍 Fetching category for item \(itemId) from /items/describe")
-        print("🍪 Raw cookie from UserManager: \(cookie)")
-        print("🍪 Cookie header being sent: \(cookieHeader)")
-        print("🌐 Request URL: \(url)")
         
         let semaphore = DispatchSemaphore(value: 0)
         var categoryResult: String? = nil
@@ -1248,29 +1107,22 @@ class NetworkManager: NSObject {
             defer { semaphore.signal() }
             
             if let error = error {
-                print("❌ Network error fetching category: \(error.localizedDescription)")
                 return
             }
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("❌ Invalid HTTP response for category fetch")
                 return
             }
             
-            print("📡 Category fetch response status: \(httpResponse.statusCode)")
             
             guard let data = data,
                   let htmlString = String(data: data, encoding: .utf8) else {
-                print("❌ Failed to get item describe HTML for category")
                 return
             }
             
-            print("📄 Item describe HTML length: \(htmlString.count)")
-            print("📄 HTML preview: \(String(htmlString.prefix(500)))")
             
             // Check if we got a login page instead of item details
             if htmlString.contains("<title>Login</title>") || htmlString.contains("class=\"login\"") {
-                print("❌ Received login page instead of item details - authentication failed")
                 return
             }
             
@@ -1290,7 +1142,6 @@ class NetworkManager: NSObject {
             for (index, pattern) in patterns.enumerated() {
                 if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
                     let matches = regex.matches(in: htmlString, options: [], range: NSRange(location: 0, length: htmlString.count))
-                    print("🔍 Pattern \(index + 1) found \(matches.count) matches")
                     
                     for match in matches {
                         // For pattern 1, we want the second capture group (category)
@@ -1299,7 +1150,6 @@ class NetworkManager: NSObject {
                         if match.numberOfRanges > captureIndex,
                            let categoryRange = Range(match.range(at: captureIndex), in: htmlString) {
                             let category = String(htmlString[categoryRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-                            print("🔍 Found potential category: '\(category)'")
                             
                             if !category.isEmpty && 
                                category != "None" && 
@@ -1308,7 +1158,6 @@ class NetworkManager: NSObject {
                                !category.contains("href") &&
                                !category.contains("2025") {
                                 categoryResult = category
-                                print("✅ Found real category for item \(itemId): \(category)")
                                 return
                             }
                         }
@@ -1320,12 +1169,10 @@ class NetworkManager: NSObject {
             let allCellsPattern = #"<td>([^<]+)</td>"#
             if let regex = try? NSRegularExpression(pattern: allCellsPattern, options: [.caseInsensitive]) {
                 let matches = regex.matches(in: htmlString, options: [], range: NSRange(location: 0, length: htmlString.count))
-                print("🔍 Found \(matches.count) total table cells")
                 
                 for match in matches {
                     if let cellRange = Range(match.range(at: 1), in: htmlString) {
                         let cellContent = String(htmlString[cellRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-                        print("📋 Cell content: '\(cellContent)'")
                         
                         if (cellContent.lowercased().contains("board") && cellContent.lowercased().contains("game")) ||
                            cellContent.lowercased() == "board games" ||
@@ -1335,14 +1182,12 @@ class NetworkManager: NSObject {
                             !cellContent.contains("test1") &&
                             cellContent != "None") {
                             categoryResult = cellContent
-                            print("✅ Found category in cell scan: \(cellContent)")
                             return
                         }
                     }
                 }
             }
             
-            print("❌ Could not parse category from item describe HTML for item \(itemId)")
         }.resume()
         
         semaphore.wait()
@@ -1368,7 +1213,6 @@ class NetworkManager: NSObject {
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue("*/*", forHTTPHeaderField: "Accept")
         
-        print("🗑️ Removing item: \(itemId)")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -1376,7 +1220,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Remove item response status: \(httpResponse.statusCode)")
         
         guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
@@ -1388,7 +1231,6 @@ class NetworkManager: NSObject {
             throw NetworkError.unauthorized
         }
         
-        print("✅ Item removed successfully")
     }
     
     // MARK: - Item Details
@@ -1410,7 +1252,6 @@ class NetworkManager: NSObject {
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue("*/*", forHTTPHeaderField: "Accept")
         
-        print("🔍 Fetching item details for: \(itemId)")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -1418,7 +1259,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Item details response status: \(httpResponse.statusCode)")
         
         guard httpResponse.statusCode == 200 else {
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
@@ -1428,7 +1268,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response data")
         }
         
-        print("📄 Item details HTML length: \(htmlString.count)")
         
         // Check if we got a login page instead of item details
         if htmlString.contains("<title>Login</title>") || htmlString.contains("class=\"login\"") {
@@ -1449,7 +1288,6 @@ class NetworkManager: NSObject {
         guard let regex = try? NSRegularExpression(pattern: tableRowPattern, options: []),
               let match = regex.firstMatch(in: html, options: [], range: NSRange(location: 0, length: html.count)),
               match.numberOfRanges >= 7 else {
-            print("❌ Could not parse item details from HTML")
             throw NetworkError.serverError("Failed to parse item details")
         }
         
@@ -1480,8 +1318,6 @@ class NetworkManager: NSObject {
         var daysToSell: Int? = nil
         
         if sold {
-            print("🔍 Item is sold, attempting to parse financial details...")
-            print("📄 HTML snippet for debugging: \(String(html.suffix(1000)))")
             
             // Try multiple patterns for the sold price table
             let soldPricePatterns = [
@@ -1497,11 +1333,9 @@ class NetworkManager: NSObject {
                 if let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) {
                     let matches = regex.matches(in: html, options: [], range: NSRange(location: 0, length: html.count))
                     if let match = matches.last {
-                        print("✅ Sold price pattern \(index + 1) matched!")
                         soldPrice = Double(extractString(from: html, range: match.range(at: 1)))
                         shippingFee = Double(extractString(from: html, range: match.range(at: 2)))
                         netPrice = Double(extractString(from: html, range: match.range(at: 3)))
-                        print("💰 Extracted: Price=\(soldPrice ?? 0), Shipping=\(shippingFee ?? 0), Net=\(netPrice ?? 0)")
                         break
                     }
                 }
@@ -1518,7 +1352,6 @@ class NetworkManager: NSObject {
             for (index, pattern) in statusPatterns.enumerated() {
                 if let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]),
                    let match = regex.firstMatch(in: html, options: [], range: NSRange(location: 0, length: html.count)) {
-                    print("✅ Status pattern \(index + 1) matched!")
                     if index == 0 {
                         soldDate = extractString(from: html, range: match.range(at: 2))
                         daysToSell = Int(extractString(from: html, range: match.range(at: 3)))
@@ -1526,22 +1359,18 @@ class NetworkManager: NSObject {
                         soldDate = extractString(from: html, range: match.range(at: 2))
                         daysToSell = Int(extractString(from: html, range: match.range(at: 3)))
                     }
-                    print("📅 Extracted: Date=\(soldDate ?? "nil"), Days=\(daysToSell ?? 0)")
                     break
                 }
             }
             
             if soldPrice == nil && shippingFee == nil && netPrice == nil {
-                print("❌ Failed to parse any financial details")
             }
         }
         
         // For now, assume not returned (we could parse this from additional tables if needed)
         let returned = false
         
-        print("✅ Parsed item details: \(name) - Category: \(category), Sold: \(sold)")
         if sold {
-            print("💰 Sold details - Price: \(soldPrice ?? 0), Shipping: \(shippingFee ?? 0), Net: \(netPrice ?? 0)")
         }
         
         return ItemDetail(
@@ -1586,7 +1415,6 @@ class NetworkManager: NSObject {
                 return String(text[matchRange]).trimmingCharacters(in: .whitespacesAndNewlines)
             }
         } catch {
-            print("❌ Error in regex pattern \(pattern): \(error)")
         }
         return nil
     }
@@ -1605,7 +1433,6 @@ class NetworkManager: NSObject {
                 }
             }
         } catch {
-            print("❌ Error finding matches for pattern \(pattern): \(error)")
         }
         return matches
     }
@@ -1619,9 +1446,7 @@ class NetworkManager: NSObject {
         // Set up session cookies for authentication
         if let cookie = UserManager.shared.cookie {
             request.setValue(cookie, forHTTPHeaderField: "Cookie")
-            print("🍪 Sending cookie: \(cookie)")
         } else {
-            print("⚠️ No cookie found - user not logged in")
             throw NetworkError.unauthorized
         }
         
@@ -1629,8 +1454,6 @@ class NetworkManager: NSObject {
         let formData = "group_id=\(groupId)&name=\(name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name)&price=\(price)&date=\(date.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? date)"
         request.httpBody = formData.data(using: .utf8)
         
-        print("🌐 Making modify group request to: \(url)")
-        print("📝 Form data: \(formData)")
         
         let (data, response) = try await session.data(for: request)
         
@@ -1638,7 +1461,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Modify group response status: \(httpResponse.statusCode)")
         
         if httpResponse.statusCode == 401 {
             throw NetworkError.unauthorized
@@ -1646,11 +1468,9 @@ class NetworkManager: NSObject {
         
         guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
             let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("❌ Modify group request failed. Response: \(responseString)")
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
         }
         
-        print("✅ Group modified successfully")
     }
     
     func removeGroup(groupId: String) async throws {
@@ -1662,14 +1482,10 @@ class NetworkManager: NSObject {
         // Set up session cookies for authentication
         if let cookie = UserManager.shared.cookie {
             request.setValue(cookie, forHTTPHeaderField: "Cookie")
-            print("🍪 Sending cookie: \(cookie)")
         } else {
-            print("⚠️ No cookie found - user not logged in")
             throw NetworkError.unauthorized
         }
         
-        print("🌐 Making remove group request to: \(url)")
-        print("📝 Group ID: \(groupId)")
         
         let (data, response) = try await session.data(for: request)
         
@@ -1677,7 +1493,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Remove group response status: \(httpResponse.statusCode)")
         
         if httpResponse.statusCode == 401 {
             throw NetworkError.unauthorized
@@ -1686,12 +1501,9 @@ class NetworkManager: NSObject {
         // Backend redirects to groups list after successful deletion (302)
         guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
             let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("❌ Remove group request failed. Response: \(responseString)")
-            print("📄 Response preview: \(String(responseString.prefix(500)))")
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
         }
         
-        print("✅ Group removed successfully - status: \(httpResponse.statusCode)")
     }
     
     func addGroup(name: String, price: Double, date: Date, image: UIImage? = nil, location: Location? = nil) async throws -> AddGroupResponse {
@@ -1706,9 +1518,7 @@ class NetworkManager: NSObject {
         // Set up session cookies for authentication
         if let cookie = UserManager.shared.cookie {
             request.setValue(cookie, forHTTPHeaderField: "Cookie")
-            print("🍪 Using stored cookie: \(cookie)")
         } else {
-            print("⚠️ No cookie found - user not logged in")
         }
         
         // Create form data for the groups/create endpoint
@@ -1791,15 +1601,9 @@ class NetworkManager: NSObject {
             request.httpBody = body.data(using: .utf8)
         }
         
-        print("🌐 Making add group request to: \(url)")
-        print("📝 Request data: name=\(name), price=\(price), date=\(dateString)")
-        print("📷 Image included: \(image != nil)")
         if let location = location {
-            print("📍 Location data: lat=\(location.latitude), long=\(location.longitude), address=\(location.address ?? "nil")")
         } else {
-            print("📍 No location data provided")
         }
-        print("📋 Request headers: \(request.allHTTPHeaderFields ?? [:])")
         
         let (data, response) = try await session.data(for: request)
         
@@ -1807,7 +1611,6 @@ class NetworkManager: NSObject {
             throw NetworkError.serverError("Invalid response")
         }
         
-        print("📡 Add group response status: \(httpResponse.statusCode)")
         
         if httpResponse.statusCode == 401 {
             throw NetworkError.unauthorized
@@ -1816,16 +1619,13 @@ class NetworkManager: NSObject {
         // Check for redirect to login (not authenticated)
         if httpResponse.statusCode == 302 {
             let locationHeader = httpResponse.allHeaderFields["Location"] as? String ?? ""
-            print("🔄 Redirect detected: \(locationHeader)")
             
             if locationHeader.contains("/login") {
-                print("❌ Not authenticated - redirecting to login")
                 throw NetworkError.unauthorized
             }
             
             // Check if this is a redirect to group describe page
             if locationHeader.contains("/groups/describe") {
-                print("✅ Group created successfully - redirecting to group describe")
                 
                 // Extract group ID from the Location header
                 var groupId: String? = nil
@@ -1835,7 +1635,6 @@ class NetworkManager: NSObject {
                     let idString = String(locationHeader[idStart..<idEnd])
                     if !idString.isEmpty {
                         groupId = idString
-                        print("📦 Extracted group ID from redirect: \(idString)")
                     }
                 }
                 
@@ -1846,7 +1645,6 @@ class NetworkManager: NSObject {
                 )
             }
             
-            print("✅ Group created successfully (redirect)")
             return AddGroupResponse(
                 success: true,
                 message: "Group created successfully",
@@ -1857,25 +1655,19 @@ class NetworkManager: NSObject {
         // Check for 200 response but with potential error in body
         if httpResponse.statusCode == 200 {
             let responseString = String(data: data, encoding: .utf8) ?? ""
-            print("📄 Response body length: \(responseString.count)")
-            print("📄 Response body preview: \(String(responseString.prefix(500)))")
             
             // Check if response contains error indicators
             let lowercasedResponse = responseString.lowercased()
             if lowercasedResponse.contains("error") || lowercasedResponse.contains("failed") || lowercasedResponse.contains("exception") {
-                print("❌ 200 response but contains error")
-                print("📄 Full error response: \(responseString)")
                 throw NetworkError.serverError("Server returned error: \(responseString)")
             }
             
             // Check if this is a successful HTML page (contains common HTML elements)
             if responseString.contains("<html") || responseString.contains("<body") || responseString.contains("<!DOCTYPE") {
-                print("✅ 200 response appears to be valid HTML")
             }
             
             // Check if this is a redirect to group details page
             if responseString.contains("Group Information") || responseString.contains("groups/describe") {
-                print("✅ Group created successfully - redirected to group details")
                 
                 // Extract group ID from the URL if present
                 var groupId: String? = nil
@@ -1900,11 +1692,9 @@ class NetworkManager: NSObject {
             
             // Check if this is a successful HTML page (not an error page)
             if responseString.contains("<html") && !lowercasedResponse.contains("error") {
-                print("✅ Group created successfully - received HTML page")
                 
                 // Check if this is the group describe page
                 if responseString.contains("Group Information") || responseString.contains("groups/describe") {
-                    print("✅ This appears to be the group describe page")
                 }
                 
                 // Try to extract group ID from the page content
@@ -1919,11 +1709,9 @@ class NetworkManager: NSObject {
                             let idRange = Range(match.range(at: 1), in: responseString)!
                             let idString = String(responseString[idRange])
                             groupId = idString
-                            print("📦 Extracted group ID: \(groupId ?? "none")")
                         }
                     }
                 } catch {
-                    print("❌ Error extracting group ID: \(error)")
                 }
                 
                 return AddGroupResponse(
@@ -1934,7 +1722,6 @@ class NetworkManager: NSObject {
             }
             
             // If we get here, it's a successful 200 response
-            print("✅ Group created successfully (200)")
             return AddGroupResponse(
                 success: true,
                 message: "Group created successfully",
@@ -1944,8 +1731,6 @@ class NetworkManager: NSObject {
         
         // If we get here, something went wrong
         let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-        print("❌ Add group failed. Response: \(responseString)")
-        print("📡 Response headers: \(httpResponse.allHeaderFields)")
         
         if httpResponse.statusCode == 500 {
             throw NetworkError.serverError("Server error (500) - \(responseString)")
@@ -1973,7 +1758,6 @@ class NetworkManager: NSObject {
         ]
         
         guard let cookie = UserManager.shared.cookie else {
-            print("⚠️ No cookie available, using fallback categories")
             return fallbackCategories
         }
         
@@ -1986,27 +1770,20 @@ class NetworkManager: NSObject {
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue("*/*", forHTTPHeaderField: "Accept")
         
-        print("🌐 Getting categories from: \(url)")
-        print("🍪 Raw cookie: \(cookie.prefix(50))...")
-        print("🍪 Cookie header: \(cookieHeader.prefix(60))...")
         
         do {
             let (data, response) = try await session.data(for: request)
             
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("⚠️ Invalid response, using fallback categories")
                 return fallbackCategories
             }
             
-            print("📡 Categories response status: \(httpResponse.statusCode)")
             
             guard httpResponse.statusCode == 200 else {
-                print("⚠️ HTTP \(httpResponse.statusCode), using fallback categories")
                 return fallbackCategories
             }
             
             guard let responseString = String(data: data, encoding: .utf8) else {
-                print("⚠️ No data received, using fallback categories")
                 return fallbackCategories
             }
             
@@ -2015,43 +1792,31 @@ class NetworkManager: NSObject {
                responseString.contains("Please log in") ||
                responseString.contains("You should be redirected") ||
                !responseString.contains("Add Item") {
-                print("⚠️ Received login page or wrong page, using fallback categories")
                 return fallbackCategories
             }
             
-            print("📄 Categories HTML preview (first 500 chars): \(responseString.prefix(500))")
-            print("📄 Categories HTML length: \(responseString.count) characters")
             
             // Save full HTML response to debug
             if let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
                 let filePath = documentsPath.appendingPathComponent("categories_response.html")
                 try? responseString.write(to: filePath, atomically: true, encoding: .utf8)
-                print("💾 Saved full HTML response to: \(filePath.path)")
             }
             
             // Check if HTML contains the category select element
             if responseString.contains("name=\"category\"") {
-                print("✅ Found category select element in HTML")
             } else {
-                print("⚠️ No category select element found in HTML")
-                print("🔍 Searching for 'category' (case insensitive): \(responseString.lowercased().contains("category"))")
-                print("🔍 Searching for 'select': \(responseString.contains("select"))")
-                print("🔍 Searching for 'items/bought': \(responseString.contains("items/bought"))")
-                print("🔍 Searching for 'Add Item': \(responseString.contains("Add Item"))")
             }
             
             let parsedCategories = parseCategories(from: responseString)
             
             // If parsing failed, return fallback categories
             if parsedCategories.isEmpty {
-                print("⚠️ No categories parsed from HTML, using fallback categories")
                 return fallbackCategories
             }
             
             return parsedCategories
             
         } catch {
-            print("⚠️ Network error: \(error), using fallback categories")
             return fallbackCategories
         }
     }
@@ -2068,13 +1833,11 @@ class NetworkManager: NSObject {
             let selectRegex = try NSRegularExpression(pattern: #"<select[^>]*name="category"[^>]*>(.*?)</select>"#, options: [.dotMatchesLineSeparators])
             let selectMatches = selectRegex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
             
-            print("🔍 Found \(selectMatches.count) select matches for category")
             
             if let selectMatch = selectMatches.first, selectMatch.numberOfRanges >= 2 {
                 let selectRange = Range(selectMatch.range(at: 1), in: html)!
                 let selectContent = String(html[selectRange])
                 
-                print("📋 Category select content (first 300 chars): \(selectContent.prefix(300))")
                 
                 // Now extract individual options from the category select
                 // Updated pattern to handle both numeric IDs and UUIDs
@@ -2082,7 +1845,6 @@ class NetworkManager: NSObject {
                 let optionRegex = try NSRegularExpression(pattern: optionPattern, options: [])
                 let optionMatches = optionRegex.matches(in: selectContent, options: [], range: NSRange(selectContent.startIndex..<selectContent.endIndex, in: selectContent))
                 
-                print("🔍 Found \(optionMatches.count) category options in select")
                 
                 for match in optionMatches {
                     guard match.numberOfRanges >= 3 else { continue }
@@ -2104,17 +1866,13 @@ class NetworkManager: NSObject {
                         // Accept both numeric IDs (legacy) and UUIDs
                         let category = Category(id: idString, name: name, userId: nil)
                         categories.append(category)
-                        print("✅ Found category: '\(name)' (ID: \(idString))")
                     }
                 }
             } else {
-                print("⚠️ Could not find category select element in HTML")
             }
         } catch {
-            print("❌ Error parsing categories: \(error)")
         }
         
-        print("📋 Parsed \(categories.count) categories from HTML")
         return categories
     }
     
@@ -2133,7 +1891,6 @@ class NetworkManager: NSObject {
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue("*/*", forHTTPHeaderField: "Accept")
         
-        print("🌐 Getting all items from: \(url)")
         
         let (data, response) = try await session.data(for: request)
         
@@ -2141,7 +1898,6 @@ class NetworkManager: NSObject {
             throw NetworkError.noData
         }
         
-        print("📡 Items list response status: \(httpResponse.statusCode)")
         
         guard httpResponse.statusCode == 200 else {
             throw NetworkError.serverError("Failed to get items: HTTP \(httpResponse.statusCode)")
@@ -2155,15 +1911,12 @@ class NetworkManager: NSObject {
         if responseString.contains("<title>Login</title>") || 
            responseString.contains("Please log in") ||
            responseString.contains("You should be redirected") {
-            print("⚠️ Received login page when getting items")
             throw NetworkError.unauthorized
         }
         
-        print("📄 Items HTML preview (first 500 chars): \(responseString.prefix(500))")
         let items = parseItemsFromHTML(responseString)
         
         // Skip category fetching for better performance - items list doesn't need detailed categories
-        print("📋 Parsed \(items.count) items (skipping detailed category fetching for performance)")
         
         return items
     }
@@ -2204,7 +1957,6 @@ class NetworkManager: NSObject {
                             daysToSell: item.daysToSell
                         )
                     } catch {
-                        print("⚠️ Failed to fetch category for item \(item.name): \(error)")
                         // Return original item with "Uncategorized" if category fetch fails
                         return ItemDetail(
                             id: item.id,
@@ -2235,10 +1987,8 @@ class NetworkManager: NSObject {
                 updatedItems.append(updatedItem)
             }
             
-            print("🔄 Processed batch \(i/batchSize + 1) - \(updatedItems.count)/\(items.count) items")
         }
         
-        print("✅ Finished fetching categories for all items")
         return updatedItems
     }
     
@@ -2268,11 +2018,9 @@ class NetworkManager: NSObject {
             let regex = try NSRegularExpression(pattern: itemPattern, options: [.dotMatchesLineSeparators])
             let matches = regex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
             
-            print("🔍 Found \(matches.count) potential items with regex")
             
             for match in matches {
                 guard match.numberOfRanges >= 13 else { 
-                    print("⚠️ Match has insufficient groups: \(match.numberOfRanges)")
                     continue 
                 }
                 
@@ -2302,7 +2050,6 @@ class NetworkManager: NSObject {
                 let groupId = String(html[groupIdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                 let groupName = String(html[groupNameRange]).trimmingCharacters(in: .whitespacesAndNewlines)
                 
-                print("🔍 Raw values - Index: '\(index)' Name: '\(name)' SoldDate: '\(soldDate)' SoldNet: '\(soldNet)' Storage: '\(storageText)' Group: '\(groupName)'")
                 
                 // Determine if item is sold
                 let sold = soldDate != "NA" && !soldDate.isEmpty
@@ -2334,26 +2081,19 @@ class NetworkManager: NSObject {
                 )
                 
                 items.append(item)
-                print("✅ Parsed item #\(index): \(name) (\(sold ? "Sold $\(soldNet)" : "Available")) - Group: \(groupName)")
             }
         } catch {
-            print("❌ Error parsing items: \(error)")
         }
         
         // Always try the simple approach as well and compare results
-        print("🔄 Regex found \(items.count) items, also trying simpler approach for comparison...")
         let simpleItems = parseItemsSimple(html)
-        print("🔄 Simple parsing found \(simpleItems.count) items")
         
         // Use whichever method found more items
         if simpleItems.count > items.count {
-            print("🔄 Using simple parsing results (\(simpleItems.count) vs \(items.count))")
             items = simpleItems
         } else {
-            print("🔄 Using regex results (\(items.count) vs \(simpleItems.count))")
         }
         
-        print("📋 Parsed \(items.count) items from HTML")
         return items
     }
     
@@ -2367,7 +2107,6 @@ class NetworkManager: NSObject {
             let rowRegex = try NSRegularExpression(pattern: rowPattern, options: [.dotMatchesLineSeparators])
             let rowMatches = rowRegex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
             
-            print("🔍 Found \(rowMatches.count) table rows")
             
             for rowMatch in rowMatches {
                 let rowContentRange = Range(rowMatch.range(at: 1), in: html)!
@@ -2377,26 +2116,22 @@ class NetworkManager: NSObject {
                 if rowContent.contains("/items/describe?item=") {
                     if let item = parseItemRow(rowContent) {
                         items.append(item)
-                        print("✅ Parsed item: \(item.name)")
                     }
                 }
             }
         } catch {
-            print("❌ Error in simple parsing: \(error)")
         }
         
         return items
     }
     
     private func parseItemRow(_ rowContent: String) -> ItemDetail? {
-        print("🔍 Parsing row content: \(rowContent.prefix(200))...")
         
         // Extract item ID and name
         let itemPattern = #"/items/describe\?item=([^"&]+)"[^>]*>([^<]+)</a>"#
         guard let itemRegex = try? NSRegularExpression(pattern: itemPattern),
               let itemMatch = itemRegex.firstMatch(in: rowContent, options: [], range: NSRange(rowContent.startIndex..<rowContent.endIndex, in: rowContent)),
               itemMatch.numberOfRanges >= 3 else {
-            print("⚠️ Could not extract item info from row")
             return nil
         }
         
@@ -2405,7 +2140,6 @@ class NetworkManager: NSObject {
         let itemId = String(rowContent[itemIdRange])
         let name = String(rowContent[nameRange])
         
-        print("📝 Found item: \(name) with ID: \(itemId)")
         
         // Extract group ID and name
         let groupPattern = #"/groups/detail\?group_id=([^"&]+)"[^>]*>([^<]+)</a>"#
@@ -2418,7 +2152,6 @@ class NetworkManager: NSObject {
             let groupNameRange = Range(groupMatch.range(at: 2), in: rowContent)!
             groupId = String(rowContent[groupIdRange])
             groupName = String(rowContent[groupNameRange])
-            print("🏷️ Group: \(groupName) (\(groupId))")
         }
         
         // Extract purchase date, list date
@@ -2485,7 +2218,6 @@ class NetworkManager: NSObject {
         let soldPrice = sold ? parsePrice(from: soldNet) : nil
         let daysToSellInt = Int(daysToSell)
         
-        print("💰 Sold: \(sold), SoldNet: \(soldNet), DaysToSell: \(daysToSell)")
         
         return ItemDetail(
             id: itemId,
@@ -2553,8 +2285,6 @@ class NetworkManager: NSObject {
         request.setValue("\(bodyData.count)", forHTTPHeaderField: "Content-Length")
         request.httpBody = bodyData
         
-        print("🌐 Adding item to: \(url)")
-        print("📝 Form data: \(formData)")
         
         let (data, response) = try await session.data(for: request)
         
@@ -2562,24 +2292,20 @@ class NetworkManager: NSObject {
             throw NetworkError.noData
         }
         
-        print("📡 Add item response status: \(httpResponse.statusCode)")
         
         // Handle various success statuses
         if httpResponse.statusCode == 200 || httpResponse.statusCode == 302 {
             // Check if we got a login page
             if let responseString = String(data: data, encoding: .utf8) {
                 if responseString.contains("<title>Login</title>") || responseString.contains("Please log in") {
-                    print("⚠️ Received login page when adding item")
                     throw NetworkError.unauthorized
                 }
                 
                 // Check for any error messages in the response
                 if responseString.contains("error") || responseString.contains("Error") {
-                    print("⚠️ Response contains error: \(responseString.prefix(200))")
                     // Still consider it a success if it's a 200/302 - might be a form validation issue
                 }
                 
-                print("✅ Item added successfully")
                 return true
             }
         }

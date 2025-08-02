@@ -238,7 +238,6 @@ class GroupsViewController: UIViewController {
                     // Add "Show All" button to clear search
                     self.addShowAllButton()
                     
-                    print("✅ Search completed: found \(searchResults.count) groups")
                 }
             } catch {
                 await MainActor.run {
@@ -293,7 +292,6 @@ class GroupsViewController: UIViewController {
     }
     
     @objc private func groupCreated() {
-        print("📢 Received group created notification - refreshing groups list")
         if isSearching {
             loadGroups()
         } else {
@@ -302,7 +300,6 @@ class GroupsViewController: UIViewController {
     }
     
     @objc private func groupDeleted() {
-        print("📢 Received group deleted notification - refreshing groups list")
         if isSearching {
             loadGroups()
         } else {
@@ -314,7 +311,6 @@ class GroupsViewController: UIViewController {
         guard !isLoading else { return }
         
         isLoading = true
-        print("📅 Loading groups for year: \(year)")
         activityIndicator.startAnimating()
         
         Task {
@@ -331,7 +327,6 @@ class GroupsViewController: UIViewController {
                         self.navigationItem.leftBarButtonItem = nil
                     }
                     
-                    print("✅ Loaded \(fetchedGroups.count) groups for year \(year)")
                     self.tableView.reloadData()
                     self.refreshControl.endRefreshing()
                     self.activityIndicator.stopAnimating()
@@ -343,7 +338,6 @@ class GroupsViewController: UIViewController {
                 }
             } catch {
                 await MainActor.run {
-                    print("❌ Failed to load groups for year \(year): \(error)")
                     self.refreshControl.endRefreshing()
                     self.activityIndicator.stopAnimating()
                     self.isLoading = false
@@ -357,7 +351,6 @@ class GroupsViewController: UIViewController {
         guard !isLoading else { return }
         
         isLoading = true
-        print("🔄 Loading groups...")
         activityIndicator.startAnimating()
         
         Task {
@@ -374,7 +367,6 @@ class GroupsViewController: UIViewController {
                         self.navigationItem.leftBarButtonItem = nil
                     }
                     
-                    print("✅ Loaded \(fetchedGroups.count) groups")
                     self.tableView.reloadData()
                     self.refreshControl.endRefreshing()
                     self.activityIndicator.stopAnimating()
@@ -386,7 +378,6 @@ class GroupsViewController: UIViewController {
                 }
             } catch {
                 await MainActor.run {
-                    print("❌ Failed to load groups: \(error)")
                     self.refreshControl.endRefreshing()
                     self.activityIndicator.stopAnimating()
                     self.isLoading = false
@@ -405,7 +396,6 @@ class GroupsViewController: UIViewController {
 
 extension GroupsViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print("📊 Table view asking for \(groups.count) rows")
         return groups.count
     }
     
@@ -417,7 +407,6 @@ extension GroupsViewController: UITableViewDataSource {
         cell.detailTextLabel?.text = group.description ?? "Created: \(group.created_at)"
         cell.accessoryType = .disclosureIndicator
         
-        print("📱 Configuring cell for group: \(group.name) - \(group.description ?? "no description")")
         return cell
     }
     

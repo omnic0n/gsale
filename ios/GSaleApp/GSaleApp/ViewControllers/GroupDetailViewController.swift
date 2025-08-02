@@ -13,7 +13,6 @@ class GroupDetailViewController: UIViewController {
     private let totalItemsLabel = UILabel()
     private let soldItemsLabel = UILabel()
     private let soldPriceLabel = UILabel()
-    private let profitLabel = UILabel()
     
     private let modifyButton = UIButton(type: .system)
     private let addItemButton = UIButton(type: .system)
@@ -42,7 +41,6 @@ class GroupDetailViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("📱 GroupDetailViewController loaded for group: \(groupDetail.name)")
         setupUI()
         setupData()
         
@@ -119,11 +117,6 @@ class GroupDetailViewController: UIViewController {
         soldPriceLabel.numberOfLines = 0
         soldPriceLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        profitLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        profitLabel.textAlignment = .center
-        profitLabel.numberOfLines = 0
-        profitLabel.translatesAutoresizingMaskIntoConstraints = false
-        
         // Enhanced button styling
         setupButton(modifyButton, title: "✏️ Modify Group", backgroundColor: .systemBlue)
         modifyButton.addTarget(self, action: #selector(modifyButtonTapped), for: .touchUpInside)
@@ -182,7 +175,6 @@ class GroupDetailViewController: UIViewController {
         statsView.addSubview(totalItemsLabel)
         statsView.addSubview(soldItemsLabel)
         statsView.addSubview(soldPriceLabel)
-        statsView.addSubview(profitLabel)
         
         contentView.addSubview(headerView)
         contentView.addSubview(modifyButton)
@@ -288,7 +280,6 @@ class GroupDetailViewController: UIViewController {
             
             statsView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
             statsView.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),
-            statsView.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -24),
             statsView.heightAnchor.constraint(equalToConstant: 120),
             
             totalItemsLabel.topAnchor.constraint(equalTo: statsView.topAnchor, constant: 16),
@@ -300,10 +291,7 @@ class GroupDetailViewController: UIViewController {
             soldPriceLabel.topAnchor.constraint(equalTo: soldItemsLabel.bottomAnchor, constant: 8),
             soldPriceLabel.centerXAnchor.constraint(equalTo: statsView.centerXAnchor),
             
-            profitLabel.topAnchor.constraint(equalTo: soldPriceLabel.bottomAnchor, constant: 8),
-            profitLabel.centerXAnchor.constraint(equalTo: statsView.centerXAnchor),
-            
-            modifyButton.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 32),
+            modifyButton.topAnchor.constraint(equalTo: statsView.bottomAnchor, constant: 24),
             modifyButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             modifyButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             modifyButton.heightAnchor.constraint(equalToConstant: 56),
@@ -360,31 +348,10 @@ class GroupDetailViewController: UIViewController {
         soldItemsLabel.text = "💰 Sold Items: \(groupDetail.totalSoldItems)"
         soldPriceLabel.text = "💵 Sold Price: $\(String(format: "%.2f", groupDetail.soldPrice))"
         
-        // Calculate and display profit (sold price - purchase price)
-        let profit = groupDetail.soldPrice - groupDetail.price
-        let profitColor: UIColor
-        let profitIcon: String
-        
-        if profit > 0 {
-            profitColor = .systemGreen
-            profitIcon = "📈"
-        } else if profit < 0 {
-            profitColor = .systemRed
-            profitIcon = "📉"
-        } else {
-            profitColor = .systemGray
-            profitIcon = "➖"
-        }
-        
-        profitLabel.textColor = profitColor
-        profitLabel.text = "\(profitIcon) Profit: $\(String(format: "%.2f", profit))"
-        
         // Check if we have items, if not load them immediately
         if !groupDetail.items.isEmpty {
-            print("📦 Displaying existing items (\(groupDetail.items.count))")
             updateItemsDisplay(with: groupDetail.items)
         } else {
-            print("🔍 No items found, loading automatically")
             loadActualItemsSimple()
         }
         
@@ -393,21 +360,16 @@ class GroupDetailViewController: UIViewController {
         
         // Debug: Print button frame after layout
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            print("🔧 Modify button frame: \(self.modifyButton.frame)")
-            print("🔧 Modify button isUserInteractionEnabled: \(self.modifyButton.isUserInteractionEnabled)")
-            print("🔧 Modify button alpha: \(self.modifyButton.alpha)")
         }
     }
     
         @objc private func modifyButtonTapped() {
-        print("🔘 Modify button tapped for group: \(groupDetail.name)")
         // Navigate to modify group page
         let modifyGroupVC = ModifyGroupViewController(groupId: groupDetail.id, groupName: groupDetail.name)
         navigationController?.pushViewController(modifyGroupVC, animated: true)
     }
     
     @objc private func addItemButtonTapped() {
-        print("🔘 Add Item button tapped for group: \(groupDetail.name)")
         // Navigate to add item page
         let addItemVC = AddItemViewController(groupId: groupDetail.id, groupName: groupDetail.name)
         let navController = UINavigationController(rootViewController: addItemVC)
@@ -415,24 +377,20 @@ class GroupDetailViewController: UIViewController {
     }
     
     @objc private func itemWasAdded() {
-        print("📬 Received item added notification - refreshing items")
         loadActualItemsSimple()
     }
     
     private func loadActualItemsSimple() {
-        print("🔍 Loading items for group: \(groupDetail.id)")
         
         Task {
             do {
                 let actualItems = try await NetworkManager.shared.getItemsForGroup(groupId: self.groupDetail.id)
                 
                 await MainActor.run {
-                    print("✅ Loaded \(actualItems.count) items")
                     self.updateItemsDisplay(with: actualItems)
                 }
             } catch {
                 await MainActor.run {
-                    print("❌ Failed to load items: \(error)")
                     // Just show empty state, no error dialog
                     self.updateItemsDisplay(with: [])
                 }
@@ -441,12 +399,10 @@ class GroupDetailViewController: UIViewController {
     }
 
     @objc private func deleteButtonTapped() {
-        print("🔘 Delete button tapped for group: \(groupDetail.name)")
         showDeleteConfirmation()
     }
     
     @objc private func locationButtonTapped() {
-        print("📍 Location button tapped for group: \(groupDetail.name)")
         openLocationInMaps()
     }
     
@@ -477,17 +433,13 @@ class GroupDetailViewController: UIViewController {
         // Try Google Maps app first, then fall back to other options
         if let googleMapsURL = URL(string: "comgooglemaps://?q=\(encodedAddress)"),
            UIApplication.shared.canOpenURL(googleMapsURL) {
-            print("📱 Opening in Google Maps app")
             UIApplication.shared.open(googleMapsURL)
         } else if let googleMapsWebURL = URL(string: "https://maps.google.com/?q=\(encodedAddress)") {
-            print("🌐 Opening in Google Maps web")
             UIApplication.shared.open(googleMapsWebURL)
         } else if hasCoordinates, let latitude = groupDetail.latitude, let longitude = groupDetail.longitude,
                   let appleMapsURL = URL(string: "http://maps.apple.com/?q=\(latitude),\(longitude)") {
-            print("🍎 Opening in Apple Maps with coordinates")
             UIApplication.shared.open(appleMapsURL)
         } else if let appleMapsURL = URL(string: "http://maps.apple.com/?q=\(encodedAddress)") {
-            print("🍎 Opening in Apple Maps with address")
             UIApplication.shared.open(appleMapsURL)
         } else {
             showAlert(title: "Maps Error", message: "Unable to open maps application.")
@@ -499,7 +451,6 @@ class GroupDetailViewController: UIViewController {
         let loadingAlert = UIAlertController(title: "Loading Items...", message: nil, preferredStyle: .alert)
         present(loadingAlert, animated: true)
         
-        print("🔍 Starting to load items for group: \(groupDetail.id)")
         
         Task {
             do {
@@ -508,7 +459,6 @@ class GroupDetailViewController: UIViewController {
                     try await NetworkManager.shared.getItemsForGroup(groupId: self.groupDetail.id)
                 }
                 
-                print("✅ Successfully loaded \(actualItems.count) items")
                 
                 await MainActor.run {
                     loadingAlert.dismiss(animated: true) {
@@ -516,13 +466,11 @@ class GroupDetailViewController: UIViewController {
                     }
                 }
             } catch {
-                print("❌ Failed to load items: \(error)")
                 
                 await MainActor.run {
                     loadingAlert.dismiss(animated: true) {
                         // Show items that were already loaded (fallback)
                         if !self.groupDetail.items.isEmpty {
-                            print("🔄 Using existing items as fallback")
                             self.updateItemsDisplay(with: self.groupDetail.items)
                         } else {
                             self.showAlert(title: "Error", message: "Failed to load items: \(error.localizedDescription)")
@@ -591,7 +539,6 @@ class GroupDetailViewController: UIViewController {
         let newHeightConstraint = itemsTableView.heightAnchor.constraint(equalToConstant: CGFloat(max(items.count * 50, 50)))
         newHeightConstraint.isActive = true
         
-        print("✅ Updated items display with \(items.count) actual items")
     }
     
     private func showAlert(title: String, message: String) {
@@ -663,13 +610,11 @@ class GroupDetailViewController: UIViewController {
     
     private func loadGroupImage() {
         guard let imageFilename = groupDetail.imageFilename, !imageFilename.isEmpty else {
-            print("📷 No image filename available for group")
             groupImageView.isHidden = true
             updateStatsViewConstraint(hasImage: false)
             return
         }
         
-        print("📸 Loading group image: \(imageFilename)")
         
         // Show loading indicator
         imageActivityIndicator.startAnimating()
@@ -679,7 +624,6 @@ class GroupDetailViewController: UIViewController {
         let imageURL = "https://gsale.levimylesllc.com/static/uploads/\(imageFilename)"
         
         guard let url = URL(string: imageURL) else {
-            print("❌ Invalid image URL: \(imageURL)")
             imageActivityIndicator.stopAnimating()
             groupImageView.isHidden = true
             return
@@ -692,7 +636,6 @@ class GroupDetailViewController: UIViewController {
                 
                 guard let httpResponse = response as? HTTPURLResponse,
                       httpResponse.statusCode == 200 else {
-                    print("❌ Failed to load image, HTTP status: \((response as? HTTPURLResponse)?.statusCode ?? 0)")
                     await MainActor.run {
                         imageActivityIndicator.stopAnimating()
                         groupImageView.isHidden = true
@@ -702,7 +645,6 @@ class GroupDetailViewController: UIViewController {
                 }
                 
                 guard let image = UIImage(data: data) else {
-                    print("❌ Failed to create image from data")
                     await MainActor.run {
                         imageActivityIndicator.stopAnimating()
                         groupImageView.isHidden = true
@@ -712,7 +654,6 @@ class GroupDetailViewController: UIViewController {
                 }
                 
                 await MainActor.run {
-                    print("✅ Successfully loaded group image")
                     groupImageView.image = image
                     imageActivityIndicator.stopAnimating()
                     updateStatsViewConstraint(hasImage: true)
@@ -725,7 +666,6 @@ class GroupDetailViewController: UIViewController {
                 }
                 
             } catch {
-                print("❌ Error loading image: \(error)")
                 await MainActor.run {
                     imageActivityIndicator.stopAnimating()
                     groupImageView.isHidden = true
@@ -742,11 +682,9 @@ class GroupDetailViewController: UIViewController {
         if hasImage {
             // Position stats view below the image
             statsViewTopConstraint = statsView.topAnchor.constraint(equalTo: groupImageView.bottomAnchor, constant: 20)
-            print("📐 Updated stats view constraint: below image")
         } else {
             // Position stats view directly below the price (no spacing for image)
             statsViewTopConstraint = statsView.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 20)
-            print("📐 Updated stats view constraint: below price (no image)")
         }
         
         // Activate the new constraint
@@ -762,7 +700,6 @@ class GroupDetailViewController: UIViewController {
         let hasCoordinates = groupDetail.latitude != nil && groupDetail.longitude != nil && groupDetail.latitude != 0 && groupDetail.longitude != 0
         let hasAddress = groupDetail.locationAddress != nil && !groupDetail.locationAddress!.isEmpty
         let hasLocation = hasCoordinates || hasAddress
-        print("📍 hasLocationData check - Lat: \(groupDetail.latitude ?? 0), Long: \(groupDetail.longitude ?? 0), Address: \(groupDetail.locationAddress ?? "nil"), HasCoords: \(hasCoordinates), HasAddress: \(hasAddress), Result: \(hasLocation)")
         return hasLocation
     }
 }
@@ -904,7 +841,6 @@ extension GroupDetailViewController: UITableViewDelegate {
                 message += financialDetails
             } else {
                 message += "\n\n💰 Sale Details: Not available"
-                print("⚠️ No financial data found for sold item: \(itemDetail.name)")
             }
         }
         

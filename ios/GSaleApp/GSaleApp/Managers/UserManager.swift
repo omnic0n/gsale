@@ -20,16 +20,13 @@ class UserManager {
     var cookie: String? {
         get {
             let cookieValue = userDefaults.string(forKey: cookieKey)
-            print("🍪 Retrieved cookie from UserDefaults: \(cookieValue ?? "nil")")
             return cookieValue
         }
         set {
             if let newValue = newValue {
                 userDefaults.set(newValue, forKey: cookieKey)
-                print("🍪 Cookie saved to UserDefaults")
             } else {
                 userDefaults.removeObject(forKey: cookieKey)
-                print("🗑️ Cookie removed from UserDefaults")
             }
         }
     }
@@ -41,10 +38,8 @@ class UserManager {
         set {
             if let newValue = newValue {
                 userDefaults.set(newValue, forKey: usernameKey)
-                print("👤 Username saved: \(newValue)")
             } else {
                 userDefaults.removeObject(forKey: usernameKey)
-                print("🗑️ Username removed")
             }
         }
     }
@@ -92,10 +87,8 @@ class UserManager {
         let status = SecItemAdd(query as CFDictionary, nil)
         
         if status == errSecSuccess {
-            print("🔐 Password saved securely to Keychain")
             return true
         } else {
-            print("❌ Failed to save password to Keychain: \(status)")
             return false
         }
     }
@@ -115,13 +108,10 @@ class UserManager {
         if status == errSecSuccess {
             if let passwordData = result as? Data,
                let password = String(data: passwordData, encoding: .utf8) {
-                print("🔐 Password retrieved from Keychain")
                 return password
             }
         } else if status == errSecItemNotFound {
-            print("📝 No saved password found in Keychain")
         } else {
-            print("❌ Failed to retrieve password from Keychain: \(status)")
         }
         
         return nil
@@ -137,13 +127,10 @@ class UserManager {
         let status = SecItemDelete(query as CFDictionary)
         
         if status == errSecSuccess {
-            print("🗑️ Password deleted from Keychain")
             return true
         } else if status == errSecItemNotFound {
-            print("📝 No password to delete in Keychain")
             return true // Consider this success
         } else {
-            print("❌ Failed to delete password from Keychain: \(status)")
             return false
         }
     }
@@ -160,12 +147,6 @@ class UserManager {
             _ = savePassword(password)
         }
         
-        print("💾 Saved login data:")
-        print("   Cookie: \(cookie)")
-        print("   Username: \(username)")
-        print("   User ID: \(userId ?? 0)")
-        print("   Is Admin: \(isAdmin)")
-        print("   Password saved: \(password != nil)")
     }
     
     func hasStoredCredentials() -> Bool {
@@ -187,7 +168,6 @@ class UserManager {
         isAdmin = false
         _ = deletePassword()
         
-        print("🗑️ All user data cleared")
     }
     
     func isLoggedIn() -> Bool {

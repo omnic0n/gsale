@@ -376,17 +376,23 @@ class AddItemViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Helper Methods
     
     private func loadCategories() {
+        activityIndicator.startAnimating()
+        
         Task {
             do {
                 let loadedCategories = try await NetworkManager.shared.getCategories()
+                
                 await MainActor.run {
+                    self.activityIndicator.stopAnimating()
                     self.categories = loadedCategories
-                    print("📋 Loaded \(loadedCategories.count) categories")
                 }
             } catch {
                 await MainActor.run {
-                    print("❌ Failed to load categories: \(error)")
-                    self.showAlert(title: "Error", message: "Failed to load categories. Please try again.")
+                    self.activityIndicator.stopAnimating()
+                    
+                    let alert = UIAlertController(title: "Error", message: "Failed to load categories", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
                 }
             }
         }

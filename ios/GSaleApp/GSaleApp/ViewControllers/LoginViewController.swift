@@ -83,40 +83,45 @@ class LoginViewController: UIViewController {
     }
     
     @objc private func googleSignInTapped() {
-        print("🔵 GOOGLE SIGN-IN DEBUG:")
-        print("   Button tapped, starting OAuth process...")
-        
-        googleSignInButton.isEnabled = false
-        activityIndicator.startAnimating()
-        
-        print("🔄 Calling NetworkManager.initiateGoogleSignIn()...")
-        
         Task {
             do {
-                let response = try await NetworkManager.shared.initiateGoogleSignIn()
+                let result = try await NetworkManager.shared.initiateGoogleSignIn()
                 
-                await MainActor.run {
-                    self.activityIndicator.stopAnimating()
-                    self.googleSignInButton.isEnabled = true
-                    
-                    if response.success {
+                DispatchQueue.main.async {
+                    if result.success {
                         UserManager.shared.saveLoginData(
-                            cookie: response.cookie ?? "",
-                            username: response.username ?? "",
-                            userId: response.user_id,
-                            isAdmin: response.is_admin ?? false,
-                            password: nil
+                            cookie: result.cookie ?? "",
+                            username: result.username ?? "",
+                            userId: result.user_id ?? 0,
+                            isAdmin: result.is_admin ?? false
                         )
-                        self.presentDashboard()
+                        
+                        let dashboardVC = DashboardViewController()
+                        let navController = UINavigationController(rootViewController: dashboardVC)
+                        
+                        if let window = self.view.window {
+                            window.rootViewController = navController
+                            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
+                        }
                     } else {
-                        self.showAlert(title: "Google Sign-In Failed", message: response.message)
+                        let alert = UIAlertController(
+                            title: "Login Failed",
+                            message: result.message,
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(alert, animated: true)
                     }
                 }
             } catch {
-                await MainActor.run {
-                    self.activityIndicator.stopAnimating()
-                    self.googleSignInButton.isEnabled = true
-                    self.showAlert(title: "Google Sign-In Error", message: error.localizedDescription)
+                DispatchQueue.main.async {
+                    let alert = UIAlertController(
+                        title: "Login Failed",
+                        message: error.localizedDescription,
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
                 }
             }
         }
