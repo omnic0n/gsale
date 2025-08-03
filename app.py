@@ -24,7 +24,7 @@ app.secret_key = 'your-secret-key-here'  # Required for session functionality
 try:
     app.config.from_object("config.ProductionConfig")
 except Exception as e:
-    print(f"Warning: Could not load ProductionConfig, using default config: {e}")
+    print("Warning: Could not load ProductionConfig, using default config: {}".format(e))
     # Set default configuration
     app.config['GOOGLE_MAPS_API_KEY'] = "YOUR_GOOGLE_MAPS_API_KEY"
 
@@ -36,7 +36,7 @@ try:
     get_data.set_mysql_connection(mysql)
     set_data.set_mysql_connection(mysql)
 except Exception as e:
-    print(f"Error initializing MySQL: {e}")
+    print("Error initializing MySQL: {}".format(e))
     mysql = None
 
 # Simple report caching
@@ -46,7 +46,7 @@ CACHE_DURATION = 300  # 5 minutes
 def get_cache_key(report_type, params):
     """Generate cache key for reports"""
     param_str = json.dumps(params, sort_keys=True)
-    return f"{report_type}_{hashlib.md5(param_str.encode()).hexdigest()}"
+    return "{}_{}".format(report_type, hashlib.md5(param_str.encode()).hexdigest())
 
 def get_cached_report(report_type, params):
     """Get cached report data if available and not expired"""
@@ -262,7 +262,7 @@ def google_callback():
         
         # Get user info from Google
         userinfo_url = 'https://www.googleapis.com/oauth2/v2/userinfo'
-        headers = {'Authorization': f"Bearer {tokens['access_token']}"}
+        headers = {'Authorization': "Bearer {}".format(tokens['access_token'])}
         userinfo_response = requests.get(userinfo_url, headers=headers)
         userinfo_response.raise_for_status()
         user_info = userinfo_response.json()
@@ -284,7 +284,7 @@ def google_callback():
                 mysql.connection.commit()
                 cursor.close()
             except Exception as e:
-                print(f"Error recording access attempt: {e}")
+                print("Error recording access attempt: {}".format(e))
             
             # Create new user account
             print(f"Creating new account for {email}")
@@ -1259,4 +1259,4 @@ def api_add_group():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=app.config['PORT'])
+    app.run(debug=True, port=app.config['PORT'])
