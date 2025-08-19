@@ -509,11 +509,11 @@ def update_access_attempt_status(attempt_id, status):
 def mark_item_returned(item_id, returned_fee):
     cur = mysql.connection.cursor()
     try:
-        # Mark item as returned
+        # Mark item as returned (don't change sold status)
         cur.execute("""
             UPDATE items i
             INNER JOIN collection c ON i.group_id = c.id
-            SET i.returned = 1, i.sold = 0
+            SET i.returned = 1
             WHERE i.id = %s AND c.account = %s
         """, (item_id, session.get('id')))
         

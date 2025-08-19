@@ -28,12 +28,12 @@ def get_all_from_group_and_items(date):
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
+            c.id, 
             c.name, 
             c.price, 
-            c.id,
             c.date,
             c.location_address,
-            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS net,
             COUNT(i.group_id) AS total_items,
             SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) AS sold_items
         FROM collection c
@@ -55,7 +55,7 @@ def get_all_from_group_and_items_by_name(name):
             c.id,
             c.date,
             c.location_address,
-            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS net,
             COUNT(i.group_id) AS total_items,
             SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) AS sold_items
         FROM collection c
@@ -346,7 +346,7 @@ def get_data_for_item_sold(item_id):
                     s.date,
                     s.shipping_fee,
                     s.returned_fee,
-                    (s.price - s.shipping_fee) AS net
+                    (s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)) AS net
                     FROM sale s
                     INNER JOIN items i ON s.id = i.id
                     INNER JOIN collection c ON i.group_id = c.id
@@ -364,7 +364,7 @@ def get_list_of_items_purchased_by_date(sold_date, purchase_date, sold, list_dat
             i.storage,
             i.list_date,
             s.date as sale_date,
-            (s.price - s.shipping_fee) AS net,
+            (s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)) AS net,
             c.date as purchase_date,
             c.name as group_name
         FROM items i
@@ -416,7 +416,7 @@ def get_list_of_items_by_category(category_id, sold_status="all"):
                 i.storage,
                 i.list_date,
                 s.date as sale_date,
-                (s.price - s.shipping_fee) AS net,
+                (s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)) AS net,
                 c.date as purchase_date,
                 c.name as group_name
             FROM items i
@@ -623,14 +623,15 @@ def get_profit(year):
 def get_group_profit(group_id):
     cur = mysql.connection.cursor()
     cur.execute("""
-        SELECT COALESCE(SUM(s.price - s.shipping_fee), 0) AS price 
+        SELECT COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS sale_price
         FROM sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
-        WHERE i.sold = 1 AND i.group_id = %s AND c.account = %s
+        WHERE i.group_id = %s AND c.account = %s
     """, (group_id, session.get('id')))
     result = cur.fetchone()
-    return result['price']
+    cur.close()
+    return result['sale_price'] if result else 0
 
 def get_location_from_date(start_date, end_date):
     cur = mysql.connection.cursor()
@@ -678,25 +679,23 @@ def get_combined_profit_report(start_date, end_date):
     return list(cur.fetchall())
 
 def get_combined_sales_summary(start_date, end_date):
-    """Single query for comprehensive sales summary"""
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
-            s.date,
-            SUM(s.price) as total_sales,
-            SUM(s.shipping_fee) as total_shipping,
-            SUM(s.price - s.shipping_fee) as net_sales,
-            COUNT(i.id) as items_sold,
-            AVG(s.price) as avg_sale_price,
-            AVG(s.shipping_fee) as avg_shipping,
-            DAYNAME(s.date) as day
-        FROM sale s
-        INNER JOIN items i ON s.id = i.id
-        INNER JOIN collection c ON i.group_id = c.id
-        WHERE s.date BETWEEN %s AND %s AND c.account = %s
-        GROUP BY s.date
-        ORDER BY s.date
-    """, (start_date, end_date, session.get('id')))
+            c.date,
+            c.name as group_name,
+            c.price as purchase_price,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) as sales_net,
+            COUNT(i.id) as item_count,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) - COALESCE(SUM(c.price), 0) as profit,
+            c.id as group_id
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.account = %s AND c.date BETWEEN %s AND %s
+        GROUP BY c.id, c.date, c.name, c.price
+        ORDER BY c.date DESC
+    """, (session.get('id'), start_date, end_date))
     return list(cur.fetchall())
 
 
