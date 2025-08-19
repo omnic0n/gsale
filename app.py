@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -864,6 +864,12 @@ def describe_item():
         availability.button.label.text = "Mark as Sold"
     availability.id.data = id
 
+    # Add return form
+    return_form = ReturnItemForm()
+    return_form.id.data = id
+    if return_to:
+        return_form.return_to.data = return_to
+
     if request.method == "POST":
         details = request.form
         if details['button'] == "Sell Item":
@@ -891,7 +897,56 @@ def describe_item():
                             remove=remove,
                             modify=modify,
                             availability=availability,
+                            return_form=return_form,
                             return_to=return_to)
+
+@app.route('/items/return', methods=["POST"])
+@login_required
+def return_item():
+    item_id = request.form.get('id')
+    returned_fee = request.form.get('returned_fee')
+    return_to = request.form.get('return_to')
+    
+    if not item_id or not returned_fee:
+        flash('Missing required information for return.', 'error')
+        return redirect(url_for('describe_item', item=item_id))
+    
+    try:
+        # Validate returned_fee is a valid number
+        try:
+            returned_fee = float(returned_fee)
+            if returned_fee < 0:
+                flash('Returned fee must be a positive number.', 'error')
+                return redirect(url_for('describe_item', item=item_id))
+        except ValueError:
+            flash('Returned fee must be a valid number.', 'error')
+            return redirect(url_for('describe_item', item=item_id))
+        
+        # Check if item exists and belongs to current user
+        item = get_data.get_data_for_item_describe(item_id)
+        if not item:
+            flash('Item not found or access denied.', 'error')
+            return redirect(url_for('index'))
+        
+        # Check if item is already returned
+        if item[0]['returned']:
+            flash('Item is already marked as returned.', 'error')
+            return redirect(url_for('describe_item', item=item_id))
+        
+        # Mark item as returned and update sale table
+        set_data.mark_item_returned(item_id, returned_fee)
+        
+        flash('Item marked as returned successfully!', 'success')
+        
+        # Redirect back to appropriate page
+        if return_to == 'group_detail':
+            return redirect(url_for('group_detail', group_id=item[0]['group_id']))
+        else:
+            return redirect(url_for('describe_item', item=item_id))
+            
+    except Exception as e:
+        flash(f'Error processing return: {str(e)}', 'error')
+        return redirect(url_for('describe_item', item=item_id))
 
 
 

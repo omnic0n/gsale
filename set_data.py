@@ -505,3 +505,31 @@ def update_access_attempt_status(attempt_id, status):
     except Exception as e:
         print(f"Error updating access attempt status: {e}")
         return False
+
+def mark_item_returned(item_id, returned_fee):
+    cur = mysql.connection.cursor()
+    try:
+        # Mark item as returned
+        cur.execute("""
+            UPDATE items i
+            INNER JOIN collection c ON i.group_id = c.id
+            SET i.returned = 1, i.sold = 0
+            WHERE i.id = %s AND c.account = %s
+        """, (item_id, session.get('id')))
+        
+        # Update sale table with returned_fee
+        cur.execute("""
+            UPDATE sale s
+            INNER JOIN items i ON s.id = i.id
+            INNER JOIN collection c ON i.group_id = c.id
+            SET s.returned_fee = %s
+            WHERE s.id = %s AND c.account = %s
+        """, (returned_fee, item_id, session.get('id')))
+        
+        mysql.connection.commit()
+        return True
+    except Exception as e:
+        mysql.connection.rollback()
+        raise e
+    finally:
+        cur.close()

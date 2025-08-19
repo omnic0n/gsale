@@ -266,6 +266,7 @@ def get_sold_from_date(start_date, end_date):
     return list(cur.fetchall())
 
 
+
 def get_sold_from_day(day):
     """Optimized sales by day of week query"""
     cur = mysql.connection.cursor()
@@ -344,6 +345,7 @@ def get_data_for_item_sold(item_id):
                     s.price, 
                     s.date,
                     s.shipping_fee,
+                    s.returned_fee,
                     (s.price - s.shipping_fee) AS net
                     FROM sale s
                     INNER JOIN items i ON s.id = i.id

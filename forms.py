@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField, HiddenField, FormField, FieldList, DateField
-from wtforms.validators import DataRequired, Length, EqualTo
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, FileField, HiddenField, FormField, FieldList, DateField, DecimalField
+from wtforms.validators import DataRequired, Length, EqualTo, NumberRange
 from datetime import datetime
 
 class GroupForm(FlaskForm):
@@ -116,4 +116,9 @@ class ChangePasswordForm(FlaskForm):
     new_password = StringField('New Password', validators=[DataRequired(), Length(min=6, max=100)])
     confirm_password = StringField('Confirm Password', validators=[DataRequired(), EqualTo('new_password', message='Passwords must match')])
     submit = SubmitField('Change Password')
+
+class ReturnItemForm(FlaskForm):
+    returned_fee = DecimalField('Returned Fee', validators=[DataRequired(), NumberRange(min=0, message='Returned fee must be a positive number')])
+    return_to = HiddenField('return_to')
+    submit = SubmitField('Return Item')
 

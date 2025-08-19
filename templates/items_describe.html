@@ -1,6 +1,40 @@
 <html>
 {% extends "layout.html" %}
 {% block content %}
+<style>
+.return-form-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.return-fee-input {
+    width: 120px !important;
+    margin-right: 10px;
+    text-align: center;
+}
+
+.return-button {
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.return-help-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.return-section {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    margin: 10px 0;
+}
+</style>
 {% if return_to == 'group_detail' %}
 <div class="mb-3">
     <a href="{{ url_for('group_detail', group_id=item[0]['group_id']) }}" class="btn btn-outline-secondary">
@@ -51,7 +85,13 @@
     <tbody>
         {% if item[0]['sold'] %}
         <tr>
-            <td>Sold</td>
+            <td>
+                {% if item[0]['returned'] %}
+                    Returned
+                {% else %}
+                    Sold
+                {% endif %}
+            </td>
             <td>{{ sold[0]['net'] }}</td>
             <td><a href = "/items/list?sold_date={{ sold[0]['date'] }}&sold_status=sold">{{ sold[0]['date'] }}</a></td>
             <td>{{ (sold[0]['date'] - item[0]['purchase_date']).days }}</td>
@@ -68,6 +108,9 @@
             <th>Sold Price</th>    
             <th>Shipping Fee</th>
             <th>Net</th>
+            {% if item[0]['returned'] %}
+            <th>Returned Fee</th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
@@ -75,6 +118,9 @@
             <td>{{ sold[0]['price'] }}</td>
             <td>{{ sold[0]['shipping_fee'] }}</td>
             <td>{{ sold[0]['net'] }}</td>
+            {% if item[0]['returned'] %}
+            <td>{{ sold[0]['returned_fee'] or '0.00' }}</td>
+            {% endif %}
         </tr>
     </tbody>
 </table>
@@ -99,6 +145,20 @@
                 {{ form.button(class="btn btn-outline-info") }}
             </div>
             </form>
+        </td>
+        {% endif %}
+        {% if item[0]['sold'] and not item[0]['returned'] %}
+        <td>
+            <div class="return-section">
+                <div class="return-help-text">Mark item as returned</div>
+                <form method="POST" action="{{ url_for('return_item') }}">
+                    {{ return_form.hidden_tag() }}
+                    <div class="return-form-container">
+                        {{ return_form.returned_fee(class="form-control return-fee-input", placeholder="Return Fee") }}
+                        {{ return_form.submit(class="btn btn-outline-warning return-button") }}
+                    </div>
+                </form>
+            </div>
         </td>
         {% endif %}
         <td align="right">
