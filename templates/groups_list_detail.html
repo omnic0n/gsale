@@ -157,6 +157,8 @@
         <tr>
             <th>Purchase</th>
             <th>Sale</th>
+            <th>Returns</th>
+            <th>Net After Returns</th>
             <th>Average Sale</th>
             <th>Profit</th>
             <th>ROI</th>
@@ -165,6 +167,8 @@
     <tbody>
         <tr>
             <td>${{ group_id[0]['price'] }}</td>
+            <td>${{ sold_price + total_returned_fees }}</td>
+            <td>${{ total_returned_fees }}</td>
             <td>${{ sold_price }}</td>
             <td>{% if total_items['total'] %}
                 ${{ "%.2f"|format(sold_price/total_items['total']) }}
@@ -211,6 +215,7 @@
             <th>Gross</th>
             <th>Net</th>
             <th>Shipping Fee</th>
+            <th>Returned Fee</th>
             <th>Storage</th>
             <th>Edit</th>
             <th>Remove</th>
@@ -235,6 +240,7 @@
             <td>{{ item['gross'] }}</td>
             <td>{{ item['net'] }}</td>
             <td>{{ item['shipping_fee'] }}</td>
+            <td>{% if item['returned'] %}{{ item['returned_fee'] or '0.00' }}{% else %}-{% endif %}</td>
             <td>{{ item['storage'] }}</td>
             <td><button type="button" class="btn btn-sm btn-outline-primary edit-item-btn" style="min-width: 60px;" 
                 data-item-id="{{ item['id'] }}"
@@ -250,6 +256,16 @@
         </tr>
         {% endfor %}
     </tbody>
+    <tfoot>
+        <tr style="font-weight: bold; background-color: #f8f9fa;">
+            <td colspan="4"><strong>Totals:</strong></td>
+            <td><strong>${{ items|selectattr('gross')|map(attribute='gross')|sum }}</strong></td>
+            <td><strong>${{ items|selectattr('net')|map(attribute='net')|sum }}</strong></td>
+            <td><strong>${{ items|selectattr('shipping_fee')|map(attribute='shipping_fee')|sum }}</strong></td>
+            <td><strong>${{ items|selectattr('returned_fee')|map(attribute='returned_fee')|sum }}</strong></td>
+            <td colspan="2"></td>
+        </tr>
+    </tfoot>
 </table>
 {% if group_id[0]['image'] %}
 <br>

@@ -211,16 +211,17 @@ def get_data_from_item_groups(group_id):
                     items.id,
                     items.category_id,
                     items.storage,
+                    items.returned,
                     sale.price AS gross,
                     sale.shipping_fee AS shipping_fee,
-                    sum(sale.price - sale.shipping_fee) AS net,
+                    sale.returned_fee AS returned_fee,
+                    (sale.price - sale.shipping_fee - COALESCE(sale.returned_fee, 0)) AS net,
                     sale.date AS sale_date,
 					DATEDIFF(sale.date,collection.date) AS days_to_sell 
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN sale sale ON sale.id = items.id
                     WHERE items.group_id = %s AND collection.account = %s
-                    GROUP BY items.id, items.category_id, sale.date, sale.price, sale.shipping_fee
                     ORDER BY sale.date""", (group_id, session.get('id')))
     return list(cur.fetchall())
 
@@ -632,6 +633,19 @@ def get_group_profit(group_id):
     result = cur.fetchone()
     cur.close()
     return result['sale_price'] if result else 0
+
+def get_total_returned_fees_in_group(group_id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" 
+        SELECT COALESCE(SUM(s.returned_fee), 0) as total_returned_fees
+        FROM sale s
+        INNER JOIN items i ON s.id = i.id
+        INNER JOIN collection c ON i.group_id = c.id
+        WHERE i.group_id = %s AND c.account = %s AND i.returned = 1
+    """, (group_id, session.get('id')))
+    result = cur.fetchone()
+    cur.close()
+    return result['total_returned_fees'] if result else 0
 
 def get_location_from_date(start_date, end_date):
     cur = mysql.connection.cursor()

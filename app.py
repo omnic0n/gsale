@@ -965,6 +965,7 @@ def group_detail():
     total_items = get_data.get_total_items_in_group(id)
     total_sold_items = get_data.get_total_items_in_group_sold(id)
     sold_price = get_data.get_group_profit(id)
+    total_returned_fees = get_data.get_total_returned_fees_in_group(id)
     if not sold_price:
         sold_price = 0
 
@@ -993,6 +994,7 @@ def group_detail():
                             total_items=total_items,
                             total_sold_items=total_sold_items,
                             sold_price=sold_price,
+                            total_returned_fees=total_returned_fees,
                             form=form,
                             quicksell=quicksell,
                             groups=groups,
