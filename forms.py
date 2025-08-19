@@ -118,6 +118,7 @@ class ChangePasswordForm(FlaskForm):
     submit = SubmitField('Change Password')
 
 class ReturnItemForm(FlaskForm):
+    id = HiddenField('id')
     returned_fee = DecimalField('Returned Fee', validators=[DataRequired(), NumberRange(min=0, message='Returned fee must be a positive number')])
     return_to = HiddenField('return_to')
     submit = SubmitField('Return Item')
