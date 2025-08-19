@@ -226,7 +226,7 @@
         {% set ns.count = 1 %}
         {% for item in items %}
         <!-- Debug: {{ item }} -->
-        <tr>
+        <tr {% if item['returned'] %}style="background-color: #ffe6e6;"{% endif %}>
             <td>{{ ns.count }}</td>
             <td>
                 <a href = "/items/describe?item={{ item['id'] }}&return_to=group_detail">
