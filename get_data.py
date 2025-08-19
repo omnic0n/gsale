@@ -252,7 +252,7 @@ def get_sold_from_date(start_date, end_date):
             s.date,
             SUM(s.price) as price,
             SUM(s.shipping_fee) as shipping_fee,
-            SUM(s.price - s.shipping_fee) AS net,
+            SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)) AS net,
             COUNT(i.id) AS total_items,
             DAYNAME(s.date) AS day
         FROM sale s
@@ -275,7 +275,7 @@ def get_sold_from_day(day):
             s.date,
             SUM(s.price) as price,
             SUM(s.shipping_fee) as shipping_fee,
-            SUM(s.price - s.shipping_fee) AS net,
+            SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)) AS net,
             COUNT(i.id) AS total_items,
             DAYNAME(s.date) AS day
         FROM sale s
@@ -320,7 +320,7 @@ def get_all_items_sold():
     cur.execute("""SELECT
                     sale.id,
                     sale.date,
-                    (sale.price - sale.shipping_fee) AS net
+                    (sale.price - sale.shipping_fee - COALESCE(sale.returned_fee, 0)) AS net
                     FROM sale
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON items.group_id = collection.id 
@@ -598,9 +598,9 @@ def get_profit(year):
     year_value = year + '-%-%'
     cur = mysql.connection.cursor()
     
-    # Get sales (only for sold items)
+    # Get sales (only for sold items, including returned fees)
     cur.execute("""
-        SELECT COALESCE(SUM(s.price - s.shipping_fee), 0) AS sale_price
+        SELECT COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS sale_price
         FROM sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
@@ -655,12 +655,12 @@ def get_combined_profit_report(start_date, end_date):
     cur.execute("""
         SELECT 
             COALESCE(s.date, c.date) as date,
-            COALESCE(SUM(s.price - s.shipping_fee), 0) as sales_net,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) as sales_net,
             COALESCE(SUM(c.price), 0) as purchase_price,
-            COALESCE(SUM(s.price - s.shipping_fee), 0) - COALESCE(SUM(c.price), 0) as profit,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) - COALESCE(SUM(c.price), 0) as profit,
             DAYNAME(COALESCE(s.date, c.date)) as day
         FROM (
-            SELECT date, SUM(price - shipping_fee) as price, SUM(shipping_fee) as shipping_fee
+            SELECT date, SUM(price - shipping_fee - COALESCE(returned_fee, 0)) as price, SUM(shipping_fee) as shipping_fee
             FROM sale s
             INNER JOIN items i ON s.id = i.id
             INNER JOIN collection c ON i.group_id = c.id
