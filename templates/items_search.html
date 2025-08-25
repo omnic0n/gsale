@@ -11,9 +11,9 @@
         <div class="form-group">
             <label for="searchSold" class="form-control-label">Sold Status</label>
             <select id="searchSold" class="form-control form-control-lg">
-                <option value="">All Items</option>
                 <option value="0">Available</option>
                 <option value="1">Sold</option>
+                <option value="">All Items</option>
             </select>
         </div>
     </fieldset>
@@ -139,8 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
     nameInput.addEventListener('input', performSearch);
     soldSelect.addEventListener('change', performSearch);
     
-    // Don't perform initial search - wait for user input
-    // performSearch();
+    // Perform initial search to show available items by default
+    performSearch();
 });
 </script>
 {% endblock content %}
