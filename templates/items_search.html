@@ -79,27 +79,25 @@ function displayResults(items) {
     items.forEach(item => {
         const row = document.createElement('tr');
         
-        // Determine color based on sold status
-        let color = 'black';
+        // Set background color based on sold status
         if (item.sold == 0) {
-            color = 'black';
-        } else if (item.sold == 2) {
-            color = 'green';
-        } else {
-            color = 'red';
+            // Available items - green background
+            row.style.backgroundColor = '#e6ffe6';
+        } else if (item.sold == 1) {
+            // Sold items - no special background
+            row.style.backgroundColor = '';
         }
         
         // Create name cell with link
         const nameCell = document.createElement('td');
         const nameLink = document.createElement('a');
         nameLink.href = `/items/describe?item=${item.id}`;
-        nameLink.style.color = color;
         nameLink.textContent = item.name;
         nameCell.appendChild(nameLink);
         
         // Create sold status cell
         const soldCell = document.createElement('td');
-        soldCell.textContent = item.sold == 0 ? 'False' : 'True';
+        soldCell.textContent = item.sold == 0 ? 'Available' : 'Sold';
         
         // Create group cell
         const groupCell = document.createElement('td');
@@ -114,11 +112,11 @@ function displayResults(items) {
         
         // Create net cell
         const netCell = document.createElement('td');
-        netCell.textContent = item.net;
+        netCell.textContent = item.net || '-';
         
         // Create storage cell
         const storageCell = document.createElement('td');
-        storageCell.textContent = item.storage;
+        storageCell.textContent = item.storage || '-';
         
         // Append all cells to row
         row.appendChild(nameCell);
