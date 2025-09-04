@@ -1,7 +1,9 @@
-import mysql.connection
 from datetime import datetime, date, timedelta
 import datetime
 from flask import session
+
+# MySQL connection will be set by app.py
+mysql = None
 
 def validate_string_input(value, max_length=100, default=''):
     """Validate and sanitize string inputs to prevent SQL injection"""
