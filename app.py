@@ -522,7 +522,7 @@ def group_add():
 
     if request.method == "POST":
         details = request.form
-        print("📝 Received form data: {}".format(details))
+        print("Received form data: {}".format(details))
         
         # Check for required fields
         if 'date' not in details or 'name' not in details:
@@ -551,12 +551,12 @@ def group_add():
         except KeyError as e:
             return jsonify({
                 'success': False,
-                'message': f'Missing required field: {str(e)}'
+                'message': 'Missing required field: {}'.format(str(e))
             }), 400
         except Exception as e:
             return jsonify({
                 'success': False,
-                'message': f'Error creating group: {str(e)}'
+                'message': 'Error creating group: {}'.format(str(e))
             }), 500
     return render_template('groups_add.html', form=form, google_maps_api_key=app.config['GOOGLE_MAPS_API_KEY'])
 
@@ -700,7 +700,7 @@ def modify_items_ajax():
     except Exception as e:
         return jsonify({
             'success': False,
-            'message': f'Error updating item: {str(e)}'
+            'message': 'Error updating item: {}'.format(str(e))
         }), 500
 
 @app.route('/items/remove',methods=["POST","GET"])
@@ -880,7 +880,7 @@ def describe_item():
             # Pass return_to parameter to modify_items
             modify_url = url_for('modify_items', item=details['id'])
             if return_to:
-                modify_url += f'&return_to={return_to}'
+                modify_url += '&return_to={}'.format(return_to)
             return redirect(modify_url)
         elif details['button'] == "Mark as Available":
             return redirect(url_for('mark_sold',item=details['id'],sold=0))
@@ -945,7 +945,7 @@ def return_item():
             return redirect(url_for('describe_item', item=item_id))
             
     except Exception as e:
-        flash(f'Error processing return: {str(e)}', 'error')
+        flash('Error processing return: {}'.format(str(e)), 'error')
         return redirect(url_for('describe_item', item=item_id))
 
 
@@ -1142,7 +1142,7 @@ def admin_panel():
                     if user_id:
                         # Mark the attempt as approved
                         set_data.update_access_attempt_status(attempt_id, 'approved')
-                        flash(f'Access approved for {email}. User account created successfully.', 'success')
+                        flash('Access approved for {}. User account created successfully.'.format(email), 'success')
                     else:
                         flash('Failed to create user account.', 'error')
                 return redirect(url_for('admin_panel'))
@@ -1155,7 +1155,7 @@ def admin_panel():
                 if attempt_id:
                     success = set_data.update_access_attempt_status(attempt_id, 'denied')
                     if success:
-                        flash(f'Access denied for {email}.', 'success')
+                        flash('Access denied for {}.'.format(email), 'success')
                     else:
                         flash('Failed to deny access.', 'error')
                 return redirect(url_for('admin_panel'))
