@@ -19,20 +19,20 @@ def set_dates(details):
     date_obj = details['date']
     
     if details['type'] == "2":  # Year
-        start_date = f"{year}-01-01"
-        end_date = f"{year}-12-31"
+        start_date = "{}-01-01".format(year)
+        end_date = "{}-12-31".format(year)
     elif details['type'] == "1":  # Month
-        start_date = f"{year}-{month:02d}-01"
+        start_date = "{}-{:02d}-01".format(year, month)
         # Calculate last day of month more efficiently
         if month == 12:
-            end_date = f"{year}-12-31"
+            end_date = "{}-12-31".format(year)
         else:
             next_month = month + 1
             next_year = year
             if next_month == 13:
                 next_month = 1
                 next_year = year + 1
-            end_date = f"{next_year}-{next_month:02d}-01"
+            end_date = "{}-{:02d}-01".format(next_year, next_month)
             # Subtract one day to get last day of current month
             end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date() - timedelta(days=1)
             end_date = end_date_obj.strftime('%Y-%m-%d')

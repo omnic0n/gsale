@@ -16,7 +16,7 @@ def upload_image(file):
     if file and allowed_file(file.filename):
         # Generate a unique filename
         filename = secure_filename(file.filename)
-        unique_filename = f"{uuid.uuid4().hex}_{filename}"
+        unique_filename = "{}_{}".format(uuid.uuid4().hex, filename)
         
         # Ensure upload directory exists
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)

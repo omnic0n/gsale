@@ -95,7 +95,7 @@ def get_all_from_group_and_items(date):
 def get_all_from_group_and_items_by_name(name):
     # Use validation function
     validated_name = validate_string_input(name, max_length=100)
-    search_pattern = f'%{validated_name}%'
+    search_pattern = '%{}%'.format(validated_name)
     
     cur = mysql.connection.cursor()
     cur.execute("""
@@ -122,7 +122,7 @@ def get_all_from_groups(date):
     
     # Use validation function
     validated_date = validate_date_input(date)
-    search_pattern = f'%{validated_date}%'
+    search_pattern = '%{}%'.format(validated_date)
     
     cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", 
                (search_pattern, session.get('id')))
@@ -245,7 +245,7 @@ def get_list_of_items_with_name(name, sold):
     validated_name = validate_string_input(name, max_length=100)
     validated_sold = validate_numeric_input(sold, min_val=0, max_val=1, default='')
     
-    search_pattern = f'%{validated_name}%'
+    search_pattern = '%{}%'.format(validated_name)
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
                 items.name, 

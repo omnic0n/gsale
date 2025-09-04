@@ -804,7 +804,7 @@ def get_access_attempts_by_user_agent(user_agent):
         FROM access_attempts 
         WHERE user_agent LIKE %s 
         ORDER BY attempt_time DESC
-    """, (f'%{user_agent}%',))
+            """, ('%{}%'.format(user_agent),))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -854,7 +854,7 @@ def get_access_attempts_by_name(name):
         FROM access_attempts 
         WHERE name LIKE %s 
         ORDER BY attempt_time DESC
-    """, (f'%{name}%',))
+            """, ('%{}%'.format(name),))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -966,7 +966,7 @@ def get_access_attempts_by_name_and_status(name, status):
         FROM access_attempts 
         WHERE name LIKE %s AND status = %s 
         ORDER BY attempt_time DESC
-    """, (f'%{name}%', status))
+            """, ('%{}%'.format(name), status))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1050,7 +1050,7 @@ def get_access_attempts_by_email_and_name(email, name):
         FROM access_attempts 
         WHERE email = %s AND name LIKE %s 
         ORDER BY attempt_time DESC
-    """, (email, f'%{name}%'))
+            """, (email, '%{}%'.format(name)))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1106,7 +1106,7 @@ def get_access_attempts_by_ip_and_name(ip_address, name):
         FROM access_attempts 
         WHERE ip_address = %s AND name LIKE %s 
         ORDER BY attempt_time DESC
-    """, (ip_address, f'%{name}%'))
+            """, (ip_address, '%{}%'.format(name)))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1134,7 +1134,7 @@ def get_access_attempts_by_google_id_and_name(google_id, name):
         FROM access_attempts 
         WHERE google_id = %s AND name LIKE %s 
         ORDER BY attempt_time DESC
-    """, (google_id, f'%{name}%'))
+            """, (google_id, '%{}%'.format(name)))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1227,7 +1227,7 @@ def get_access_attempts_by_email_and_name_and_status(email, name, status):
         FROM access_attempts 
         WHERE email = %s AND name LIKE %s AND status = %s 
         ORDER BY attempt_time DESC
-    """, (email, f'%{name}%', status))
+            """, (email, '%{}%'.format(name), status))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1289,7 +1289,7 @@ def get_access_attempts_by_ip_and_name_and_status(ip_address, name, status):
         FROM access_attempts 
         WHERE ip_address = %s AND name LIKE %s AND status = %s 
         ORDER BY attempt_time DESC
-    """, (ip_address, f'%{name}%', status))
+    """, (ip_address, '%{}%'.format(name), status))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1320,7 +1320,7 @@ def get_access_attempts_by_google_id_and_name_and_status(google_id, name, status
         FROM access_attempts 
         WHERE google_id = %s AND name LIKE %s AND status = %s 
         ORDER BY attempt_time DESC
-    """, (google_id, f'%{name}%', status))
+    """, (google_id, '%{}%'.format(name), status))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1382,7 +1382,7 @@ def get_access_attempts_by_email_and_ip_and_name(email, ip_address, name):
         FROM access_attempts 
         WHERE email = %s AND ip_address = %s AND name LIKE %s 
         ORDER BY attempt_time DESC
-    """, (email, ip_address, f'%{name}%'))
+            """, (email, ip_address, '%{}%'.format(name)))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1450,7 +1450,7 @@ def get_access_attempts_by_email_and_ip_and_name_and_status(email, ip_address, n
         FROM access_attempts 
         WHERE email = %s AND ip_address = %s AND name LIKE %s AND status = %s 
         ORDER BY attempt_time DESC
-    """, (email, ip_address, f'%{name}%', status))
+            """, (email, ip_address, '%{}%'.format(name), status))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1484,7 +1484,7 @@ def get_access_attempts_by_ip_and_google_id_and_name_and_status(ip_address, goog
         FROM access_attempts 
         WHERE ip_address = %s AND google_id = %s AND name LIKE %s AND status = %s 
         ORDER BY attempt_time DESC
-    """, (ip_address, google_id, f'%{name}%', status))
+            """, (ip_address, google_id, '%{}%'.format(name), status))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1518,7 +1518,7 @@ def get_access_attempts_by_email_and_ip_and_google_id_and_name(email, ip_address
         FROM access_attempts 
         WHERE email = %s AND ip_address = %s AND google_id = %s AND name LIKE %s 
         ORDER BY attempt_time DESC
-    """, (email, ip_address, google_id, f'%{name}%'))
+            """, (email, ip_address, google_id, '%{}%'.format(name)))
     results = list(cur.fetchall())
     cur.close()
     return results
@@ -1555,7 +1555,7 @@ def get_access_attempts_by_email_and_ip_and_google_id_and_name_and_status(email,
         FROM access_attempts 
         WHERE email = %s AND ip_address = %s AND google_id = %s AND name LIKE %s AND status = %s 
         ORDER BY attempt_time DESC
-    """, (email, ip_address, google_id, f'%{name}%', status))
+            """, (email, ip_address, google_id, '%{}%'.format(name), status))
     results = list(cur.fetchall())
     cur.close()
     return results
