@@ -150,8 +150,8 @@ def get_purchased_from_day(day, year):
         start_date = '2000-01-01'
         end_date = '3000-01-01'
     else:
-        start_date = f"{year}-01-01"
-        end_date = f"{int(year) + 1}-01-01"
+        start_date = "{}-01-01".format(year)
+        end_date = "{}-01-01".format(int(year) + 1)
     
     cur = mysql.connection.cursor()
     cur.execute("""
@@ -782,7 +782,7 @@ def check_admin_status(user_id):
     try:
         # Check if MySQL is available
         if not mysql or not hasattr(mysql, 'connection') or not mysql.connection:
-            print(f"Warning: MySQL not available in check_admin_status for user {user_id}")
+            print("Warning: MySQL not available in check_admin_status for user {}".format(user_id))
             return False
         
         cur = mysql.connection.cursor()
@@ -802,7 +802,7 @@ def check_admin_status(user_id):
         
         return False
     except Exception as e:
-        print(f"Error in check_admin_status: {e}")
+        print("Error in check_admin_status: {}".format(e))
         return False
 
 def get_all_users():
@@ -852,7 +852,7 @@ def get_all_users():
         cur.close()
         return result
     except Exception as e:
-        print(f"Error in get_all_users: {e}")
+        print("Error in get_all_users: {}".format(e))
         if 'cur' in locals():
             cur.close()
         # Return a safe default structure to prevent KeyError: 0
@@ -867,7 +867,7 @@ def get_user_by_google_id(google_id):
         cur.close()
         return result
     except Exception as e:
-        print(f"Error getting user by Google ID: {e}")
+        print("Error getting user by Google ID: {}".format(e))
         return None
 
 def get_user_by_email(email):
@@ -879,5 +879,5 @@ def get_user_by_email(email):
         cur.close()
         return result
     except Exception as e:
-        print(f"Error getting user by email: {e}")
+        print("Error getting user by email: {}".format(e))
         return None

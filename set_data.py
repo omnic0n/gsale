@@ -409,7 +409,7 @@ def create_user(details):
         cur.close()
         return user_id
     except Exception as e:
-        print(f"Error creating user: {e}")
+        print("Error creating user: {}".format(e))
         return None
 
 
@@ -443,7 +443,7 @@ def create_google_user(google_id, email, name, picture=None):
         except Exception as e:
             # If that fails, the migration might not have been run
             # Try with a dummy password (this is a fallback)
-            print(f"Warning: Google OAuth migration may not have been run. Using fallback method: {e}")
+            print("Warning: Google OAuth migration may not have been run. Using fallback method: {}".format(e))
             cur.execute("""
                 INSERT INTO accounts(id, username, email, password, name, is_admin) 
                 VALUES (%s, %s, %s, %s, %s, %s)
@@ -453,7 +453,7 @@ def create_google_user(google_id, email, name, picture=None):
         cur.close()
         return user_id
     except Exception as e:
-        print(f"Error creating Google user: {e}")
+        print("Error creating Google user: {}".format(e))
         return None
 
 def create_user_from_admin(email, name):

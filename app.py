@@ -287,7 +287,7 @@ def google_callback():
                 print("Error recording access attempt: {}".format(e))
             
             # Create new user account
-            print(f"Creating new account for {email}")
+            print("Creating new account for {}".format(email))
             user_id = set_data.create_user_account(email, name, google_id, picture)
             if not user_id:
                 error_msg = 'Failed to create user account. Please try again.'
@@ -340,8 +340,8 @@ def google_callback():
             return redirect(next_page)
             
     except Exception as e:
-        print(f"OAuth error: {e}")
-        error_msg = f'Authentication failed: {str(e)}'
+        print("OAuth error: {}".format(e))
+        error_msg = 'Authentication failed: {}'.format(str(e))
         
         # Clear OAuth session data on error
         session.pop('oauth_state', None)
@@ -522,7 +522,7 @@ def group_add():
 
     if request.method == "POST":
         details = request.form
-        print(f"📝 Received form data: {details}")
+        print("📝 Received form data: {}".format(details))
         
         # Check for required fields
         if 'date' not in details or 'name' not in details:
@@ -539,7 +539,7 @@ def group_add():
             try:
                 image_id = files.upload_image(request.files['image'])
             except Exception as e:
-                print(f"Error uploading image: {e}")
+                print("Error uploading image: {}".format(e))
                 image_id = ""
         else:
             # No image provided, use empty string
@@ -1080,7 +1080,7 @@ def inject_pending_requests():
             pending_attempts = set_data.get_pending_access_attempts()
             return {'pending_requests_count': len(pending_attempts)}
         except Exception as e:
-            print(f"Error getting pending requests count: {e}")
+            print("Error getting pending requests count: {}".format(e))
             return {'pending_requests_count': 0}
     return {'pending_requests_count': 0}
 
@@ -1167,7 +1167,7 @@ def admin_panel():
     
     except Exception as e:
         # Log the error for debugging
-        print(f"Error in admin panel: {e}")
+        print("Error in admin panel: {}".format(e))
         flash('An error occurred while loading the admin panel.', 'error')
         return redirect(url_for('index'))
 
