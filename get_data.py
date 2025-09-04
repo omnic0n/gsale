@@ -1,6 +1,53 @@
-from flask import session
+import mysql.connection
 from datetime import datetime, date, timedelta
 import datetime
+from flask import session
+
+def validate_string_input(value, max_length=100, default=''):
+    """Validate and sanitize string inputs to prevent SQL injection"""
+    if not isinstance(value, str):
+        return default
+    if len(value) > max_length:
+        return default
+    # Remove any potentially dangerous characters
+    value = value.replace("'", "").replace('"', "").replace(';', "").replace('--', "")
+    return value
+
+def validate_numeric_input(value, min_val=None, max_val=None, default=0):
+    """Validate and sanitize numeric inputs"""
+    try:
+        if isinstance(value, str):
+            value = int(value)
+        if min_val is not None and value < min_val:
+            return default
+        if max_val is not None and value > max_val:
+            return default
+        return value
+    except (ValueError, TypeError):
+        return default
+
+def validate_date_input(value, default=None):
+    """Validate and sanitize date inputs"""
+    if default is None:
+        default = str(datetime.date.today().year)
+    
+    if not isinstance(value, str):
+        return default
+    
+    # Basic date format validation
+    if len(value) > 10:  # YYYY-MM-DD is 10 chars
+        return default
+    
+    # Check if it's a valid date format
+    try:
+        datetime.strptime(value, '%Y-%m-%d')
+        return value
+    except ValueError:
+        try:
+            datetime.strptime(value, '%Y')
+            return value
+        except ValueError:
+            return default
 
 # We'll get the mysql object passed to us or use a global reference
 mysql = None
@@ -46,7 +93,10 @@ def get_all_from_group_and_items(date):
     return list(cur.fetchall())
 
 def get_all_from_group_and_items_by_name(name):
-    name = '%' + name + '%'
+    # Use validation function
+    validated_name = validate_string_input(name, max_length=100)
+    search_pattern = f'%{validated_name}%'
+    
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
@@ -64,14 +114,18 @@ def get_all_from_group_and_items_by_name(name):
         WHERE c.name LIKE %s AND c.account = %s
         GROUP BY c.id, c.name, c.price, c.date, c.location_address
         ORDER BY c.date
-    """, (name, session.get('id')))
+    """, (search_pattern, session.get('id')))
     return list(cur.fetchall())
 
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
-    if not date:
-        date = str(datetime.date.today().year)
-    cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", ('%' + date + '%', session.get('id'), ))
+    
+    # Use validation function
+    validated_date = validate_date_input(date)
+    search_pattern = f'%{validated_date}%'
+    
+    cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", 
+               (search_pattern, session.get('id')))
     return list(cur.fetchall())
 
 def get_purchased_from_date(start_date, end_date):
@@ -186,11 +240,15 @@ def get_all_from_items(item_id):
     """, (item_id, session.get('id')))
     return list(cur.fetchall())
 
-def get_list_of_items_with_name(name,sold):
+def get_list_of_items_with_name(name, sold):
+    # Use validation functions
+    validated_name = validate_string_input(name, max_length=100)
+    validated_sold = validate_numeric_input(sold, min_val=0, max_val=1, default='')
+    
+    search_pattern = f'%{validated_name}%'
     cur = mysql.connection.cursor()
-    cur.execute("""
-                SELECT 
-                items.name,
+    cur.execute("""SELECT 
+                items.name, 
                 items.sold,
                 items.id,
                 items.storage,
@@ -200,7 +258,8 @@ def get_list_of_items_with_name(name,sold):
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
                 INNER JOIN sale sale ON items.id = sale.id
-                WHERE items.name LIKE %s AND collection.account = %s AND items.sold LIKE %s""", ('%'+ name + '%', session.get('id'), sold ))
+                WHERE items.name LIKE %s AND collection.account = %s AND items.sold LIKE %s""", 
+                (search_pattern, session.get('id'), validated_sold))
     return list(cur.fetchall())
 
 def get_data_from_item_groups(group_id):
