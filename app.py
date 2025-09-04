@@ -4,13 +4,21 @@ from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, Reports
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
-from urllib.parse import unquote
+try:
+    from urllib.parse import unquote
+except ImportError:
+    from urllib import unquote
 import random, os, math
 import hashlib
 import json
 import requests
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+try:
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+except ImportError:
+    # Google OAuth libraries not available
+    id_token = None
+    google_requests = None
 
 import get_data, set_data
 import files
@@ -129,7 +137,10 @@ def login():
             next_page = request.form.get('next') or request.args.get('next')
             if next_page:
                 # Extract only the path and query string from the URL
-                from urllib.parse import urlparse
+                try:
+                    from urllib.parse import urlparse
+                except ImportError:
+                    from urlparse import urlparse
                 parsed = urlparse(next_page)
                 if parsed.netloc:  # If it's a full URL, extract just the path
                     next_page = parsed.path
@@ -319,8 +330,13 @@ def google_callback():
         if is_mobile_request:
             # For mobile, show success page with instructions to return to app
             # Generate a session token that represents the current session
-            import secrets
-            session_token = secrets.token_urlsafe(32)
+            try:
+                import secrets
+                session_token = secrets.token_urlsafe(32)
+            except ImportError:
+                import uuid
+                import base64
+                session_token = base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('utf-8').rstrip('=')
             
             # Store session information with the token for later retrieval
             mobile_sessions[session_token] = {
