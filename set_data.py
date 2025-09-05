@@ -1,5 +1,6 @@
 from flask import session
-from datetime import datetime, date, timedelta
+import datetime
+from datetime import date, timedelta
 import uuid
 
 # We'll get the mysql object passed to us or use a global reference
@@ -734,8 +735,8 @@ def get_access_attempts_by_date_range(start_date, end_date):
     
     # Validate date format
     try:
-        datetime.strptime(start_date, '%Y-%m-%d')
-        datetime.strptime(end_date, '%Y-%m-%d')
+        datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        datetime.datetime.strptime(end_date, '%Y-%m-%d')
     except ValueError:
         raise ValueError("Invalid date format. Use YYYY-MM-DD")
     

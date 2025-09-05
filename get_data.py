@@ -1,5 +1,5 @@
-from datetime import datetime, date, timedelta
 import datetime
+from datetime import date, timedelta
 from flask import session
 
 # MySQL connection will be set by app.py
@@ -42,11 +42,11 @@ def validate_date_input(value, default=None):
     
     # Check if it's a valid date format
     try:
-        datetime.strptime(value, '%Y-%m-%d')
+        datetime.datetime.strptime(value, '%Y-%m-%d')
         return value
     except ValueError:
         try:
-            datetime.strptime(value, '%Y')
+            datetime.datetime.strptime(value, '%Y')
             return value
         except ValueError:
             return default

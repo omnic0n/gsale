@@ -1,4 +1,5 @@
-from datetime import datetime, date, timedelta
+import datetime
+from datetime import date, timedelta
 from flask import Flask, session
 
 from flask_mysqldb import MySQL
@@ -34,7 +35,7 @@ def set_dates(details):
                 next_year = year + 1
             end_date = "{}-{:02d}-01".format(next_year, next_month)
             # Subtract one day to get last day of current month
-            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date() - timedelta(days=1)
+            end_date_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d').date() - timedelta(days=1)
             end_date = end_date_obj.strftime('%Y-%m-%d')
     else:  # Date
         start_date = date_obj
