@@ -30,14 +30,28 @@ DEALLOCATE PREPARE stmt;
 -- Generate UUIDs for existing categories that don't have them
 UPDATE `categories` SET `uuid_id` = UUID() WHERE `uuid_id` IS NULL;
 
--- Check if uuid_id is already the primary key
+-- Check if uuid_id is already the primary key, if not make it the primary key
 SET @sql = (SELECT IF(
     (SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
      WHERE TABLE_SCHEMA = DATABASE() 
      AND TABLE_NAME = 'categories' 
      AND COLUMN_NAME = 'uuid_id' 
      AND CONSTRAINT_NAME = 'PRIMARY') = 0,
-    'ALTER TABLE `categories` DROP PRIMARY KEY; ALTER TABLE `categories` ADD PRIMARY KEY (`uuid_id`);',
+    'ALTER TABLE `categories` DROP PRIMARY KEY',
+    'SELECT "uuid_id is already primary key" as message'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Add primary key on uuid_id (only if it's not already the primary key)
+SET @sql = (SELECT IF(
+    (SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+     WHERE TABLE_SCHEMA = DATABASE() 
+     AND TABLE_NAME = 'categories' 
+     AND COLUMN_NAME = 'uuid_id' 
+     AND CONSTRAINT_NAME = 'PRIMARY') = 0,
+    'ALTER TABLE `categories` ADD PRIMARY KEY (`uuid_id`)',
     'SELECT "uuid_id is already primary key" as message'
 ));
 PREPARE stmt FROM @sql;
