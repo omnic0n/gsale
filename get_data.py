@@ -451,15 +451,15 @@ def get_list_of_items_with_categories(category_id):
                     items.group_id,
                     collection.name as group_name,
                     categories.type,
-                    categories.id AS category_id,
+                    categories.uuid_id AS category_id,
                     sale.date as sales_date,
                     collection.date
                     FROM items items 
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale ON items.id = sale.id
-                    INNER JOIN categories categories ON items.category_id = categories.id
-                    WHERE categories.id = %s AND collection.account = %s
-                    ORDER BY categories.id""",
+                    INNER JOIN categories categories ON items.category_id = categories.uuid_id
+                    WHERE categories.uuid_id = %s AND collection.account = %s
+                    ORDER BY categories.uuid_id""",
                     (category_id, session.get('id'), ))
         return list(cur.fetchall())
 
@@ -484,9 +484,9 @@ def get_list_of_items_by_category(category_id, sold_status="all"):
             FROM items i
             INNER JOIN collection c ON i.group_id = c.id
             LEFT JOIN sale s ON i.id = s.id
-            INNER JOIN categories cat ON i.category_id = cat.id
+            INNER JOIN categories cat ON i.category_id = cat.uuid_id
             WHERE c.account = %s
-            AND cat.id = %s
+            AND cat.uuid_id = %s
             AND i.sold = 1
             ORDER BY c.date ASC
         """, (session.get('id'), category_id))
@@ -507,9 +507,9 @@ def get_list_of_items_by_category(category_id, sold_status="all"):
             FROM items i
             INNER JOIN collection c ON i.group_id = c.id
             LEFT JOIN sale s ON i.id = s.id
-            INNER JOIN categories cat ON i.category_id = cat.id
+            INNER JOIN categories cat ON i.category_id = cat.uuid_id
             WHERE c.account = %s
-            AND cat.id = %s
+            AND cat.uuid_id = %s
             AND i.sold = 0
             ORDER BY c.date ASC
         """, (session.get('id'), category_id))
@@ -530,9 +530,9 @@ def get_list_of_items_by_category(category_id, sold_status="all"):
             FROM items i
             INNER JOIN collection c ON i.group_id = c.id
             LEFT JOIN sale s ON i.id = s.id
-            INNER JOIN categories cat ON i.category_id = cat.id
+            INNER JOIN categories cat ON i.category_id = cat.uuid_id
             WHERE c.account = %s
-            AND cat.id = %s
+            AND cat.uuid_id = %s
             ORDER BY c.date ASC
         """, (session.get('id'), category_id))
     
@@ -622,18 +622,18 @@ def get_list_of_items_by_sold_status(sold_status, sold_date="%", purchase_date="
 #Category Data
 def get_all_from_categories():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM categories WHERE user_id = %s ORDER BY type", (session.get('id'),))
+    cur.execute("SELECT uuid_id as id, type, user_id FROM categories WHERE user_id = %s ORDER BY type", (session.get('id'),))
     return list(cur.fetchall())
 
 def get_category(category_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT type FROM categories where id = %s AND user_id = %s", (category_id, session.get('id')))
+    cur.execute("SELECT type FROM categories where uuid_id = %s AND user_id = %s", (category_id, session.get('id')))
     return cur.fetchone()
 
 def get_category_by_id(category_id):
     """Get category by ID without user restriction (for admin purposes)"""
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM categories where id = %s", (category_id,))
+    cur.execute("SELECT uuid_id as id, type, user_id FROM categories where uuid_id = %s", (category_id,))
     return cur.fetchone()
 
 def get_category_item_counts():
@@ -641,14 +641,14 @@ def get_category_item_counts():
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
-            c.id,
+            c.uuid_id as id,
             c.type,
             COUNT(CASE WHEN col.account = %s THEN i.id ELSE NULL END) as item_count
         FROM categories c
-        LEFT JOIN items i ON c.id = i.category_id
+        LEFT JOIN items i ON c.uuid_id = i.category_id
         LEFT JOIN collection col ON i.group_id = col.id
         WHERE c.user_id = %s
-        GROUP BY c.id, c.type
+        GROUP BY c.uuid_id, c.type
         ORDER BY c.type
     """, (session.get('id'), session.get('id')))
     return list(cur.fetchall())

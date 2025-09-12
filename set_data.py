@@ -42,7 +42,7 @@ def set_bought_items(details):
     if not isinstance(details.get('group'), str) or len(details.get('group', '')) > 50:
         raise ValueError("Invalid group ID")
     
-    if not isinstance(details.get('category'), str) or len(details.get('category', '')) > 10:
+    if not isinstance(details.get('category'), str) or len(details.get('category', '')) > 36:
         raise ValueError("Invalid category ID")
     
     if not isinstance(details.get('storage', ''), str) or len(details.get('storage', '')) > 50:
@@ -77,7 +77,7 @@ def set_quick_sale(details):
     if not isinstance(details.get('group'), str) or len(details.get('group', '')) > 50:
         raise ValueError("Invalid group ID")
     
-    if not isinstance(details.get('category'), str) or len(details.get('category', '')) > 10:
+    if not isinstance(details.get('category'), str) or len(details.get('category', '')) > 36:
         raise ValueError("Invalid category ID")
     
     if not isinstance(details.get('list_date', ''), str) or len(details.get('list_date', '')) > 10:
@@ -149,7 +149,7 @@ def set_items_modify(details):
     if not isinstance(details.get('group'), str) or len(details.get('group', '')) > 50:
         raise ValueError("Invalid group ID")
     
-    if not isinstance(details.get('category'), str) or len(details.get('category', '')) > 10:
+    if not isinstance(details.get('category'), str) or len(details.get('category', '')) > 36:
         raise ValueError("Invalid category ID")
     
     cur = mysql.connection.cursor()
@@ -291,7 +291,7 @@ def add_category(category_name, user_id):
     
     category_id = generate_uuid()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO categories (id, type, user_id) VALUES (%s, %s, %s)", 
+    cur.execute("INSERT INTO categories (uuid_id, type, user_id) VALUES (%s, %s, %s)", 
                 (category_id, category_name, user_id))
     mysql.connection.commit()
     cur.close()
@@ -299,7 +299,7 @@ def add_category(category_name, user_id):
 
 def update_category(category_id, category_name, user_id):
     # Validate inputs
-    if not isinstance(category_id, str) or len(category_id) > 50:
+    if not isinstance(category_id, str) or len(category_id) > 36:
         raise ValueError("Invalid category ID")
     
     if not isinstance(category_name, str) or len(category_name) > 50:
@@ -309,7 +309,7 @@ def update_category(category_id, category_name, user_id):
         raise ValueError("Invalid user ID")
     
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE categories SET type = %s WHERE id = %s AND user_id = %s",
+    cur.execute("UPDATE categories SET type = %s WHERE uuid_id = %s AND user_id = %s",
                 (category_name, category_id, user_id))
     mysql.connection.commit()
     cur.close()
@@ -317,7 +317,7 @@ def update_category(category_id, category_name, user_id):
 
 def delete_category(category_id, user_id):
     # Validate inputs
-    if not isinstance(category_id, str) or len(category_id) > 50:
+    if not isinstance(category_id, str) or len(category_id) > 36:
         raise ValueError("Invalid category ID")
     
     if not isinstance(user_id, str) or len(user_id) > 50:
@@ -333,7 +333,7 @@ def delete_category(category_id, user_id):
         return False, "Cannot delete category that has items assigned to it"
     
     # Delete the category
-    cur.execute("DELETE FROM categories WHERE id = %s AND user_id = %s", (category_id, user_id))
+    cur.execute("DELETE FROM categories WHERE uuid_id = %s AND user_id = %s", (category_id, user_id))
     mysql.connection.commit()
     cur.close()
     return True, "Category deleted successfully"
