@@ -291,7 +291,7 @@ def add_category(category_name, user_id):
     
     category_id = generate_uuid()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO categories (id, uuid_id, type, user_id) VALUES (NULL, %s, %s, %s)", 
+    cur.execute("INSERT INTO categories (uuid_id, type, user_id) VALUES (%s, %s, %s)", 
                 (category_id, category_name, user_id))
     mysql.connection.commit()
     cur.close()
