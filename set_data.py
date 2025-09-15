@@ -555,12 +555,12 @@ def get_pending_access_attempts():
             a.picture,
             a.ip_address,
             a.user_agent,
-            a.attempt_time,
+            a.attempted_at as attempt_time,
             (SELECT COUNT(*) FROM access_attempts WHERE email = a.email) as total_requests,
             (SELECT COUNT(*) FROM access_attempts WHERE email = a.email AND status = 'denied') as denied_requests
         FROM access_attempts a
         WHERE a.status IS NULL OR a.status = 'pending'
-        ORDER BY a.attempt_time DESC
+        ORDER BY a.attempted_at DESC
     """)
     results = list(cur.fetchall())
     cur.close()
