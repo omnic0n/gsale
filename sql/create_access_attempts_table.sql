@@ -14,6 +14,39 @@ CREATE TABLE IF NOT EXISTS access_attempts (
 );
 
 -- Add indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_access_attempts_email ON access_attempts(email);
-CREATE INDEX IF NOT EXISTS idx_access_attempts_status ON access_attempts(status);
-CREATE INDEX IF NOT EXISTS idx_access_attempts_attempted_at ON access_attempts(attempted_at);
+-- Check if indexes exist before creating them
+SET @sql = (SELECT IF(
+    (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS 
+     WHERE TABLE_SCHEMA = DATABASE() 
+     AND TABLE_NAME = 'access_attempts' 
+     AND INDEX_NAME = 'idx_access_attempts_email') = 0,
+    'CREATE INDEX idx_access_attempts_email ON access_attempts(email)',
+    'SELECT "idx_access_attempts_email index already exists" as message'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = (SELECT IF(
+    (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS 
+     WHERE TABLE_SCHEMA = DATABASE() 
+     AND TABLE_NAME = 'access_attempts' 
+     AND INDEX_NAME = 'idx_access_attempts_status') = 0,
+    'CREATE INDEX idx_access_attempts_status ON access_attempts(status)',
+    'SELECT "idx_access_attempts_status index already exists" as message'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = (SELECT IF(
+    (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS 
+     WHERE TABLE_SCHEMA = DATABASE() 
+     AND TABLE_NAME = 'access_attempts' 
+     AND INDEX_NAME = 'idx_access_attempts_attempted_at') = 0,
+    'CREATE INDEX idx_access_attempts_attempted_at ON access_attempts(attempted_at)',
+    'SELECT "idx_access_attempts_attempted_at index already exists" as message'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
