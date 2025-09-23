@@ -275,7 +275,7 @@ def get_data_from_item_groups(group_id):
                     items.name, 
                     items.sold, 
                     items.id,
-                    items.category_id,
+                    COALESCE(categories.uuid_id, items.category_id) AS category_id,
                     items.storage,
                     items.returned,
                     sale.price AS gross,
@@ -287,6 +287,7 @@ def get_data_from_item_groups(group_id):
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN sale sale ON sale.id = items.id
+                    LEFT JOIN categories ON items.category_id = categories.id
                     WHERE items.group_id = %s AND collection.account = %s
                     ORDER BY sale.date""", (group_id, session.get('id')))
     return list(cur.fetchall())
@@ -362,7 +363,7 @@ def get_data_for_item_describe(item_id):
                     items.sold, 
                     items.id,
                     items.group_id,
-                    items.category_id,
+                    COALESCE(categories.uuid_id, items.category_id) AS category_id,
                     items.returned,
                     items.storage,
                     items.list_date,
@@ -370,6 +371,7 @@ def get_data_for_item_describe(item_id):
                     collection.date AS purchase_date
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
+                    LEFT JOIN categories ON items.category_id = categories.id
                     WHERE items.id = %s AND collection.account = %s""", (item_id, session.get('id')))
     return list(cur.fetchall())
 
