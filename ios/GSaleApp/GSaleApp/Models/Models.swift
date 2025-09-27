@@ -102,3 +102,34 @@ struct APIResponse<T: Codable>: Codable {
     let message: String
     let data: T?
 } 
+
+// MARK: - Reports Models
+enum ReportInterval: String, Codable {
+    case date
+    case month
+    case year
+    case day
+}
+
+struct SalesReportRow: Codable {
+    let date: String
+    let day: String
+    let soldPrice: Double
+    let shippingFee: Double
+    let net: Double
+    let totalItems: Int
+}
+
+struct PurchasesReportRow: Codable {
+    let date: String
+    let day: String
+    let price: Double
+}
+
+struct ProfitReportRow: Codable {
+    let date: String
+    let day: String
+    let purchasePrice: Double
+    let profit: Double
+    let roiPercent: Double?
+}

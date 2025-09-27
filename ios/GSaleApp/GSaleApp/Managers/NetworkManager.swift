@@ -31,6 +31,190 @@ class NetworkManager: NSObject {
             completionHandler(request)
         }
     }
+
+    // MARK: - Reports (native)
+    func getSalesReport(interval: ReportInterval, date: String?, month: Int?, year: String?, day: Int?) async throws -> [SalesReportRow] {
+        return try await fetchReport(path: "/reports/sales", interval: interval, date: date, month: month, year: year, day: day) { html in
+            self.parseSalesReport(from: html)
+        }
+    }
+
+    func getPurchasesReport(interval: ReportInterval, date: String?, month: Int?, year: String?, day: Int?) async throws -> [PurchasesReportRow] {
+        return try await fetchReport(path: "/reports/purchases", interval: interval, date: date, month: month, year: year, day: day) { html in
+            self.parsePurchasesReport(from: html)
+        }
+    }
+
+    func getProfitReport(interval: ReportInterval, date: String?, month: Int?, year: String?, day: Int?) async throws -> [ProfitReportRow] {
+        // Use the backend profit report exclusively to populate the Profit tab
+        return try await fetchReport(path: "/reports/profit", interval: interval, date: date, month: month, year: year, day: day) { html in
+            self.parseProfitReport(from: html)
+        }
+    }
+
+    private func fetchReport<T>(path: String, interval: ReportInterval, date: String?, month: Int?, year: String?, day: Int?, parser: (String) -> [T]) async throws -> [T] {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)\(path)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
+        request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+
+        let typeValue: String
+        switch interval {
+        case .date: typeValue = "0"
+        case .month: typeValue = "1"
+        case .year: typeValue = "2"
+        case .day: typeValue = "3"
+        }
+
+        // Provide defaults to satisfy backend form keys
+        let now = Date()
+        let cal = Calendar.current
+        let yyyy = String(cal.component(.year, from: now))
+        let mm = cal.component(.month, from: now)
+        let weekday = cal.component(.weekday, from: now)
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        let today = df.string(from: now)
+
+        var params: [String: String] = [
+            "type": typeValue,
+            "date": date ?? today,
+            "month": String(month ?? mm),
+            "year": year ?? yyyy
+        ]
+        if typeValue == "3" {
+            params["day"] = String(day ?? weekday)
+        } else if let day = day {
+            params["day"] = String(day)
+        }
+        let body = params.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+        request.httpBody = body.data(using: .utf8)
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.serverError("Failed to fetch report")
+        }
+        guard let html = String(data: data, encoding: .utf8) else { throw NetworkError.noData }
+        if html.contains("<title>Login</title>") { throw NetworkError.unauthorized }
+        return parser(html)
+    }
+
+    private func parseSalesReport(from html: String) -> [SalesReportRow] {
+        var rows: [SalesReportRow] = []
+        let rowPattern = #"<tr[^>]*>([\s\S]*?)</tr>"#
+        guard let rowRegex = try? NSRegularExpression(pattern: rowPattern, options: [.dotMatchesLineSeparators]) else { return rows }
+        let rowMatches = rowRegex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
+        for rm in rowMatches {
+            guard let rr = Range(rm.range(at: 1), in: html) else { continue }
+            let rowHTML = String(html[rr])
+            // Identify data rows by items list sold_date link
+            guard rowHTML.contains("/items/list?sold_date=") else { continue }
+            // Extract all td contents
+            let tdPattern = #"<td[^>]*>([\s\S]*?)</td>"#
+            guard let tdRegex = try? NSRegularExpression(pattern: tdPattern, options: [.dotMatchesLineSeparators]) else { continue }
+            let tds = tdRegex.matches(in: rowHTML, options: [], range: NSRange(rowHTML.startIndex..<rowHTML.endIndex, in: rowHTML))
+            guard tds.count >= 7 else { continue }
+            func cell(_ i: Int) -> String {
+                let r = tds[i].range(at: 1)
+                guard let sr = Range(r, in: rowHTML) else { return "" }
+                return String(rowHTML[sr]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            // Date cell contains an <a> - extract inner text
+            let dateCell = cell(0)
+            let date = extractInnerText(fromHTMLCell: dateCell)
+            if date.isEmpty || date.lowercased() == "total" { continue }
+            let day = cell(1)
+            let sold = parsePrice(from: cell(2))
+            let ship = parsePrice(from: cell(3))
+            let net = parsePrice(from: cell(5)) // index 4 is shipping %
+            let items = Int(cell(6)) ?? 0
+            rows.append(SalesReportRow(date: date, day: day, soldPrice: sold, shippingFee: ship, net: net, totalItems: items))
+        }
+        return rows
+    }
+
+    private func parsePurchasesReport(from html: String) -> [PurchasesReportRow] {
+        var rows: [PurchasesReportRow] = []
+        let rowPattern = #"<tr[^>]*>([\s\S]*?)</tr>"#
+        guard let rowRegex = try? NSRegularExpression(pattern: rowPattern, options: [.dotMatchesLineSeparators]) else { return rows }
+        let rowMatches = rowRegex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
+        for rm in rowMatches {
+            guard let rr = Range(rm.range(at: 1), in: html) else { continue }
+            let rowHTML = String(html[rr])
+            guard rowHTML.contains("/groups/list?date=") else { continue }
+            let tdPattern = #"<td[^>]*>([\s\S]*?)</td>"#
+            guard let tdRegex = try? NSRegularExpression(pattern: tdPattern, options: [.dotMatchesLineSeparators]) else { continue }
+            let tds = tdRegex.matches(in: rowHTML, options: [], range: NSRange(rowHTML.startIndex..<rowHTML.endIndex, in: rowHTML))
+            guard tds.count >= 3 else { continue }
+            func cell(_ i: Int) -> String {
+                let r = tds[i].range(at: 1)
+                guard let sr = Range(r, in: rowHTML) else { return "" }
+                return String(rowHTML[sr]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            let dateText = extractInnerText(fromHTMLCell: cell(0))
+            if dateText.isEmpty || dateText.lowercased() == "total" { continue }
+            let day = cell(1)
+            let price = parsePrice(from: cell(2))
+            rows.append(PurchasesReportRow(date: dateText, day: day, price: price))
+        }
+        return rows
+    }
+
+    private func parseProfitReport(from html: String) -> [ProfitReportRow] {
+        var rows: [ProfitReportRow] = []
+        let rowPattern = #"<tr[^>]*>([\s\S]*?)</tr>"#
+        guard let rowRegex = try? NSRegularExpression(pattern: rowPattern, options: [.dotMatchesLineSeparators]) else { return rows }
+        let rowMatches = rowRegex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
+        for rm in rowMatches {
+            guard let rr = Range(rm.range(at: 1), in: html) else { continue }
+            let rowHTML = String(html[rr])
+            guard rowHTML.contains("/groups/list?date=") else { continue }
+            let tdPattern = #"<td[^>]*>([\s\S]*?)</td>"#
+            guard let tdRegex = try? NSRegularExpression(pattern: tdPattern, options: [.dotMatchesLineSeparators]) else { continue }
+            let tds = tdRegex.matches(in: rowHTML, options: [], range: NSRange(rowHTML.startIndex..<rowHTML.endIndex, in: rowHTML))
+            // Require first 4 tds (date, day, purchase, profit). ROI may be malformed.
+            guard tds.count >= 4 else { continue }
+            func cell(_ i: Int) -> String {
+                let r = tds[i].range(at: 1)
+                guard let sr = Range(r, in: rowHTML) else { return "" }
+                return String(rowHTML[sr]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            let dateText = extractInnerText(fromHTMLCell: cell(0))
+            if dateText.isEmpty || dateText.lowercased() == "total" { continue }
+            let day = cell(1)
+            let purchase = parsePrice(from: cell(2))
+            let profit = parsePrice(from: cell(3))
+            // Try to find ROI percentage anywhere in the row (optional)
+            var roi: Double? = nil
+            if let roiRegex = try? NSRegularExpression(pattern: #"(\d+(?:\.\d+)?)%"#),
+               let m = roiRegex.firstMatch(in: rowHTML, options: [], range: NSRange(rowHTML.startIndex..<rowHTML.endIndex, in: rowHTML)),
+               let r = Range(m.range(at: 1), in: rowHTML) {
+                roi = Double(String(rowHTML[r]))
+            } else if rowHTML.uppercased().contains("INF") {
+                roi = nil
+            }
+            rows.append(ProfitReportRow(date: dateText, day: day, purchasePrice: purchase, profit: profit, roiPercent: roi))
+        }
+        return rows
+    }
+
+    private func extractInnerText(fromHTMLCell cellHTML: String) -> String {
+        // Extract inner text, stripping link tags if present
+        if let r = try? NSRegularExpression(pattern: #">([^<]+)<"#, options: []),
+           let m = r.firstMatch(in: cellHTML, options: [], range: NSRange(cellHTML.startIndex..<cellHTML.endIndex, in: cellHTML)),
+           let rr = Range(m.range(at: 1), in: cellHTML) {
+            return String(cellHTML[rr]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return cellHTML.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    
     
     private override init() {
         let config = URLSessionConfiguration.default
@@ -392,6 +576,23 @@ class NetworkManager: NSObject {
         
         // Use the shared parsing method
         return parseGroupsFromHTML(responseString)
+    }
+
+    // MARK: - Groups by Date
+    func getGroupsByDate(_ date: String) async throws -> [Group] {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let encodedDate = date.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? date
+        let url = URL(string: "\(baseURL)/groups/list?date=\(encodedDate)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw NetworkError.serverError("Failed to load groups for date") }
+        guard let html = String(data: data, encoding: .utf8) else { throw NetworkError.noData }
+        if html.contains("<title>Login</title>") { throw NetworkError.unauthorized }
+        return parseGroupsFromHTML(html)
     }
     
     private func parseGroupsFromHTML(_ responseString: String) -> [Group] {
@@ -2241,11 +2442,26 @@ class NetworkManager: NSObject {
     }
     
     private func parsePrice(from priceString: String) -> Double {
-        // Remove currency symbols and parse
-        let cleanString = priceString.replacingOccurrences(of: "$", with: "")
-                                    .replacingOccurrences(of: ",", with: "")
-                                    .trimmingCharacters(in: .whitespacesAndNewlines)
-        return Double(cleanString) ?? 0.0
+        // Normalize currency/percent and parentheses negatives
+        var s = priceString
+            .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "\u{00a0}", with: " ") // non-breaking space
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        var isNegative = false
+        if s.contains("(") && s.contains(")") {
+            isNegative = true
+            s = s.replacingOccurrences(of: "(", with: "").replacingOccurrences(of: ")", with: "")
+        }
+        // Strip currency and percent markers
+        s = s.replacingOccurrences(of: "$", with: "")
+             .replacingOccurrences(of: ",", with: "")
+             .replacingOccurrences(of: "%", with: "")
+             .replacingOccurrences(of: "+", with: "")
+        // Also handle formats like -$5.00 or $-5.00
+        s = s.replacingOccurrences(of: "-$", with: "-")
+             .replacingOccurrences(of: "$-", with: "-")
+        let value = Double(s) ?? 0.0
+        return isNegative ? -value : value
     }
     
     // MARK: - Add Item
