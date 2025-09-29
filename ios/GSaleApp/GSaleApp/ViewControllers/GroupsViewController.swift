@@ -22,6 +22,7 @@ class GroupsViewController: UIViewController {
     private var isLoading = false
     private var isSearching = false
     private var currentSearchTerm = ""
+    private var activeDateFilter: String? = nil
     
     // Year filtering
     private let availableYears: [String] = {
@@ -57,6 +58,33 @@ class GroupsViewController: UIViewController {
             object: nil
         )
     }
+
+    // Public loader to filter groups by a specific date
+    @objc func loadGroupsForDate(_ date: String) {
+        title = "Groups for \(date)"
+        activeDateFilter = date
+        isLoading = true
+        activityIndicator.startAnimating()
+        Task { [weak self] in
+            guard let self = self else { return }
+            do {
+                let results = try await NetworkManager.shared.getGroupsByDate(date)
+                await MainActor.run {
+                    self.groups = results
+                    self.allGroups = results
+                    self.tableView.reloadData()
+                    self.isLoading = false
+                    self.activityIndicator.stopAnimating()
+                }
+            } catch {
+                await MainActor.run {
+                    self.isLoading = false
+                    self.activityIndicator.stopAnimating()
+                    self.showAlert(title: "Error", message: "Failed to load groups for \(date)")
+                }
+            }
+        }
+    }
     
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -64,6 +92,7 @@ class GroupsViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        if activeDateFilter != nil { return }
         if !isSearching {
             loadGroupsForYear(selectedYear)
         }
@@ -188,6 +217,7 @@ class GroupsViewController: UIViewController {
         for year in availableYears {
             let action = UIAlertAction(title: year, style: .default) { _ in
                 self.selectedYear = year
+                self.activeDateFilter = nil
                 self.yearButton.setTitle(year, for: .normal)
                 self.loadGroupsForYear(year)
             }
@@ -271,6 +301,7 @@ class GroupsViewController: UIViewController {
     @objc private func showAllGroups() {
         isSearching = false
         currentSearchTerm = ""
+        activeDateFilter = nil
         title = selectedYear == "All" ? "Groups" : "Groups (\(selectedYear))"
         navigationItem.leftBarButtonItem = nil
         
@@ -284,7 +315,9 @@ class GroupsViewController: UIViewController {
     }
     
     @objc private func refreshData() {
-        if isSearching {
+        if let date = activeDateFilter {
+            loadGroupsForDate(date)
+        } else if isSearching {
             loadGroups() // Use default loadGroups for search state
         } else {
             loadGroupsForYear(selectedYear) // Use year filtering for normal state
@@ -292,19 +325,15 @@ class GroupsViewController: UIViewController {
     }
     
     @objc private func groupCreated() {
-        if isSearching {
-            loadGroups()
-        } else {
-            loadGroupsForYear(selectedYear)
-        }
+        if let date = activeDateFilter { loadGroupsForDate(date) }
+        else if isSearching { loadGroups() }
+        else { loadGroupsForYear(selectedYear) }
     }
     
     @objc private func groupDeleted() {
-        if isSearching {
-            loadGroups()
-        } else {
-            loadGroupsForYear(selectedYear)
-        }
+        if let date = activeDateFilter { loadGroupsForDate(date) }
+        else if isSearching { loadGroups() }
+        else { loadGroupsForYear(selectedYear) }
     }
     
     private func loadGroupsForYear(_ year: String) {

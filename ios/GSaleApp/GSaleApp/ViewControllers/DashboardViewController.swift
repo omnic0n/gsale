@@ -8,6 +8,7 @@ class DashboardViewController: UIViewController {
     private let welcomeLabel = UILabel()
     private let groupsButton = UIButton(type: .system)
     private let itemsButton = UIButton(type: .system)
+    private let reportsButton = UIButton(type: .system)
     private let logoutButton = UIButton(type: .system)
     
     override func viewDidLoad() {
@@ -47,6 +48,14 @@ class DashboardViewController: UIViewController {
         itemsButton.layer.cornerRadius = 12
         itemsButton.translatesAutoresizingMaskIntoConstraints = false
         itemsButton.addTarget(self, action: #selector(itemsTapped), for: .touchUpInside)
+
+        reportsButton.setTitle("Reports", for: .normal)
+        reportsButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        reportsButton.backgroundColor = .systemOrange
+        reportsButton.setTitleColor(.white, for: .normal)
+        reportsButton.layer.cornerRadius = 12
+        reportsButton.translatesAutoresizingMaskIntoConstraints = false
+        reportsButton.addTarget(self, action: #selector(reportsTapped), for: .touchUpInside)
         
         logoutButton.setTitle("Logout", for: .normal)
         logoutButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -57,6 +66,7 @@ class DashboardViewController: UIViewController {
         contentView.addSubview(welcomeLabel)
         contentView.addSubview(groupsButton)
         contentView.addSubview(itemsButton)
+        contentView.addSubview(reportsButton)
         contentView.addSubview(logoutButton)
         
         setupConstraints()
@@ -88,8 +98,13 @@ class DashboardViewController: UIViewController {
             itemsButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             itemsButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             itemsButton.heightAnchor.constraint(equalToConstant: 50),
+
+            reportsButton.topAnchor.constraint(equalTo: itemsButton.bottomAnchor, constant: 20),
+            reportsButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            reportsButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            reportsButton.heightAnchor.constraint(equalToConstant: 50),
             
-            logoutButton.topAnchor.constraint(equalTo: itemsButton.bottomAnchor, constant: 40),
+            logoutButton.topAnchor.constraint(equalTo: reportsButton.bottomAnchor, constant: 40),
             logoutButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             logoutButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -40)
         ])
@@ -98,6 +113,11 @@ class DashboardViewController: UIViewController {
     @objc private func groupsTapped() {
         let groupsVC = GroupsViewController()
         navigationController?.pushViewController(groupsVC, animated: true)
+    }
+
+    @objc private func reportsTapped() {
+        let reportsVC = ReportsViewController()
+        navigationController?.pushViewController(reportsVC, animated: true)
     }
     
     @objc private func itemsTapped() {
