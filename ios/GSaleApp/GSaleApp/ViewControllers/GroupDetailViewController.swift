@@ -850,6 +850,51 @@ extension GroupDetailViewController: UITableViewDelegate {
             preferredStyle: .alert
         )
         
+        // Add Sell action if item is not sold
+        if !itemDetail.sold {
+            alert.addAction(UIAlertAction(title: "Sell...", style: .default) { _ in
+                let sellVC = SellItemViewController(itemId: itemDetail.id, itemName: itemDetail.name, groupId: itemDetail.groupId)
+                self.navigationController?.pushViewController(sellVC, animated: true)
+            })
+        }
+
+        // If sold, add Return action; else allow Sell
+        if itemDetail.sold {
+            alert.addAction(UIAlertAction(title: "↩️ Return (Mark Available)", style: .default) { _ in
+                // Confirm return
+                let confirm = UIAlertController(title: "Confirm Return", message: "Mark this item as available?", preferredStyle: .alert)
+                confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                confirm.addAction(UIAlertAction(title: "Return", style: .destructive) { _ in
+                    // Call API to mark available
+                    let loading = UIAlertController(title: "Processing...", message: nil, preferredStyle: .alert)
+                    self.present(loading, animated: true)
+                    Task {
+                        do {
+                            try await NetworkManager.shared.markItemAvailable(itemId: itemDetail.id)
+                            let updatedDetail = try await NetworkManager.shared.getItemDetails(itemId: itemDetail.id)
+                            let updatedGroup = try await NetworkManager.shared.getGroupDetails(groupId: itemDetail.groupId)
+                            await MainActor.run {
+                                loading.dismiss(animated: true) {
+                                    // Refresh group view
+                                    self.groupDetail = updatedGroup
+                                    self.setupData()
+                                    self.itemsTableView.reloadData()
+                                    self.showAlert(title: "Success", message: "Item marked as available.")
+                                }
+                            }
+                        } catch {
+                            await MainActor.run {
+                                loading.dismiss(animated: true) {
+                                    self.showAlert(title: "Error", message: "Failed to mark item as available.")
+                                }
+                            }
+                        }
+                    }
+                })
+                self.present(confirm, animated: true)
+            })
+        }
+
         // Add Remove Item action
         alert.addAction(UIAlertAction(title: "🗑️ Remove Item", style: .destructive) { _ in
             self.confirmRemoveItem(itemDetail: itemDetail)

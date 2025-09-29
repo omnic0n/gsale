@@ -234,6 +234,10 @@ class ItemsViewController: UIViewController {
         let alert = UIAlertController(title: item.name, message: message, preferredStyle: .alert)
         
         if !item.sold {
+            alert.addAction(UIAlertAction(title: "Sell...", style: .default) { _ in
+                let vc = SellItemViewController(itemId: item.id, itemName: item.name, groupId: item.groupId)
+                self.navigationController?.pushViewController(vc, animated: true)
+            })
             alert.addAction(UIAlertAction(title: "Remove Item", style: .destructive) { _ in
                 self.confirmRemoveItem(item)
             })
@@ -241,6 +245,80 @@ class ItemsViewController: UIViewController {
         
         alert.addAction(UIAlertAction(title: "Close", style: .cancel))
         present(alert, animated: true)
+    }
+
+    private func promptMarkAsSold(_ item: ItemDetail) {
+        let alert = UIAlertController(title: "Mark as Sold", message: "Enter sale details", preferredStyle: .alert)
+        alert.addTextField { tf in
+            tf.placeholder = "Sale Date (YYYY-MM-DD)"
+            tf.text = self.todayString()
+            tf.keyboardType = .numbersAndPunctuation
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Sold Price (e.g., 25.00)"
+            tf.keyboardType = .decimalPad
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Shipping Fee (e.g., 3.50)"
+            tf.keyboardType = .decimalPad
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Save", style: .default) { _ in
+            let date = alert.textFields?[0].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let price = alert.textFields?[1].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "0"
+            let shipping = alert.textFields?[2].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "0"
+            self.markAsSold(item: item, soldDate: date, price: price, shippingFee: shipping)
+        })
+        present(alert, animated: true)
+    }
+
+    private func todayString() -> String {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        return df.string(from: Date())
+    }
+
+    private func markAsSold(item: ItemDetail, soldDate: String, price: String, shippingFee: String) {
+        loadingIndicator.startAnimating()
+        Task {
+            do {
+                try await NetworkManager.shared.markItemSold(itemId: item.id, soldDate: soldDate, price: price, shippingFee: shippingFee)
+                await MainActor.run {
+                    self.loadingIndicator.stopAnimating()
+                    // Update local state: mark item as sold
+                    if let idx = self.allItems.firstIndex(where: { $0.id == item.id }) {
+                        var updated = self.allItems[idx]
+                        updated = ItemDetail(
+                            id: updated.id,
+                            name: updated.name,
+                            sold: true,
+                            groupId: updated.groupId,
+                            categoryId: updated.categoryId,
+                            category: updated.category,
+                            returned: updated.returned,
+                            storage: updated.storage,
+                            listDate: updated.listDate,
+                            groupName: updated.groupName,
+                            purchaseDate: updated.purchaseDate,
+                            price: updated.price,
+                            soldPrice: Double(price),
+                            shippingFee: Double(shippingFee),
+                            netPrice: nil,
+                            soldDate: soldDate,
+                            daysToSell: updated.daysToSell
+                        )
+                        self.allItems[idx] = updated
+                    }
+                    self.applyFilters()
+                    self.showAlert(title: "Success", message: "Item marked as sold.")
+                }
+            } catch {
+                await MainActor.run {
+                    self.loadingIndicator.stopAnimating()
+                    self.showAlert(title: "Error", message: "Failed to mark item sold. Please try again.")
+                }
+            }
+        }
     }
     
     private func confirmRemoveItem(_ item: ItemDetail) {

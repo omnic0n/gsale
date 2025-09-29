@@ -1508,8 +1508,14 @@ class NetworkManager: NSObject {
             groupId = extractString(from: html, range: groupMatch.range(at: 1))
         }
         
-        // Check if item is sold by looking for "Sold" in the status table
-        let sold = html.contains("<td>Sold</td>")
+        // Check if item is sold with robust matching
+        // Consider any of the following as indicators: a table cell with "Sold" (any spacing/case),
+        // presence of a sold_date link, or a "Mark as Available" action on the page
+        let soldRegex = try? NSRegularExpression(pattern: "(?i)<td>\\s*Sold\\s*</td>", options: [])
+        let soldMatch = soldRegex?.firstMatch(in: html, options: [], range: NSRange(location: 0, length: html.count)) != nil
+        let hasSoldDateLink = html.contains("sold_date=")
+        let hasMarkAvailable = html.localizedCaseInsensitiveContains("Mark as Available")
+        let sold = soldMatch || hasSoldDateLink || hasMarkAvailable
         
         // Parse sold item financial details if the item is sold
         var soldPrice: Double? = nil
@@ -2537,6 +2543,59 @@ class NetworkManager: NSObject {
         } else {
             let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode) - \(responseString)")
+        }
+    }
+
+    // MARK: - Mark Item Sold
+    func markItemSold(itemId: String, soldDate: String, price: String, shippingFee: String) async throws {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)/items/sold")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+
+        // Backend expects: id, price, sale_date, shipping_fee
+        let params: [String: String] = [
+            "id": itemId,
+            "price": price,
+            "sale_date": soldDate,
+            "shipping_fee": shippingFee
+        ]
+        let body = params.map { key, value in
+            let k = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
+            let v = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
+            return "\(k)=\(v)"
+        }.joined(separator: "&")
+        request.httpBody = body.data(using: .utf8)
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.noData }
+        if httpResponse.statusCode == 401 { throw NetworkError.unauthorized }
+        guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
+            let snippet = String(data: data, encoding: .utf8) ?? ""
+            throw NetworkError.serverError("Failed to mark sold: HTTP \(httpResponse.statusCode) \n\(snippet.prefix(200))")
+        }
+    }
+
+    // MARK: - Mark Item Available (Un-Sell)
+    func markItemAvailable(itemId: String) async throws {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)/items/mark_sold?item=\(itemId)&sold=0")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.noData }
+        if httpResponse.statusCode == 401 { throw NetworkError.unauthorized }
+        guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
+            let snippet = String(data: data, encoding: .utf8) ?? ""
+            throw NetworkError.serverError("Failed to mark available: HTTP \(httpResponse.statusCode) \n\(snippet.prefix(200))")
         }
     }
 } 
