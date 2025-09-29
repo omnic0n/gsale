@@ -613,7 +613,9 @@ def modify_group():
 def mark_sold():
     id = request.args.get('item', type = str)
     sold = request.args.get('sold', type = str)
-    set_data.set_mark_sold(id, sold)    
+    # Convert string to integer for validation
+    sold_int = int(sold) if sold in ['0', '1'] else None
+    set_data.set_mark_sold(id, sold_int)    
     return redirect(url_for('describe_item',item=id))
 
 @app.route('/items/bought',methods=["POST","GET"])
