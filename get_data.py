@@ -197,7 +197,7 @@ def get_group_sold_from_date(start_date, end_date):
     cur.execute("""
         SELECT 
             c.date,
-            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS net
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
@@ -214,7 +214,7 @@ def get_group_sold_from_day(day):
     cur.execute("""
         SELECT 
             c.date,
-            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS net,
             DAYNAME(c.date) AS day
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
