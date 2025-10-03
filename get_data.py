@@ -8,7 +8,7 @@ mysql = None
 def get_current_group_id():
     """Get the current user's group_id from session"""
     group_id = session.get('group_id')
-    print(f"DEBUG: get_current_group_id() returning: {group_id}")
+    print("DEBUG: get_current_group_id() returning: {}".format(group_id))
     return group_id
 
 def get_current_user_id():
@@ -137,7 +137,7 @@ def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     
     current_group_id = get_current_group_id()
-    print(f"DEBUG: get_all_from_groups() - current_group_id: {current_group_id}")
+    print("DEBUG: get_all_from_groups() - current_group_id: {}".format(current_group_id))
     
     # Handle wildcard case - if date is '%', get all groups regardless of date
     if date == '%':
@@ -151,7 +151,7 @@ def get_all_from_groups(date):
                    (search_pattern, current_group_id))
     
     result = list(cur.fetchall())
-    print(f"DEBUG: get_all_from_groups() - found {len(result)} collections")
+    print("DEBUG: get_all_from_groups() - found {} collections".format(len(result)))
     
     return result
 

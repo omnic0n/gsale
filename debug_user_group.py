@@ -25,11 +25,11 @@ def debug_user_group():
         """)
         user_info = cur.fetchone()
         if user_info:
-            print(f"User ID: {user_info['id']}")
-            print(f"Username: {user_info['username']}")
-            print(f"Email: {user_info['email']}")
-            print(f"Group ID: {user_info['group_id']}")
-            print(f"Group Name: {user_info['group_name']}")
+            print("User ID: {}".format(user_info['id']))
+            print("Username: {}".format(user_info['username']))
+            print("Email: {}".format(user_info['email']))
+            print("Group ID: {}".format(user_info['group_id']))
+            print("Group Name: {}".format(user_info['group_name']))
         else:
             print("❌ User not found!")
             return
@@ -43,9 +43,9 @@ def debug_user_group():
             LIMIT 5
         """, (user_info['group_id'],))
         collections = cur.fetchall()
-        print(f"Found {len(collections)} collections for group {user_info['group_id']}")
+        print("Found {} collections for group {}".format(len(collections), user_info['group_id']))
         for col in collections:
-            print(f"  - {col['name']} (ID: {col['id']}, Account: {col['account']})")
+            print("  - {} (ID: {}, Account: {})".format(col['name'], col['id'], col['account']))
         
         # Check if there are any collections with the user's account
         print("\n=== COLLECTIONS FOR USER'S ACCOUNT ===")
@@ -56,14 +56,14 @@ def debug_user_group():
             LIMIT 5
         """, (user_info['id'],))
         user_collections = cur.fetchall()
-        print(f"Found {len(user_collections)} collections for user account {user_info['id']}")
+        print("Found {} collections for user account {}".format(len(user_collections), user_info['id']))
         for col in user_collections:
-            print(f"  - {col['name']} (ID: {col['id']}, Group ID: {col['group_id']})")
+            print("  - {} (ID: {}, Group ID: {})".format(col['name'], col['id'], col['group_id']))
         
         cur.close()
         
     except Exception as e:
-        print(f"Error: {e}")
+        print("Error: {}".format(e))
 
 if __name__ == "__main__":
     debug_user_group()
