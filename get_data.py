@@ -1141,21 +1141,7 @@ def get_group_creator(group_id):
     try:
         cur = mysql.connection.cursor()
         
-        # First check if created_by column exists
-        cur.execute("""
-            SELECT COLUMN_NAME 
-            FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE TABLE_SCHEMA = DATABASE() 
-            AND TABLE_NAME = 'groups' 
-            AND COLUMN_NAME = 'created_by'
-        """)
-        
-        if not cur.fetchone():
-            # Column doesn't exist, return None
-            cur.close()
-            return None
-        
-        # Get creator information
+        # Get creator information - simplified query
         cur.execute("""
             SELECT 
                 g.created_by,
@@ -1168,6 +1154,10 @@ def get_group_creator(group_id):
         """, (group_id,))
         result = cur.fetchone()
         cur.close()
+        
+        # Debug output
+        print(f"DEBUG: Group {group_id} creator result: {result}")
+        
         return result
     except Exception as e:
         print("Error in get_group_creator: {}".format(e))
