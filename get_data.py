@@ -819,13 +819,13 @@ def get_purchases_by_city(city):
         WHERE c.account = %s 
         AND (
             c.location_name = %s 
-            OR c.location_address LIKE CONCAT('%, ', %s, ',%')
-            OR c.location_address LIKE CONCAT('%, ', %s, ' %')
-            OR c.location_address LIKE CONCAT('%, ', %s, ', %')
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
         )
         GROUP BY c.id, c.name, c.date, c.price, c.location_name, c.location_address, c.latitude, c.longitude
         ORDER BY c.date DESC
-    """, (user_id, city, city, city, city))
+    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
     return list(cur.fetchall())
 
 def get_city_summary(city):
@@ -851,11 +851,11 @@ def get_city_summary(city):
         WHERE c.account = %s 
         AND (
             c.location_name = %s 
-            OR c.location_address LIKE CONCAT('%, ', %s, ',%')
-            OR c.location_address LIKE CONCAT('%, ', %s, ' %')
-            OR c.location_address LIKE CONCAT('%, ', %s, ', %')
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
         )
-    """, (user_id, city, city, city, city))
+    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
     return cur.fetchone()
 
 def get_all_cities():
