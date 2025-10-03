@@ -127,12 +127,12 @@
         <small class="text-muted">DEBUG: {{ group_creator }}</small><br>
         {% if group_creator.created_by %}
             <small class="text-muted">
-                <i class="fas fa-user-plus"></i> Created by: 
+                <i class="fas fa-user-plus"></i> Collection Creator: 
                 <strong>{{ group_creator.creator_name or group_creator.creator_username or 'Unknown' }}</strong>
             </small>
         {% else %}
             <small class="text-muted">
-                <i class="fas fa-user-plus"></i> Created by: Unknown
+                <i class="fas fa-user-plus"></i> Collection Creator: Unknown
             </small>
         {% endif %}
     </div>

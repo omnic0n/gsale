@@ -140,10 +140,10 @@ def get_all_from_groups(date):
                    (session.get('id'),))
     else:
         # Use validation function for specific dates
-        validated_date = validate_date_input(date)
-        search_pattern = '%{}%'.format(validated_date)
-        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", 
-                   (search_pattern, session.get('id')))
+    validated_date = validate_date_input(date)
+    search_pattern = '%{}%'.format(validated_date)
+    cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", 
+               (search_pattern, session.get('id')))
     
     return list(cur.fetchall())
 
@@ -1137,26 +1137,27 @@ def get_group_members(group_id):
         return []
 
 def get_group_creator(group_id):
-    """Get the creator of a specific group"""
+    """Get the creator of collection items in a specific group"""
     try:
         cur = mysql.connection.cursor()
         
-        # Get creator information - simplified query
+        # Get creator information from collection items in this group
         cur.execute("""
-            SELECT 
-                g.created_by,
+            SELECT DISTINCT
+                c.created_by,
                 a.username as creator_username,
                 a.name as creator_name,
                 a.email as creator_email
-            FROM `groups` g
-            LEFT JOIN accounts a ON g.created_by = a.id
-            WHERE g.id = %s
+            FROM `collection` c
+            LEFT JOIN accounts a ON c.created_by = a.id
+            WHERE c.group_id = %s AND c.created_by IS NOT NULL
+            LIMIT 1
         """, (group_id,))
         result = cur.fetchone()
         cur.close()
         
         # Debug output
-        print(f"DEBUG: Group {group_id} creator result: {result}")
+        print(f"DEBUG: Group {group_id} collection creator result: {result}")
         
         return result
     except Exception as e:
