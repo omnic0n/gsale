@@ -898,17 +898,7 @@ def get_all_cities():
         ORDER BY city_name ASC
     """, (user_id,))
     
-    # Convert tuples to dictionaries
-    columns = ['city_name', 'purchase_count', 'total_spent']
-    results = []
-    for row in cur.fetchall():
-        # Debug: print the actual row data
-        print(f"Row data: {row}")
-        if len(row) == 3:
-            results.append(dict(zip(columns, row)))
-        else:
-            print(f"Warning: Expected 3 columns, got {len(row)}: {row}")
-    return results
+    return cur.fetchall()
 
 # Admin Functions
 def check_admin_status(user_id):
