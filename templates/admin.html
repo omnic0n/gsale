@@ -181,8 +181,8 @@
                                             {% endif %}
                                         </td>
                                         <td class="action-buttons">
-                                            {% if not user.is_current_user %}
                                             <div class="d-flex gap-1">
+                                                {% if not user.is_current_user %}
                                                 <form method="POST" style="display: inline;">
                                                     <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                     <input type="hidden" name="action" value="toggle_admin">
@@ -196,11 +196,6 @@
                                                     </button>
                                                 </form>
                                                 
-                                                <button type="button" class="btn btn-sm btn-info" 
-                                                        onclick="openMoveUserModal('{{ user.id }}', '{{ user.email or 'N/A' }}', '{{ user.group_id or '' }}', '{{ user.group_name or 'No Group' }}')">
-                                                    Move to Group
-                                                </button>
-                                                
                                                 <form method="POST" action="/admin" style="display: inline;" onsubmit="console.log('Form submitted for user: {{ user.email }}');">
                                                     <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                     <input type="hidden" name="action" value="delete_user">
@@ -209,8 +204,13 @@
                                                         {% if user.is_active %}Deactivate User{% else %}Activate User{% endif %}
                                                     </button>
                                                 </form>
+                                                {% endif %}
+                                                
+                                                <button type="button" class="btn btn-sm btn-info" 
+                                                        onclick="openMoveUserModal('{{ user.id }}', '{{ user.email or 'N/A' }}', '{{ user.group_id or '' }}', '{{ user.group_name or 'No Group' }}')">
+                                                    {% if user.is_current_user %}Change My Group{% else %}Move to Group{% endif %}
+                                                </button>
                                             </div>
-                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -260,6 +260,10 @@
                                                 <button type="button" class="btn btn-sm btn-info" 
                                                         onclick="viewGroupMembers('{{ group.id }}', '{{ group.name }}')">
                                                     View Members
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-warning" 
+                                                        onclick="openEditGroupModal('{{ group.id }}', '{{ group.name }}', '{{ group.description or '' }}')">
+                                                    Edit Group
                                                 </button>
                                                 {% if group.member_count == 0 %}
                                                 <form method="POST" style="display: inline;">
@@ -424,11 +428,49 @@
                             <option value="{{ group.id }}">{{ group.name }}</option>
                             {% endfor %}
                         </select>
+                        <small class="form-text text-muted" id="groupChangeNote" style="display: none;">
+                            <i class="fas fa-info-circle"></i> Changing your group will immediately update your access to shared data.
+                        </small>
                     </div>
                 </div>
                 <div class="custom-modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeMoveUserModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Move User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Group Modal -->
+<div id="editGroupModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeEditGroupModal()"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Edit Group</h5>
+                <button type="button" class="btn-close" onclick="closeEditGroupModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/admin">
+                <div class="custom-modal-body">
+                    <input type="hidden" name="action" value="update_group">
+                    <input type="hidden" id="editGroupId" name="group_id">
+                    
+                    <div class="form-group">
+                        <label for="editGroupName">Group Name</label>
+                        <input type="text" class="form-control" id="editGroupName" name="group_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editGroupDescription">Description</label>
+                        <textarea class="form-control" id="editGroupDescription" name="group_description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="custom-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Group</button>
                 </div>
             </form>
         </div>
@@ -495,6 +537,23 @@ function openMoveUserModal(userId, userEmail, currentGroupId, currentGroupName) 
     const groupSelect = document.getElementById('newGroup');
     groupSelect.value = currentGroupId || '';
     
+    // Update modal title and button text based on whether it's the current user
+    const modalTitle = document.querySelector('#moveUserModal .custom-modal-title');
+    const submitButton = document.querySelector('#moveUserModal button[type="submit"]');
+    const isCurrentUser = userId === '{{ session.id }}';
+    
+    if (isCurrentUser) {
+        modalTitle.textContent = 'Change My Group';
+        submitButton.textContent = 'Change Group';
+        // Show the note about immediate access change
+        document.getElementById('groupChangeNote').style.display = 'block';
+    } else {
+        modalTitle.textContent = 'Move User to Group';
+        submitButton.textContent = 'Move User';
+        // Hide the note for other users
+        document.getElementById('groupChangeNote').style.display = 'none';
+    }
+    
     document.getElementById('moveUserModal').style.display = 'flex';
 }
 
@@ -505,6 +564,22 @@ function closeMoveUserModal() {
     document.getElementById('moveUserEmail').textContent = '';
     document.getElementById('currentGroup').textContent = '';
     document.getElementById('newGroup').value = '';
+}
+
+function openEditGroupModal(groupId, groupName, groupDescription) {
+    document.getElementById('editGroupId').value = groupId;
+    document.getElementById('editGroupName').value = groupName;
+    document.getElementById('editGroupDescription').value = groupDescription || '';
+    
+    document.getElementById('editGroupModal').style.display = 'flex';
+}
+
+function closeEditGroupModal() {
+    document.getElementById('editGroupModal').style.display = 'none';
+    // Clear form
+    document.getElementById('editGroupId').value = '';
+    document.getElementById('editGroupName').value = '';
+    document.getElementById('editGroupDescription').value = '';
 }
 
 function viewGroupMembers(groupId, groupName) {

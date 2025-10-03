@@ -1218,14 +1218,37 @@ def admin_panel():
                     flash('Group name is required.', 'error')
                 return redirect(url_for('admin_panel'))
             
+            elif action == 'update_group':
+                # Update an existing group
+                group_id = request.form.get('group_id')
+                group_name = request.form.get('group_name')
+                group_description = request.form.get('group_description', '')
+                
+                if group_id and group_name:
+                    success = set_data.update_group(group_id, group_name, group_description)
+                    if success:
+                        flash('Group "{}" updated successfully.'.format(group_name), 'success')
+                    else:
+                        flash('Failed to update group.', 'error')
+                else:
+                    flash('Group ID and name are required.', 'error')
+                return redirect(url_for('admin_panel'))
+            
             elif action == 'move_user_to_group':
                 # Move user to a different group
                 user_id = request.form.get('user_id')
                 group_id = request.form.get('group_id')
+                current_user_id = session.get('id')
+                
                 if user_id and group_id:
                     success = set_data.move_user_to_group(user_id, group_id)
                     if success:
-                        flash('User moved to group successfully.', 'success')
+                        # If the user is moving themselves, update their session
+                        if user_id == current_user_id:
+                            session['group_id'] = group_id
+                            flash('Your group has been changed successfully.', 'success')
+                        else:
+                            flash('User moved to group successfully.', 'success')
                     else:
                         flash('Failed to move user to group.', 'error')
                 else:
