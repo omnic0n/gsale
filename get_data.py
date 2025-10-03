@@ -841,16 +841,32 @@ def get_city_summary(city):
         return None
     
     cur = mysql.connection.cursor()
+    
+    # First get the total spent from collection table only (no joins)
     cur.execute("""
         SELECT 
             COUNT(DISTINCT c.id) as total_purchases,
             SUM(c.price) as total_spent,
-            COUNT(i.id) as total_items,
-            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_items,
-            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) as total_sales,
-            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) - SUM(c.price) as total_profit,
             MIN(c.date) as first_purchase,
             MAX(c.date) as last_purchase
+        FROM collection c
+        WHERE c.account = %s 
+        AND (
+            c.location_name = %s 
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+        )
+    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
+    
+    collection_result = cur.fetchone()
+    
+    # Then get item and sales data
+    cur.execute("""
+        SELECT 
+            COUNT(i.id) as total_items,
+            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_items,
+            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) as total_sales
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
@@ -862,9 +878,25 @@ def get_city_summary(city):
             OR c.location_address LIKE %s
         )
     """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
-    result = cur.fetchone()
-    print(f"City summary for '{city}' - Total spent: ${result['total_spent'] if result else 'None'}")
-    return result
+    
+    items_result = cur.fetchone()
+    
+    # Combine results
+    if collection_result and items_result:
+        result = {
+            'total_purchases': collection_result['total_purchases'],
+            'total_spent': collection_result['total_spent'],
+            'total_items': items_result['total_items'],
+            'sold_items': items_result['sold_items'],
+            'total_sales': items_result['total_sales'],
+            'total_profit': items_result['total_sales'] - collection_result['total_spent'],
+            'first_purchase': collection_result['first_purchase'],
+            'last_purchase': collection_result['last_purchase']
+        }
+        print(f"City summary for '{city}' - Total spent: ${result['total_spent']}")
+        return result
+    
+    return None
 
 def get_all_cities():
     """Get all unique cities from user's purchases"""
