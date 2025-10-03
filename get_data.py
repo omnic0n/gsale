@@ -200,7 +200,7 @@ def get_data_from_group_list(group_id):
                     collection.longitude,
                     collection.location_address
                     FROM collection collection
-                    WHERE collection.id = %s AND collection.account = %s""", (group_id, session.get('id')))
+                    WHERE collection.id = %s AND collection.group_id = %s""", (group_id, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_group_sold_from_date(start_date, end_date):
@@ -310,8 +310,8 @@ def get_total_items_in_group(group_id):
         SELECT count(*) as total 
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
-        WHERE i.group_id = %s AND c.account = %s
-    """, (group_id, session.get('id')))
+        WHERE i.group_id = %s AND c.group_id = %s
+    """, (group_id, get_current_group_id()))
     return cur.fetchone()
 
 def get_total_items_in_group_sold(group_id):
@@ -320,8 +320,8 @@ def get_total_items_in_group_sold(group_id):
         SELECT count(*) as total 
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
-        WHERE i.group_id = %s AND i.sold = 1 AND c.account = %s
-    """, (group_id, session.get('id')))
+        WHERE i.group_id = %s AND i.sold = 1 AND c.group_id = %s
+    """, (group_id, get_current_group_id()))
     return cur.fetchone()
 
 def get_sold_from_date(start_date, end_date):
@@ -716,8 +716,8 @@ def get_group_profit(group_id):
         FROM sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
-        WHERE i.group_id = %s AND c.account = %s
-    """, (group_id, session.get('id')))
+        WHERE i.group_id = %s AND c.group_id = %s
+    """, (group_id, get_current_group_id()))
     result = cur.fetchone()
     cur.close()
     return result['sale_price'] if result else 0
@@ -729,8 +729,8 @@ def get_total_returned_fees_in_group(group_id):
         FROM sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
-        WHERE i.group_id = %s AND c.account = %s AND i.returned = 1
-    """, (group_id, session.get('id')))
+        WHERE i.group_id = %s AND c.group_id = %s AND i.returned = 1
+    """, (group_id, get_current_group_id()))
     result = cur.fetchone()
     cur.close()
     return result['total_returned_fees'] if result else 0
