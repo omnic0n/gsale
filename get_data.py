@@ -896,10 +896,26 @@ def get_all_cities():
         AND city_name NOT REGEXP '^[0-9]{5}$'
         AND city_name NOT REGEXP '^[A-Z]{2} [0-9]{5}$'
         AND LENGTH(city_name) > 2
+        AND LENGTH(city_name) < 50
+        AND city_name NOT LIKE '%%Street%%'
+        AND city_name NOT LIKE '%%Avenue%%'
+        AND city_name NOT LIKE '%%Road%%'
+        AND city_name NOT LIKE '%%Drive%%'
+        AND city_name NOT LIKE '%%Lane%%'
+        AND city_name NOT LIKE '%%Boulevard%%'
+        AND city_name NOT LIKE '%%Way%%'
+        AND city_name NOT LIKE '%%Place%%'
+        AND city_name NOT LIKE '%%Court%%'
+        AND city_name NOT LIKE '%%Suite%%'
+        AND city_name NOT LIKE '%%Unit%%'
+        AND city_name NOT LIKE '%%Apt%%'
+        AND city_name NOT LIKE '%%#%%'
         ORDER BY city_name ASC
     """, (user_id,))
     
-    return cur.fetchall()
+    results = cur.fetchall()
+    print(f"Extracted city names: {[row['city_name'] for row in results]}")
+    return results
 
 # Admin Functions
 def check_admin_status(user_id):
