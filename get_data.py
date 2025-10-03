@@ -1137,40 +1137,24 @@ def get_group_members(group_id):
         return []
 
 def get_group_creator(group_id):
-    """Get the creator of collection items in a specific group"""
+    """Get the creator of collection items in a specific group using account field"""
     try:
         cur = mysql.connection.cursor()
         
         # Get creator information from collection items in this group
-        # Look at the collection items and find who created them
+        # Use the account field to find who created the collection items
         cur.execute("""
             SELECT DISTINCT
-                c.created_by,
+                c.account as created_by,
                 a.username as creator_username,
                 a.name as creator_name,
                 a.email as creator_email
             FROM `collection` c
-            LEFT JOIN accounts a ON c.created_by = a.id
-            WHERE c.group_id = %s AND c.created_by IS NOT NULL
+            LEFT JOIN accounts a ON c.account = a.id
+            WHERE c.group_id = %s AND c.account IS NOT NULL
             LIMIT 1
         """, (group_id,))
         result = cur.fetchone()
-        
-        # If no result, try to get creator from account field instead
-        if not result:
-            cur.execute("""
-                SELECT DISTINCT
-                    c.account as created_by,
-                    a.username as creator_username,
-                    a.name as creator_name,
-                    a.email as creator_email
-                FROM `collection` c
-                LEFT JOIN accounts a ON c.account = a.id
-                WHERE c.group_id = %s AND c.account IS NOT NULL
-                LIMIT 1
-            """, (group_id,))
-            result = cur.fetchone()
-        
         cur.close()
         
         # Debug output
