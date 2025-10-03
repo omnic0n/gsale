@@ -75,12 +75,8 @@ def get_years():
 
 #Group Data
 def get_all_from_group(group_id):
-    user_id = session.get('id')
-    if not user_id:
-        return None
-    
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM collection WHERE id = %s AND account = %s", (group_id, user_id))
+    cur.execute("SELECT * FROM collection WHERE id = %s AND group_id = %s", (group_id, get_current_group_id()))
     return cur.fetchone()
 
 def get_all_from_group_and_items(date):
@@ -340,10 +336,10 @@ def get_sold_from_date(start_date, end_date):
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
         WHERE s.date BETWEEN %s AND %s 
-        AND c.account = %s 
+        AND c.group_id = %s 
         GROUP BY s.date 
         ORDER BY s.date ASC
-    """, (start_date, end_date, session.get('id')))
+    """, (start_date, end_date, get_current_group_id()))
     return list(cur.fetchall())
 
 
@@ -363,10 +359,10 @@ def get_sold_from_day(day):
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
         WHERE DAYOFWEEK(s.date) = %s 
-        AND c.account = %s 
+        AND c.group_id = %s 
         GROUP BY s.date 
         ORDER BY s.date ASC
-    """, (day, session.get('id')))
+    """, (day, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_data_for_item_describe(item_id):
@@ -694,8 +690,8 @@ def get_profit(year):
         FROM sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
-        WHERE c.account = %s AND c.date LIKE %s AND i.sold = 1
-    """, (session.get('id'), year_value))
+        WHERE c.group_id = %s AND c.date LIKE %s AND i.sold = 1
+    """, (get_current_group_id(), year_value))
     sales_result = cur.fetchone()
     sale_price = sales_result['sale_price'] if sales_result else 0
     
@@ -703,8 +699,8 @@ def get_profit(year):
     cur.execute("""
         SELECT COALESCE(SUM(price), 0) AS purchase_price
         FROM collection
-        WHERE account = %s AND date LIKE %s
-    """, (session.get('id'), year_value))
+        WHERE group_id = %s AND date LIKE %s
+    """, (get_current_group_id(), year_value))
     purchase_result = cur.fetchone()
     purchase_price = purchase_result['purchase_price'] if purchase_result else 0
     
