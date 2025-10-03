@@ -140,10 +140,10 @@ def get_all_from_groups(date):
                    (session.get('id'),))
     else:
         # Use validation function for specific dates
-    validated_date = validate_date_input(date)
-    search_pattern = '%{}%'.format(validated_date)
-    cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", 
-               (search_pattern, session.get('id')))
+        validated_date = validate_date_input(date)
+        search_pattern = '%{}%'.format(validated_date)
+        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", 
+                   (search_pattern, session.get('id')))
     
     return list(cur.fetchall())
 
