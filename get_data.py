@@ -836,7 +836,7 @@ def get_all_cities():
             CASE 
                 WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN c.location_name
                 WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
-                    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
                 ELSE NULL
             END as city_name,
             COUNT(c.id) as purchase_count,
@@ -847,6 +847,8 @@ def get_all_cities():
              OR c.location_address IS NOT NULL AND c.location_address != '')
         GROUP BY city_name
         HAVING city_name IS NOT NULL AND city_name != ''
+        AND city_name NOT REGEXP '^[0-9]+$'
+        AND LENGTH(city_name) > 2
         ORDER BY city_name ASC
     """, (session.get('id'),))
     return list(cur.fetchall())
