@@ -828,6 +828,29 @@ def get_city_summary(city):
     """, (session.get('id'), f'%{city}%', f'%{city}%'))
     return cur.fetchone()
 
+def get_all_cities():
+    """Get all unique cities from user's purchases"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT DISTINCT 
+            CASE 
+                WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN c.location_name
+                WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
+                    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                ELSE NULL
+            END as city_name,
+            COUNT(c.id) as purchase_count,
+            SUM(c.price) as total_spent
+        FROM collection c
+        WHERE c.account = %s 
+        AND (c.location_name IS NOT NULL AND c.location_name != '' 
+             OR c.location_address IS NOT NULL AND c.location_address != '')
+        GROUP BY city_name
+        HAVING city_name IS NOT NULL AND city_name != ''
+        ORDER BY city_name ASC
+    """, (session.get('id'),))
+    return list(cur.fetchall())
+
 # Admin Functions
 def check_admin_status(user_id):
     """Check if a user has admin privileges"""

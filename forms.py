@@ -118,7 +118,7 @@ class ChangePasswordForm(FlaskForm):
     submit = SubmitField('Change Password')
 
 class CityReportForm(FlaskForm):
-    city = StringField('City', validators=[DataRequired(), Length(min=1, max=100)])
+    city = SelectField('City', validators=[DataRequired()], choices=[], coerce=str)
     submit = SubmitField('Search by City')
 
 class ReturnItemForm(FlaskForm):

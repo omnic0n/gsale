@@ -7,7 +7,7 @@
     <form method="POST">
         <div class="form-group">
             {{ form.city.label(class="form-control-label") }}
-            {{ form.city(class="form-control", placeholder="Enter city name (e.g., New York, Los Angeles)") }}
+            {{ form.city(class="form-control") }}
             {% if form.city.errors %}
                 <div class="text-danger">
                     {% for error in form.city.errors %}
@@ -15,9 +15,17 @@
                     {% endfor %}
                 </div>
             {% endif %}
+            <small class="form-text text-muted">Select a city from your purchase history</small>
         </div>
         {{ form.submit(class="btn btn-primary") }}
     </form>
+    
+    {% if not form.city.choices %}
+    <div class="alert alert-warning mt-3">
+        <h4>No Cities Found</h4>
+        <p>No cities were found in your purchase history. Make sure you have set location data for your groups when creating or modifying them.</p>
+    </div>
+    {% endif %}
 </div>
 
 {% if purchases %}

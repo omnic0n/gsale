@@ -534,6 +534,10 @@ def reports_locations():
 @login_required
 def reports_city():
     form = CityReportForm()
+    
+    # Get all available cities and populate the dropdown
+    cities = get_data.get_all_cities()
+    form.city.choices = [(city['city_name'], f"{city['city_name']} ({city['purchase_count']} purchases, ${city['total_spent']:.2f})") for city in cities]
 
     if request.method == "POST":
         details = request.form
@@ -544,7 +548,7 @@ def reports_city():
             summary = get_data.get_city_summary(city)
             return render_template('reports_city.html', form=form, purchases=purchases, summary=summary, city=city)
         else:
-            flash('Please enter a city name', 'error')
+            flash('Please select a city', 'error')
     
     return render_template('reports_city.html', form=form)
 
