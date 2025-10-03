@@ -1142,6 +1142,7 @@ def get_group_creator(group_id):
         cur = mysql.connection.cursor()
         
         # Get creator information from collection items in this group
+        # The created_by field contains user account IDs, not group IDs
         cur.execute("""
             SELECT DISTINCT
                 c.created_by,
@@ -1158,6 +1159,16 @@ def get_group_creator(group_id):
         
         # Debug output
         print(f"DEBUG: Group {group_id} collection creator result: {result}")
+        
+        # Additional debug - check what's actually in the collection table
+        cur.execute("""
+            SELECT id, name, created_by, account, group_id
+            FROM `collection`
+            WHERE group_id = %s
+            LIMIT 3
+        """, (group_id,))
+        debug_items = cur.fetchall()
+        print(f"DEBUG: Sample collection items in group: {debug_items}")
         
         return result
     except Exception as e:
