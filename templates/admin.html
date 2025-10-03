@@ -447,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         userRows.forEach(row => {
             const emailCell = row.querySelector('td:nth-child(1)'); // Email column
-            const statusCell = row.querySelector('td:nth-child(4)'); // Status column
+            const statusCell = row.querySelector('td:nth-child(5)'); // Status column (moved due to Group column)
             const statusBadge = statusCell.querySelector('.badge');
             
             const email = emailCell.textContent.toLowerCase();
