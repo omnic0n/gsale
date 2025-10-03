@@ -886,15 +886,15 @@ def get_all_cities():
         AND city_name NOT REGEXP '^[0-9]{5}$'
         AND city_name NOT REGEXP '^[0-9]{5}-[0-9]{4}$'
         AND LENGTH(city_name) > 2
-        AND city_name NOT LIKE '%Street%'
-        AND city_name NOT LIKE '%Avenue%'
-        AND city_name NOT LIKE '%Road%'
-        AND city_name NOT LIKE '%Drive%'
-        AND city_name NOT LIKE '%Lane%'
-        AND city_name NOT LIKE '%Boulevard%'
-        AND city_name NOT LIKE '%Way%'
-        AND city_name NOT LIKE '%Place%'
-        AND city_name NOT LIKE '%Court%'
+        AND city_name NOT LIKE '%%Street%%'
+        AND city_name NOT LIKE '%%Avenue%%'
+        AND city_name NOT LIKE '%%Road%%'
+        AND city_name NOT LIKE '%%Drive%%'
+        AND city_name NOT LIKE '%%Lane%%'
+        AND city_name NOT LIKE '%%Boulevard%%'
+        AND city_name NOT LIKE '%%Way%%'
+        AND city_name NOT LIKE '%%Place%%'
+        AND city_name NOT LIKE '%%Court%%'
         ORDER BY city_name ASC
     """, (user_id,))
     
