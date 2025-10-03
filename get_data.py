@@ -67,8 +67,12 @@ def get_years():
 
 #Group Data
 def get_all_from_group(group_id):
+    user_id = session.get('id')
+    if not user_id:
+        return None
+    
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM collection WHERE id = %s AND account = %s", (group_id, session.get('id')))
+    cur.execute("SELECT * FROM collection WHERE id = %s AND account = %s", (group_id, user_id))
     return cur.fetchone()
 
 def get_all_from_group_and_items(date):
@@ -628,13 +632,21 @@ def get_list_of_items_by_sold_status(sold_status, sold_date="%", purchase_date="
 
 #Category Data
 def get_all_from_categories():
+    user_id = session.get('id')
+    if not user_id:
+        return []
+    
     cur = mysql.connection.cursor()
-    cur.execute("SELECT uuid_id as id, type, user_id FROM categories WHERE user_id = %s ORDER BY type", (session.get('id'),))
+    cur.execute("SELECT uuid_id as id, type, user_id FROM categories WHERE user_id = %s ORDER BY type", (user_id,))
     return list(cur.fetchall())
 
 def get_category(category_id):
+    user_id = session.get('id')
+    if not user_id:
+        return None
+    
     cur = mysql.connection.cursor()
-    cur.execute("SELECT type FROM categories where uuid_id = %s AND user_id = %s", (category_id, session.get('id')))
+    cur.execute("SELECT type FROM categories where uuid_id = %s AND user_id = %s", (category_id, user_id))
     return cur.fetchone()
 
 def get_category_by_id(category_id):
