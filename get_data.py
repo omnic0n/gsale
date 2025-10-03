@@ -895,6 +895,11 @@ def get_all_cities():
         AND city_name NOT REGEXP '^[A-Z]{2}$'
         AND city_name NOT REGEXP '^[0-9]{5}$'
         AND city_name NOT REGEXP '^[A-Z]{2} [0-9]{5}$'
+        AND city_name NOT LIKE 'None'
+        AND city_name NOT LIKE 'NULL'
+        AND city_name NOT LIKE 'null'
+        AND city_name NOT LIKE 'Unknown'
+        AND city_name NOT LIKE 'unknown'
         AND LENGTH(city_name) > 2
         ORDER BY city_name ASC
     """, (user_id,))
