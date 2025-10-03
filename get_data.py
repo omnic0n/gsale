@@ -862,14 +862,17 @@ def get_all_cities():
                 WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
                     CASE 
                         -- Try to extract city from common address formats
-                        WHEN c.location_address REGEXP '.*, [A-Za-z ]+, [A-Z]{2}.*' THEN 
+                        -- Format: "123 Main St, City Name, State" or "123 Main St, City Name, 12345"
+                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2}[^0-9].*' THEN 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        WHEN c.location_address REGEXP '.*, [A-Za-z ]+, [0-9]{5}.*' THEN 
+                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [0-9]{5}.*' THEN 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        WHEN c.location_address REGEXP '.*, [A-Za-z ]+, [A-Za-z ]+.*' THEN 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        ELSE 
+                        -- Format: "123 Main St, City Name, State Zip" 
+                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2} [0-9]{5}.*' THEN 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
+                        -- Fallback: try to get the second-to-last comma-separated part
+                        ELSE 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
                     END
                 ELSE NULL
             END as city_name,
@@ -885,6 +888,10 @@ def get_all_cities():
         AND city_name NOT REGEXP '^[A-Z]{2}$'
         AND city_name NOT REGEXP '^[0-9]{5}$'
         AND city_name NOT REGEXP '^[0-9]{5}-[0-9]{4}$'
+        AND city_name NOT REGEXP '^[A-Z]{2} [0-9]{5}$'
+        AND city_name NOT REGEXP '^[0-9]{5} [A-Z]{2}$'
+        AND city_name NOT REGEXP '^[A-Z]{2}[0-9]{5}$'
+        AND city_name NOT REGEXP '^[0-9]{5}[A-Z]{2}$'
         AND LENGTH(city_name) > 2
         AND city_name NOT LIKE '%%Street%%'
         AND city_name NOT LIKE '%%Avenue%%'
@@ -895,6 +902,10 @@ def get_all_cities():
         AND city_name NOT LIKE '%%Way%%'
         AND city_name NOT LIKE '%%Place%%'
         AND city_name NOT LIKE '%%Court%%'
+        AND city_name NOT LIKE '%%Suite%%'
+        AND city_name NOT LIKE '%%Unit%%'
+        AND city_name NOT LIKE '%%Apt%%'
+        AND city_name NOT LIKE '%%#%%'
         ORDER BY city_name ASC
     """, (user_id,))
     
