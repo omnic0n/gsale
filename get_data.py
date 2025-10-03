@@ -136,14 +136,14 @@ def get_all_from_groups(date):
     
     # Handle wildcard case - if date is '%', get all groups regardless of date
     if date == '%':
-        cur.execute("SELECT * FROM collection WHERE collection.account = %s ORDER BY name ASC", 
-                   (session.get('id'),))
+        cur.execute("SELECT * FROM collection WHERE collection.group_id = %s ORDER BY name ASC", 
+                   (get_current_group_id(),))
     else:
         # Use validation function for specific dates
         validated_date = validate_date_input(date)
         search_pattern = '%{}%'.format(validated_date)
-        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", 
-                   (search_pattern, session.get('id')))
+        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.group_id = %s ORDER BY name ASC", 
+                   (search_pattern, get_current_group_id()))
     
     return list(cur.fetchall())
 
@@ -278,8 +278,8 @@ def get_list_of_items_with_name(name, sold):
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
                 INNER JOIN sale sale ON items.id = sale.id
-                WHERE items.name LIKE %s AND collection.account = %s AND items.sold LIKE %s""", 
-                (search_pattern, session.get('id'), validated_sold))
+                WHERE items.name LIKE %s AND collection.group_id = %s AND items.sold LIKE %s""", 
+                (search_pattern, get_current_group_id(), validated_sold))
     return list(cur.fetchall())
 
 def get_data_from_item_groups(group_id):
@@ -385,7 +385,7 @@ def get_data_for_item_describe(item_id):
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN categories ON items.category_id = categories.id
-                    WHERE items.id = %s AND collection.account = %s""", (item_id, session.get('id')))
+                    WHERE items.id = %s AND collection.group_id = %s""", (item_id, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_all_items_not_sold():
@@ -394,7 +394,7 @@ def get_all_items_not_sold():
                 SELECT 
                 * FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id  
-                WHERE items.sold = 0 AND collection.account = %s ORDER BY items.name ASC""", (session.get('id'), ))
+                WHERE items.sold = 0 AND collection.group_id = %s ORDER BY items.name ASC""", (get_current_group_id(), ))
     return list(cur.fetchall())
 
 def get_all_items_sold():
@@ -406,7 +406,7 @@ def get_all_items_sold():
                     FROM sale
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON items.group_id = collection.id 
-                    WHERE items.sold = 1 AND collection.account = %s ORDER BY sale.date ASC""", (session.get('id'), ))
+                    WHERE items.sold = 1 AND collection.group_id = %s ORDER BY sale.date ASC""", (get_current_group_id(), ))
     return list(cur.fetchall())
 
 def get_data_from_sale(item_id):
@@ -478,9 +478,9 @@ def get_list_of_items_with_categories(category_id):
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale ON items.id = sale.id
                     INNER JOIN categories categories ON items.category_id = categories.uuid_id
-                    WHERE categories.uuid_id = %s AND collection.account = %s
+                    WHERE categories.uuid_id = %s AND collection.group_id = %s
                     ORDER BY categories.uuid_id""",
-                    (category_id, session.get('id'), ))
+                    (category_id, get_current_group_id(), ))
         return list(cur.fetchall())
 
 def get_list_of_items_by_category(category_id, sold_status="all"):
@@ -746,9 +746,9 @@ def get_location_from_date(start_date, end_date):
                    FROM location
                    INNER join collection collection on location.group_id = collection.id
                    WHERE collection.date >= %s AND collection.date <= %s
-                   AND collection.account = %s
+                   AND collection.group_id = %s
                    AND latitude != '' AND longitude != '' """,
-                   (start_date, end_date, session.get('id')))
+                   (start_date, end_date, get_current_group_id()))
     return list(cur.fetchall())
 
 # Optimized Report Functions
