@@ -862,24 +862,24 @@ def get_all_cities():
                 WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN c.location_name
                 WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
                     CASE 
-                        -- Format: "123 Main St, City Name, State Zip" - extract city before state
+                        -- Format: "Street Address, City, State Zip" - extract city (second-to-last part)
                         WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2} [0-9]{5}.*' THEN 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
-                        -- Format: "123 Main St, City Name, State" - extract city before state
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        -- Format: "Street Address, City, State" - extract city (second-to-last part)
                         WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2}[^0-9].*' THEN 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        -- Format: "123 Main St, City Name, 12345" - extract city before zip
+                        -- Format: "Street Address, City, 12345" - extract city (second-to-last part)
                         WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [0-9]{5}.*' THEN 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        -- Format: "123 Main St, City Name, State, Country" - extract city before state
+                        -- Format: "Street Address, City, State, Country" - extract city (third-to-last part)
                         WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2},.*' THEN 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
-                        -- Try to find a city-like pattern (letters and spaces, not starting with numbers)
-                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]{2,}[A-Za-z],.*' THEN 
+                        -- For addresses with exactly 3 comma-separated parts, take the middle one
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 2 THEN
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        -- Fallback: try the third-to-last comma-separated part
+                        -- Fallback: try the second-to-last comma-separated part
                         ELSE 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
                     END
                 ELSE NULL
             END as city_name,
