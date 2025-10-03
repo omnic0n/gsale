@@ -537,7 +537,29 @@ def reports_city():
     
     # Get all available cities and populate the dropdown
     cities = get_data.get_all_cities()
-    form.city.choices = [(city['city_name'], "{} ({} purchases, ${:.2f})".format(city['city_name'], city['purchase_count'], float(city['total_spent']))) for city in cities]
+    
+    # Debug: Print cities to see what we're getting
+    print("Cities data:", cities)
+    
+    form.city.choices = []
+    for city in cities:
+        try:
+            city_name = city.get('city_name', 'Unknown')
+            purchase_count = city.get('purchase_count', 0)
+            total_spent = city.get('total_spent', 0)
+            
+            # Convert to appropriate types
+            if isinstance(total_spent, str):
+                try:
+                    total_spent = float(total_spent)
+                except ValueError:
+                    total_spent = 0.0
+            
+            choice_text = "{} ({} purchases, ${:.2f})".format(city_name, purchase_count, total_spent)
+            form.city.choices.append((city_name, choice_text))
+        except Exception as e:
+            print(f"Error processing city {city}: {e}")
+            continue
 
     if request.method == "POST":
         details = request.form
