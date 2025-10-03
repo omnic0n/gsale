@@ -780,7 +780,53 @@ def get_combined_sales_summary(start_date, end_date):
     """, (session.get('id'), start_date, end_date))
     return list(cur.fetchall())
 
+def get_purchases_by_city(city):
+    """Get all purchases made in a specific city"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            c.id,
+            c.name,
+            c.date,
+            c.price,
+            c.location_name,
+            c.location_address,
+            c.latitude,
+            c.longitude,
+            COUNT(i.id) as item_count,
+            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_count,
+            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) as total_sales,
+            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) - c.price as profit
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.account = %s 
+        AND (c.location_name LIKE %s OR c.location_address LIKE %s)
+        GROUP BY c.id, c.name, c.date, c.price, c.location_name, c.location_address, c.latitude, c.longitude
+        ORDER BY c.date DESC
+    """, (session.get('id'), f'%{city}%', f'%{city}%'))
+    return list(cur.fetchall())
 
+def get_city_summary(city):
+    """Get summary statistics for purchases in a specific city"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            COUNT(DISTINCT c.id) as total_purchases,
+            SUM(c.price) as total_spent,
+            COUNT(i.id) as total_items,
+            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_items,
+            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) as total_sales,
+            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) - SUM(c.price) as total_profit,
+            MIN(c.date) as first_purchase,
+            MAX(c.date) as last_purchase
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.account = %s 
+        AND (c.location_name LIKE %s OR c.location_address LIKE %s)
+    """, (session.get('id'), f'%{city}%', f'%{city}%'))
+    return cur.fetchone()
 
 # Admin Functions
 def check_admin_status(user_id):

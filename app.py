@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -529,6 +529,24 @@ def reports_locations():
         locations = get_data.get_location_from_date(start_date, end_date)
         return render_template('reports_locations.html', form=form, locations=locations)
     return render_template('reports_locations.html', form=form)
+
+@app.route('/reports/city',methods=["GET", "POST"])
+@login_required
+def reports_city():
+    form = CityReportForm()
+
+    if request.method == "POST":
+        details = request.form
+        city = details['city'].strip()
+        
+        if city:
+            purchases = get_data.get_purchases_by_city(city)
+            summary = get_data.get_city_summary(city)
+            return render_template('reports_city.html', form=form, purchases=purchases, summary=summary, city=city)
+        else:
+            flash('Please enter a city name', 'error')
+    
+    return render_template('reports_city.html', form=form)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
