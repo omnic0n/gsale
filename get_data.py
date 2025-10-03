@@ -198,7 +198,8 @@ def get_data_from_group_list(group_id):
                     collection.image,
                     collection.latitude,
                     collection.longitude,
-                    collection.location_address
+                    collection.location_address,
+                    collection.account
                     FROM collection collection
                     WHERE collection.id = %s AND collection.group_id = %s""", (group_id, get_current_group_id()))
     return list(cur.fetchall())
@@ -1159,6 +1160,16 @@ def get_group_creator(group_id):
         
         # Debug output
         print(f"DEBUG: Group {group_id} collection creator result: {result}")
+        
+        # Additional debug - check what's actually in the collection table
+        cur.execute("""
+            SELECT id, name, account, group_id
+            FROM `collection`
+            WHERE group_id = %s
+            LIMIT 3
+        """, (group_id,))
+        debug_items = cur.fetchall()
+        print(f"DEBUG: Sample collection items in group: {debug_items}")
         
         return result
     except Exception as e:
