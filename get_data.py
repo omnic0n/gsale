@@ -862,7 +862,9 @@ def get_city_summary(city):
             OR c.location_address LIKE %s
         )
     """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
-    return cur.fetchone()
+    result = cur.fetchone()
+    print(f"City summary for '{city}' - Total spent: ${result['total_spent'] if result else 'None'}")
+    return result
 
 def get_all_cities():
     """Get all unique cities from user's purchases"""
