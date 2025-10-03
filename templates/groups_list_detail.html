@@ -123,8 +123,6 @@
 {% if group_creator %}
 <div class="d-flex justify-content-end align-items-center mb-4">
     <div class="text-right">
-        <!-- Debug info -->
-        <small class="text-muted">DEBUG: {{ group_creator }}</small><br>
         {% if group_creator.created_by %}
             <small class="text-muted">
                 <i class="fas fa-user-plus"></i> Collection Creator: 
@@ -135,12 +133,6 @@
                 <i class="fas fa-user-plus"></i> Collection Creator: Unknown
             </small>
         {% endif %}
-    </div>
-</div>
-{% else %}
-<div class="d-flex justify-content-end align-items-center mb-4">
-    <div class="text-right">
-        <small class="text-muted">DEBUG: No group_creator data</small>
     </div>
 </div>
 {% endif %}

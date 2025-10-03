@@ -1158,9 +1158,6 @@ def get_group_creator(group_id):
         
         cur.close()
         
-        # Debug output
-        print(f"DEBUG: Group {group_id} collection creator result: {result}")
-        
         return result
     except Exception as e:
         print("Error in get_group_creator: {}".format(e))

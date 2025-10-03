@@ -995,9 +995,7 @@ def return_item():
 @login_required
 def group_detail():
     id = request.args.get('group_id', type = str)
-    print(f"DEBUG: Group ID from URL: {id}")
     group_id = get_data.get_data_from_group_list(id)
-    print(f"DEBUG: Group data: {group_id}")
     
     # Check if group exists and belongs to current user
     if not group_id:
@@ -1032,9 +1030,7 @@ def group_detail():
     categories = get_data.get_all_from_categories()
     
     # Get group creator information
-    print(f"DEBUG: Getting creator for group ID: {id}")
     group_creator = get_data.get_group_creator(id)
-    print(f"DEBUG: Group creator result: {group_creator}")
     
     return render_template('groups_list_detail.html', 
                             group_id=group_id,
