@@ -825,7 +825,13 @@ def get_purchases_by_city(city):
         GROUP BY c.id, c.name, c.date, c.price, c.location_name, c.location_address, c.latitude, c.longitude
         ORDER BY c.date DESC
     """, (user_id, city, f'%, {city},%', f'%, {city} %'))
-    return list(cur.fetchall())
+    results = cur.fetchall()
+    print(f"City search for '{city}' returned {len(results)} purchases")
+    total_price = sum(float(result['price']) for result in results)
+    print(f"Total purchase price: ${total_price:.2f}")
+    for result in results:
+        print(f"  - {result['name']}: ${result['price']} ({result['location_name'] or result['location_address']})")
+    return list(results)
 
 def get_city_summary(city):
     """Get summary statistics for purchases in a specific city"""
