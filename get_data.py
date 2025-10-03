@@ -821,10 +821,11 @@ def get_purchases_by_city(city):
             c.location_name = %s 
             OR c.location_address LIKE %s
             OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
         )
         GROUP BY c.id, c.name, c.date, c.price, c.location_name, c.location_address, c.latitude, c.longitude
         ORDER BY c.date DESC
-    """, (user_id, city, f'%, {city},%', f'%, {city} %'))
+    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
     results = cur.fetchall()
     print(f"City search for '{city}' returned {len(results)} purchases")
     total_price = sum(float(result['price']) for result in results)
@@ -858,8 +859,9 @@ def get_city_summary(city):
             c.location_name = %s 
             OR c.location_address LIKE %s
             OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
         )
-    """, (user_id, city, f'%, {city},%', f'%, {city} %'))
+    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
     return cur.fetchone()
 
 def get_all_cities():
