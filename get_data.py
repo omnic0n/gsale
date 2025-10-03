@@ -830,6 +830,10 @@ def get_city_summary(city):
 
 def get_all_cities():
     """Get all unique cities from user's purchases"""
+    user_id = session.get('id')
+    if not user_id:
+        return []
+    
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT DISTINCT 
@@ -872,7 +876,7 @@ def get_all_cities():
         AND city_name NOT LIKE '%Place%'
         AND city_name NOT LIKE '%Court%'
         ORDER BY city_name ASC
-    """, (session.get('id'),))
+    """, (user_id,))
     return list(cur.fetchall())
 
 # Admin Functions
