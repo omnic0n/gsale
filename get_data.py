@@ -7,9 +7,7 @@ mysql = None
 
 def get_current_group_id():
     """Get the current user's group_id from session"""
-    group_id = session.get('group_id')
-    print("DEBUG: get_current_group_id() returning: {}".format(group_id))
-    return group_id
+    return session.get('group_id')
 
 def get_current_user_id():
     """Get the current user's id from session"""
@@ -102,10 +100,10 @@ def get_all_from_group_and_items(date):
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
-        WHERE c.date LIKE %s AND c.account = %s
+        WHERE c.date LIKE %s AND c.group_id = %s
         GROUP BY c.id, c.name, c.price, c.date, c.location_address
         ORDER BY c.date
-    """, (date, session.get('id')))
+    """, (date, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_all_from_group_and_items_by_name(name):
@@ -127,33 +125,27 @@ def get_all_from_group_and_items_by_name(name):
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
-        WHERE c.name LIKE %s AND c.account = %s
+        WHERE c.name LIKE %s AND c.group_id = %s
         GROUP BY c.id, c.name, c.price, c.date, c.location_address
         ORDER BY c.date
-    """, (search_pattern, session.get('id')))
+    """, (search_pattern, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     
-    current_group_id = get_current_group_id()
-    print("DEBUG: get_all_from_groups() - current_group_id: {}".format(current_group_id))
-    
     # Handle wildcard case - if date is '%', get all groups regardless of date
     if date == '%':
         cur.execute("SELECT * FROM collection WHERE collection.group_id = %s ORDER BY name ASC", 
-                   (current_group_id,))
+                   (get_current_group_id(),))
     else:
         # Use validation function for specific dates
         validated_date = validate_date_input(date)
         search_pattern = '%{}%'.format(validated_date)
         cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.group_id = %s ORDER BY name ASC", 
-                   (search_pattern, current_group_id))
+                   (search_pattern, get_current_group_id()))
     
-    result = list(cur.fetchall())
-    print("DEBUG: get_all_from_groups() - found {} collections".format(len(result)))
-    
-    return result
+    return list(cur.fetchall())
 
 def get_purchased_from_date(start_date, end_date):
     """Optimized purchase report query"""
