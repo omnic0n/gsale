@@ -119,11 +119,11 @@
 }
 </style>
 
-<!-- Group Header with Creator Info -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0">Group Collection</h4>
+<!-- Group Creator Info -->
+{% if group_creator %}
+<div class="d-flex justify-content-end align-items-center mb-4">
     <div class="text-right">
-        {% if group_creator and group_creator.created_by %}
+        {% if group_creator.created_by %}
             <small class="text-muted">
                 <i class="fas fa-user-plus"></i> Created by: 
                 <strong>{{ group_creator.creator_name or group_creator.creator_username or 'Unknown' }}</strong>
@@ -135,6 +135,7 @@
         {% endif %}
     </div>
 </div>
+{% endif %}
 
 <h4>Group Information</h4>
 <table class="blueTable">
