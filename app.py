@@ -321,6 +321,7 @@ def google_callback():
         session['username'] = user.get('name', email) if 'user' in locals() else name
         session['email'] = email
         session['is_admin'] = user.get('is_admin', False) if 'user' in locals() else False
+        session['group_id'] = user.get('group_id') if 'user' in locals() else None  # Store group_id for group-based access
         
         # Clear OAuth session data
         session.pop('oauth_state', None)

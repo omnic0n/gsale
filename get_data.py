@@ -5,6 +5,14 @@ from flask import session
 # MySQL connection will be set by app.py
 mysql = None
 
+def get_current_group_id():
+    """Get the current user's group_id from session"""
+    return session.get('group_id')
+
+def get_current_user_id():
+    """Get the current user's id from session"""
+    return session.get('id')
+
 def validate_string_input(value, max_length=100, default=''):
     """Validate and sanitize string inputs to prevent SQL injection"""
     if not isinstance(value, str):
@@ -224,10 +232,10 @@ def get_group_sold_from_day(day):
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
         WHERE DAYOFWEEK(c.date) = %s 
-        AND c.account = %s 
+        AND c.group_id = %s 
         GROUP BY c.date 
         ORDER BY c.date
-    """, (day, session.get('id')))
+    """, (day, get_current_group_id()))
     return list(cur.fetchall())
 
 #Item Data
@@ -237,8 +245,8 @@ def get_group_id(item_id):
         SELECT i.group_id 
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
-        WHERE i.id = %s AND c.account = %s
-    """, (item_id, session.get('id')))
+        WHERE i.id = %s AND c.group_id = %s
+    """, (item_id, get_current_group_id()))
     return cur.fetchone()
 
 def get_all_from_items(item_id):
@@ -292,8 +300,8 @@ def get_data_from_item_groups(group_id):
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN sale sale ON sale.id = items.id
                     LEFT JOIN categories ON items.category_id = categories.id
-                    WHERE items.group_id = %s AND collection.account = %s
-                    ORDER BY sale.date""", (group_id, session.get('id')))
+                    WHERE items.group_id = %s AND collection.group_id = %s
+                    ORDER BY sale.date""", (group_id, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_total_items_in_group(group_id):
@@ -1065,3 +1073,46 @@ def get_user_by_email(email):
     except Exception as e:
         print("Error getting user by email: {}".format(e))
         return None
+
+# Group Management Functions
+def get_all_groups():
+    """Get all groups for admin management"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT g.*, COUNT(a.id) as member_count
+        FROM `groups` g
+        LEFT JOIN accounts a ON g.id = a.group_id
+        GROUP BY g.id
+        ORDER BY g.name
+    """)
+    return list(cur.fetchall())
+
+def get_group_by_id(group_id):
+    """Get group details by ID"""
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM `groups` WHERE id = %s", (group_id,))
+    return cur.fetchone()
+
+def get_group_members(group_id):
+    """Get all members of a specific group"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT a.*, g.name as group_name
+        FROM accounts a
+        INNER JOIN `groups` g ON a.group_id = g.id
+        WHERE a.group_id = %s
+        ORDER BY a.username
+    """, (group_id,))
+    return list(cur.fetchall())
+
+def get_current_group_info():
+    """Get current user's group information"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT g.*, COUNT(a.id) as member_count
+        FROM `groups` g
+        LEFT JOIN accounts a ON g.id = a.group_id
+        WHERE g.id = %s
+        GROUP BY g.id
+    """, (get_current_group_id(),))
+    return cur.fetchone()
