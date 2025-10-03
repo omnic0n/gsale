@@ -817,10 +817,15 @@ def get_purchases_by_city(city):
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
         WHERE c.account = %s 
-        AND (c.location_name LIKE %s OR c.location_address LIKE %s)
+        AND (
+            c.location_name = %s 
+            OR c.location_address LIKE CONCAT('%, ', %s, ',%')
+            OR c.location_address LIKE CONCAT('%, ', %s, ' %')
+            OR c.location_address LIKE CONCAT('%, ', %s, ', %')
+        )
         GROUP BY c.id, c.name, c.date, c.price, c.location_name, c.location_address, c.latitude, c.longitude
         ORDER BY c.date DESC
-    """, (user_id, f'%{city}%', f'%{city}%'))
+    """, (user_id, city, city, city, city))
     return list(cur.fetchall())
 
 def get_city_summary(city):
@@ -844,8 +849,13 @@ def get_city_summary(city):
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
         WHERE c.account = %s 
-        AND (c.location_name LIKE %s OR c.location_address LIKE %s)
-    """, (user_id, f'%{city}%', f'%{city}%'))
+        AND (
+            c.location_name = %s 
+            OR c.location_address LIKE CONCAT('%, ', %s, ',%')
+            OR c.location_address LIKE CONCAT('%, ', %s, ' %')
+            OR c.location_address LIKE CONCAT('%, ', %s, ', %')
+        )
+    """, (user_id, city, city, city, city))
     return cur.fetchone()
 
 def get_all_cities():
