@@ -885,7 +885,10 @@ def get_all_cities():
         AND city_name NOT LIKE '%Court%'
         ORDER BY city_name ASC
     """, (user_id,))
-    return list(cur.fetchall())
+    
+    # Convert tuples to dictionaries
+    columns = ['city_name', 'purchase_count', 'total_spent']
+    return [dict(zip(columns, row)) for row in cur.fetchall()]
 
 # Admin Functions
 def check_admin_status(user_id):
