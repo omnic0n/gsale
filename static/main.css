@@ -724,6 +724,8 @@ main.container {
     padding: 1rem 1.25rem !important;
     border-radius: 12px !important;
     margin-bottom: 1.5rem !important;
+    line-height: 1.4 !important;
+    height: auto !important;
   }
   
   /* Checkbox and radio adjustments */
@@ -917,6 +919,8 @@ main.container {
     padding: 0.875rem 1.125rem !important;
     border-radius: 10px !important;
     margin-bottom: 1.25rem !important;
+    line-height: 1.4 !important;
+    height: auto !important;
   }
   
   /* Checkbox and radio adjustments */
@@ -1034,4 +1038,33 @@ main.container {
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+}
+
+/* Form select dropdown fixes */
+.form-control {
+  height: auto !important;
+  min-height: 48px !important;
+  line-height: 1.4 !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.95rem !important;
+}
+
+.form-control option {
+  padding: 0.5rem !important;
+  line-height: 1.4 !important;
+  height: auto !important;
+}
+
+/* Ensure dropdown text is fully visible */
+select.form-control {
+  height: auto !important;
+  min-height: 48px !important;
+  overflow: visible !important;
+}
+
+select.form-control option {
+  padding: 0.5rem 1rem !important;
+  line-height: 1.4 !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
 }
