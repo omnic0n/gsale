@@ -862,18 +862,24 @@ def get_all_cities():
                 WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN c.location_name
                 WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
                     CASE 
-                        -- Try to extract city from common address formats
-                        -- Format: "123 Main St, City Name, State" or "123 Main St, City Name, 12345"
-                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2}[^0-9].*' THEN 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [0-9]{5}.*' THEN 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        -- Format: "123 Main St, City Name, State Zip" 
+                        -- Format: "123 Main St, City Name, State Zip" - extract city before state
                         WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2} [0-9]{5}.*' THEN 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
-                        -- Fallback: try to get the second-to-last comma-separated part
-                        ELSE 
+                        -- Format: "123 Main St, City Name, State" - extract city before state
+                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2}[^0-9].*' THEN 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        -- Format: "123 Main St, City Name, 12345" - extract city before zip
+                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [0-9]{5}.*' THEN 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        -- Format: "123 Main St, City Name, State, Country" - extract city before state
+                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2},.*' THEN 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
+                        -- Try to find a city-like pattern (letters and spaces, not starting with numbers)
+                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]{2,}[A-Za-z],.*' THEN 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        -- Fallback: try the third-to-last comma-separated part
+                        ELSE 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
                     END
                 ELSE NULL
             END as city_name,
@@ -885,47 +891,15 @@ def get_all_cities():
              OR c.location_address IS NOT NULL AND c.location_address != '')
         GROUP BY city_name
         HAVING city_name IS NOT NULL AND city_name != ''
+        AND city_name NOT REGEXP '^[0-9]+$'
+        AND city_name NOT REGEXP '^[A-Z]{2}$'
+        AND city_name NOT REGEXP '^[0-9]{5}$'
+        AND city_name NOT REGEXP '^[A-Z]{2} [0-9]{5}$'
+        AND LENGTH(city_name) > 2
         ORDER BY city_name ASC
     """, (user_id,))
     
-    all_results = cur.fetchall()
-    print(f"All extracted city names before filtering: {[row['city_name'] for row in all_results]}")
-    
-    # Now apply filtering in Python to see what gets filtered out
-    filtered_results = []
-    for row in all_results:
-        city_name = row['city_name']
-        should_include = True
-        
-        # Check each filter condition
-        if city_name and city_name != '':
-            if city_name.isdigit():  # All digits
-                print(f"Filtered out '{city_name}' - all digits")
-                should_include = False
-            elif len(city_name) == 2 and city_name.isalpha():  # State code
-                print(f"Filtered out '{city_name}' - state code")
-                should_include = False
-            elif city_name.isdigit() and len(city_name) == 5:  # Zip code
-                print(f"Filtered out '{city_name}' - zip code")
-                should_include = False
-            elif city_name.isdigit() and len(city_name) == 9:  # Extended zip
-                print(f"Filtered out '{city_name}' - extended zip")
-                should_include = False
-            elif len(city_name) <= 2:  # Too short
-                print(f"Filtered out '{city_name}' - too short")
-                should_include = False
-            elif any(word in city_name.lower() for word in ['street', 'avenue', 'road', 'drive', 'lane', 'boulevard', 'way', 'place', 'court', 'suite', 'unit', 'apt', '#']):
-                print(f"Filtered out '{city_name}' - contains address component")
-                should_include = False
-            elif city_name.startswith('TX ') and len(city_name.split()) == 2 and city_name.split()[1].isdigit():
-                print(f"Filtered out '{city_name}' - TX zip pattern")
-                should_include = False
-        
-        if should_include:
-            filtered_results.append(row)
-    
-    print(f"Final filtered results: {[row['city_name'] for row in filtered_results]}")
-    return filtered_results
+    return cur.fetchall()
 
 # Admin Functions
 def check_admin_status(user_id):
