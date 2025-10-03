@@ -7,7 +7,9 @@ mysql = None
 
 def get_current_group_id():
     """Get the current user's group_id from session"""
-    return session.get('group_id')
+    group_id = session.get('group_id')
+    print(f"DEBUG: get_current_group_id() returning: {group_id}")
+    return group_id
 
 def get_current_user_id():
     """Get the current user's id from session"""
@@ -134,18 +136,24 @@ def get_all_from_group_and_items_by_name(name):
 def get_all_from_groups(date):
     cur = mysql.connection.cursor()
     
+    current_group_id = get_current_group_id()
+    print(f"DEBUG: get_all_from_groups() - current_group_id: {current_group_id}")
+    
     # Handle wildcard case - if date is '%', get all groups regardless of date
     if date == '%':
         cur.execute("SELECT * FROM collection WHERE collection.group_id = %s ORDER BY name ASC", 
-                   (get_current_group_id(),))
+                   (current_group_id,))
     else:
         # Use validation function for specific dates
         validated_date = validate_date_input(date)
         search_pattern = '%{}%'.format(validated_date)
         cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.group_id = %s ORDER BY name ASC", 
-                   (search_pattern, get_current_group_id()))
+                   (search_pattern, current_group_id))
     
-    return list(cur.fetchall())
+    result = list(cur.fetchall())
+    print(f"DEBUG: get_all_from_groups() - found {len(result)} collections")
+    
+    return result
 
 def get_purchased_from_date(start_date, end_date):
     """Optimized purchase report query"""
