@@ -537,7 +537,7 @@ def reports_city():
     
     # Get all available cities and populate the dropdown
     cities = get_data.get_all_cities()
-    form.city.choices = [(city['city_name'], f"{city['city_name']} ({city['purchase_count']} purchases, ${city['total_spent']:.2f})") for city in cities]
+    form.city.choices = [(city['city_name'], "{} ({} purchases, ${:.2f})".format(city['city_name'], city['purchase_count'], city['total_spent'])) for city in cities]
 
     if request.method == "POST":
         details = request.form
