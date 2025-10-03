@@ -1136,6 +1136,9 @@ def admin_panel():
         # Get all users for admin management
         users = get_data.get_all_users()
         
+        # Get all groups for group management
+        groups = get_data.get_all_groups()
+        
         # Get pending access attempts
         pending_attempts = set_data.get_pending_access_attempts()
         
@@ -1200,11 +1203,52 @@ def admin_panel():
                     else:
                         flash('Failed to deny access.', 'error')
                 return redirect(url_for('admin_panel'))
+            
+            elif action == 'create_group':
+                # Create a new group
+                group_name = request.form.get('group_name')
+                group_description = request.form.get('group_description', '')
+                if group_name:
+                    group_id = set_data.create_group(group_name, group_description)
+                    if group_id:
+                        flash('Group "{}" created successfully.'.format(group_name), 'success')
+                    else:
+                        flash('Failed to create group.', 'error')
+                else:
+                    flash('Group name is required.', 'error')
+                return redirect(url_for('admin_panel'))
+            
+            elif action == 'move_user_to_group':
+                # Move user to a different group
+                user_id = request.form.get('user_id')
+                group_id = request.form.get('group_id')
+                if user_id and group_id:
+                    success = set_data.move_user_to_group(user_id, group_id)
+                    if success:
+                        flash('User moved to group successfully.', 'success')
+                    else:
+                        flash('Failed to move user to group.', 'error')
+                else:
+                    flash('User ID and Group ID are required.', 'error')
+                return redirect(url_for('admin_panel'))
+            
+            elif action == 'delete_group':
+                # Delete a group (only if it has no members)
+                group_id = request.form.get('group_id')
+                if group_id:
+                    success, message = set_data.delete_group(group_id)
+                    if success:
+                        flash(message, 'success')
+                    else:
+                        flash(message, 'error')
+                else:
+                    flash('Group ID is required.', 'error')
+                return redirect(url_for('admin_panel'))
         
         # Ensure users is always a list to prevent KeyError: 0
         if not users:
             users = [{'id': '1', 'username': 'Admin', 'email': 'admin@example.com', 'is_admin': 1, 'is_current_user': 'Current User'}]
-        return render_template('admin.html', users=users, pending_attempts=pending_attempts)
+        return render_template('admin.html', users=users, groups=groups, pending_attempts=pending_attempts)
     
     except Exception as e:
         # Log the error for debugging

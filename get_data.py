@@ -1018,27 +1018,30 @@ def get_all_users():
         
         cur = mysql.connection.cursor()
         
-        # Get all users for admin management
+        # Get all users for admin management with group information
         cur.execute("""
             SELECT 
-                id, 
-                username, 
-                email, 
-                name,
-                is_admin,
-                is_active,
+                a.id, 
+                a.username, 
+                a.email, 
+                a.name,
+                a.is_admin,
+                a.is_active,
+                a.group_id,
+                g.name as group_name,
                 CASE 
-                    WHEN id = %s THEN 'Current User'
+                    WHEN a.id = %s THEN 'Current User'
                     ELSE ''
                 END as is_current_user
-            FROM accounts 
-            ORDER BY username
+            FROM accounts a
+            LEFT JOIN `groups` g ON a.group_id = g.id
+            ORDER BY a.username
         """, (current_user_id,))
         result = list(cur.fetchall())
         
         # Convert to list of dictionaries if needed
         if result and not hasattr(result[0], 'keys'):
-            column_names = ['id', 'username', 'email', 'name', 'is_admin', 'is_active', 'is_current_user']
+            column_names = ['id', 'username', 'email', 'name', 'is_admin', 'is_active', 'group_id', 'group_name', 'is_current_user']
             result = [dict(zip(column_names, user)) for user in result]
         
         cur.close()
