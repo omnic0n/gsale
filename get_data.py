@@ -1000,12 +1000,6 @@ def check_admin_status(user_id):
 def get_all_users():
     """Get all users for admin management"""
     try:
-        # Check if session has 'id' key
-        current_user_id = session.get('id')
-        if not current_user_id:
-            print("Warning: No session ID found in get_all_users")
-            return []
-        
         # Check if MySQL is available
         if not mysql:
             print("Warning: MySQL not initialized")
@@ -1017,6 +1011,9 @@ def get_all_users():
             return []
         
         cur = mysql.connection.cursor()
+        
+        # Get current user ID from session if available (for highlighting current user)
+        current_user_id = session.get('id') if session else None
         
         # Get all users for admin management with group information
         cur.execute("""
