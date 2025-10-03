@@ -782,6 +782,10 @@ def get_combined_sales_summary(start_date, end_date):
 
 def get_purchases_by_city(city):
     """Get all purchases made in a specific city"""
+    user_id = session.get('id')
+    if not user_id:
+        return []
+    
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
@@ -804,11 +808,15 @@ def get_purchases_by_city(city):
         AND (c.location_name LIKE %s OR c.location_address LIKE %s)
         GROUP BY c.id, c.name, c.date, c.price, c.location_name, c.location_address, c.latitude, c.longitude
         ORDER BY c.date DESC
-    """, (session.get('id'), f'%{city}%', f'%{city}%'))
+    """, (user_id, f'%{city}%', f'%{city}%'))
     return list(cur.fetchall())
 
 def get_city_summary(city):
     """Get summary statistics for purchases in a specific city"""
+    user_id = session.get('id')
+    if not user_id:
+        return None
+    
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
@@ -825,7 +833,7 @@ def get_city_summary(city):
         LEFT JOIN sale s ON i.id = s.id
         WHERE c.account = %s 
         AND (c.location_name LIKE %s OR c.location_address LIKE %s)
-    """, (session.get('id'), f'%{city}%', f'%{city}%'))
+    """, (user_id, f'%{city}%', f'%{city}%'))
     return cur.fetchone()
 
 def get_all_cities():
