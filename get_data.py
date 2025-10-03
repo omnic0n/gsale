@@ -862,21 +862,21 @@ def get_all_cities():
                 WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN c.location_name
                 WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
                     CASE 
-                        -- Format: "Street Address, City, State Zip" - extract city (second-to-last part)
-                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2} [0-9]{5}.*' THEN 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        -- Format: "Street Address, City, State" - extract city (second-to-last part)
-                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2}[^0-9].*' THEN 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        -- Format: "Street Address, City, 12345" - extract city (second-to-last part)
-                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [0-9]{5}.*' THEN 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
-                        -- Format: "Street Address, City, State, Country" - extract city (third-to-last part)
-                        WHEN c.location_address REGEXP '.*, [A-Za-z][A-Za-z ]+[A-Za-z], [A-Z]{2},.*' THEN 
-                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
-                        -- For addresses with exactly 3 comma-separated parts, take the middle one
+                        -- For addresses with exactly 3 comma-separated parts, take the middle one (most common case)
                         WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 2 THEN
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        -- For addresses with 4+ comma-separated parts, try different positions
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) >= 3 THEN
+                            CASE 
+                                -- Try third-to-last part first
+                                WHEN TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1)) REGEXP '^[A-Za-z][A-Za-z ]+[A-Za-z]$' THEN
+                                    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
+                                -- Fallback to second-to-last part
+                                ELSE TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                            END
+                        -- For addresses with only 2 comma-separated parts, take the first part
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 1 THEN
+                            TRIM(SUBSTRING_INDEX(c.location_address, ',', 1))
                         -- Fallback: try the second-to-last comma-separated part
                         ELSE 
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
@@ -905,7 +905,6 @@ def get_all_cities():
     """, (user_id,))
     
     results = cur.fetchall()
-    print(f"Extracted city names: {[row['city_name'] for row in results]}")
     return results
 
 # Admin Functions
