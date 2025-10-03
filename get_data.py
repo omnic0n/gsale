@@ -836,7 +836,17 @@ def get_all_cities():
             CASE 
                 WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN c.location_name
                 WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
-                    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
+                    CASE 
+                        -- Try to extract city from common address formats
+                        WHEN c.location_address REGEXP '.*, [A-Za-z ]+, [A-Z]{2}.*' THEN 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        WHEN c.location_address REGEXP '.*, [A-Za-z ]+, [0-9]{5}.*' THEN 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        WHEN c.location_address REGEXP '.*, [A-Za-z ]+, [A-Za-z ]+.*' THEN 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        ELSE 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
+                    END
                 ELSE NULL
             END as city_name,
             COUNT(c.id) as purchase_count,
@@ -848,7 +858,19 @@ def get_all_cities():
         GROUP BY city_name
         HAVING city_name IS NOT NULL AND city_name != ''
         AND city_name NOT REGEXP '^[0-9]+$'
+        AND city_name NOT REGEXP '^[A-Z]{2}$'
+        AND city_name NOT REGEXP '^[0-9]{5}$'
+        AND city_name NOT REGEXP '^[0-9]{5}-[0-9]{4}$'
         AND LENGTH(city_name) > 2
+        AND city_name NOT LIKE '%Street%'
+        AND city_name NOT LIKE '%Avenue%'
+        AND city_name NOT LIKE '%Road%'
+        AND city_name NOT LIKE '%Drive%'
+        AND city_name NOT LIKE '%Lane%'
+        AND city_name NOT LIKE '%Boulevard%'
+        AND city_name NOT LIKE '%Way%'
+        AND city_name NOT LIKE '%Place%'
+        AND city_name NOT LIKE '%Court%'
         ORDER BY city_name ASC
     """, (session.get('id'),))
     return list(cur.fetchall())
