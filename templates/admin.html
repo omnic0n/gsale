@@ -477,6 +477,29 @@
     </div>
 </div>
 
+<!-- View Group Members Modal -->
+<div id="viewMembersModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeViewMembersModal()"></div>
+    <div class="custom-modal-dialog" style="max-width: 800px;">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title" id="viewMembersTitle">Group Members</h5>
+                <button type="button" class="btn-close" onclick="closeViewMembersModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="custom-modal-body">
+                <div id="membersList">
+                    <!-- Members will be loaded here -->
+                </div>
+            </div>
+            <div class="custom-modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeViewMembersModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const activeOnlyCheckbox = document.getElementById('activeOnly');
@@ -583,8 +606,72 @@ function closeEditGroupModal() {
 }
 
 function viewGroupMembers(groupId, groupName) {
-    // This could be expanded to show a detailed view of group members
-    alert('Group: ' + groupName + '\nGroup ID: ' + groupId + '\n\nThis feature can be expanded to show detailed member information.');
+    // Load and display group members
+    document.getElementById('viewMembersTitle').textContent = groupName + ' - Members';
+    
+    // Show loading state
+    document.getElementById('membersList').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading members...</div>';
+    
+    // Show modal
+    document.getElementById('viewMembersModal').style.display = 'flex';
+    
+    // Fetch group members via AJAX
+    fetch(`/admin/api/group-members/${groupId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayGroupMembers(data.members);
+            } else {
+                document.getElementById('membersList').innerHTML = '<div class="alert alert-danger">Error loading members: ' + data.error + '</div>';
+            }
+        })
+        .catch(error => {
+            document.getElementById('membersList').innerHTML = '<div class="alert alert-danger">Error loading members: ' + error.message + '</div>';
+        });
+}
+
+function displayGroupMembers(members) {
+    const membersList = document.getElementById('membersList');
+    
+    if (members.length === 0) {
+        membersList.innerHTML = '<div class="alert alert-info">No members in this group.</div>';
+        return;
+    }
+    
+    let html = '<div class="table-responsive"><table class="table table-striped">';
+    html += '<thead><tr><th>Name</th><th>Email</th><th>Admin Status</th><th>Status</th><th>Actions</th></tr></thead>';
+    html += '<tbody>';
+    
+    members.forEach(member => {
+        const adminBadge = member.is_admin ? 
+            '<span class="badge bg-success">Admin</span>' : 
+            '<span class="badge bg-secondary">User</span>';
+        
+        const statusBadge = member.is_active ? 
+            '<span class="badge bg-success">Active</span>' : 
+            '<span class="badge bg-danger">Inactive</span>';
+        
+        const isCurrentUser = member.is_current_user;
+        const actionButtons = isCurrentUser ? 
+            '<span class="text-muted">Current User</span>' :
+            `<button type="button" class="btn btn-sm btn-info" onclick="openMoveUserModal('${member.id}', '${member.email}', '${member.group_id}', '${member.group_name}')">Move to Group</button>`;
+        
+        html += `<tr>
+            <td>${member.name || 'N/A'}</td>
+            <td>${member.email || 'N/A'}</td>
+            <td>${adminBadge}</td>
+            <td>${statusBadge}</td>
+            <td>${actionButtons}</td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table></div>';
+    membersList.innerHTML = html;
+}
+
+function closeViewMembersModal() {
+    document.getElementById('viewMembersModal').style.display = 'none';
+    document.getElementById('membersList').innerHTML = '';
 }
 </script>
 

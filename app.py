@@ -1279,6 +1279,23 @@ def admin_panel():
         flash('An error occurred while loading the admin panel.', 'error')
         return redirect(url_for('index'))
 
+# Admin API endpoints
+@app.route('/admin/api/group-members/<group_id>')
+@admin_required
+def api_group_members(group_id):
+    """API endpoint to get group members"""
+    try:
+        members = get_data.get_group_members(group_id)
+        return jsonify({
+            'success': True,
+            'members': members
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 # JSON API endpoints for iOS app
 @app.route('/api/items/search', methods=['GET'])
 @login_required

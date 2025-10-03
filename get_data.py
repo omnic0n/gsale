@@ -1095,15 +1095,46 @@ def get_group_by_id(group_id):
 
 def get_group_members(group_id):
     """Get all members of a specific group"""
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT a.*, g.name as group_name
-        FROM accounts a
-        INNER JOIN `groups` g ON a.group_id = g.id
-        WHERE a.group_id = %s
-        ORDER BY a.username
-    """, (group_id,))
-    return list(cur.fetchall())
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get current user ID from session if available
+        current_user_id = session.get('id') if session else None
+        
+        cur.execute("""
+            SELECT 
+                a.id, 
+                a.username, 
+                a.email, 
+                a.name,
+                a.is_admin,
+                a.is_active,
+                a.group_id,
+                g.name as group_name,
+                CASE 
+                    WHEN a.id = %s THEN 'Current User'
+                    ELSE ''
+                END as is_current_user
+            FROM accounts a
+            INNER JOIN `groups` g ON a.group_id = g.id
+            WHERE a.group_id = %s
+            ORDER BY a.username
+        """, (current_user_id, group_id))
+        
+        result = list(cur.fetchall())
+        
+        # Convert to list of dictionaries if needed
+        if result and not hasattr(result[0], 'keys'):
+            column_names = ['id', 'username', 'email', 'name', 'is_admin', 'is_active', 'group_id', 'group_name', 'is_current_user']
+            result = [dict(zip(column_names, user)) for user in result]
+        
+        cur.close()
+        return result
+    except Exception as e:
+        print("Error in get_group_members: {}".format(e))
+        if 'cur' in locals():
+            cur.close()
+        return []
 
 def get_current_group_info():
     """Get current user's group information"""
