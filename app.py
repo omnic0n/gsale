@@ -1029,6 +1029,9 @@ def group_detail():
     groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
     
+    # Get group creator information
+    group_creator = get_data.get_group_creator(id)
+    
     return render_template('groups_list_detail.html', 
                             group_id=group_id,
                             items=items,
@@ -1039,7 +1042,8 @@ def group_detail():
                             form=form,
                             quicksell=quicksell,
                             groups=groups,
-                            categories=categories)
+                            categories=categories,
+                            group_creator=group_creator)
 
 @app.route('/groups/remove',methods=["POST","GET"])
 @login_required

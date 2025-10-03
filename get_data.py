@@ -1136,6 +1136,29 @@ def get_group_members(group_id):
             cur.close()
         return []
 
+def get_group_creator(group_id):
+    """Get the creator of a specific group"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT 
+                g.created_by,
+                a.username as creator_username,
+                a.name as creator_name,
+                a.email as creator_email
+            FROM `groups` g
+            LEFT JOIN accounts a ON g.created_by = a.id
+            WHERE g.id = %s
+        """, (group_id,))
+        result = cur.fetchone()
+        cur.close()
+        return result
+    except Exception as e:
+        print("Error in get_group_creator: {}".format(e))
+        if 'cur' in locals():
+            cur.close()
+        return None
+
 def get_current_group_info():
     """Get current user's group information"""
     cur = mysql.connection.cursor()
