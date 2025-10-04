@@ -1057,6 +1057,34 @@ def group_remove():
     set_data.remove_group_data(id)
     return redirect(url_for('groups_list'))
 
+@app.route('/groups/delete', methods=["POST"])
+@login_required
+def group_delete():
+    """Delete a group and all its associated data"""
+    group_id = request.form.get('group_id')
+    
+    if not group_id:
+        flash('Group ID is required.', 'error')
+        return redirect(url_for('groups_list'))
+    
+    try:
+        # Check if user has permission to delete this group
+        # For now, we'll allow any logged-in user to delete groups
+        # You might want to add additional permission checks here
+        
+        # Delete the group using the existing function
+        success, message = set_data.delete_group(group_id)
+        
+        if success:
+            flash(message, 'success')
+        else:
+            flash(message, 'error')
+            
+    except Exception as e:
+        flash('An error occurred while deleting the group: {}'.format(str(e)), 'error')
+    
+    return redirect(url_for('groups_list'))
+
 
 
 
