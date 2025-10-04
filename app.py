@@ -541,7 +541,8 @@ def reports_city():
     form.city.choices = [(city['city_name'], "{} ({} purchases, ${:.2f})".format(city['city_name'], city['purchase_count'], float(city['total_spent']))) for city in cities]
     
     # Get all available years and populate the dropdown
-    years = get_data.get_years()
+    # Use a static list of years from 2010 to 2025
+    years = [{'year': str(year)} for year in range(2010, 2026)]
     form.year.choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
 
     if request.method == "POST":
