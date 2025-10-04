@@ -136,8 +136,8 @@ def get_all_from_groups(date):
                    (get_current_group_id(),))
     else:
         # Use validation function for specific dates
-        validated_date = validate_date_input(date)
-        search_pattern = '%{}%'.format(validated_date)
+    validated_date = validate_date_input(date)
+    search_pattern = '%{}%'.format(validated_date)
         cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.group_id = %s ORDER BY name ASC", 
                    (search_pattern, get_current_group_id()))
     
@@ -797,14 +797,19 @@ def get_combined_sales_summary(start_date, end_date):
     """, (session.get('id'), start_date, end_date))
     return list(cur.fetchall())
 
-def get_purchases_by_city(city):
-    """Get all purchases made in a specific city"""
-    user_id = session.get('id')
-    if not user_id:
-        return []
-    
+def get_purchases_by_city(city, year='all'):
+    """Get all purchases made in a specific city, optionally filtered by year"""
     cur = mysql.connection.cursor()
-    cur.execute("""
+    
+    # Build the year filter
+    year_filter = ""
+    params = [get_current_group_id(), city, f'%, {city},%', f'%, {city} %', f'%, {city}, %']
+    
+    if year != 'all':
+        year_filter = "AND c.date LIKE %s"
+        params.append(f'{year}-%-%')
+    
+    cur.execute(f"""
         SELECT 
             c.id,
             c.name,
@@ -821,53 +826,54 @@ def get_purchases_by_city(city):
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
-        WHERE c.account = %s 
+        WHERE c.group_id = %s 
         AND (
             c.location_name = %s 
             OR c.location_address LIKE %s
             OR c.location_address LIKE %s
             OR c.location_address LIKE %s
         )
+        {year_filter}
         GROUP BY c.id, c.name, c.date, c.price, c.location_name, c.location_address, c.latitude, c.longitude
         ORDER BY c.date DESC
-    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
+    """, params)
     results = cur.fetchall()
-    print(f"City search for '{city}' returned {len(results)} purchases")
-    total_price = sum(float(result['price']) for result in results)
-    print(f"Total purchase price: ${total_price:.2f}")
-    for result in results:
-        print(f"  - {result['name']}: ${result['price']} ({result['location_name'] or result['location_address']})")
     return list(results)
 
-def get_city_summary(city):
-    """Get summary statistics for purchases in a specific city"""
-    user_id = session.get('id')
-    if not user_id:
-        return None
-    
+def get_city_summary(city, year='all'):
+    """Get summary statistics for purchases in a specific city, optionally filtered by year"""
     cur = mysql.connection.cursor()
     
+    # Build the year filter
+    year_filter = ""
+    params = [get_current_group_id(), city, f'%, {city},%', f'%, {city} %', f'%, {city}, %']
+    
+    if year != 'all':
+        year_filter = "AND c.date LIKE %s"
+        params.append(f'{year}-%-%')
+    
     # First get the total spent from collection table only (no joins)
-    cur.execute("""
+    cur.execute(f"""
         SELECT 
             COUNT(DISTINCT c.id) as total_purchases,
             SUM(c.price) as total_spent,
             MIN(c.date) as first_purchase,
             MAX(c.date) as last_purchase
         FROM collection c
-        WHERE c.account = %s 
+        WHERE c.group_id = %s 
         AND (
             c.location_name = %s 
             OR c.location_address LIKE %s
             OR c.location_address LIKE %s
             OR c.location_address LIKE %s
         )
-    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
+        {year_filter}
+    """, params)
     
     collection_result = cur.fetchone()
     
     # Then get item and sales data
-    cur.execute("""
+    cur.execute(f"""
         SELECT 
             COUNT(i.id) as total_items,
             SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_items,
@@ -875,14 +881,15 @@ def get_city_summary(city):
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
-        WHERE c.account = %s 
+        WHERE c.group_id = %s 
         AND (
             c.location_name = %s 
             OR c.location_address LIKE %s
             OR c.location_address LIKE %s
             OR c.location_address LIKE %s
         )
-    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
+        {year_filter}
+    """, params)
     
     items_result = cur.fetchone()
     
@@ -898,17 +905,12 @@ def get_city_summary(city):
             'first_purchase': collection_result['first_purchase'],
             'last_purchase': collection_result['last_purchase']
         }
-        print(f"City summary for '{city}' - Total spent: ${result['total_spent']}")
         return result
     
     return None
 
 def get_all_cities():
-    """Get all unique cities from user's purchases"""
-    user_id = session.get('id')
-    if not user_id:
-        return []
-    
+    """Get all unique cities from group's purchases"""
     cur = mysql.connection.cursor()
     # First, let's see what we're getting before filtering
     cur.execute("""
@@ -941,7 +943,7 @@ def get_all_cities():
             COUNT(c.id) as purchase_count,
             SUM(c.price) as total_spent
         FROM collection c
-        WHERE c.account = %s 
+        WHERE c.group_id = %s 
         AND (c.location_name IS NOT NULL AND c.location_name != '' 
              OR c.location_address IS NOT NULL AND c.location_address != '')
         GROUP BY city_name
@@ -957,7 +959,7 @@ def get_all_cities():
         AND city_name NOT LIKE 'unknown'
         AND LENGTH(city_name) > 2
         ORDER BY city_name ASC
-    """, (user_id,))
+    """, (get_current_group_id(),))
     
     results = cur.fetchall()
     return results

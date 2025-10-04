@@ -539,15 +539,20 @@ def reports_city():
     # Get all available cities and populate the dropdown
     cities = get_data.get_all_cities()
     form.city.choices = [(city['city_name'], "{} ({} purchases, ${:.2f})".format(city['city_name'], city['purchase_count'], float(city['total_spent']))) for city in cities]
+    
+    # Get all available years and populate the dropdown
+    years = get_data.get_years()
+    form.year.choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
 
     if request.method == "POST":
         details = request.form
         city = details['city'].strip()
+        year = details.get('year', 'all')
         
         if city:
-            purchases = get_data.get_purchases_by_city(city)
-            summary = get_data.get_city_summary(city)
-            return render_template('reports_city.html', form=form, purchases=purchases, summary=summary, city=city)
+            purchases = get_data.get_purchases_by_city(city, year)
+            summary = get_data.get_city_summary(city, year)
+            return render_template('reports_city.html', form=form, purchases=purchases, summary=summary, city=city, selected_year=year)
         else:
             flash('Please select a city', 'error')
     

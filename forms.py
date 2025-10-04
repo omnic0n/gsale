@@ -119,6 +119,7 @@ class ChangePasswordForm(FlaskForm):
 
 class CityReportForm(FlaskForm):
     city = SelectField('City', validators=[DataRequired()], choices=[], coerce=str)
+    year = SelectField('Year', choices=[], coerce=str)
     submit = SubmitField('Search by City')
 
 class ReturnItemForm(FlaskForm):

@@ -17,6 +17,20 @@
             {% endif %}
             <small class="form-text text-muted">Select a city from your purchase history</small>
         </div>
+        
+        <div class="form-group">
+            {{ form.year.label(class="form-control-label") }}
+            {{ form.year(class="form-control") }}
+            {% if form.year.errors %}
+                <div class="text-danger">
+                    {% for error in form.year.errors %}
+                        <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <small class="form-text text-muted">Select a year to filter results (defaults to all years)</small>
+        </div>
+        
         {{ form.submit(class="btn btn-primary") }}
     </form>
     
@@ -30,7 +44,7 @@
 
 {% if purchases %}
 <div class="content-wrapper">
-    <h2>Purchases in {{ city }}</h2>
+    <h2>Purchases in {{ city }}{% if selected_year and selected_year != 'all' %} ({{ selected_year }}){% endif %}</h2>
     
     {% if summary %}
     <div class="alert alert-info">
