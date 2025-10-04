@@ -707,7 +707,7 @@ def get_category_item_counts():
 
 #Profit Data
 def get_profit(year):
-    year_value = year + '-%-%'
+    year_value = str(year) + '-%-%'
     cur = mysql.connection.cursor()
     
     # Get sales (only for sold items, including returned fees)
