@@ -224,7 +224,7 @@
     </td>
     <td align="right">
         <div class="form-group">
-            <button type="button" onclick="alert('Button clicked!'); openDeleteGroupModal();" class="btn btn-light">Delete Group</button>
+            <button type="button" onclick="openDeleteCollectionModal()" class="btn btn-light">Delete Collection</button>
         </div>
     </td>
 </table>
@@ -479,44 +479,44 @@ document.getElementById('editItemForm').addEventListener('submit', function(e) {
 });
 </script>
 
-<!-- Delete Group Modal -->
-<div id="deleteGroupModal" class="custom-modal" style="display: none;">
+<!-- Delete Collection Modal -->
+<div id="deleteCollectionModal" class="custom-modal" style="display: none;">
     <div class="custom-modal-backdrop"></div>
     <div class="custom-modal-dialog">
         <div class="custom-modal-content">
             <div class="custom-modal-header">
-                <h5 class="custom-modal-title">Delete Group</h5>
-                <button type="button" class="btn-close" onclick="closeDeleteGroupModal()">&times;</button>
+                <h5 class="custom-modal-title">Delete Collection</h5>
+                <button type="button" class="btn-close" onclick="closeDeleteCollectionModal()">&times;</button>
             </div>
             <div class="custom-modal-body">
                 <p><strong>Warning:</strong> This action cannot be undone!</p>
-                <p>Are you sure you want to delete the group <strong>"{{ group_id[0]['name'] }}"</strong>?</p>
+                <p>Are you sure you want to delete the collection <strong>"{{ group_id[0]['name'] }}"</strong>?</p>
                 <p>This will permanently delete:</p>
                 <ul>
-                    <li>The group and all its items</li>
-                    <li>All sales records associated with this group</li>
-                    <li>All location and image data</li>
+                    <li>All items in this collection</li>
+                    <li>All sales records for these items</li>
+                    <li>All location and image data for this collection</li>
                 </ul>
                 <p style="color: red;"><strong>This action is irreversible!</strong></p>
             </div>
             <div class="custom-modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeDeleteGroupModal()">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDeleteGroup()">Delete Group</button>
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteCollectionModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteCollection()">Delete Collection</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function openDeleteGroupModal() {
-    document.getElementById('deleteGroupModal').style.display = 'flex';
+function openDeleteCollectionModal() {
+    document.getElementById('deleteCollectionModal').style.display = 'flex';
 }
 
-function closeDeleteGroupModal() {
-    document.getElementById('deleteGroupModal').style.display = 'none';
+function closeDeleteCollectionModal() {
+    document.getElementById('deleteCollectionModal').style.display = 'none';
 }
 
-function confirmDeleteGroup() {
+function confirmDeleteCollection() {
     // Create a form to submit the delete request
     const form = document.createElement('form');
     form.method = 'POST';
@@ -534,9 +534,9 @@ function confirmDeleteGroup() {
 
 // Close modal when clicking outside
 document.addEventListener('click', function(event) {
-    const modal = document.getElementById('deleteGroupModal');
+    const modal = document.getElementById('deleteCollectionModal');
     if (event.target === modal) {
-        closeDeleteGroupModal();
+        closeDeleteCollectionModal();
     }
 });
 </script>

@@ -1629,23 +1629,26 @@ def move_user_to_group(user_id, group_id):
         return False
 
 def delete_group(group_id):
-    """Delete a group (only if it has no members)"""
+    """Delete a collection and all its associated items (not the user group)"""
     try:
         cur = mysql.connection.cursor()
         
-        # Check if group has members
-        cur.execute("SELECT COUNT(*) FROM accounts WHERE group_id = %s", (group_id,))
-        member_count = cur.fetchone()['COUNT(*)']
+        # Delete all items in the collection
+        cur.execute("DELETE FROM items WHERE group_id = %s", (group_id,))
         
-        if member_count > 0:
-            cur.close()
-            return False, "Cannot delete group with members"
+        # Delete all sales for items in the collection
+        cur.execute("""
+            DELETE s FROM sale s 
+            INNER JOIN items i ON s.id = i.id 
+            WHERE i.group_id = %s
+        """, (group_id,))
         
-        # Delete the group
-        cur.execute("DELETE FROM `groups` WHERE id = %s", (group_id,))
+        # Delete the collection record
+        cur.execute("DELETE FROM collection WHERE id = %s", (group_id,))
+        
         mysql.connection.commit()
         cur.close()
-        return True, "Group deleted successfully"
+        return True, "Collection and all associated items deleted successfully"
     except Exception as e:
-        print("Error deleting group: {}".format(e))
+        print("Error deleting collection: {}".format(e))
         return False, str(e)
