@@ -921,19 +921,36 @@ def get_city_summary(city, year='all'):
     
     # Combine results
     if collection_result and items_result:
+        # Handle None values by converting them to 0
+        total_spent = collection_result['total_spent'] or 0
+        total_sales = items_result['total_sales'] or 0
+        total_items = items_result['total_items'] or 0
+        sold_items = items_result['sold_items'] or 0
+        total_purchases = collection_result['total_purchases'] or 0
+        
         result = {
-            'total_purchases': collection_result['total_purchases'],
-            'total_spent': collection_result['total_spent'],
-            'total_items': items_result['total_items'],
-            'sold_items': items_result['sold_items'],
-            'total_sales': items_result['total_sales'],
-            'total_profit': items_result['total_sales'] - collection_result['total_spent'],
+            'total_purchases': total_purchases,
+            'total_spent': total_spent,
+            'total_items': total_items,
+            'sold_items': sold_items,
+            'total_sales': total_sales,
+            'total_profit': total_sales - total_spent,
             'first_purchase': collection_result['first_purchase'],
             'last_purchase': collection_result['last_purchase']
         }
         return result
     
-    return None
+    # If no results found, return a default result with zeros
+    return {
+        'total_purchases': 0,
+        'total_spent': 0,
+        'total_items': 0,
+        'sold_items': 0,
+        'total_sales': 0,
+        'total_profit': 0,
+        'first_purchase': None,
+        'last_purchase': None
+    }
 
 def get_all_cities():
     """Get all unique cities from group's purchases"""
