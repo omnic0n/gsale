@@ -43,6 +43,15 @@
     {% endif %}
 </div>
 
+{% if selected_year and selected_year != 'all' and not purchases %}
+<div class="content-wrapper">
+    <div class="alert alert-info">
+        <h4>No Results for {{ city }} in {{ selected_year }}</h4>
+        <p>No purchases were found for the city "{{ city }}" in the year {{ selected_year }}. Try selecting a different year or city.</p>
+    </div>
+</div>
+{% endif %}
+
 {% if purchases %}
 <div class="content-wrapper">
     <h2>Purchases in {{ city }}{% if selected_year and selected_year != 'all' %} ({{ selected_year }}){% endif %}</h2>
@@ -138,7 +147,7 @@
     {% if purchases|length == 0 %}
     <div class="alert alert-warning">
         <h4>No purchases found</h4>
-        <p>No purchases were found for the city "{{ city }}". Try searching for a different city name or check if the location data is properly set for your groups.</p>
+        <p>No purchases were found for the city "{{ city }}"{% if selected_year and selected_year != 'all' %} in the year {{ selected_year }}{% endif %}. Try searching for a different city name{% if selected_year and selected_year != 'all' %} or year{% endif %} or check if the location data is properly set for your groups.</p>
     </div>
     {% endif %}
 </div>
