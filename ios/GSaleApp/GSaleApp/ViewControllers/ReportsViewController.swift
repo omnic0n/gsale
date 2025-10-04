@@ -1,11 +1,12 @@
 import UIKit
 
-private enum ReportTab: Int { case profit = 0, sales = 1, purchases = 2 }
+private enum ReportTab: Int { case profit = 0, sales = 1, purchases = 2, city = 3 }
 
 class ReportsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    private let segmentedControl = UISegmentedControl(items: ["Profit", "Sales", "Purchases"])
+    private let segmentedControl = UISegmentedControl(items: ["Profit", "Sales", "Purchases", "City"])
     private let yearButton = UIButton(type: .system)
+    private let cityButton = UIButton(type: .system)
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let loadingIndicator = UIActivityIndicatorView(style: .large)
 
@@ -15,6 +16,10 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
     private var profitRows: [ProfitReportRow] = []
     private var salesRows: [SalesReportRow] = []
     private var purchaseRows: [PurchasesReportRow] = []
+    private var cityOptions: [CityOption] = []
+    private var cityPurchases: [CityPurchaseRow] = []
+    private var citySummary: CitySummary?
+    private var selectedCityName: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,6 +39,11 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         yearButton.addTarget(self, action: #selector(selectYear), for: .touchUpInside)
         yearButton.translatesAutoresizingMaskIntoConstraints = false
 
+        cityButton.setTitle("Select City ▾", for: .normal)
+        cityButton.addTarget(self, action: #selector(openCityReport), for: .touchUpInside)
+        cityButton.translatesAutoresizingMaskIntoConstraints = false
+        cityButton.isHidden = true
+
         tableView.dataSource = self
         tableView.delegate = self
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -43,6 +53,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
 
         view.addSubview(segmentedControl)
         view.addSubview(yearButton)
+        view.addSubview(cityButton)
         view.addSubview(tableView)
         view.addSubview(loadingIndicator)
 
@@ -53,6 +64,9 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
 
             yearButton.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 8),
             yearButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
+
+            cityButton.centerYAnchor.constraint(equalTo: yearButton.centerYAnchor),
+            cityButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
 
             tableView.topAnchor.constraint(equalTo: yearButton.bottomAnchor, constant: 8),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -67,6 +81,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
     @objc private func segmentChanged() {
         if let tab = ReportTab(rawValue: segmentedControl.selectedSegmentIndex) {
             currentTab = tab
+            cityButton.isHidden = (tab != .city)
             loadData()
         }
     }
@@ -85,6 +100,45 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         present(alert, animated: true)
     }
 
+    @objc private func openCityReport() {
+        if cityOptions.isEmpty {
+            loadingIndicator.startAnimating()
+            Task { [weak self] in
+                guard let self = self else { return }
+                do {
+                    self.cityOptions = try await NetworkManager.shared.getCityOptions()
+                    self.presentCityPicker()
+                } catch {
+                    self.showError(error)
+                }
+                self.loadingIndicator.stopAnimating()
+            }
+        } else {
+            presentCityPicker()
+        }
+    }
+
+    private func presentCityPicker() {
+        let alert = UIAlertController(title: "Select City", message: nil, preferredStyle: .actionSheet)
+        for opt in cityOptions {
+            alert.addAction(UIAlertAction(title: opt.label, style: .default) { _ in
+                Task { [weak self] in
+                    guard let self = self else { return }
+                    self.selectedCityName = opt.name
+                    self.cityButton.setTitle("\(opt.name) ▾", for: .normal)
+                    do {
+                        try await self.loadCityIfNeeded()
+                        self.tableView.reloadData()
+                    } catch {
+                        self.showError(error)
+                    }
+                }
+            })
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
     private func loadData() {
         loadingIndicator.startAnimating()
         Task { [weak self] in
@@ -97,12 +151,32 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
                     self.salesRows = try await NetworkManager.shared.getSalesReport(interval: .year, date: nil, month: nil, year: self.currentYear, day: nil)
                 case .purchases:
                     self.purchaseRows = try await NetworkManager.shared.getPurchasesReport(interval: .year, date: nil, month: nil, year: self.currentYear, day: nil)
+                case .city:
+                    try await self.loadCityIfNeeded()
                 }
                 self.tableView.reloadData()
             } catch {
                 self.showError(error)
             }
             self.loadingIndicator.stopAnimating()
+        }
+    }
+
+    @discardableResult
+    private func loadCityIfNeeded() async throws -> Void {
+        if selectedCityName == nil {
+            if cityOptions.isEmpty {
+                self.cityOptions = try await NetworkManager.shared.getCityOptions()
+            }
+            selectedCityName = cityOptions.first?.name
+            if let name = selectedCityName {
+                self.cityButton.setTitle("\(name) ▾", for: .normal)
+            }
+        }
+        if let name = selectedCityName {
+            let result = try await NetworkManager.shared.getCityReport(city: name)
+            self.citySummary = result.summary
+            self.cityPurchases = result.purchases
         }
     }
 
@@ -118,6 +192,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         case .profit: return profitRows.count + (profitRows.isEmpty ? 0 : 1)
         case .sales: return salesRows.count + (salesRows.isEmpty ? 0 : 1)
         case .purchases: return purchaseRows.count + (purchaseRows.isEmpty ? 0 : 1)
+        case .city: return cityPurchases.count + (cityPurchases.isEmpty ? 0 : 1)
         }
     }
 
@@ -167,8 +242,49 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
                 cell.textLabel?.text = "\(r.date) (\(r.day))"
                 cell.detailTextLabel?.text = "Spent: $\(fmt(r.price))"
             }
+        case .city:
+            if !cityPurchases.isEmpty && indexPath.row == cityPurchases.count {
+                if let s = citySummary {
+                    var detail = "Purchases: \(s.totalPurchases)  Items: \(s.totalItems)  Sold: \(s.soldItems)"
+                    detail += "\nSpent: $\(fmt(s.totalSpent))  Sales: $\(fmt(s.totalSales))  Profit: $\(fmt(s.totalProfit))"
+                    cell.textLabel?.text = "Summary"
+                    cell.detailTextLabel?.text = detail
+                } else {
+                    cell.textLabel?.text = "Summary"
+                    cell.detailTextLabel?.text = "No summary"
+                }
+            } else {
+                if indexPath.row < cityPurchases.count {
+                    let r = cityPurchases[indexPath.row]
+                    cell.textLabel?.text = "\(r.date) - \(r.name)"
+                    cell.detailTextLabel?.text = "Purchase: $\(fmt(r.purchasePrice))  Items: \(r.itemCount)  Sold: \(r.soldCount)\nSales: $\(fmt(r.totalSales))  Profit: $\(fmt(r.profit))"
+                }
+            }
         }
         return cell
+    }
+
+    // Header for City tab to show extra data label at the top of the list
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard currentTab == .city else { return nil }
+        let header = UIView()
+        header.backgroundColor = .secondarySystemBackground
+        let label = UILabel()
+        label.text = "Group Name"
+        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        header.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: header.topAnchor, constant: 6),
+            label.bottomAnchor.constraint(equalTo: header.bottomAnchor, constant: -6),
+            label.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 12),
+            label.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -12)
+        ])
+        return header
+    }
+
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return currentTab == .city ? 28 : 0.01
     }
 
     // Navigate to groups list for selected profit date

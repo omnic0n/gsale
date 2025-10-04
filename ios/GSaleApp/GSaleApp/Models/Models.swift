@@ -133,3 +133,35 @@ struct ProfitReportRow: Codable {
     let profit: Double
     let roiPercent: Double?
 }
+
+// MARK: - City Reports Models
+struct CityOption: Codable {
+    let name: String      // pure city key used for POST
+    let label: String     // display label (e.g., "City (N purchases, $X)")
+}
+
+struct CityPurchaseRow: Codable {
+    let id: String
+    let name: String
+    let date: String
+    let purchasePrice: Double
+    let locationName: String?
+    let locationAddress: String?
+    let latitude: Double?
+    let longitude: Double?
+    let itemCount: Int
+    let soldCount: Int
+    let totalSales: Double
+    let profit: Double
+}
+
+struct CitySummary: Codable {
+    let totalPurchases: Int
+    let totalSpent: Double
+    let totalItems: Int
+    let soldItems: Int
+    let totalSales: Double
+    let totalProfit: Double
+    let firstPurchase: String?
+    let lastPurchase: String?
+}

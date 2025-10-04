@@ -104,6 +104,221 @@ class NetworkManager: NSObject {
         return parser(html)
     }
 
+    // MARK: - City Reports
+    func getCityOptions() async throws -> [CityOption] {
+        // Load the city report page to parse the dropdown of cities
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)/reports/city")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("text/html", forHTTPHeaderField: "Accept")
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.serverError("Failed to fetch city options")
+        }
+        guard let html = String(data: data, encoding: .utf8) else { throw NetworkError.noData }
+        if html.contains("<title>Login</title>") { throw NetworkError.unauthorized }
+        return parseCityOptions(from: html)
+    }
+
+    func getCityReport(city: String) async throws -> (summary: CitySummary?, purchases: [CityPurchaseRow]) {
+        // POST to /reports/city with selected city, parse summary and purchases table
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)/reports/city")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = "city=\(city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city)".data(using: .utf8)
+        request.setValue("text/html", forHTTPHeaderField: "Accept")
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.serverError("Failed to fetch city report")
+        }
+        guard let html = String(data: data, encoding: .utf8) else { throw NetworkError.noData }
+        if html.contains("<title>Login</title>") { throw NetworkError.unauthorized }
+        return parseCityReport(from: html)
+    }
+
+    private func parseCityOptions(from html: String) -> [CityOption] {
+        var options: [CityOption] = []
+        // Expect a <select name="city"> with <option value="CityName">Label</option>
+        if let selectRange = html.range(of: #"<select[^>]*name=[\"']city[\"'][^>]*>([\s\S]*?)</select>"#, options: .regularExpression) {
+            let selectHTML = String(html[selectRange])
+            let optionRegex = try? NSRegularExpression(pattern: #"<option[^>]*value=\"([^\"]*)\"[^>]*>([^<]+)</option>"#, options: [])
+            if let optionRegex = optionRegex {
+                let ns = selectHTML as NSString
+                let matches = optionRegex.matches(in: selectHTML, options: [], range: NSRange(location: 0, length: ns.length))
+                for m in matches {
+                    if m.numberOfRanges >= 3,
+                       let r1 = Range(m.range(at: 1), in: selectHTML),
+                       let r2 = Range(m.range(at: 2), in: selectHTML) {
+                        let value = String(selectHTML[r1]).trimmingCharacters(in: .whitespacesAndNewlines)
+                        let label = String(selectHTML[r2]).trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !value.isEmpty { options.append(CityOption(name: value, label: label)) }
+                    }
+                }
+            }
+        }
+        return options
+    }
+
+    private func parseCityReport(from html: String) -> (summary: CitySummary?, purchases: [CityPurchaseRow]) {
+        // Parse summary key figures if present (search a specific summary section if available, else entire document)
+        var summary: CitySummary? = nil
+        let summaryScope: String = {
+            if let summaryRange = html.range(of: #"<div[^>]*id=[\"']summary[\"'][^>]*>([\s\S]*?)</div>"#, options: .regularExpression) {
+                return String(html[summaryRange])
+            }
+            return html
+        }()
+        do {
+            func extractNumber(_ label: String) -> Double? {
+                // Support numbers with thousands separators, e.g., 1,234.56
+                if let r = try? NSRegularExpression(pattern: label + #"[^0-9-]*([0-9][0-9,]*(?:\.[0-9]+)?)"#, options: [.caseInsensitive]) {
+                    if let m = r.firstMatch(in: summaryScope, options: [], range: NSRange(summaryScope.startIndex..<summaryScope.endIndex, in: summaryScope)), let rr = Range(m.range(at: 1), in: summaryScope) {
+                        let raw = String(summaryScope[rr])
+                        let normalized = raw.replacingOccurrences(of: ",", with: "")
+                        return Double(normalized)
+                    }
+                }
+                return nil
+            }
+            let totalPurchases = Int(extractNumber("Total purchases") ?? 0)
+            let totalSpent = extractNumber("Total spent") ?? 0
+            let totalItems = Int(extractNumber("Total items") ?? 0)
+            let soldItems = Int(extractNumber("Sold items") ?? 0)
+            let totalSales = extractNumber("Total sales") ?? 0
+            let totalProfit = extractNumber("Total profit") ?? 0
+            // Dates if present
+            let dateRegex = try? NSRegularExpression(pattern: #"(First|Last) purchase[^0-9]*([0-9]{4}-[0-9]{2}-[0-9]{2})"#, options: [])
+            var first: String? = nil
+            var last: String? = nil
+            if let dateRegex = dateRegex {
+                let ns = summaryScope as NSString
+                for m in dateRegex.matches(in: summaryScope, options: [], range: NSRange(location: 0, length: ns.length)) {
+                    if m.numberOfRanges >= 3, let rr = Range(m.range(at: 2), in: summaryScope) {
+                        let dateStr = String(summaryScope[rr])
+                        if first == nil { first = dateStr } else { last = dateStr }
+                    }
+                }
+            }
+            let hasNumbers = (totalPurchases != 0) || (totalItems != 0) || (soldItems != 0) ||
+                             (totalSpent != 0) || (totalSales != 0) || (totalProfit != 0)
+            if hasNumbers || first != nil || last != nil {
+                summary = CitySummary(totalPurchases: totalPurchases, totalSpent: totalSpent, totalItems: totalItems, soldItems: soldItems, totalSales: totalSales, totalProfit: totalProfit, firstPurchase: first, lastPurchase: last)
+            }
+        }
+
+        // Parse purchases table rows
+        var purchases: [CityPurchaseRow] = []
+        let rowPattern = #"<tr[^>]*>([\s\S]*?)</tr>"#
+        if let rowRegex = try? NSRegularExpression(pattern: rowPattern, options: [.dotMatchesLineSeparators]) {
+            let ns = html as NSString
+            let matches = rowRegex.matches(in: html, options: [], range: NSRange(location: 0, length: ns.length))
+
+            // Extract header cells (first row with <th>) to map dynamic column indexes
+            var headerTexts: [String] = []
+            if let headerRow = matches.first(where: { ns.substring(with: $0.range(at: 1)).range(of: "<th", options: [.caseInsensitive]) != nil }) {
+                let headerHTML = ns.substring(with: headerRow.range(at: 1))
+                if let thRegex = try? NSRegularExpression(pattern: #"<th[^>]*>([\s\S]*?)</th>"#, options: []) {
+                    let ths = thRegex.matches(in: headerHTML, options: [], range: NSRange(location: 0, length: (headerHTML as NSString).length))
+                    headerTexts = ths.compactMap { m in
+                        let r = m.range(at: 1)
+                        if let rr = Range(r, in: headerHTML) {
+                            return extractInnerText(fromHTMLCell: String(headerHTML[rr])).trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                        }
+                        return nil
+                    }
+                }
+            }
+
+            func indexFor(_ predicate: (String) -> Bool, fallback: Int) -> Int {
+                if let i = headerTexts.firstIndex(where: predicate) { return i }
+                return fallback
+            }
+
+            for m in matches {
+                let rowHTML = ns.substring(with: m.range(at: 1))
+                // Skip header rows (th cells)
+                if rowHTML.range(of: "<th", options: [.caseInsensitive]) != nil { continue }
+                // Extract cells
+                let cellRegex = try? NSRegularExpression(pattern: #"<t[dh][^>]*>([\s\S]*?)</t[dh]>"#, options: [])
+                guard let cellRegex = cellRegex else { continue }
+                let mm = cellRegex.matches(in: rowHTML, options: [], range: NSRange(location: 0, length: (rowHTML as NSString).length))
+                guard mm.count >= 2 else { continue }
+                func cellText(_ idx: Int) -> String {
+                    let rr = mm[idx].range(at: 1)
+                    if let r = Range(rr, in: rowHTML) {
+                        return extractInnerText(fromHTMLCell: String(rowHTML[r]))
+                    }
+                    return ""
+                }
+
+                // Dynamic column mapping based on header labels
+                let dateIdx = indexFor({ $0.contains("date") }, fallback: 0)
+                let nameIdx = indexFor({ $0.contains("group name") || $0 == "name" }, fallback: 1)
+                let profitIdx = indexFor({ $0.contains("profit") }, fallback: 7)
+                let totalSalesIdx = indexFor({ $0.contains("total") && $0.contains("sales") || ($0 == "sales") }, fallback: 6)
+                let purchaseIdx = indexFor({ $0.contains("purchase") && $0.contains("price") || ($0 == "purchase") || ($0 == "price") }, fallback: 2)
+                let locationIdx = indexFor({ $0.contains("location") }, fallback: 3)
+                let itemsIdx = indexFor({ $0 == "items" || $0.contains("item") }, fallback: 4)
+                let soldIdx = indexFor({ $0.contains("sold") }, fallback: 5)
+
+                let dateText = cellText(dateIdx)
+                let nameText = cellText(nameIdx)
+                // Skip if this row is header-like
+                if dateText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "date" ||
+                    nameText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "group name" {
+                    continue
+                }
+                func parseMoney(_ s: String) -> Double {
+                    let cleaned = s.replacingOccurrences(of: ",", with: "").replacingOccurrences(of: "$", with: "")
+                    return Double(cleaned) ?? 0
+                }
+                let price = parseMoney(cellText(purchaseIdx))
+                let locationText = cellText(locationIdx)
+                let items = Int(cellText(itemsIdx).replacingOccurrences(of: ",", with: "")) ?? 0
+                let sold = Int(cellText(soldIdx).replacingOccurrences(of: ",", with: "")) ?? 0
+                let totalSales = parseMoney(cellText(totalSalesIdx))
+                let profit = parseMoney(cellText(profitIdx))
+
+                let row = CityPurchaseRow(
+                    id: UUID().uuidString,
+                    name: nameText,
+                    date: dateText,
+                    purchasePrice: price,
+                    locationName: locationText.isEmpty ? nil : locationText,
+                    locationAddress: nil,
+                    latitude: nil,
+                    longitude: nil,
+                    itemCount: items,
+                    soldCount: sold,
+                    totalSales: totalSales,
+                    profit: profit
+                )
+                purchases.append(row)
+            }
+        }
+
+        // Ensure summary.soldItems matches the sum from rows (more reliable than HTML text extraction)
+        if let s = summary {
+            let soldSum = purchases.reduce(0) { $0 + $1.soldCount }
+            summary = CitySummary(
+                totalPurchases: s.totalPurchases,
+                totalSpent: s.totalSpent,
+                totalItems: s.totalItems,
+                soldItems: soldSum,
+                totalSales: s.totalSales,
+                totalProfit: s.totalProfit,
+                firstPurchase: s.firstPurchase,
+                lastPurchase: s.lastPurchase
+            )
+        }
+        return (summary, purchases)
+    }
+
     private func parseSalesReport(from html: String) -> [SalesReportRow] {
         var rows: [SalesReportRow] = []
         let rowPattern = #"<tr[^>]*>([\s\S]*?)</tr>"#
