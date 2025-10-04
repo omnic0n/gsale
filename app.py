@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -321,6 +321,7 @@ def google_callback():
         session['username'] = user.get('name', email) if 'user' in locals() else name
         session['email'] = email
         session['is_admin'] = user.get('is_admin', False) if 'user' in locals() else False
+        session['group_id'] = user.get('group_id') if 'user' in locals() else None  # Store group_id for group-based access
         
         # Clear OAuth session data
         session.pop('oauth_state', None)
@@ -529,6 +530,28 @@ def reports_locations():
         locations = get_data.get_location_from_date(start_date, end_date)
         return render_template('reports_locations.html', form=form, locations=locations)
     return render_template('reports_locations.html', form=form)
+
+@app.route('/reports/city',methods=["GET", "POST"])
+@login_required
+def reports_city():
+    form = CityReportForm()
+    
+    # Get all available cities and populate the dropdown
+    cities = get_data.get_all_cities()
+    form.city.choices = [(city['city_name'], "{} ({} purchases, ${:.2f})".format(city['city_name'], city['purchase_count'], float(city['total_spent']))) for city in cities]
+
+    if request.method == "POST":
+        details = request.form
+        city = details['city'].strip()
+        
+        if city:
+            purchases = get_data.get_purchases_by_city(city)
+            summary = get_data.get_city_summary(city)
+            return render_template('reports_city.html', form=form, purchases=purchases, summary=summary, city=city)
+        else:
+            flash('Please select a city', 'error')
+    
+    return render_template('reports_city.html', form=form)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
@@ -1006,6 +1029,9 @@ def group_detail():
     groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
     
+    # Get group creator information
+    group_creator = get_data.get_group_creator(id)
+    
     return render_template('groups_list_detail.html', 
                             group_id=group_id,
                             items=items,
@@ -1016,7 +1042,8 @@ def group_detail():
                             form=form,
                             quicksell=quicksell,
                             groups=groups,
-                            categories=categories)
+                            categories=categories,
+                            group_creator=group_creator)
 
 @app.route('/groups/remove',methods=["POST","GET"])
 @login_required
@@ -1113,6 +1140,9 @@ def admin_panel():
         # Get all users for admin management
         users = get_data.get_all_users()
         
+        # Get all groups for group management
+        groups = get_data.get_all_groups()
+        
         # Get pending access attempts
         pending_attempts = set_data.get_pending_access_attempts()
         
@@ -1177,17 +1207,98 @@ def admin_panel():
                     else:
                         flash('Failed to deny access.', 'error')
                 return redirect(url_for('admin_panel'))
+            
+            elif action == 'create_group':
+                # Create a new group
+                group_name = request.form.get('group_name')
+                group_description = request.form.get('group_description', '')
+                if group_name:
+                    group_id = set_data.create_group(group_name, group_description)
+                    if group_id:
+                        flash('Group "{}" created successfully.'.format(group_name), 'success')
+                    else:
+                        flash('Failed to create group.', 'error')
+                else:
+                    flash('Group name is required.', 'error')
+                return redirect(url_for('admin_panel'))
+            
+            elif action == 'update_group':
+                # Update an existing group
+                group_id = request.form.get('group_id')
+                group_name = request.form.get('group_name')
+                group_description = request.form.get('group_description', '')
+                
+                if group_id and group_name:
+                    success = set_data.update_group(group_id, group_name, group_description)
+                    if success:
+                        flash('Group "{}" updated successfully.'.format(group_name), 'success')
+                    else:
+                        flash('Failed to update group.', 'error')
+                else:
+                    flash('Group ID and name are required.', 'error')
+                return redirect(url_for('admin_panel'))
+            
+            elif action == 'move_user_to_group':
+                # Move user to a different group
+                user_id = request.form.get('user_id')
+                group_id = request.form.get('group_id')
+                current_user_id = session.get('id')
+                
+                if user_id and group_id:
+                    success = set_data.move_user_to_group(user_id, group_id)
+                    if success:
+                        # If the user is moving themselves, update their session
+                        if user_id == current_user_id:
+                            session['group_id'] = group_id
+                            flash('Your group has been changed successfully.', 'success')
+                        else:
+                            flash('User moved to group successfully.', 'success')
+                    else:
+                        flash('Failed to move user to group.', 'error')
+                else:
+                    flash('User ID and Group ID are required.', 'error')
+                return redirect(url_for('admin_panel'))
+            
+            elif action == 'delete_group':
+                # Delete a group (only if it has no members)
+                group_id = request.form.get('group_id')
+                if group_id:
+                    success, message = set_data.delete_group(group_id)
+                    if success:
+                        flash(message, 'success')
+                    else:
+                        flash(message, 'error')
+                else:
+                    flash('Group ID is required.', 'error')
+                return redirect(url_for('admin_panel'))
         
         # Ensure users is always a list to prevent KeyError: 0
         if not users:
             users = [{'id': '1', 'username': 'Admin', 'email': 'admin@example.com', 'is_admin': 1, 'is_current_user': 'Current User'}]
-        return render_template('admin.html', users=users, pending_attempts=pending_attempts)
+        return render_template('admin.html', users=users, groups=groups, pending_attempts=pending_attempts)
     
     except Exception as e:
         # Log the error for debugging
         print("Error in admin panel: {}".format(e))
         flash('An error occurred while loading the admin panel.', 'error')
         return redirect(url_for('index'))
+
+# Admin API endpoints
+@app.route('/admin/api/group-members/<group_id>')
+@admin_required
+def api_group_members(group_id):
+    """API endpoint to get group members"""
+    try:
+        members = get_data.get_group_members(group_id)
+        return jsonify({
+            'success': True,
+            'members': members
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # JSON API endpoints for iOS app
 @app.route('/api/items/search', methods=['GET'])

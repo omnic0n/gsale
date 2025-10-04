@@ -148,6 +148,7 @@
                                     <tr>
                                         <th>Email</th>
                                         <th>Name</th>
+                                        <th>Group</th>
                                         <th>Admin Status</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -158,6 +159,13 @@
                                     <tr {% if user.is_current_user %}class="table-secondary"{% endif %}>
                                         <td>{{ user.email or 'N/A' }}</td>
                                         <td>{{ user.name or 'N/A' }}</td>
+                                        <td>
+                                            {% if user.group_name %}
+                                                <span class="badge bg-info">{{ user.group_name }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">No Group</span>
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             {% if user.is_admin %}
                                                 <span class="badge bg-success">Admin</span>
@@ -173,8 +181,8 @@
                                             {% endif %}
                                         </td>
                                         <td class="action-buttons">
-                                            {% if not user.is_current_user %}
                                             <div class="d-flex gap-1">
+                                                {% if not user.is_current_user %}
                                                 <form method="POST" style="display: inline;">
                                                     <input type="hidden" name="user_id" value="{{ user.id or '' }}">
                                                     <input type="hidden" name="action" value="toggle_admin">
@@ -196,8 +204,13 @@
                                                         {% if user.is_active %}Deactivate User{% else %}Activate User{% endif %}
                                                     </button>
                                                 </form>
+                                                {% endif %}
+                                                
+                                                <button type="button" class="btn btn-sm btn-info" 
+                                                        onclick="openMoveUserModal('{{ user.id }}', '{{ user.email or 'N/A' }}', '{{ user.group_id or '' }}', '{{ user.group_name or 'No Group' }}')">
+                                                    {% if user.is_current_user %}Change My Group{% else %}Move to Group{% endif %}
+                                                </button>
                                             </div>
-                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -206,6 +219,71 @@
                         </div>
                     {% else %}
                         <p class="text-muted">No users found.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Group Management Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Group Management</h3>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-primary" onclick="openCreateGroupModal()">
+                            <i class="fas fa-plus"></i> Create New Group
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if groups %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Group Name</th>
+                                        <th>Description</th>
+                                        <th>Members</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for group in groups %}
+                                    <tr>
+                                        <td><strong>{{ group.name }}</strong></td>
+                                        <td>{{ group.description or 'No description' }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ group.member_count or 0 }} members</span>
+                                        </td>
+                                        <td>{{ group.created_at.strftime('%m/%d/%Y') if group.created_at else 'N/A' }}</td>
+                                        <td class="action-buttons">
+                                            <div class="d-flex gap-1">
+                                                <button type="button" class="btn btn-sm btn-info" 
+                                                        onclick="viewGroupMembers('{{ group.id }}', '{{ group.name }}')">
+                                                    View Members
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-warning" 
+                                                        onclick="openEditGroupModal('{{ group.id }}', '{{ group.name }}', '{{ group.description or '' }}')">
+                                                    Edit Group
+                                                </button>
+                                                {% if group.member_count == 0 %}
+                                                <form method="POST" style="display: inline;">
+                                                    <input type="hidden" name="group_id" value="{{ group.id }}">
+                                                    <input type="hidden" name="action" value="delete_group">
+                                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                                            onclick="return confirm('Are you sure you want to delete the group \"{{ group.name }}\"?')">
+                                                        Delete Group
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No groups found.</p>
                     {% endif %}
                 </div>
             </div>
@@ -282,6 +360,146 @@
     </div>
 </div>
 
+<!-- Create Group Modal -->
+<div id="createGroupModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeCreateGroupModal()"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Create New Group</h5>
+                <button type="button" class="btn-close" onclick="closeCreateGroupModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/admin">
+                <div class="custom-modal-body">
+                    <input type="hidden" name="action" value="create_group">
+                    
+                    <div class="form-group">
+                        <label for="groupName">Group Name</label>
+                        <input type="text" class="form-control" id="groupName" name="group_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="groupDescription">Description (Optional)</label>
+                        <textarea class="form-control" id="groupDescription" name="group_description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="custom-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateGroupModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Move User to Group Modal -->
+<div id="moveUserModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeMoveUserModal()"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Move User to Group</h5>
+                <button type="button" class="btn-close" onclick="closeMoveUserModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/admin">
+                <div class="custom-modal-body">
+                    <input type="hidden" name="action" value="move_user_to_group">
+                    <input type="hidden" id="moveUserId" name="user_id">
+                    
+                    <div class="form-group">
+                        <label>User</label>
+                        <p class="form-control-plaintext" id="moveUserEmail"></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Current Group</label>
+                        <p class="form-control-plaintext" id="currentGroup"></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newGroup">Move to Group</label>
+                        <select class="form-control" id="newGroup" name="group_id" required>
+                            <option value="">Select a group...</option>
+                            {% for group in groups %}
+                            <option value="{{ group.id }}">{{ group.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted" id="groupChangeNote" style="display: none;">
+                            <i class="fas fa-info-circle"></i> Changing your group will immediately update your access to shared data.
+                        </small>
+                    </div>
+                </div>
+                <div class="custom-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeMoveUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Move User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Group Modal -->
+<div id="editGroupModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeEditGroupModal()"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Edit Group</h5>
+                <button type="button" class="btn-close" onclick="closeEditGroupModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/admin">
+                <div class="custom-modal-body">
+                    <input type="hidden" name="action" value="update_group">
+                    <input type="hidden" id="editGroupId" name="group_id">
+                    
+                    <div class="form-group">
+                        <label for="editGroupName">Group Name</label>
+                        <input type="text" class="form-control" id="editGroupName" name="group_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editGroupDescription">Description</label>
+                        <textarea class="form-control" id="editGroupDescription" name="group_description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="custom-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditGroupModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Group Members Modal -->
+<div id="viewMembersModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeViewMembersModal()"></div>
+    <div class="custom-modal-dialog" style="max-width: 800px;">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title" id="viewMembersTitle">Group Members</h5>
+                <button type="button" class="btn-close" onclick="closeViewMembersModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="custom-modal-body">
+                <div id="membersList">
+                    <!-- Members will be loaded here -->
+                </div>
+            </div>
+            <div class="custom-modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeViewMembersModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const activeOnlyCheckbox = document.getElementById('activeOnly');
@@ -294,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         userRows.forEach(row => {
             const emailCell = row.querySelector('td:nth-child(1)'); // Email column
-            const statusCell = row.querySelector('td:nth-child(4)'); // Status column
+            const statusCell = row.querySelector('td:nth-child(5)'); // Status column (moved due to Group column)
             const statusBadge = statusCell.querySelector('.badge');
             
             const email = emailCell.textContent.toLowerCase();
@@ -320,6 +538,141 @@ document.addEventListener('DOMContentLoaded', function() {
     activeOnlyCheckbox.addEventListener('change', applyFilters);
     searchInput.addEventListener('input', applyFilters);
 });
+
+// Group Management Functions
+function openCreateGroupModal() {
+    document.getElementById('createGroupModal').style.display = 'flex';
+}
+
+function closeCreateGroupModal() {
+    document.getElementById('createGroupModal').style.display = 'none';
+    // Clear form
+    document.getElementById('groupName').value = '';
+    document.getElementById('groupDescription').value = '';
+}
+
+function openMoveUserModal(userId, userEmail, currentGroupId, currentGroupName) {
+    document.getElementById('moveUserId').value = userId;
+    document.getElementById('moveUserEmail').textContent = userEmail;
+    document.getElementById('currentGroup').textContent = currentGroupName;
+    
+    // Set current group as selected if it exists
+    const groupSelect = document.getElementById('newGroup');
+    groupSelect.value = currentGroupId || '';
+    
+    // Update modal title and button text based on whether it's the current user
+    const modalTitle = document.querySelector('#moveUserModal .custom-modal-title');
+    const submitButton = document.querySelector('#moveUserModal button[type="submit"]');
+    const isCurrentUser = userId === '{{ session.id }}';
+    
+    if (isCurrentUser) {
+        modalTitle.textContent = 'Change My Group';
+        submitButton.textContent = 'Change Group';
+        // Show the note about immediate access change
+        document.getElementById('groupChangeNote').style.display = 'block';
+    } else {
+        modalTitle.textContent = 'Move User to Group';
+        submitButton.textContent = 'Move User';
+        // Hide the note for other users
+        document.getElementById('groupChangeNote').style.display = 'none';
+    }
+    
+    document.getElementById('moveUserModal').style.display = 'flex';
+}
+
+function closeMoveUserModal() {
+    document.getElementById('moveUserModal').style.display = 'none';
+    // Clear form
+    document.getElementById('moveUserId').value = '';
+    document.getElementById('moveUserEmail').textContent = '';
+    document.getElementById('currentGroup').textContent = '';
+    document.getElementById('newGroup').value = '';
+}
+
+function openEditGroupModal(groupId, groupName, groupDescription) {
+    document.getElementById('editGroupId').value = groupId;
+    document.getElementById('editGroupName').value = groupName;
+    document.getElementById('editGroupDescription').value = groupDescription || '';
+    
+    document.getElementById('editGroupModal').style.display = 'flex';
+}
+
+function closeEditGroupModal() {
+    document.getElementById('editGroupModal').style.display = 'none';
+    // Clear form
+    document.getElementById('editGroupId').value = '';
+    document.getElementById('editGroupName').value = '';
+    document.getElementById('editGroupDescription').value = '';
+}
+
+function viewGroupMembers(groupId, groupName) {
+    // Load and display group members
+    document.getElementById('viewMembersTitle').textContent = groupName + ' - Members';
+    
+    // Show loading state
+    document.getElementById('membersList').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading members...</div>';
+    
+    // Show modal
+    document.getElementById('viewMembersModal').style.display = 'flex';
+    
+    // Fetch group members via AJAX
+    fetch(`/admin/api/group-members/${groupId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayGroupMembers(data.members);
+            } else {
+                document.getElementById('membersList').innerHTML = '<div class="alert alert-danger">Error loading members: ' + data.error + '</div>';
+            }
+        })
+        .catch(error => {
+            document.getElementById('membersList').innerHTML = '<div class="alert alert-danger">Error loading members: ' + error.message + '</div>';
+        });
+}
+
+function displayGroupMembers(members) {
+    const membersList = document.getElementById('membersList');
+    
+    if (members.length === 0) {
+        membersList.innerHTML = '<div class="alert alert-info">No members in this group.</div>';
+        return;
+    }
+    
+    let html = '<div class="table-responsive"><table class="table table-striped">';
+    html += '<thead><tr><th>Name</th><th>Email</th><th>Admin Status</th><th>Status</th><th>Actions</th></tr></thead>';
+    html += '<tbody>';
+    
+    members.forEach(member => {
+        const adminBadge = member.is_admin ? 
+            '<span class="badge bg-success">Admin</span>' : 
+            '<span class="badge bg-secondary">User</span>';
+        
+        const statusBadge = member.is_active ? 
+            '<span class="badge bg-success">Active</span>' : 
+            '<span class="badge bg-danger">Inactive</span>';
+        
+        const isCurrentUser = member.is_current_user;
+        const actionButtons = isCurrentUser ? 
+            '<span class="text-muted">Current User</span>' :
+            `<button type="button" class="btn btn-sm btn-info" onclick="openMoveUserModal('${member.id}', '${member.email}', '${member.group_id}', '${member.group_name}')">Move to Group</button>`;
+        
+        html += `<tr>
+            <td>${member.name || 'N/A'}</td>
+            <td>${member.email || 'N/A'}</td>
+            <td>${adminBadge}</td>
+            <td>${statusBadge}</td>
+            <td>${actionButtons}</td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table></div>';
+    membersList.innerHTML = html;
+}
+
+function closeViewMembersModal() {
+    document.getElementById('viewMembersModal').style.display = 'none';
+    document.getElementById('membersList').innerHTML = '';
+}
 </script>
 
 

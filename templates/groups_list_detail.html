@@ -118,6 +118,25 @@
     margin-bottom: 20px !important;
 }
 </style>
+
+<!-- Group Creator Info -->
+{% if group_creator %}
+<div class="d-flex justify-content-end align-items-center mb-4">
+    <div class="text-right">
+        {% if group_creator.created_by %}
+            <small class="text-muted">
+                <i class="fas fa-user-plus"></i> Collection Creator: 
+                <strong>{{ group_creator.creator_name or group_creator.creator_username or 'Unknown' }}</strong>
+            </small>
+        {% else %}
+            <small class="text-muted">
+                <i class="fas fa-user-plus"></i> Collection Creator: Unknown
+            </small>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <h4>Group Information</h4>
 <table class="blueTable">
     <thead>
@@ -257,8 +276,16 @@
         {% endfor %}
     </tbody>
     <tfoot>
+        <tr style="font-weight: bold; background-color: #e9ecef; color: #495057;">
+            <td colspan="4"><strong>SUMMARY TOTALS</strong></td>
+            <td><strong>Gross</strong></td>
+            <td><strong>Net</strong></td>
+            <td><strong>Shipping</strong></td>
+            <td><strong>Returns</strong></td>
+            <td colspan="2"></td>
+        </tr>
         <tr style="font-weight: bold; background-color: #f8f9fa;">
-            <td colspan="4"><strong>Totals:</strong></td>
+            <td colspan="4"></td>
             <td><strong>${{ items|selectattr('gross')|map(attribute='gross')|sum }}</strong></td>
             <td><strong>${{ items|selectattr('net')|map(attribute='net')|sum }}</strong></td>
             <td><strong>${{ items|selectattr('shipping_fee')|map(attribute='shipping_fee')|sum }}</strong></td>

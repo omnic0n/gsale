@@ -211,10 +211,10 @@ def set_group_add(group_name, details, image_id):
         location_address = None
     
     cur.execute("""
-        INSERT INTO collection(id, name, date, price, image, account, latitude, longitude, location_address) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO collection(id, name, date, price, image, account, group_id, latitude, longitude, location_address) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """, (group_id, group_name, details['date'], price, image_id, session.get('id'), 
-          latitude, longitude, location_address))
+          session.get('group_id'), latitude, longitude, location_address))
     mysql.connection.commit()
     cur.close()
     return group_id
@@ -256,10 +256,10 @@ def set_group_modify(details, image_id):
         UPDATE collection 
         SET name = %s, date = %s, price = %s, image = %s, 
             latitude = %s, longitude = %s, location_address = %s 
-        WHERE id = %s AND account = %s
+        WHERE id = %s AND group_id = %s
     """, (details['name'], details['date'], price, image_id, 
           latitude, longitude, location_address,
-          details['id'], session.get('id')))
+          details['id'], session.get('group_id')))
     mysql.connection.commit()
     cur.close()
 
@@ -271,8 +271,8 @@ def remove_group_data(id):
     cur = mysql.connection.cursor()
     cur.execute("""
         DELETE FROM collection 
-        WHERE id = %s AND account = %s
-    """, (id, session.get('id')))
+        WHERE id = %s AND group_id = %s
+    """, (id, session.get('group_id')))
     mysql.connection.commit()
     cur.close()
 
@@ -508,8 +508,8 @@ def add_group(name, description=""):
     
     group_id = generate_uuid()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO collection(id, name, date, price, account) VALUES (%s, %s, %s, %s, %s)", 
-                (group_id, name, date.today().strftime("%Y-%m-%d"), 0, session.get('id')))
+    cur.execute("INSERT INTO collection(id, name, date, price, account, group_id) VALUES (%s, %s, %s, %s, %s, %s)", 
+                (group_id, name, date.today().strftime("%Y-%m-%d"), 0, session.get('id'), session.get('group_id')))
     mysql.connection.commit()
     cur.close()
     return group_id
@@ -1564,3 +1564,88 @@ def get_access_attempts_by_email_and_ip_and_google_id_and_name_and_status(email,
     results = list(cur.fetchall())
     cur.close()
     return results
+
+# Group Management Functions
+def create_group(name, description=None):
+    """Create a new group"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO `groups` (name, description) 
+            VALUES (%s, %s)
+        """, (name, description))
+        mysql.connection.commit()
+        group_id = cur.lastrowid
+        cur.close()
+        return group_id
+    except Exception as e:
+        print("Error creating group: {}".format(e))
+        return None
+
+def update_group(group_id, name=None, description=None):
+    """Update group information"""
+    try:
+        cur = mysql.connection.cursor()
+        updates = []
+        params = []
+        
+        if name is not None:
+            updates.append("name = %s")
+            params.append(name)
+        
+        if description is not None:
+            updates.append("description = %s")
+            params.append(description)
+        
+        if updates:
+            params.append(group_id)
+            cur.execute(f"""
+                UPDATE `groups` 
+                SET {', '.join(updates)}
+                WHERE id = %s
+            """, params)
+            mysql.connection.commit()
+        
+        cur.close()
+        return True
+    except Exception as e:
+        print("Error updating group: {}".format(e))
+        return False
+
+def move_user_to_group(user_id, group_id):
+    """Move a user to a different group"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE accounts 
+            SET group_id = %s 
+            WHERE id = %s
+        """, (group_id, user_id))
+        mysql.connection.commit()
+        cur.close()
+        return True
+    except Exception as e:
+        print("Error moving user to group: {}".format(e))
+        return False
+
+def delete_group(group_id):
+    """Delete a group (only if it has no members)"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Check if group has members
+        cur.execute("SELECT COUNT(*) FROM accounts WHERE group_id = %s", (group_id,))
+        member_count = cur.fetchone()['COUNT(*)']
+        
+        if member_count > 0:
+            cur.close()
+            return False, "Cannot delete group with members"
+        
+        # Delete the group
+        cur.execute("DELETE FROM `groups` WHERE id = %s", (group_id,))
+        mysql.connection.commit()
+        cur.close()
+        return True, "Group deleted successfully"
+    except Exception as e:
+        print("Error deleting group: {}".format(e))
+        return False, str(e)

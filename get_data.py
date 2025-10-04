@@ -5,6 +5,14 @@ from flask import session
 # MySQL connection will be set by app.py
 mysql = None
 
+def get_current_group_id():
+    """Get the current user's group_id from session"""
+    return session.get('group_id')
+
+def get_current_user_id():
+    """Get the current user's id from session"""
+    return session.get('id')
+
 def validate_string_input(value, max_length=100, default=''):
     """Validate and sanitize string inputs to prevent SQL injection"""
     if not isinstance(value, str):
@@ -68,7 +76,7 @@ def get_years():
 #Group Data
 def get_all_from_group(group_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM collection WHERE id = %s AND account = %s", (group_id, session.get('id')))
+    cur.execute("SELECT * FROM collection WHERE id = %s AND group_id = %s", (group_id, get_current_group_id()))
     return cur.fetchone()
 
 def get_all_from_group_and_items(date):
@@ -88,10 +96,10 @@ def get_all_from_group_and_items(date):
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
-        WHERE c.date LIKE %s AND c.account = %s
+        WHERE c.date LIKE %s AND c.group_id = %s
         GROUP BY c.id, c.name, c.price, c.date, c.location_address
         ORDER BY c.date
-    """, (date, session.get('id')))
+    """, (date, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_all_from_group_and_items_by_name(name):
@@ -113,10 +121,10 @@ def get_all_from_group_and_items_by_name(name):
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
-        WHERE c.name LIKE %s AND c.account = %s
+        WHERE c.name LIKE %s AND c.group_id = %s
         GROUP BY c.id, c.name, c.price, c.date, c.location_address
         ORDER BY c.date
-    """, (search_pattern, session.get('id')))
+    """, (search_pattern, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_all_from_groups(date):
@@ -124,14 +132,14 @@ def get_all_from_groups(date):
     
     # Handle wildcard case - if date is '%', get all groups regardless of date
     if date == '%':
-        cur.execute("SELECT * FROM collection WHERE collection.account = %s ORDER BY name ASC", 
-                   (session.get('id'),))
+        cur.execute("SELECT * FROM collection WHERE collection.group_id = %s ORDER BY name ASC", 
+                   (get_current_group_id(),))
     else:
         # Use validation function for specific dates
         validated_date = validate_date_input(date)
         search_pattern = '%{}%'.format(validated_date)
-        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.account = %s ORDER BY name ASC", 
-                   (search_pattern, session.get('id')))
+        cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.group_id = %s ORDER BY name ASC", 
+                   (search_pattern, get_current_group_id()))
     
     return list(cur.fetchall())
 
@@ -186,9 +194,10 @@ def get_data_from_group_list(group_id):
                     collection.image,
                     collection.latitude,
                     collection.longitude,
-                    collection.location_address
+                    collection.location_address,
+                    collection.account
                     FROM collection collection
-                    WHERE collection.id = %s AND collection.account = %s""", (group_id, session.get('id')))
+                    WHERE collection.id = %s AND collection.group_id = %s""", (group_id, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_group_sold_from_date(start_date, end_date):
@@ -197,7 +206,7 @@ def get_group_sold_from_date(start_date, end_date):
     cur.execute("""
         SELECT 
             c.date,
-            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS net
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
@@ -214,16 +223,16 @@ def get_group_sold_from_day(day):
     cur.execute("""
         SELECT 
             c.date,
-            COALESCE(SUM(s.price - s.shipping_fee), 0) AS net,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS net,
             DAYNAME(c.date) AS day
         FROM collection c
         LEFT JOIN items i ON c.id = i.group_id
         LEFT JOIN sale s ON i.id = s.id
         WHERE DAYOFWEEK(c.date) = %s 
-        AND c.account = %s 
+        AND c.group_id = %s 
         GROUP BY c.date 
         ORDER BY c.date
-    """, (day, session.get('id')))
+    """, (day, get_current_group_id()))
     return list(cur.fetchall())
 
 #Item Data
@@ -233,8 +242,8 @@ def get_group_id(item_id):
         SELECT i.group_id 
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
-        WHERE i.id = %s AND c.account = %s
-    """, (item_id, session.get('id')))
+        WHERE i.id = %s AND c.group_id = %s
+    """, (item_id, get_current_group_id()))
     return cur.fetchone()
 
 def get_all_from_items(item_id):
@@ -265,8 +274,8 @@ def get_list_of_items_with_name(name, sold):
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
                 INNER JOIN sale sale ON items.id = sale.id
-                WHERE items.name LIKE %s AND collection.account = %s AND items.sold LIKE %s""", 
-                (search_pattern, session.get('id'), validated_sold))
+                WHERE items.name LIKE %s AND collection.group_id = %s AND items.sold LIKE %s""", 
+                (search_pattern, get_current_group_id(), validated_sold))
     return list(cur.fetchall())
 
 def get_data_from_item_groups(group_id):
@@ -288,8 +297,8 @@ def get_data_from_item_groups(group_id):
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN sale sale ON sale.id = items.id
                     LEFT JOIN categories ON items.category_id = categories.id
-                    WHERE items.group_id = %s AND collection.account = %s
-                    ORDER BY sale.date""", (group_id, session.get('id')))
+                    WHERE items.group_id = %s AND collection.group_id = %s
+                    ORDER BY sale.date""", (group_id, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_total_items_in_group(group_id):
@@ -298,8 +307,8 @@ def get_total_items_in_group(group_id):
         SELECT count(*) as total 
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
-        WHERE i.group_id = %s AND c.account = %s
-    """, (group_id, session.get('id')))
+        WHERE i.group_id = %s AND c.group_id = %s
+    """, (group_id, get_current_group_id()))
     return cur.fetchone()
 
 def get_total_items_in_group_sold(group_id):
@@ -308,8 +317,8 @@ def get_total_items_in_group_sold(group_id):
         SELECT count(*) as total 
         FROM items i 
         INNER JOIN collection c ON i.group_id = c.id 
-        WHERE i.group_id = %s AND i.sold = 1 AND c.account = %s
-    """, (group_id, session.get('id')))
+        WHERE i.group_id = %s AND i.sold = 1 AND c.group_id = %s
+    """, (group_id, get_current_group_id()))
     return cur.fetchone()
 
 def get_sold_from_date(start_date, end_date):
@@ -327,10 +336,10 @@ def get_sold_from_date(start_date, end_date):
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
         WHERE s.date BETWEEN %s AND %s 
-        AND c.account = %s 
+        AND c.group_id = %s 
         GROUP BY s.date 
         ORDER BY s.date ASC
-    """, (start_date, end_date, session.get('id')))
+    """, (start_date, end_date, get_current_group_id()))
     return list(cur.fetchall())
 
 
@@ -350,10 +359,10 @@ def get_sold_from_day(day):
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
         WHERE DAYOFWEEK(s.date) = %s 
-        AND c.account = %s 
+        AND c.group_id = %s 
         GROUP BY s.date 
         ORDER BY s.date ASC
-    """, (day, session.get('id')))
+    """, (day, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_data_for_item_describe(item_id):
@@ -372,7 +381,7 @@ def get_data_for_item_describe(item_id):
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
                     LEFT JOIN categories ON items.category_id = categories.id
-                    WHERE items.id = %s AND collection.account = %s""", (item_id, session.get('id')))
+                    WHERE items.id = %s AND collection.group_id = %s""", (item_id, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_all_items_not_sold():
@@ -381,7 +390,7 @@ def get_all_items_not_sold():
                 SELECT 
                 * FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id  
-                WHERE items.sold = 0 AND collection.account = %s ORDER BY items.name ASC""", (session.get('id'), ))
+                WHERE items.sold = 0 AND collection.group_id = %s ORDER BY items.name ASC""", (get_current_group_id(), ))
     return list(cur.fetchall())
 
 def get_all_items_sold():
@@ -393,7 +402,7 @@ def get_all_items_sold():
                     FROM sale
                     INNER JOIN items items ON items.id = sale.id
                     INNER JOIN collection collection ON items.group_id = collection.id 
-                    WHERE items.sold = 1 AND collection.account = %s ORDER BY sale.date ASC""", (session.get('id'), ))
+                    WHERE items.sold = 1 AND collection.group_id = %s ORDER BY sale.date ASC""", (get_current_group_id(), ))
     return list(cur.fetchall())
 
 def get_data_from_sale(item_id):
@@ -465,9 +474,9 @@ def get_list_of_items_with_categories(category_id):
                     INNER JOIN collection collection ON items.group_id = collection.id
                     INNER JOIN sale sale ON items.id = sale.id
                     INNER JOIN categories categories ON items.category_id = categories.uuid_id
-                    WHERE categories.uuid_id = %s AND collection.account = %s
+                    WHERE categories.uuid_id = %s AND collection.group_id = %s
                     ORDER BY categories.uuid_id""",
-                    (category_id, session.get('id'), ))
+                    (category_id, get_current_group_id(), ))
         return list(cur.fetchall())
 
 def get_list_of_items_by_category(category_id, sold_status="all"):
@@ -628,13 +637,21 @@ def get_list_of_items_by_sold_status(sold_status, sold_date="%", purchase_date="
 
 #Category Data
 def get_all_from_categories():
+    user_id = session.get('id')
+    if not user_id:
+        return []
+    
     cur = mysql.connection.cursor()
-    cur.execute("SELECT uuid_id as id, type, user_id FROM categories WHERE user_id = %s ORDER BY type", (session.get('id'),))
+    cur.execute("SELECT uuid_id as id, type, user_id FROM categories WHERE user_id = %s ORDER BY type", (user_id,))
     return list(cur.fetchall())
 
 def get_category(category_id):
+    user_id = session.get('id')
+    if not user_id:
+        return None
+    
     cur = mysql.connection.cursor()
-    cur.execute("SELECT type FROM categories where uuid_id = %s AND user_id = %s", (category_id, session.get('id')))
+    cur.execute("SELECT type FROM categories where uuid_id = %s AND user_id = %s", (category_id, user_id))
     return cur.fetchone()
 
 def get_category_by_id(category_id):
@@ -673,8 +690,8 @@ def get_profit(year):
         FROM sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
-        WHERE c.account = %s AND c.date LIKE %s AND i.sold = 1
-    """, (session.get('id'), year_value))
+        WHERE c.group_id = %s AND c.date LIKE %s AND i.sold = 1
+    """, (get_current_group_id(), year_value))
     sales_result = cur.fetchone()
     sale_price = sales_result['sale_price'] if sales_result else 0
     
@@ -682,8 +699,8 @@ def get_profit(year):
     cur.execute("""
         SELECT COALESCE(SUM(price), 0) AS purchase_price
         FROM collection
-        WHERE account = %s AND date LIKE %s
-    """, (session.get('id'), year_value))
+        WHERE group_id = %s AND date LIKE %s
+    """, (get_current_group_id(), year_value))
     purchase_result = cur.fetchone()
     purchase_price = purchase_result['purchase_price'] if purchase_result else 0
     
@@ -696,8 +713,8 @@ def get_group_profit(group_id):
         FROM sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
-        WHERE i.group_id = %s AND c.account = %s
-    """, (group_id, session.get('id')))
+        WHERE i.group_id = %s AND c.group_id = %s
+    """, (group_id, get_current_group_id()))
     result = cur.fetchone()
     cur.close()
     return result['sale_price'] if result else 0
@@ -709,8 +726,8 @@ def get_total_returned_fees_in_group(group_id):
         FROM sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
-        WHERE i.group_id = %s AND c.account = %s AND i.returned = 1
-    """, (group_id, session.get('id')))
+        WHERE i.group_id = %s AND c.group_id = %s AND i.returned = 1
+    """, (group_id, get_current_group_id()))
     result = cur.fetchone()
     cur.close()
     return result['total_returned_fees'] if result else 0
@@ -725,9 +742,9 @@ def get_location_from_date(start_date, end_date):
                    FROM location
                    INNER join collection collection on location.group_id = collection.id
                    WHERE collection.date >= %s AND collection.date <= %s
-                   AND collection.account = %s
+                   AND collection.group_id = %s
                    AND latitude != '' AND longitude != '' """,
-                   (start_date, end_date, session.get('id')))
+                   (start_date, end_date, get_current_group_id()))
     return list(cur.fetchall())
 
 # Optimized Report Functions
@@ -780,7 +797,170 @@ def get_combined_sales_summary(start_date, end_date):
     """, (session.get('id'), start_date, end_date))
     return list(cur.fetchall())
 
+def get_purchases_by_city(city):
+    """Get all purchases made in a specific city"""
+    user_id = session.get('id')
+    if not user_id:
+        return []
+    
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            c.id,
+            c.name,
+            c.date,
+            c.price,
+            c.location_name,
+            c.location_address,
+            c.latitude,
+            c.longitude,
+            COUNT(i.id) as item_count,
+            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_count,
+            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) as total_sales,
+            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) - c.price as profit
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.account = %s 
+        AND (
+            c.location_name = %s 
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+        )
+        GROUP BY c.id, c.name, c.date, c.price, c.location_name, c.location_address, c.latitude, c.longitude
+        ORDER BY c.date DESC
+    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
+    results = cur.fetchall()
+    print(f"City search for '{city}' returned {len(results)} purchases")
+    total_price = sum(float(result['price']) for result in results)
+    print(f"Total purchase price: ${total_price:.2f}")
+    for result in results:
+        print(f"  - {result['name']}: ${result['price']} ({result['location_name'] or result['location_address']})")
+    return list(results)
 
+def get_city_summary(city):
+    """Get summary statistics for purchases in a specific city"""
+    user_id = session.get('id')
+    if not user_id:
+        return None
+    
+    cur = mysql.connection.cursor()
+    
+    # First get the total spent from collection table only (no joins)
+    cur.execute("""
+        SELECT 
+            COUNT(DISTINCT c.id) as total_purchases,
+            SUM(c.price) as total_spent,
+            MIN(c.date) as first_purchase,
+            MAX(c.date) as last_purchase
+        FROM collection c
+        WHERE c.account = %s 
+        AND (
+            c.location_name = %s 
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+        )
+    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
+    
+    collection_result = cur.fetchone()
+    
+    # Then get item and sales data
+    cur.execute("""
+        SELECT 
+            COUNT(i.id) as total_items,
+            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_items,
+            COALESCE(SUM(CASE WHEN i.sold = 1 THEN s.price - s.shipping_fee - COALESCE(s.returned_fee, 0) ELSE 0 END), 0) as total_sales
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE c.account = %s 
+        AND (
+            c.location_name = %s 
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+            OR c.location_address LIKE %s
+        )
+    """, (user_id, city, f'%, {city},%', f'%, {city} %', f'%, {city}, %'))
+    
+    items_result = cur.fetchone()
+    
+    # Combine results
+    if collection_result and items_result:
+        result = {
+            'total_purchases': collection_result['total_purchases'],
+            'total_spent': collection_result['total_spent'],
+            'total_items': items_result['total_items'],
+            'sold_items': items_result['sold_items'],
+            'total_sales': items_result['total_sales'],
+            'total_profit': items_result['total_sales'] - collection_result['total_spent'],
+            'first_purchase': collection_result['first_purchase'],
+            'last_purchase': collection_result['last_purchase']
+        }
+        print(f"City summary for '{city}' - Total spent: ${result['total_spent']}")
+        return result
+    
+    return None
+
+def get_all_cities():
+    """Get all unique cities from user's purchases"""
+    user_id = session.get('id')
+    if not user_id:
+        return []
+    
+    cur = mysql.connection.cursor()
+    # First, let's see what we're getting before filtering
+    cur.execute("""
+        SELECT DISTINCT 
+            CASE 
+                WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN c.location_name
+                WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
+                    CASE 
+                        -- For addresses with exactly 3 comma-separated parts, take the middle one (most common case)
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 2 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        -- For addresses with 4+ comma-separated parts, try different positions
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) >= 3 THEN
+                            CASE 
+                                -- Try third-to-last part first
+                                WHEN TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1)) REGEXP '^[A-Za-z][A-Za-z ]+[A-Za-z]$' THEN
+                                    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
+                                -- Fallback to second-to-last part
+                                ELSE TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                            END
+                        -- For addresses with only 2 comma-separated parts, take the first part
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 1 THEN
+                            TRIM(SUBSTRING_INDEX(c.location_address, ',', 1))
+                        -- Fallback: try the second-to-last comma-separated part
+                        ELSE 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                    END
+                ELSE NULL
+            END as city_name,
+            COUNT(c.id) as purchase_count,
+            SUM(c.price) as total_spent
+        FROM collection c
+        WHERE c.account = %s 
+        AND (c.location_name IS NOT NULL AND c.location_name != '' 
+             OR c.location_address IS NOT NULL AND c.location_address != '')
+        GROUP BY city_name
+        HAVING city_name IS NOT NULL AND city_name != ''
+        AND city_name NOT REGEXP '^[0-9]+$'
+        AND city_name NOT REGEXP '^[A-Z]{2}$'
+        AND city_name NOT REGEXP '^[0-9]{5}$'
+        AND city_name NOT REGEXP '^[A-Z]{2} [0-9]{5}$'
+        AND city_name NOT LIKE 'None'
+        AND city_name NOT LIKE 'NULL'
+        AND city_name NOT LIKE 'null'
+        AND city_name NOT LIKE 'Unknown'
+        AND city_name NOT LIKE 'unknown'
+        AND LENGTH(city_name) > 2
+        ORDER BY city_name ASC
+    """, (user_id,))
+    
+    results = cur.fetchall()
+    return results
 
 # Admin Functions
 def check_admin_status(user_id):
@@ -817,12 +997,6 @@ def check_admin_status(user_id):
 def get_all_users():
     """Get all users for admin management"""
     try:
-        # Check if session has 'id' key
-        current_user_id = session.get('id')
-        if not current_user_id:
-            print("Warning: No session ID found in get_all_users")
-            return []
-        
         # Check if MySQL is available
         if not mysql:
             print("Warning: MySQL not initialized")
@@ -835,27 +1009,33 @@ def get_all_users():
         
         cur = mysql.connection.cursor()
         
-        # Get all users for admin management
+        # Get current user ID from session if available (for highlighting current user)
+        current_user_id = session.get('id') if session else None
+        
+        # Get all users for admin management with group information
         cur.execute("""
             SELECT 
-                id, 
-                username, 
-                email, 
-                name,
-                is_admin,
-                is_active,
+                a.id, 
+                a.username, 
+                a.email, 
+                a.name,
+                a.is_admin,
+                a.is_active,
+                a.group_id,
+                g.name as group_name,
                 CASE 
-                    WHEN id = %s THEN 'Current User'
+                    WHEN a.id = %s THEN 'Current User'
                     ELSE ''
                 END as is_current_user
-            FROM accounts 
-            ORDER BY username
+            FROM accounts a
+            LEFT JOIN `groups` g ON a.group_id = g.id
+            ORDER BY a.username
         """, (current_user_id,))
         result = list(cur.fetchall())
         
         # Convert to list of dictionaries if needed
         if result and not hasattr(result[0], 'keys'):
-            column_names = ['id', 'username', 'email', 'name', 'is_admin', 'is_active', 'is_current_user']
+            column_names = ['id', 'username', 'email', 'name', 'is_admin', 'is_active', 'group_id', 'group_name', 'is_current_user']
             result = [dict(zip(column_names, user)) for user in result]
         
         cur.close()
@@ -890,3 +1070,105 @@ def get_user_by_email(email):
     except Exception as e:
         print("Error getting user by email: {}".format(e))
         return None
+
+# Group Management Functions
+def get_all_groups():
+    """Get all groups for admin management"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT g.*, COUNT(a.id) as member_count
+        FROM `groups` g
+        LEFT JOIN accounts a ON g.id = a.group_id
+        GROUP BY g.id
+        ORDER BY g.name
+    """)
+    return list(cur.fetchall())
+
+def get_group_by_id(group_id):
+    """Get group details by ID"""
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM `groups` WHERE id = %s", (group_id,))
+    return cur.fetchone()
+
+def get_group_members(group_id):
+    """Get all members of a specific group"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get current user ID from session if available
+        current_user_id = session.get('id') if session else None
+        
+        cur.execute("""
+            SELECT 
+                a.id, 
+                a.username, 
+                a.email, 
+                a.name,
+                a.is_admin,
+                a.is_active,
+                a.group_id,
+                g.name as group_name,
+                CASE 
+                    WHEN a.id = %s THEN 'Current User'
+                    ELSE ''
+                END as is_current_user
+            FROM accounts a
+            INNER JOIN `groups` g ON a.group_id = g.id
+            WHERE a.group_id = %s
+            ORDER BY a.username
+        """, (current_user_id, group_id))
+        
+        result = list(cur.fetchall())
+        
+        # Convert to list of dictionaries if needed
+        if result and not hasattr(result[0], 'keys'):
+            column_names = ['id', 'username', 'email', 'name', 'is_admin', 'is_active', 'group_id', 'group_name', 'is_current_user']
+            result = [dict(zip(column_names, user)) for user in result]
+        
+        cur.close()
+        return result
+    except Exception as e:
+        print("Error in get_group_members: {}".format(e))
+        if 'cur' in locals():
+            cur.close()
+        return []
+
+def get_group_creator(group_id):
+    """Get the creator of the collection/group using the account field from group data"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get the account ID from the group data (who created the collection)
+        cur.execute("""
+            SELECT DISTINCT
+                c.account as created_by,
+                a.username as creator_username,
+                a.name as creator_name,
+                a.email as creator_email
+            FROM `collection` c
+            LEFT JOIN accounts a ON c.account = a.id
+            WHERE c.id = %s AND c.account IS NOT NULL
+            LIMIT 1
+        """, (group_id,))
+        result = cur.fetchone()
+        
+        cur.close()
+        
+        return result
+    except Exception as e:
+        print("Error in get_group_creator: {}".format(e))
+        if 'cur' in locals():
+            cur.close()
+        return None
+
+def get_current_group_info():
+    """Get current user's group information"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT g.*, COUNT(a.id) as member_count
+        FROM `groups` g
+        LEFT JOIN accounts a ON g.id = a.group_id
+        WHERE g.id = %s
+        GROUP BY g.id
+    """, (get_current_group_id(),))
+    return cur.fetchone()

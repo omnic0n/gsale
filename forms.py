@@ -117,6 +117,10 @@ class ChangePasswordForm(FlaskForm):
     confirm_password = StringField('Confirm Password', validators=[DataRequired(), EqualTo('new_password', message='Passwords must match')])
     submit = SubmitField('Change Password')
 
+class CityReportForm(FlaskForm):
+    city = SelectField('City', validators=[DataRequired()], choices=[], coerce=str)
+    submit = SubmitField('Search by City')
+
 class ReturnItemForm(FlaskForm):
     id = HiddenField('id')
     returned_fee = DecimalField('Returned Fee', validators=[DataRequired(), NumberRange(min=0, message='Returned fee must be a positive number')])
