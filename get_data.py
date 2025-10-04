@@ -136,8 +136,8 @@ def get_all_from_groups(date):
                    (get_current_group_id(),))
     else:
         # Use validation function for specific dates
-    validated_date = validate_date_input(date)
-    search_pattern = '%{}%'.format(validated_date)
+        validated_date = validate_date_input(date)
+        search_pattern = '%{}%'.format(validated_date)
         cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.group_id = %s ORDER BY name ASC", 
                    (search_pattern, get_current_group_id()))
     
