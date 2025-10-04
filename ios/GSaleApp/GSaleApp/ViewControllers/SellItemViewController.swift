@@ -32,6 +32,7 @@ class SellItemViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupHomeButton()
     }
 
     private func setupUI() {
@@ -136,6 +137,16 @@ class SellItemViewController: UIViewController {
             loadingIndicator.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             loadingIndicator.centerYAnchor.constraint(equalTo: submitButton.centerYAnchor)
         ])
+    }
+
+    private func setupHomeButton() {
+        let homeImage = UIImage(systemName: "house.fill")
+        let homeButton = UIBarButtonItem(image: homeImage, style: .plain, target: self, action: #selector(goHome))
+        navigationItem.rightBarButtonItem = homeButton
+    }
+
+    @objc private func goHome() {
+        navigationController?.popToRootViewController(animated: true)
     }
 
     private func todayString() -> String {

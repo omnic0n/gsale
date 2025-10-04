@@ -13,6 +13,7 @@ class GroupDetailViewController: UIViewController {
     private let totalItemsLabel = UILabel()
     private let soldItemsLabel = UILabel()
     private let soldPriceLabel = UILabel()
+    private let profitLabel = UILabel()
     
     private let modifyButton = UIButton(type: .system)
     private let addItemButton = UIButton(type: .system)
@@ -43,6 +44,7 @@ class GroupDetailViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupData()
+        setupHomeButton()
         
         // Add notification observer for item additions
         NotificationCenter.default.addObserver(
@@ -117,6 +119,12 @@ class GroupDetailViewController: UIViewController {
         soldPriceLabel.numberOfLines = 0
         soldPriceLabel.translatesAutoresizingMaskIntoConstraints = false
         
+        profitLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        profitLabel.textColor = .systemGreen
+        profitLabel.textAlignment = .center
+        profitLabel.numberOfLines = 0
+        profitLabel.translatesAutoresizingMaskIntoConstraints = false
+        
         // Enhanced button styling
         setupButton(modifyButton, title: "✏️ Modify Group", backgroundColor: .systemBlue)
         modifyButton.addTarget(self, action: #selector(modifyButtonTapped), for: .touchUpInside)
@@ -175,6 +183,7 @@ class GroupDetailViewController: UIViewController {
         statsView.addSubview(totalItemsLabel)
         statsView.addSubview(soldItemsLabel)
         statsView.addSubview(soldPriceLabel)
+        statsView.addSubview(profitLabel)
         
         contentView.addSubview(headerView)
         contentView.addSubview(modifyButton)
@@ -204,6 +213,16 @@ class GroupDetailViewController: UIViewController {
         imageActivityIndicator.hidesWhenStopped = true
         
         setupConstraints()
+    }
+
+    private func setupHomeButton() {
+        let homeImage = UIImage(systemName: "house.fill")
+        let homeButton = UIBarButtonItem(image: homeImage, style: .plain, target: self, action: #selector(goHome))
+        navigationItem.rightBarButtonItem = homeButton
+    }
+
+    @objc private func goHome() {
+        navigationController?.popToRootViewController(animated: true)
     }
     
     private func setupButton(_ button: UIButton, title: String, backgroundColor: UIColor) {
@@ -280,7 +299,7 @@ class GroupDetailViewController: UIViewController {
             
             statsView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 16),
             statsView.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -16),
-            statsView.heightAnchor.constraint(equalToConstant: 120),
+            statsView.heightAnchor.constraint(equalToConstant: 160),
             
             totalItemsLabel.topAnchor.constraint(equalTo: statsView.topAnchor, constant: 16),
             totalItemsLabel.centerXAnchor.constraint(equalTo: statsView.centerXAnchor),
@@ -290,6 +309,9 @@ class GroupDetailViewController: UIViewController {
             
             soldPriceLabel.topAnchor.constraint(equalTo: soldItemsLabel.bottomAnchor, constant: 8),
             soldPriceLabel.centerXAnchor.constraint(equalTo: statsView.centerXAnchor),
+            
+            profitLabel.topAnchor.constraint(equalTo: soldPriceLabel.bottomAnchor, constant: 8),
+            profitLabel.centerXAnchor.constraint(equalTo: statsView.centerXAnchor),
             
             modifyButton.topAnchor.constraint(equalTo: statsView.bottomAnchor, constant: 24),
             modifyButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
@@ -347,6 +369,11 @@ class GroupDetailViewController: UIViewController {
         totalItemsLabel.text = "📦 Total Items: \(groupDetail.totalItems)"
         soldItemsLabel.text = "💰 Sold Items: \(groupDetail.totalSoldItems)"
         soldPriceLabel.text = "💵 Sold Price: $\(String(format: "%.2f", groupDetail.soldPrice))"
+        
+        // Compute profit as sold net minus purchase price
+        let profit = groupDetail.soldPrice - groupDetail.price
+        profitLabel.text = "📈 Profit: $\(String(format: "%.2f", profit))"
+        profitLabel.textColor = profit < 0 ? .systemRed : .systemGreen
         
         // Check if we have items, if not load them immediately
         if !groupDetail.items.isEmpty {

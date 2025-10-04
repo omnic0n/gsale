@@ -31,6 +31,7 @@ class ItemsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupHomeButton()
         loadItems()
     }
     
@@ -104,6 +105,16 @@ class ItemsViewController: UIViewController {
             loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+    }
+
+    private func setupHomeButton() {
+        let homeImage = UIImage(systemName: "house.fill")
+        let homeButton = UIBarButtonItem(image: homeImage, style: .plain, target: self, action: #selector(goHome))
+        navigationItem.rightBarButtonItem = homeButton
+    }
+
+    @objc private func goHome() {
+        navigationController?.popToRootViewController(animated: true)
     }
     
     @objc private func refreshItems() {
@@ -242,6 +253,30 @@ class ItemsViewController: UIViewController {
                 self.confirmRemoveItem(item)
             })
         }
+        
+        // Always allow navigating to the item's group
+        alert.addAction(UIAlertAction(title: "View Group", style: .default) { _ in
+            let loadingAlert = UIAlertController(title: "Loading...", message: nil, preferredStyle: .alert)
+            self.present(loadingAlert, animated: true)
+            
+            Task {
+                do {
+                    let groupDetail = try await NetworkManager.shared.getGroupDetails(groupId: item.groupId)
+                    await MainActor.run {
+                        loadingAlert.dismiss(animated: true) {
+                            let vc = GroupDetailViewController(groupDetail: groupDetail)
+                            self.navigationController?.pushViewController(vc, animated: true)
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        loadingAlert.dismiss(animated: true) {
+                            self.showAlert(title: "Error", message: "Failed to load group. Please try again.")
+                        }
+                    }
+                }
+            }
+        })
         
         alert.addAction(UIAlertAction(title: "Close", style: .cancel))
         present(alert, animated: true)
