@@ -545,6 +545,8 @@ def reports_city():
     print(f"DEBUG: Years found: {years}")
     form.year.choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
     print(f"DEBUG: Year choices: {form.year.choices}")
+    print(f"DEBUG: Form year field: {form.year}")
+    print(f"DEBUG: Form year field choices: {form.year.choices}")
 
     if request.method == "POST":
         details = request.form

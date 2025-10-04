@@ -19,16 +19,23 @@
         </div>
         
         <div class="form-group">
-            {{ form.year.label(class="form-control-label") }}
-            {{ form.year(class="form-control") }}
-            {% if form.year.errors %}
-                <div class="text-danger">
-                    {% for error in form.year.errors %}
-                        <small>{{ error }}</small>
-                    {% endfor %}
-                </div>
-            {% endif %}
+            <label for="year" class="form-control-label">Year</label>
+            <select name="year" id="year" class="form-control">
+                <option value="all">All Years</option>
+                {% for year in form.year.choices %}
+                    {% if year[0] != 'all' %}
+                        <option value="{{ year[0] }}">{{ year[1] }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
             <small class="form-text text-muted">Select a year to filter results (defaults to all years)</small>
+            <!-- Debug info -->
+            <div class="text-muted small">
+                DEBUG: Year choices count: {{ form.year.choices|length }}
+                {% if form.year.choices %}
+                    Choices: {{ form.year.choices }}
+                {% endif %}
+            </div>
         </div>
         
         {{ form.submit(class="btn btn-primary") }}
