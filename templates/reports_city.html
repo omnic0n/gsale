@@ -20,22 +20,16 @@
         
         <div class="form-group">
             <label for="year" class="form-control-label">Year</label>
-            <select name="year" id="year" class="form-control">
+            <select name="year" id="year" class="form-control" style="display: block; width: 100%; padding: 0.375rem 0.75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #fff; border: 1px solid #ced4da; border-radius: 0.25rem;">
                 <option value="all">All Years</option>
-                {% for year in form.year.choices %}
-                    {% if year[0] != 'all' %}
-                        <option value="{{ year[0] }}">{{ year[1] }}</option>
-                    {% endif %}
-                {% endfor %}
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+                <option value="2019">2019</option>
             </select>
             <small class="form-text text-muted">Select a year to filter results (defaults to all years)</small>
-            <!-- Debug info -->
-            <div class="text-muted small">
-                DEBUG: Year choices count: {{ form.year.choices|length }}
-                {% if form.year.choices %}
-                    Choices: {{ form.year.choices }}
-                {% endif %}
-            </div>
         </div>
         
         {{ form.submit(class="btn btn-primary") }}
