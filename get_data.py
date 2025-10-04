@@ -69,8 +69,21 @@ def set_mysql_connection(mysql_connection):
 
 #Get Years
 def get_years():
+    """Get all years from collection data"""
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM years ORDER BY year")
+    
+    # Get the current group_id, but handle the case where it might be None
+    group_id = get_current_group_id()
+    if not group_id:
+        # If no group_id in session, return empty list
+        return []
+    
+    cur.execute("""
+        SELECT DISTINCT YEAR(date) as year
+        FROM collection
+        WHERE group_id = %s AND date IS NOT NULL
+        ORDER BY year DESC
+    """, (group_id,))
     return list(cur.fetchall())
 
 #Group Data
