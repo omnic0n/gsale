@@ -542,7 +542,7 @@ def reports_city():
     
     # Get all available years and populate the dropdown
     years = get_data.get_years()
-    print(f"DEBUG: Found {len(years)} years: {years}")
+    print(f"DEBUG: Years found: {years}")
     form.year.choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
     print(f"DEBUG: Year choices: {form.year.choices}")
 
