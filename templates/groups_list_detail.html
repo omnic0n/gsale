@@ -146,7 +146,7 @@
             <th>Total Items</th>
             <th>Sold Items</th>
             <th>Location</th>
-            <th>Modify</th>
+            <th style="text-align: right;">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -164,7 +164,7 @@
                     <span style="color: #999; font-size: 0.9em;">No location set</span>
                 {% endif %}
             </td>
-            <td>
+            <td style="text-align: right;">
                 <a href = "/groups/modify?group_id={{ group_id[0]['id'] }}" class="btn btn-sm btn-outline-primary">Modify Group</a>
                 <button onclick="openDeleteGroupModal()" class="btn btn-sm btn-outline-danger ml-2">Delete Group</button>
             </td>
