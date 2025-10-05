@@ -561,6 +561,8 @@ def reports_city():
         else:
             flash('Please select a city', 'error')
     
+    return render_template('reports_city.html', form=form)
+
 @app.route('/reports/api/cities-by-state/<state>')
 @login_required
 def api_cities_by_state(state):
