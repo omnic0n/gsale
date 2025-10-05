@@ -171,9 +171,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const stateSelect = document.getElementById('state_select');
     const citySelect = document.getElementById('city_select');
     
-    stateSelect.addEventListener('change', function() {
-        const selectedState = this.value;
-        
+    // Function to load cities for a given state
+    function loadCitiesForState(selectedState) {
         // Clear city dropdown
         citySelect.innerHTML = '<option value="">Select a city...</option>';
         
@@ -201,6 +200,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // If no state selected, keep city dropdown empty
             // City dropdown will remain with just "Select a city..." option
         }
+    }
+    
+    // Check if there's already a selected state when page loads
+    const initialState = stateSelect.value;
+    if (initialState) {
+        loadCitiesForState(initialState);
+    }
+    
+    stateSelect.addEventListener('change', function() {
+        loadCitiesForState(this.value);
     });
 });
 </script>
