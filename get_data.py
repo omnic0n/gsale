@@ -71,7 +71,7 @@ def set_mysql_connection(mysql_connection):
 def get_years():
     """Get all years from collection data"""
     try:
-    cur = mysql.connection.cursor()
+        cur = mysql.connection.cursor()
         
         # Get the current group_id, but handle the case where it might be None
         group_id = get_current_group_id()
