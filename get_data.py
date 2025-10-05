@@ -1030,6 +1030,25 @@ def get_all_states():
                         ELSE TRIM(SUBSTRING_INDEX(c.location_address, ',', -1))
                     END
                 ELSE NULL
+            END as raw_state,
+            CASE 
+                WHEN c.location_name IS NOT NULL AND c.location_name != '' AND c.location_name != 'None' THEN 
+                    CASE 
+                        WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) = 2 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -1), ',', 1))
+                        WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) >= 3 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -2), ',', 1))
+                        ELSE TRIM(SUBSTRING_INDEX(c.location_name, ',', -1))
+                    END
+                WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
+                    CASE 
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 2 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -1), ',', 1))
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) >= 3 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        ELSE TRIM(SUBSTRING_INDEX(c.location_address, ',', -1))
+                    END
+                ELSE NULL
             END as state_name,
             COUNT(c.id) as purchase_count,
             SUM(c.price) as total_spent
@@ -1048,7 +1067,32 @@ def get_all_states():
     """, (get_current_group_id(),))
     
     results = cur.fetchall()
-    return results
+    
+    # Process results to extract only state codes (remove zip codes)
+    processed_results = []
+    seen_states = set()
+    
+    for result in results:
+        raw_state = result['raw_state']
+        if raw_state:
+            # Extract only the state code (first 2 letters)
+            if raw_state.startswith('TX ') or raw_state.startswith('CA ') or raw_state.startswith('NY ') or raw_state.startswith('FL '):
+                state_code = raw_state[:2]
+            elif len(raw_state) >= 2 and raw_state[:2].isalpha():
+                state_code = raw_state[:2]
+            else:
+                state_code = raw_state
+            
+            # Only add unique states
+            if state_code not in seen_states and len(state_code) == 2 and state_code.isalpha():
+                seen_states.add(state_code)
+                processed_results.append({
+                    'state_name': state_code,
+                    'purchase_count': result['purchase_count'],
+                    'total_spent': result['total_spent']
+                })
+    
+    return processed_results
 
 def get_cities_by_state(state):
     """Get all unique cities from group's purchases for a specific state"""
