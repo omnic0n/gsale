@@ -544,9 +544,8 @@ def reports_city():
     years = get_data.get_years()
     form.year.choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
     
-    # Initially populate cities with all cities (will be filtered by JavaScript)
-    cities = get_data.get_all_cities()
-    form.city.choices = [(city['city_name'], "{} ({} purchases, ${:.2f})".format(city['city_name'], city['purchase_count'], float(city['total_spent']))) for city in cities]
+    # Initially populate cities with empty choices (will be populated by JavaScript when state is selected)
+    form.city.choices = [('', 'Select a city...')]
 
     if request.method == "POST":
         details = request.form

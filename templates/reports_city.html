@@ -171,12 +171,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const stateSelect = document.getElementById('state_select');
     const citySelect = document.getElementById('city_select');
     
-    // Store all cities for reference
-    const allCities = Array.from(citySelect.options).map(option => ({
-        value: option.value,
-        text: option.textContent
-    }));
-    
     stateSelect.addEventListener('change', function() {
         const selectedState = this.value;
         
@@ -204,15 +198,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error:', error);
                 });
         } else {
-            // If no state selected, show all cities
-            allCities.forEach(city => {
-                if (city.value) { // Skip empty option
-                    const option = document.createElement('option');
-                    option.value = city.value;
-                    option.textContent = city.text;
-                    citySelect.appendChild(option);
-                }
-            });
+            // If no state selected, keep city dropdown empty
+            // City dropdown will remain with just "Select a city..." option
         }
     });
 });
