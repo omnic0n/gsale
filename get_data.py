@@ -1039,7 +1039,10 @@ def get_all_states():
              OR c.location_address IS NOT NULL AND c.location_address != '')
         GROUP BY state_name
         HAVING state_name IS NOT NULL AND state_name != ''
-        AND state_name REGEXP '^[A-Z]{2}$'
+        AND (
+            state_name REGEXP '^[A-Z]{2}$' OR  -- 2-letter state codes
+            state_name REGEXP '^[A-Za-z][A-Za-z ]+[A-Za-z]$'  -- Full state names
+        )
         ORDER BY state_name ASC
     """, (get_current_group_id(),))
     
@@ -1091,6 +1094,7 @@ def get_cities_by_state(state):
         AND (c.location_name IS NOT NULL AND c.location_name != '' 
              OR c.location_address IS NOT NULL AND c.location_address != '')
         AND (
+            (c.location_name LIKE %s OR c.location_address LIKE %s) OR
             (c.location_name LIKE %s OR c.location_address LIKE %s)
         )
         GROUP BY city_name
@@ -1106,7 +1110,7 @@ def get_cities_by_state(state):
         AND city_name NOT LIKE 'unknown'
         AND LENGTH(city_name) > 2
         ORDER BY city_name ASC
-    """, (get_current_group_id(), f'%, {state}', f'%, {state}'))
+    """, (get_current_group_id(), f'%, {state}', f'%, {state}', f'%, {state},%', f'%, {state},%'))
     
     results = cur.fetchall()
     return results
