@@ -6,8 +6,21 @@
     
     <form method="POST">
         <div class="form-group">
+            {{ form.state.label(class="form-control-label") }}
+            {{ form.state(class="form-control", id="state_select") }}
+            {% if form.state.errors %}
+                <div class="text-danger">
+                    {% for error in form.state.errors %}
+                        <small>{{ error }}</small>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <small class="form-text text-muted">Select a state to filter cities</small>
+        </div>
+        
+        <div class="form-group">
             {{ form.city.label(class="form-control-label") }}
-            {{ form.city(class="form-control") }}
+            {{ form.city(class="form-control", id="city_select") }}
             {% if form.city.errors %}
                 <div class="text-danger">
                     {% for error in form.city.errors %}
@@ -152,5 +165,57 @@
     {% endif %}
 </div>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stateSelect = document.getElementById('state_select');
+    const citySelect = document.getElementById('city_select');
+    
+    // Store all cities for reference
+    const allCities = Array.from(citySelect.options).map(option => ({
+        value: option.value,
+        text: option.textContent
+    }));
+    
+    stateSelect.addEventListener('change', function() {
+        const selectedState = this.value;
+        
+        // Clear city dropdown
+        citySelect.innerHTML = '<option value="">Select a city...</option>';
+        
+        if (selectedState) {
+            // Fetch cities for the selected state
+            fetch(`/reports/api/cities-by-state/${selectedState}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Populate city dropdown with cities from the selected state
+                        data.cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city.city_name;
+                            option.textContent = `${city.city_name} (${city.purchase_count} purchases, $${parseFloat(city.total_spent).toFixed(2)})`;
+                            citySelect.appendChild(option);
+                        });
+                    } else {
+                        console.error('Error fetching cities:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        } else {
+            // If no state selected, show all cities
+            allCities.forEach(city => {
+                if (city.value) { // Skip empty option
+                    const option = document.createElement('option');
+                    option.value = city.value;
+                    option.textContent = city.text;
+                    citySelect.appendChild(option);
+                }
+            });
+        }
+    });
+});
+</script>
 
 {% endblock content %}

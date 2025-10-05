@@ -71,7 +71,7 @@ def set_mysql_connection(mysql_connection):
 def get_years():
     """Get all years from collection data"""
     try:
-        cur = mysql.connection.cursor()
+    cur = mysql.connection.cursor()
         
         # Get the current group_id, but handle the case where it might be None
         group_id = get_current_group_id()
@@ -162,8 +162,8 @@ def get_all_from_groups(date):
                    (get_current_group_id(),))
     else:
         # Use validation function for specific dates
-        validated_date = validate_date_input(date)
-        search_pattern = '%{}%'.format(validated_date)
+    validated_date = validate_date_input(date)
+    search_pattern = '%{}%'.format(validated_date)
         cur.execute("SELECT * FROM collection WHERE date LIKE %s AND collection.group_id = %s ORDER BY name ASC", 
                    (search_pattern, get_current_group_id()))
     
@@ -1003,6 +1003,110 @@ def get_all_cities():
         AND LENGTH(city_name) > 2
         ORDER BY city_name ASC
     """, (get_current_group_id(),))
+    
+    results = cur.fetchall()
+    return results
+
+def get_all_states():
+    """Get all unique states from group's purchases"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT DISTINCT 
+            CASE 
+                WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN 
+                    CASE 
+                        WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) = 2 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -1), ',', 1))
+                        WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) >= 3 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -2), ',', 1))
+                        ELSE TRIM(SUBSTRING_INDEX(c.location_name, ',', -1))
+                    END
+                WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
+                    CASE 
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 2 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -1), ',', 1))
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) >= 3 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        ELSE TRIM(SUBSTRING_INDEX(c.location_address, ',', -1))
+                    END
+                ELSE NULL
+            END as state_name,
+            COUNT(c.id) as purchase_count,
+            SUM(c.price) as total_spent
+        FROM collection c
+        WHERE c.group_id = %s 
+        AND (c.location_name IS NOT NULL AND c.location_name != '' 
+             OR c.location_address IS NOT NULL AND c.location_address != '')
+        GROUP BY state_name
+        HAVING state_name IS NOT NULL AND state_name != ''
+        AND state_name REGEXP '^[A-Z]{2}$'
+        ORDER BY state_name ASC
+    """, (get_current_group_id(),))
+    
+    results = cur.fetchall()
+    return results
+
+def get_cities_by_state(state):
+    """Get all unique cities from group's purchases for a specific state"""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT DISTINCT 
+            CASE 
+                WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN 
+                    CASE 
+                        WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) = 2 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -2), ',', 1))
+                        WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) >= 3 THEN
+                            CASE 
+                                WHEN TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -3), ',', 1)) REGEXP '^[A-Za-z][A-Za-z ]+[A-Za-z]$' THEN
+                                    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -3), ',', 1))
+                                ELSE TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -2), ',', 1))
+                            END
+                        WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) = 1 THEN
+                            TRIM(SUBSTRING_INDEX(c.location_name, ',', 1))
+                        ELSE 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -2), ',', 1))
+                    END
+                WHEN c.location_address IS NOT NULL AND c.location_address != '' THEN 
+                    CASE 
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 2 THEN
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) >= 3 THEN
+                            CASE 
+                                WHEN TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1)) REGEXP '^[A-Za-z][A-Za-z ]+[A-Za-z]$' THEN
+                                    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -3), ',', 1))
+                                ELSE TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                            END
+                        WHEN (LENGTH(c.location_address) - LENGTH(REPLACE(c.location_address, ',', ''))) = 1 THEN
+                            TRIM(SUBSTRING_INDEX(c.location_address, ',', 1))
+                        ELSE 
+                            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_address, ',', -2), ',', 1))
+                    END
+                ELSE NULL
+            END as city_name,
+            COUNT(c.id) as purchase_count,
+            SUM(c.price) as total_spent
+        FROM collection c
+        WHERE c.group_id = %s 
+        AND (c.location_name IS NOT NULL AND c.location_name != '' 
+             OR c.location_address IS NOT NULL AND c.location_address != '')
+        AND (
+            (c.location_name LIKE %s OR c.location_address LIKE %s)
+        )
+        GROUP BY city_name
+        HAVING city_name IS NOT NULL AND city_name != ''
+        AND city_name NOT REGEXP '^[0-9]+$'
+        AND city_name NOT REGEXP '^[A-Z]{2}$'
+        AND city_name NOT REGEXP '^[0-9]{5}$'
+        AND city_name NOT REGEXP '^[A-Z]{2} [0-9]{5}$'
+        AND city_name NOT LIKE 'None'
+        AND city_name NOT LIKE 'NULL'
+        AND city_name NOT LIKE 'null'
+        AND city_name NOT LIKE 'Unknown'
+        AND city_name NOT LIKE 'unknown'
+        AND LENGTH(city_name) > 2
+        ORDER BY city_name ASC
+    """, (get_current_group_id(), f'%, {state}', f'%, {state}'))
     
     results = cur.fetchall()
     return results

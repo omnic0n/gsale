@@ -536,26 +536,47 @@ def reports_locations():
 def reports_city():
     form = CityReportForm()
     
-    # Get all available cities and populate the dropdown
-    cities = get_data.get_all_cities()
-    form.city.choices = [(city['city_name'], "{} ({} purchases, ${:.2f})".format(city['city_name'], city['purchase_count'], float(city['total_spent']))) for city in cities]
+    # Get all available states and populate the dropdown
+    states = get_data.get_all_states()
+    form.state.choices = [(state['state_name'], "{} ({} purchases, ${:.2f})".format(state['state_name'], state['purchase_count'], float(state['total_spent']))) for state in states]
     
     # Get all available years and populate the dropdown
     years = get_data.get_years()
     form.year.choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
+    
+    # Initially populate cities with all cities (will be filtered by JavaScript)
+    cities = get_data.get_all_cities()
+    form.city.choices = [(city['city_name'], "{} ({} purchases, ${:.2f})".format(city['city_name'], city['purchase_count'], float(city['total_spent']))) for city in cities]
 
     if request.method == "POST":
         details = request.form
-        city = details['city'].strip()
+        state = details.get('state', '').strip()
+        city = details.get('city', '').strip()
         year = details.get('year', 'all')
         
         if city:
             purchases = get_data.get_purchases_by_city(city, year)
             summary = get_data.get_city_summary(city, year)
-            return render_template('reports_city.html', form=form, purchases=purchases, summary=summary, city=city, selected_year=year)
+            return render_template('reports_city.html', form=form, purchases=purchases, summary=summary, city=city, selected_year=year, selected_state=state)
         else:
             flash('Please select a city', 'error')
     
+@app.route('/reports/api/cities-by-state/<state>')
+@login_required
+def api_cities_by_state(state):
+    """API endpoint to get cities for a specific state"""
+    try:
+        cities = get_data.get_cities_by_state(state)
+        return jsonify({
+            'success': True,
+            'cities': cities
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
     return render_template('reports_city.html', form=form)
 
 #Data Section
