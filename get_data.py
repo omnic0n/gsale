@@ -1100,7 +1100,7 @@ def get_cities_by_state(state):
     cur.execute("""
         SELECT DISTINCT 
             CASE 
-                WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN 
+                WHEN c.location_name IS NOT NULL AND c.location_name != '' AND c.location_name != 'None' THEN 
                     CASE 
                         WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) = 2 THEN
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -2), ',', 1))
@@ -1136,26 +1136,27 @@ def get_cities_by_state(state):
             SUM(c.price) as total_spent
         FROM collection c
         WHERE c.group_id = %s 
-        AND (c.location_name IS NOT NULL AND c.location_name != '' 
+        AND (c.location_name IS NOT NULL AND c.location_name != '' AND c.location_name != 'None'
              OR c.location_address IS NOT NULL AND c.location_address != '')
         AND (
+            (c.location_name LIKE %s OR c.location_address LIKE %s) OR
+            (c.location_name LIKE %s OR c.location_address LIKE %s) OR
             (c.location_name LIKE %s OR c.location_address LIKE %s) OR
             (c.location_name LIKE %s OR c.location_address LIKE %s)
         )
         GROUP BY city_name
-        HAVING city_name IS NOT NULL AND city_name != ''
+        HAVING city_name IS NOT NULL AND city_name != '' AND city_name != 'None'
         AND city_name NOT REGEXP '^[0-9]+$'
         AND city_name NOT REGEXP '^[A-Z]{2}$'
         AND city_name NOT REGEXP '^[0-9]{5}$'
         AND city_name NOT REGEXP '^[A-Z]{2} [0-9]{5}$'
-        AND city_name NOT LIKE 'None'
         AND city_name NOT LIKE 'NULL'
         AND city_name NOT LIKE 'null'
         AND city_name NOT LIKE 'Unknown'
         AND city_name NOT LIKE 'unknown'
         AND LENGTH(city_name) > 2
         ORDER BY city_name ASC
-    """, (get_current_group_id(), f'%, {state}', f'%, {state}', f'%, {state},%', f'%, {state},%'))
+    """, (get_current_group_id(), f'%, {state}', f'%, {state}', f'%, {state},%', f'%, {state},%', f'%, {state} %', f'%, {state} %', f'%, {state}, %', f'%, {state}, %'))
     
     results = cur.fetchall()
     return results
