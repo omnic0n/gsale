@@ -1013,7 +1013,7 @@ def get_all_states():
     cur.execute("""
         SELECT DISTINCT 
             CASE 
-                WHEN c.location_name IS NOT NULL AND c.location_name != '' THEN 
+                WHEN c.location_name IS NOT NULL AND c.location_name != '' AND c.location_name != 'None' THEN 
                     CASE 
                         WHEN (LENGTH(c.location_name) - LENGTH(REPLACE(c.location_name, ',', ''))) = 2 THEN
                             TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(c.location_name, ',', -1), ',', 1))
@@ -1035,12 +1035,13 @@ def get_all_states():
             SUM(c.price) as total_spent
         FROM collection c
         WHERE c.group_id = %s 
-        AND (c.location_name IS NOT NULL AND c.location_name != '' 
+        AND (c.location_name IS NOT NULL AND c.location_name != '' AND c.location_name != 'None'
              OR c.location_address IS NOT NULL AND c.location_address != '')
         GROUP BY state_name
-        HAVING state_name IS NOT NULL AND state_name != ''
+        HAVING state_name IS NOT NULL AND state_name != '' AND state_name != 'None'
         AND (
             state_name REGEXP '^[A-Z]{2}$' OR  -- 2-letter state codes
+            state_name REGEXP '^[A-Z]{2} [0-9]{5}$' OR  -- 2-letter state codes with zip
             state_name REGEXP '^[A-Za-z][A-Za-z ]+[A-Za-z]$'  -- Full state names
         )
         ORDER BY state_name ASC
