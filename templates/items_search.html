@@ -53,62 +53,87 @@
                     <input type="hidden" id="editItemId" name="id">
                     <input type="hidden" name="return_to" value="items_search">
                     
-                    <div class="form-group">
-                        <label for="editItemName">Name</label>
-                        <input type="text" class="form-control" id="editItemName" name="name" required>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemName">Name</label>
+                                <input type="text" class="form-control" id="editItemName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemGroup">Group</label>
+                                <select class="form-control" id="editItemGroup" name="group" required>
+                                    <!-- Groups will be populated by JavaScript -->
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="editItemGroup">Group</label>
-                        <select class="form-control" id="editItemGroup" name="group" required>
-                            <!-- Groups will be populated by JavaScript -->
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemCategory">Category</label>
+                                <select class="form-control" id="editItemCategory" name="category" required>
+                                    <!-- Categories will be populated by JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemStorage">Storage</label>
+                                <input type="text" class="form-control" id="editItemStorage" name="storage">
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="editItemCategory">Category</label>
-                        <select class="form-control" id="editItemCategory" name="category" required>
-                            <!-- Categories will be populated by JavaScript -->
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemEbayId">eBay Item ID</label>
+                                <small class="text-muted d-block">(Optional)</small>
+                                <input type="text" class="form-control" id="editItemEbayId" name="ebay_item_id" placeholder="eBay Item ID">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemReturned">Returned</label>
+                                <select class="form-control" id="editItemReturned" name="returned">
+                                    <option value="0">False</option>
+                                    <option value="1">True</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="editItemStorage">Storage</label>
-                        <input type="text" class="form-control" id="editItemStorage" name="storage">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemListDate">List Date</label>
+                                <input type="date" class="form-control" id="editItemListDate" name="list_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemSaleDate">Sale Date</label>
+                                <input type="date" class="form-control" id="editItemSaleDate" name="sale_date">
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="editItemEbayId">eBay Item ID</label>
-                        <small class="text-muted d-block">(Optional)</small>
-                        <input type="text" class="form-control" id="editItemEbayId" name="ebay_item_id" placeholder="eBay Item ID">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editItemReturned">Returned</label>
-                        <select class="form-control" id="editItemReturned" name="returned">
-                            <option value="0">False</option>
-                            <option value="1">True</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editItemListDate">List Date</label>
-                        <input type="date" class="form-control" id="editItemListDate" name="list_date" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editItemSaleDate">Sale Date</label>
-                        <input type="date" class="form-control" id="editItemSaleDate" name="sale_date">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editItemPrice">Price</label>
-                        <input type="number" step="0.01" class="form-control" id="editItemPrice" name="price">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editItemShippingFee">Shipping Fee</label>
-                        <input type="number" step="0.01" class="form-control" id="editItemShippingFee" name="shipping_fee">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemPrice">Price</label>
+                                <input type="number" step="0.01" class="form-control" id="editItemPrice" name="price">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editItemShippingFee">Shipping Fee</label>
+                                <input type="number" step="0.01" class="form-control" id="editItemShippingFee" name="shipping_fee">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="custom-modal-footer">
@@ -199,11 +224,10 @@
     background-color: white;
     color: black;
     flex: 1;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    display: block;
+    max-height: calc(100vh - 200px);
 }
 
 .custom-modal-footer {
