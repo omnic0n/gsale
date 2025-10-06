@@ -228,6 +228,143 @@ def get_ebay_listings_via_browse(user_token, api_base_url):
             'error': 'Browse API error: {}'.format(str(e))
         }
 
+def get_ebay_listings_legacy(user_token):
+    """
+    Fetch listings using legacy eBay Trading API
+    """
+    try:
+        import xml.etree.ElementTree as ET
+        
+        # eBay Trading API endpoint
+        url = "https://api.ebay.com/ws/api.dll"
+        
+        # XML request for GetMyeBaySelling
+        xml_request = """<?xml version="1.0" encoding="utf-8"?>
+        <GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+            <RequesterCredentials>
+                <eBayAuthToken>{}</eBayAuthToken>
+            </RequesterCredentials>
+            <ActiveList>
+                <Include>true</Include>
+                <Pagination>
+                    <EntriesPerPage>100</EntriesPerPage>
+                    <PageNumber>1</PageNumber>
+                </Pagination>
+            </ActiveList>
+            <DetailLevel>ReturnAll</DetailLevel>
+            <Version>1199</Version>
+        </GetMyeBaySellingRequest>""".format(user_token)
+        
+        headers = {
+            'X-EBAY-API-COMPATIBILITY-LEVEL': '1199',
+            'X-EBAY-API-DEV-NAME': app.config.get('EBAY_DEV_NAME', 'your_dev_name'),
+            'X-EBAY-API-APP-NAME': app.config.get('EBAY_APP_NAME', 'your_app_name'),
+            'X-EBAY-API-CERT-NAME': app.config.get('EBAY_CERT_NAME', 'your_cert_name'),
+            'X-EBAY-API-CALL-NAME': 'GetMyeBaySelling',
+            'X-EBAY-API-SITEID': '0',  # US site
+            'Content-Type': 'text/xml'
+        }
+        
+        response = requests.post(url, data=xml_request, headers=headers)
+        
+        if response.status_code == 200:
+            # Parse XML response
+            root = ET.fromstring(response.text)
+            
+            # Check for errors
+            errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
+            if errors:
+                error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
+                if error_msg is not None:
+                    return {
+                        'success': False,
+                        'error': 'eBay API error: {}'.format(error_msg.text)
+                    }
+            
+            # Extract listings
+            listings = []
+            active_list = root.find('.//{urn:ebay:apis:eBLBaseComponents}ActiveList')
+            if active_list is not None:
+                items = active_list.findall('.//{urn:ebay:apis:eBLBaseComponents}Item')
+                for item in items:
+                    item_id = item.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
+                    title = item.find('.//{urn:ebay:apis:eBLBaseComponents}Title')
+                    current_price = item.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
+                    condition = item.find('.//{urn:ebay:apis:eBLBaseComponents}ConditionDisplayName')
+                    quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
+                    
+                    listings.append({
+                        'itemId': item_id.text if item_id is not None else 'N/A',
+                        'title': title.text if title is not None else 'N/A',
+                        'price': float(current_price.text) if current_price is not None and current_price.text else 0,
+                        'condition': condition.text if condition is not None else 'N/A',
+                        'quantity': int(quantity.text) if quantity is not None and quantity.text else 0,
+                        'sku': item_id.text if item_id is not None else 'N/A'
+                    })
+            
+            return {
+                'success': True,
+                'listings': listings,
+                'total': len(listings),
+                'note': 'Using legacy Trading API'
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'Legacy API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Legacy API error: {}'.format(str(e))
+        }
+
+def get_ebay_listings_modern(user_token, api_base_url):
+    """
+    Fetch listings using modern eBay APIs (OAuth 2.0)
+    """
+    try:
+        # Try Inventory API first
+        url = "{}/sell/inventory/v1/inventory_item".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        params = {
+            'limit': 100,
+            'offset': 0
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': True,
+                'listings': data.get('inventoryItems', []),
+                'total': data.get('total', 0),
+                'note': 'Using modern Inventory API'
+            }
+        elif response.status_code == 403:
+            # Try Browse API as fallback
+            return try_alternative_ebay_endpoints(user_token, api_base_url)
+        else:
+            return {
+                'success': False,
+                'error': 'Modern API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Modern API error: {}'.format(str(e))
+        }
+
 def try_alternative_ebay_endpoints(user_token, api_base_url):
     """
     Try alternative eBay API endpoints when the main one fails
