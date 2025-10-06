@@ -229,6 +229,11 @@
                                                 <strong>Shipping:</strong>
                                                 <span class="text-warning fs-5">${{ "%.2f"|format(listing.shipping) }}</span>
                                             </div>
+                                            {% else %}
+                                            <div class="mb-3">
+                                                <strong>Shipping Debug:</strong>
+                                                <span class="text-muted">Value: {{ listing.shipping }}, Type: {{ listing.shipping|type }}, Defined: {{ listing.shipping is defined }}</span>
+                                            </div>
                                             {% endif %}
                                             
                                             {% if listing.final_price is defined and listing.final_price > 0 %}

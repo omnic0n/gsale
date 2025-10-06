@@ -873,23 +873,33 @@ def get_order_with_tax_breakdown(user_token, order_data):
         shipping_cost = order.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingCost')
         if shipping_cost is not None:
             transaction_data['shipping'] = float(shipping_cost.text) if shipping_cost.text else 0
+            print(f"DEBUG: Found shipping cost from ShippingCost: {transaction_data['shipping']}")
         else:
             # Try alternative shipping element names
             shipping_service_cost = order.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingServiceCost')
             if shipping_service_cost is not None:
                 transaction_data['shipping'] = float(shipping_service_cost.text) if shipping_service_cost.text else 0
+                print(f"DEBUG: Found shipping cost from ShippingServiceCost: {transaction_data['shipping']}")
             else:
                 # Try in transaction element
                 transaction_shipping = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingCost')
                 if transaction_shipping is not None:
                     transaction_data['shipping'] = float(transaction_shipping.text) if transaction_shipping.text else 0
+                    print(f"DEBUG: Found shipping cost from transaction ShippingCost: {transaction_data['shipping']}")
                 else:
                     transaction_shipping_service = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingServiceCost')
                     if transaction_shipping_service is not None:
                         transaction_data['shipping'] = float(transaction_shipping_service.text) if transaction_shipping_service.text else 0
+                        print(f"DEBUG: Found shipping cost from transaction ShippingServiceCost: {transaction_data['shipping']}")
                     else:
-                        transaction_data['shipping'] = 0
-                        print(f"DEBUG: No shipping cost found in order/transaction XML")
+                        # Try ActualShippingCost element
+                        actual_shipping_cost = order.find('.//{urn:ebay:apis:eBLBaseComponents}ActualShippingCost')
+                        if actual_shipping_cost is not None:
+                            transaction_data['shipping'] = float(actual_shipping_cost.text) if actual_shipping_cost.text else 0
+                            print(f"DEBUG: Found shipping cost from ActualShippingCost: {transaction_data['shipping']}")
+                        else:
+                            transaction_data['shipping'] = 0
+                            print(f"DEBUG: No shipping cost found in order/transaction XML")
         
         # Extract order total (might be different from transaction price)
         order_total = order.find('.//{urn:ebay:apis:eBLBaseComponents}Total')
