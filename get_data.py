@@ -293,6 +293,9 @@ def get_list_of_items_with_name(name, sold):
     print(f"DEBUG: search_pattern='{search_pattern}', sold='{validated_sold}', group_id='{get_current_group_id()}'")
     
     cur = mysql.connection.cursor()
+    # First, let's see what items exist with this name regardless of sold status
+    print(f"DEBUG: Searching for items with pattern '{search_pattern}' in group '{get_current_group_id()}'")
+    
     cur.execute("""SELECT 
                 items.name, 
                 items.sold,
@@ -312,9 +315,22 @@ def get_list_of_items_with_name(name, sold):
                 INNER JOIN collection collection ON items.group_id = collection.id
                 LEFT JOIN sale sale ON items.id = sale.id
                 LEFT JOIN categories ON items.category_id = categories.id
-                WHERE items.name LIKE %s AND collection.group_id = %s AND items.sold LIKE %s""", 
-                (search_pattern, get_current_group_id(), validated_sold))
-    return list(cur.fetchall())
+                WHERE items.name LIKE %s AND collection.group_id = %s""", 
+                (search_pattern, get_current_group_id()))
+    
+    all_items = list(cur.fetchall())
+    print(f"DEBUG: Found {len(all_items)} items with this name pattern:")
+    for item in all_items:
+        print(f"DEBUG:   - '{item['name']}' (ID: {item['id']}, sold: {item['sold']})")
+    
+    # Now filter by sold status if needed
+    if validated_sold != '%':
+        filtered_items = [item for item in all_items if str(item['sold']) == str(validated_sold)]
+        print(f"DEBUG: After filtering by sold='{validated_sold}': {len(filtered_items)} items")
+        return filtered_items
+    else:
+        print(f"DEBUG: No sold status filter applied, returning all {len(all_items)} items")
+        return all_items
 
 def get_data_from_item_groups(group_id):
     cur = mysql.connection.cursor()
