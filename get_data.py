@@ -295,7 +295,12 @@ def get_list_of_items_with_name(name, sold):
                 items.id,
                 items.storage,
                 items.ebay_item_id,
+                items.returned,
+                items.list_date,
                 COALESCE(categories.uuid_id, items.category_id) AS category_id,
+                sale.price AS gross_price,
+                sale.shipping_fee AS shipping_fee,
+                sale.date AS sale_date,
                 (sale.price - sale.shipping_fee) AS net,
                 collection.id as group_id,
                 collection.name as group_name

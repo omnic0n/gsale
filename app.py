@@ -3718,6 +3718,11 @@ def api_items_search():
                 'storage': item['storage'],
                 'ebay_item_id': item['ebay_item_id'],
                 'category_id': item['category_id'],
+                'returned': item['returned'],
+                'list_date': item['list_date'].strftime('%Y-%m-%d') if item['list_date'] else '',
+                'gross_price': item['gross_price'],
+                'shipping_fee': item['shipping_fee'],
+                'sale_date': item['sale_date'].strftime('%Y-%m-%d') if item['sale_date'] else '',
                 'net': item['net'],
                 'group_id': item['group_id'],
                 'group_name': item['group_name']

@@ -333,6 +333,11 @@ function displayResults(items) {
         editButton.setAttribute('data-category-id', item.category_id || '');
         editButton.setAttribute('data-storage', item.storage || '');
         editButton.setAttribute('data-ebay-item-id', item.ebay_item_id || '');
+        editButton.setAttribute('data-returned', item.returned || '0');
+        editButton.setAttribute('data-list-date', item.list_date || '');
+        editButton.setAttribute('data-gross-price', item.gross_price || '');
+        editButton.setAttribute('data-shipping-fee', item.shipping_fee || '');
+        editButton.setAttribute('data-sale-date', item.sale_date || '');
         editCell.appendChild(editButton);
         
         // Append all cells to row
@@ -352,8 +357,8 @@ function displayResults(items) {
 let groupsData = [];
 let categoriesData = [];
 
-function openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId) {
-    console.log('Opening modal with data:', { itemId, name, groupId, categoryId, storage, ebayItemId });
+function openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId, returned, listDate, grossPrice, shippingFee, saleDate) {
+    console.log('Opening modal with data:', { itemId, name, groupId, categoryId, storage, ebayItemId, returned, listDate, grossPrice, shippingFee, saleDate });
     
     // Set form values
     document.getElementById('editItemId').value = itemId;
@@ -361,11 +366,11 @@ function openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId) {
     document.getElementById('editItemGroup').value = groupId;
     document.getElementById('editItemStorage').value = storage || '';
     document.getElementById('editItemEbayId').value = ebayItemId || '';
-    document.getElementById('editItemReturned').value = '0'; // Default to False
-    document.getElementById('editItemListDate').value = new Date().toISOString().split('T')[0]; // Today's date
-    document.getElementById('editItemSaleDate').value = ''; // Leave empty for optional date
-    document.getElementById('editItemPrice').value = '';
-    document.getElementById('editItemShippingFee').value = '';
+    document.getElementById('editItemReturned').value = returned || '0';
+    document.getElementById('editItemListDate').value = listDate || new Date().toISOString().split('T')[0];
+    document.getElementById('editItemSaleDate').value = saleDate || '';
+    document.getElementById('editItemPrice').value = grossPrice || '';
+    document.getElementById('editItemShippingFee').value = shippingFee || '';
     
     // Set the correct category
     const categorySelect = document.getElementById('editItemCategory');
@@ -443,8 +448,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const categoryId = e.target.getAttribute('data-category-id');
             const storage = e.target.getAttribute('data-storage');
             const ebayItemId = e.target.getAttribute('data-ebay-item-id');
+            const returned = e.target.getAttribute('data-returned');
+            const listDate = e.target.getAttribute('data-list-date');
+            const grossPrice = e.target.getAttribute('data-gross-price');
+            const shippingFee = e.target.getAttribute('data-shipping-fee');
+            const saleDate = e.target.getAttribute('data-sale-date');
             
-            openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId);
+            openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId, returned, listDate, grossPrice, shippingFee, saleDate);
         }
     });
     
