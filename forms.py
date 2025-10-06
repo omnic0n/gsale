@@ -61,6 +61,7 @@ class ItemForm(FlaskForm):
     id = StringField('id')
     storage = StringField('storage')
     category = SelectField('category', coerce=str)
+    ebay_item_id = StringField('eBay Item ID', validators=[Length(max=50)])
     returned = SelectField('returned', coerce=int)
     sold = SelectField('sold', choices=[
         (0, 'No'),(1, 'Yes'), ('%', 'All')])

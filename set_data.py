@@ -186,12 +186,19 @@ def set_items_modify(details):
         raise ValueError("Invalid category ID")
     
     cur = mysql.connection.cursor()
+    # Handle eBay item ID (optional field)
+    ebay_item_id = details.get('ebay_item_id', '').strip()
+    if ebay_item_id and len(ebay_item_id) > 50:
+        ebay_item_id = ebay_item_id[:50]  # Truncate if too long
+    elif not ebay_item_id:
+        ebay_item_id = None
+    
     cur.execute("""
         UPDATE items i
         INNER JOIN collection c ON i.group_id = c.id
-        SET i.name = %s, i.group_id = %s, i.category_id = %s, i.returned = %s, i.storage = %s, i.list_date = %s 
+        SET i.name = %s, i.group_id = %s, i.category_id = %s, i.returned = %s, i.storage = %s, i.list_date = %s, i.ebay_item_id = %s
         WHERE i.id = %s AND c.account = %s
-    """, (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['list_date'], details['id'], session.get('id')))
+    """, (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['list_date'], ebay_item_id, details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
 

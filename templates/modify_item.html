@@ -120,6 +120,20 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
+                    {{ form.ebay_item_id.label(class="form-control-label") }}
+                    <small class="text-muted">(Optional)</small>
+                    {% if form.ebay_item_id.errors %}
+                        {{ form.ebay_item_id(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.ebay_item_id.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.ebay_item_id(class="form-control form-control-lg", value=item[0]['ebay_item_id'] or '') }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
                     {{ form.returned.label(class="form-control-label") }}
                     {% if form.returned.errors %}
                         {{ form.returned(class="form-control form-control-lg is-invalid") }}
