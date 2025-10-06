@@ -234,6 +234,7 @@
         <tr>
             <th></th>
             <th>Name</th> 
+            <th>eBay</th>
             <th>Sold Date</th>
             <th>Days to Sell</th>
             <th>Gross</th>
@@ -259,6 +260,17 @@
                     {% endif %}
                 </a>
             </td>
+            <td>
+                {% if item['ebay_item_id'] %}
+                <a href="https://www.ebay.com/itm/{{ item['ebay_item_id'] }}" 
+                   target="_blank" 
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+            </td>
             <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['sale_date'] }}{% endif %}</td>
             <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['days_to_sell'] }}{% endif %}</td>
             <td>{{ item['gross'] }}</td>
@@ -282,7 +294,7 @@
     </tbody>
     <tfoot>
         <tr style="font-weight: bold; background-color: #e9ecef; color: #495057;">
-            <td colspan="4"><strong>SUMMARY TOTALS</strong></td>
+            <td colspan="5"><strong>SUMMARY TOTALS</strong></td>
             <td><strong>Gross</strong></td>
             <td><strong>Net</strong></td>
             <td><strong>Shipping</strong></td>
@@ -290,7 +302,7 @@
             <td colspan="2"></td>
         </tr>
         <tr style="font-weight: bold; background-color: #f8f9fa;">
-            <td colspan="4"></td>
+            <td colspan="5"></td>
             <td><strong>${{ items|selectattr('gross')|map(attribute='gross')|sum }}</strong></td>
             <td><strong>${{ items|selectattr('net')|map(attribute='net')|sum }}</strong></td>
             <td><strong>${{ items|selectattr('shipping_fee')|map(attribute='shipping_fee')|sum }}</strong></td>

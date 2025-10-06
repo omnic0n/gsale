@@ -313,6 +313,7 @@ def get_data_from_item_groups(group_id):
                     COALESCE(categories.uuid_id, items.category_id) AS category_id,
                     items.storage,
                     items.returned,
+                    items.ebay_item_id,
                     sale.price AS gross,
                     sale.shipping_fee AS shipping_fee,
                     sale.returned_fee AS returned_fee,
