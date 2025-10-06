@@ -29,6 +29,47 @@
             </div>
             {% endif %}
             
+            <!-- eBay OAuth Status -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-key"></i> eBay Authentication Status
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div id="oauth-status">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status" id="oauth-spinner">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <span id="oauth-status-text">Checking authentication status...</span>
+                                        </div>
+                                        <div id="oauth-details" class="small text-muted"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-success" id="oauth-login-btn" style="display: none;">
+                                            <i class="fas fa-sign-in-alt"></i> Authenticate with eBay
+                                        </button>
+                                        <button class="btn btn-warning" id="oauth-refresh-btn" style="display: none;">
+                                            <i class="fas fa-sync-alt"></i> Refresh Token
+                                        </button>
+                                        <button class="btn btn-danger" id="oauth-logout-btn" style="display: none;">
+                                            <i class="fas fa-sign-out-alt"></i> Clear Authentication
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Search Form -->
             <div class="row">
                 <div class="col-md-12">
@@ -90,16 +131,9 @@
                             </span>
                         </div>
                         <div class="card-body">
-                            <div class="alert alert-warning">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Financial Data:</strong> 
-                                <span id="api-status">Detecting API capabilities...</span>
-                                <br>
-                                <small>
-                                    • <strong>Modern Order API:</strong> Requires OAuth 2.0 token with TAX_BREAKDOWN field group<br>
-                                    • <strong>Legacy Trading API:</strong> Uses GetMyeBaySelling and GetItemTransactions<br>
-                                    • <strong>Estimates:</strong> Fallback calculations based on eBay's current fee structure
-                                </small>
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Financial Data:</strong> Using OAuth 2.0 token with modern eBay Order API and TAX_BREAKDOWN field group for accurate fees, taxes, and financial details. Falls back to legacy APIs if needed.
                             </div>
                             
                             <div class="financial-summary mb-4">
@@ -256,4 +290,101 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    checkOAuthStatus();
+    
+    // OAuth button event listeners
+    document.getElementById('oauth-login-btn').addEventListener('click', function() {
+        window.location.href = '/ebay-login';
+    });
+    
+    document.getElementById('oauth-logout-btn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear your eBay authentication?')) {
+            window.location.href = '/ebay-logout';
+        }
+    });
+    
+    document.getElementById('oauth-refresh-btn').addEventListener('click', function() {
+        refreshOAuthToken();
+    });
+});
+
+function checkOAuthStatus() {
+    const spinner = document.getElementById('oauth-spinner');
+    const statusText = document.getElementById('oauth-status-text');
+    const details = document.getElementById('oauth-details');
+    const loginBtn = document.getElementById('oauth-login-btn');
+    const logoutBtn = document.getElementById('oauth-logout-btn');
+    const refreshBtn = document.getElementById('oauth-refresh-btn');
+    
+    // Make AJAX request to check OAuth status
+    fetch('/api/ebay-oauth-status')
+        .then(response => response.json())
+        .then(data => {
+            spinner.style.display = 'none';
+            
+            if (data.success) {
+                if (data.has_token) {
+                    statusText.innerHTML = '<i class="fas fa-check-circle text-success"></i> eBay OAuth Authenticated';
+                    details.innerHTML = `Token expires: ${data.expires_at || 'Unknown'}`;
+                    loginBtn.style.display = 'none';
+                    logoutBtn.style.display = 'block';
+                    refreshBtn.style.display = 'block';
+                } else {
+                    statusText.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> eBay OAuth Not Authenticated';
+                    details.innerHTML = 'Click "Authenticate with eBay" to enable OAuth 2.0 access';
+                    loginBtn.style.display = 'block';
+                    logoutBtn.style.display = 'none';
+                    refreshBtn.style.display = 'none';
+                }
+            } else {
+                statusText.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Authentication Check Failed';
+                details.innerHTML = data.error || 'Unable to check authentication status';
+                loginBtn.style.display = 'block';
+                logoutBtn.style.display = 'none';
+                refreshBtn.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            spinner.style.display = 'none';
+            statusText.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Authentication Check Failed';
+            details.innerHTML = 'Network error: ' + error.message;
+            loginBtn.style.display = 'block';
+            logoutBtn.style.display = 'none';
+            refreshBtn.style.display = 'none';
+        });
+}
+
+function refreshOAuthToken() {
+    const refreshBtn = document.getElementById('oauth-refresh-btn');
+    const originalText = refreshBtn.innerHTML;
+    
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+    refreshBtn.disabled = true;
+    
+    fetch('/api/ebay-refresh-token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            checkOAuthStatus(); // Refresh the status display
+        } else {
+            alert('Token refresh failed: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Token refresh failed: ' + error.message);
+    })
+    .finally(() => {
+        refreshBtn.innerHTML = originalText;
+        refreshBtn.disabled = false;
+    });
+}
+</script>
 {% endblock %}

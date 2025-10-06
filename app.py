@@ -115,39 +115,261 @@ def admin_required(f):
     decorated_function.__name__ = f.__name__
     return decorated_function
 
+# eBay OAuth 2.0 Functions
+def get_ebay_oauth_url():
+    """
+    Generate eBay OAuth authorization URL
+    """
+    try:
+        # Generate state parameter for security
+        state = hashlib.sha256(os.urandom(32)).hexdigest()
+        session['ebay_oauth_state'] = state
+        
+        # Determine environment URLs
+        if app.config.get('EBAY_SANDBOX_MODE', False):
+            auth_url = 'https://auth.sandbox.ebay.com/oauth2/authorize'
+        else:
+            auth_url = 'https://auth.ebay.com/oauth2/authorize'
+        
+        # Build authorization URL
+        auth_params = {
+            'client_id': app.config['EBAY_CLIENT_ID'],
+            'response_type': 'code',
+            'redirect_uri': app.config['EBAY_REDIRECT_URI'],
+            'scope': app.config['EBAY_OAUTH_SCOPE'],
+            'state': state
+        }
+        
+        # Create URL with parameters
+        param_string = '&'.join([f"{key}={value}" for key, value in auth_params.items()])
+        full_auth_url = f"{auth_url}?{param_string}"
+        
+        return {
+            'success': True,
+            'auth_url': full_auth_url,
+            'state': state
+        }
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f'Failed to generate OAuth URL: {str(e)}'
+        }
+
+def exchange_ebay_code_for_token(authorization_code):
+    """
+    Exchange authorization code for access token
+    """
+    try:
+        # Determine environment URLs
+        if app.config.get('EBAY_SANDBOX_MODE', False):
+            token_url = 'https://api.sandbox.ebay.com/identity/v1/oauth2/token'
+        else:
+            token_url = 'https://api.ebay.com/identity/v1/oauth2/token'
+        
+        # Prepare token request
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': f"Basic {get_ebay_basic_auth()}"
+        }
+        
+        data = {
+            'grant_type': 'authorization_code',
+            'code': authorization_code,
+            'redirect_uri': app.config['EBAY_REDIRECT_URI']
+        }
+        
+        # Make token request
+        response = requests.post(token_url, headers=headers, data=data)
+        
+        if response.status_code == 200:
+            token_data = response.json()
+            
+            # Store tokens in session or database
+            session['ebay_access_token'] = token_data.get('access_token')
+            session['ebay_refresh_token'] = token_data.get('refresh_token')
+            session['ebay_token_expires'] = datetime.now() + timedelta(seconds=token_data.get('expires_in', 7200))
+            
+            return {
+                'success': True,
+                'access_token': token_data.get('access_token'),
+                'refresh_token': token_data.get('refresh_token'),
+                'expires_in': token_data.get('expires_in'),
+                'token_type': token_data.get('token_type')
+            }
+        else:
+            return {
+                'success': False,
+                'error': f'Token exchange failed: {response.status_code} - {response.text}'
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f'Token exchange error: {str(e)}'
+        }
+
+def refresh_ebay_token(refresh_token):
+    """
+    Refresh eBay access token using refresh token
+    """
+    try:
+        # Determine environment URLs
+        if app.config.get('EBAY_SANDBOX_MODE', False):
+            token_url = 'https://api.sandbox.ebay.com/identity/v1/oauth2/token'
+        else:
+            token_url = 'https://api.ebay.com/identity/v1/oauth2/token'
+        
+        # Prepare refresh request
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': f"Basic {get_ebay_basic_auth()}"
+        }
+        
+        data = {
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+            'scope': app.config['EBAY_OAUTH_SCOPE']
+        }
+        
+        # Make refresh request
+        response = requests.post(token_url, headers=headers, data=data)
+        
+        if response.status_code == 200:
+            token_data = response.json()
+            
+            # Update session tokens
+            session['ebay_access_token'] = token_data.get('access_token')
+            if token_data.get('refresh_token'):
+                session['ebay_refresh_token'] = token_data.get('refresh_token')
+            session['ebay_token_expires'] = datetime.now() + timedelta(seconds=token_data.get('expires_in', 7200))
+            
+            return {
+                'success': True,
+                'access_token': token_data.get('access_token'),
+                'refresh_token': token_data.get('refresh_token'),
+                'expires_in': token_data.get('expires_in')
+            }
+        else:
+            return {
+                'success': False,
+                'error': f'Token refresh failed: {response.status_code} - {response.text}'
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f'Token refresh error: {str(e)}'
+        }
+
+def get_ebay_basic_auth():
+    """
+    Generate Basic Auth header for eBay OAuth
+    """
+    import base64
+    credentials = f"{app.config['EBAY_CLIENT_ID']}:{app.config['EBAY_CLIENT_SECRET']}"
+    encoded_credentials = base64.b64encode(credentials.encode()).decode()
+    return encoded_credentials
+
+def get_valid_ebay_token():
+    """
+    Get a valid eBay access token, refreshing if necessary
+    """
+    try:
+        # Check if we have a token in session
+        access_token = session.get('ebay_access_token')
+        refresh_token = session.get('ebay_refresh_token')
+        token_expires = session.get('ebay_token_expires')
+        
+        if not access_token:
+            return {
+                'success': False,
+                'error': 'No eBay access token found. Please authenticate first.',
+                'needs_auth': True
+            }
+        
+        # Check if token is expired
+        if token_expires and datetime.now() >= token_expires:
+            if refresh_token:
+                # Try to refresh the token
+                refresh_result = refresh_ebay_token(refresh_token)
+                if refresh_result['success']:
+                    return {
+                        'success': True,
+                        'access_token': refresh_result['access_token']
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'error': f'Token refresh failed: {refresh_result["error"]}',
+                        'needs_auth': True
+                    }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Token expired and no refresh token available. Please authenticate again.',
+                    'needs_auth': True
+                }
+        
+        return {
+            'success': True,
+            'access_token': access_token
+        }
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f'Token validation error: {str(e)}',
+            'needs_auth': True
+        }
+
 # eBay API Functions
 def get_ebay_active_listings():
     """
-    Fetch active listings from eBay API using the user token
+    Fetch active listings from eBay API using OAuth 2.0 or legacy token
     """
     try:
-        # Get the eBay user token from config
-        user_token = app.config.get('EBAY_USER_TOKEN')
-        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        # First try to get OAuth token
+        token_result = get_valid_ebay_token()
         
-        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+        if token_result['success']:
+            # Use OAuth 2.0 token
+            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+            return get_ebay_listings_oauth(token_result['access_token'], api_base_url)
+        elif token_result.get('needs_auth'):
+            # OAuth token not available, try legacy token
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+            
+            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+                return {
+                    'success': False,
+                    'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.',
+                    'needs_oauth': True
+                }
+            
+            # Check if this is a legacy token format
+            if user_token.startswith('v^'):
+                # Try legacy Trading API first for completed/sold items
+                legacy_result = get_ebay_completed_listings_legacy(user_token)
+                if legacy_result['success']:
+                    return legacy_result
+                
+                # Fallback to Browse API for active listings
+                browse_result = get_ebay_recently_sold_items(user_token, api_base_url)
+                if browse_result['success']:
+                    return browse_result
+                
+                # Final fallback to legacy Trading API
+                return get_ebay_listings_legacy(user_token)
+            else:
+                # Use modern OAuth 2.0 APIs with legacy token
+                return get_ebay_listings_modern(user_token, api_base_url)
+        else:
             return {
                 'success': False,
-                'error': 'eBay user token not configured. Please update config.py with your eBay user token.'
+                'error': token_result['error']
             }
-        
-        # Check if this is a legacy token format
-        if user_token.startswith('v^'):
-            # Try legacy Trading API first for completed/sold items
-            legacy_result = get_ebay_completed_listings_legacy(user_token)
-            if legacy_result['success']:
-                return legacy_result
-            
-            # Fallback to Browse API for active listings
-            browse_result = get_ebay_recently_sold_items(user_token, api_base_url)
-            if browse_result['success']:
-                return browse_result
-            
-            # Final fallback to legacy Trading API
-            return get_ebay_listings_legacy(user_token)
-        else:
-            # Use modern OAuth 2.0 APIs
-            return get_ebay_listings_modern(user_token, api_base_url)
             
     except requests.exceptions.RequestException as e:
         return {
@@ -294,8 +516,8 @@ def get_item_transaction_details(user_token, item_id):
     try:
         print("DEBUG: Starting transaction details lookup for item: {}".format(item_id))
         
-        # Check if token is OAuth 2.0 (starts with 'v1.1#') or legacy
-        is_oauth_token = user_token.startswith('v1.1#')
+        # Check if token is OAuth 2.0 (starts with 'v1.1#' or 'v^1.1#') or legacy
+        is_oauth_token = user_token.startswith('v1.1#') or user_token.startswith('v^1.1#')
         print("DEBUG: Token type - OAuth 2.0: {}".format(is_oauth_token))
         
         # Only try modern Order API if we have an OAuth 2.0 token
@@ -1307,6 +1529,133 @@ def try_alternative_ebay_endpoints(user_token, api_base_url):
             'error': 'Alternative API error: {}'.format(str(e))
         }
 
+def get_ebay_listings_oauth(access_token, api_base_url):
+    """
+    Fetch listings using OAuth 2.0 access token
+    """
+    try:
+        # Try Inventory API first (most comprehensive for seller data)
+        url = "{}/sell/inventory/v1/inventory_item".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(access_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        params = {
+            'limit': 200,  # Maximum allowed by eBay APIs
+            'offset': 0
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': True,
+                'listings': data.get('inventoryItems', []),
+                'total': data.get('total', 0),
+                'note': 'Using OAuth 2.0 Inventory API'
+            }
+        elif response.status_code == 403:
+            # Try Fulfillment API as fallback
+            return get_ebay_fulfillment_oauth(access_token, api_base_url)
+        else:
+            return {
+                'success': False,
+                'error': 'OAuth Inventory API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'OAuth API error: {}'.format(str(e))
+        }
+
+def get_ebay_fulfillment_oauth(access_token, api_base_url):
+    """
+    Try Fulfillment API with OAuth token
+    """
+    try:
+        url = "{}/sell/fulfillment/v1/order".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(access_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        params = {
+            'limit': 200,
+            'offset': 0
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': True,
+                'listings': data.get('orders', []),
+                'total': data.get('total', 0),
+                'note': 'Using OAuth 2.0 Fulfillment API'
+            }
+        else:
+            # Final fallback to Browse API
+            return get_ebay_browse_oauth(access_token, api_base_url)
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'OAuth Fulfillment API error: {}'.format(str(e))
+        }
+
+def get_ebay_browse_oauth(access_token, api_base_url):
+    """
+    Try Browse API with OAuth token as final fallback
+    """
+    try:
+        url = "{}/buy/browse/v1/item_summary/search".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(access_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        params = {
+            'q': '*',  # Search for all items
+            'limit': 200,
+            'offset': 0,
+            'filter': 'conditionIds:{1000|1500|2000|2500|3000|4000|5000}'
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': True,
+                'listings': data.get('itemSummaries', []),
+                'total': data.get('total', 0),
+                'note': 'Using OAuth 2.0 Browse API - may show all items, not just yours'
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'OAuth Browse API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'OAuth Browse API error: {}'.format(str(e))
+        }
+
 def get_ebay_listing_details(listing_id):
     """
     Get detailed information for a specific eBay listing
@@ -1606,6 +1955,131 @@ def google_callback():
         else:
             flash(error_msg, 'error')
             return redirect(url_for('login'))
+
+@app.route('/ebay-login')
+def ebay_login():
+    """Initiate eBay OAuth login"""
+    try:
+        # Generate OAuth URL
+        oauth_result = get_ebay_oauth_url()
+        
+        if oauth_result['success']:
+            return redirect(oauth_result['auth_url'])
+        else:
+            flash(f'eBay OAuth error: {oauth_result["error"]}', 'error')
+            return redirect(url_for('admin'))
+            
+    except Exception as e:
+        flash(f'eBay OAuth error: {str(e)}', 'error')
+        return redirect(url_for('admin'))
+
+@app.route('/ebay-callback', methods=['GET', 'POST'])
+def ebay_callback():
+    """Handle eBay OAuth callback"""
+    try:
+        # Verify state parameter
+        if request.args.get('state') != session.get('ebay_oauth_state'):
+            flash('Invalid state parameter. Please try again.', 'error')
+            return redirect(url_for('admin'))
+        
+        # Get authorization code
+        code = request.args.get('code')
+        if not code:
+            error_msg = request.args.get('error', 'Authorization code not received.')
+            flash(f'eBay OAuth error: {error_msg}', 'error')
+            return redirect(url_for('admin'))
+        
+        # Exchange code for tokens
+        token_result = exchange_ebay_code_for_token(code)
+        
+        if token_result['success']:
+            flash('eBay OAuth authentication successful!', 'success')
+            return redirect(url_for('admin'))
+        else:
+            flash(f'eBay OAuth error: {token_result["error"]}', 'error')
+            return redirect(url_for('admin'))
+            
+    except Exception as e:
+        flash(f'eBay OAuth error: {str(e)}', 'error')
+        return redirect(url_for('admin'))
+
+@app.route('/ebay-logout')
+def ebay_logout():
+    """Clear eBay OAuth tokens"""
+    try:
+        # Clear eBay OAuth session data
+        session.pop('ebay_access_token', None)
+        session.pop('ebay_refresh_token', None)
+        session.pop('ebay_token_expires', None)
+        session.pop('ebay_oauth_state', None)
+        
+        flash('eBay OAuth tokens cleared successfully!', 'success')
+        return redirect(url_for('admin'))
+        
+    except Exception as e:
+        flash(f'Error clearing eBay tokens: {str(e)}', 'error')
+        return redirect(url_for('admin'))
+
+@app.route('/api/ebay-oauth-status')
+def api_ebay_oauth_status():
+    """API endpoint to check eBay OAuth status"""
+    try:
+        token_result = get_valid_ebay_token()
+        
+        if token_result['success']:
+            token_expires = session.get('ebay_token_expires')
+            expires_at = None
+            if token_expires:
+                expires_at = token_expires.strftime('%Y-%m-%d %H:%M:%S')
+            
+            return jsonify({
+                'success': True,
+                'has_token': True,
+                'expires_at': expires_at
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'has_token': False,
+                'error': token_result.get('error', 'No token available')
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/ebay-refresh-token', methods=['POST'])
+def api_ebay_refresh_token():
+    """API endpoint to refresh eBay OAuth token"""
+    try:
+        refresh_token = session.get('ebay_refresh_token')
+        
+        if not refresh_token:
+            return jsonify({
+                'success': False,
+                'error': 'No refresh token available'
+            })
+        
+        refresh_result = refresh_ebay_token(refresh_token)
+        
+        if refresh_result['success']:
+            return jsonify({
+                'success': True,
+                'message': 'Token refreshed successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': refresh_result['error']
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 @app.route('/logout')
 def logout():
