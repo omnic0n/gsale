@@ -2904,6 +2904,10 @@ def bought_items():
 
     form.group.choices = [(group['id'], group['name']) for group in groups]
     
+    # Ensure we have at least one item entry
+    if not form.items.entries:
+        form.items.append_entry()
+    
     # Set category choices for each item in the form
     for item_form in form.items:
         item_form.category.choices = [(category['id'], category['type']) for category in categories]
@@ -2929,7 +2933,7 @@ def bought_items():
         set_data.set_bought_items_improved(details)
         return redirect(url_for('group_detail',group_id=group_data['id']))
     
-    return render_template('items_purchased.html', form=form)
+    return render_template('items_purchased.html', form=form, categories=categories)
 
 @app.route('/items/modify',methods=["POST","GET"])
 @login_required
