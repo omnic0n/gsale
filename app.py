@@ -2904,21 +2904,7 @@ def bought_items():
 
     form.group.choices = [(group['id'], group['name']) for group in groups]
     
-    # Force initialization of the FieldList with proper entries
-    while form.items.entries:
-        form.items.pop_entry()  # Remove any existing entries
-    
-    # Create a proper ItemDetailForm instance and add it
-    from forms import ItemDetailForm
-    item_form = ItemDetailForm()
-    item_form.category.choices = [(category['id'], category['type']) for category in categories]
-    form.items.append_entry(item_form)
-    
-    # Set category choices for each item in the form
-    for item_form in form.items:
-        print(f"DEBUG: Item form type: {type(item_form)}")
-        print(f"DEBUG: Item form name field type: {type(item_form.name)}")
-        item_form.category.choices = [(category['id'], category['type']) for category in categories]
+    # No need to initialize FieldList since we're using HTML fallback
 
     if group_id:
         group_data = get_data.get_all_from_group(group_id)
