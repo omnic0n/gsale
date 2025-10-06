@@ -483,8 +483,6 @@ document.getElementById('editItemForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Show success message
-            alert('Item updated successfully!');
             // Close modal
             closeEditModal();
             // Reload page to show updated data
