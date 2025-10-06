@@ -226,7 +226,7 @@ def get_ebay_completed_listings_legacy(user_token):
                     quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
                     end_time = item.find('.//{urn:ebay:apis:eBLBaseComponents}EndTime')
                     
-                    # Financial information - corrected calculation
+                    # Financial information - use estimated calculations since API doesn't provide detailed fees
                     selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
                     final_price = 0
                     listing_fees = 0
@@ -240,30 +240,22 @@ def get_ebay_completed_listings_legacy(user_token):
                         if final_price_elem is not None:
                             final_price = float(final_price_elem.text) if final_price_elem.text else 0
                     
-                    # Try to get fee information (if available)
-                    fees = item.find('.//{urn:ebay:apis:eBLBaseComponents}Fees')
-                    if fees is not None:
-                        fee_list = fees.findall('.//{urn:ebay:apis:eBLBaseComponents}Fee')
-                        for fee in fee_list:
-                            fee_name = fee.find('.//{urn:ebay:apis:eBLBaseComponents}Name')
-                            fee_amount = fee.find('.//{urn:ebay:apis:eBLBaseComponents}Fee')
-                            if fee_name is not None and fee_amount is not None:
-                                fee_name_text = fee_name.text.lower() if fee_name.text else ''
-                                fee_amount_val = float(fee_amount.text) if fee_amount.text else 0
-                                
-                                if 'listing' in fee_name_text:
-                                    listing_fees += fee_amount_val
-                                elif 'final value' in fee_name_text or 'transaction' in fee_name_text:
-                                    final_value_fee += fee_amount_val
-                                elif 'paypal' in fee_name_text:
-                                    paypal_fee += fee_amount_val
-                                elif 'tax' in fee_name_text:
-                                    sales_tax += fee_amount_val
+                    # Since eBay API doesn't provide detailed fee breakdown, use estimated calculations
+                    # Based on eBay's standard fee structure
+                    if final_price > 0:
+                        # Estimate final value fee (typically 10-12.9% of final price)
+                        final_value_fee = final_price * 0.129  # 12.9% is eBay's current rate
+                        
+                        # Estimate PayPal fee (typically 2.9% + $0.30)
+                        paypal_fee = (final_price * 0.029) + 0.30
+                        
+                        # Estimate sales tax (varies by state, use 8% average)
+                        sales_tax = final_price * 0.08
+                        
+                        # Calculate net earnings: Order total - Sales tax - Transaction fees
+                        net_earnings = final_price - sales_tax - final_value_fee
                     
-                    # Calculate net earnings correctly (like eBay's "Order earnings")
-                    # Order earnings = Order total - Sales tax - Transaction fees
                     total_fees = listing_fees + final_value_fee + paypal_fee
-                    net_earnings = final_price - sales_tax - final_value_fee
                     
                     listings.append({
                         'itemId': item_id.text if item_id is not None else 'N/A',
