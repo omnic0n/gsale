@@ -154,8 +154,7 @@
     width: 80%;
     max-width: 800px;
     min-width: 600px;
-    height: 80%;
-    min-height: 500px;
+    height: auto;
     max-height: 90vh;
     margin: 0;
     padding: 0;
@@ -171,7 +170,7 @@
     position: relative;
     color: black;
     width: 100%;
-    height: 100%;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -200,9 +199,11 @@
     color: black;
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    max-height: calc(90vh - 140px);
 }
 
 .custom-modal-footer {
