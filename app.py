@@ -201,13 +201,16 @@ def get_ebay_listings_via_browse(user_token, api_base_url):
                 listings.append({
                     'itemId': item_id,
                     'title': title,
+                    'description': title,  # Use title as description since Browse API doesn't provide separate description
                     'price': float(price) if price else 0,
                     'currency': currency,
                     'condition': condition,
                     'image_url': image_url,
                     'seller': seller,
                     'sku': item_id,  # Use itemId as SKU for consistency
-                    'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id)
+                    'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id),
+                    'category': item.get('categories', [{}])[0].get('categoryName', 'N/A') if item.get('categories') else 'N/A',
+                    'quantity': 1  # Browse API doesn't provide quantity info
                 })
             
             return {

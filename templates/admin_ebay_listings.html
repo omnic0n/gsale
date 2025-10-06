@@ -165,7 +165,13 @@
                             <div class="col-md-6">
                                 <div class="mb-2">
                                     <strong>Description:</strong>
-                                    <p class="mb-1">{{ listing.description[:200] }}{% if listing.description|length > 200 %}...{% endif %}</p>
+                                    <p class="mb-1">
+                                        {% if listing.description %}
+                                            {{ listing.description[:200] }}{% if listing.description|length > 200 %}...{% endif %}
+                                        {% else %}
+                                            {{ listing.title[:200] }}{% if listing.title|length > 200 %}...{% endif %}
+                                        {% endif %}
+                                    </p>
                                 </div>
                                 
                                 {% if listing.category %}
