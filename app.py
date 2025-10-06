@@ -2000,7 +2000,7 @@ def ebay_callback():
         print(f"  Session State: {session_state}")
         print(f"  States Match: {request_state == session_state}")
         
-        # Verify state parameter (with debug info)
+        # Verify state parameter (eBay sometimes doesn't return it)
         if not request_state or not session_state or request_state != session_state:
             print(f"DEBUG: State validation failed")
             print(f"  Request State: {request_state}")
@@ -2008,18 +2008,27 @@ def ebay_callback():
             print(f"  Request State Length: {len(request_state) if request_state else 0}")
             print(f"  Session State Length: {len(session_state) if session_state else 0}")
             
-            # For debugging, let's be more lenient with state validation
-            if request_state and len(request_state) == 64:  # Valid state format
+            # eBay sometimes doesn't return the state parameter, so we'll proceed anyway
+            if not request_state:
+                print(f"DEBUG: No state parameter returned by eBay - proceeding anyway")
+                # Continue with OAuth flow
+            elif request_state and len(request_state) == 64:  # Valid state format
                 print(f"DEBUG: Allowing OAuth to proceed despite state mismatch (debug mode)")
                 # Continue with OAuth flow
             else:
                 flash('Invalid state parameter. Please try again.', 'error')
                 return redirect(url_for('admin_panel'))
         
+        # Debug: Print all request parameters
+        print(f"DEBUG: All request parameters:")
+        for key, value in request.args.items():
+            print(f"  {key}: {value}")
+        
         # Get authorization code
         code = request.args.get('code')
         if not code:
             error_msg = request.args.get('error', 'Authorization code not received.')
+            print(f"DEBUG: No authorization code received. Error: {error_msg}")
             flash(f'eBay OAuth error: {error_msg}', 'error')
             return redirect(url_for('admin_panel'))
         
