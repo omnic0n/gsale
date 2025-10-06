@@ -3778,7 +3778,7 @@ def api_groups_search():
 
 @app.route('/api/groups', methods=['GET'])
 @login_required
-def api_groups():
+def api_get_groups():
     """Get all groups as JSON for iOS app"""
     try:
         # Get all groups using the existing function
