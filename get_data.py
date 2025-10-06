@@ -306,7 +306,7 @@ def get_list_of_items_with_name(name, sold):
                 collection.name as group_name
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
-                INNER JOIN sale sale ON items.id = sale.id
+                LEFT JOIN sale sale ON items.id = sale.id
                 LEFT JOIN categories ON items.category_id = categories.id
                 WHERE items.name LIKE %s AND collection.group_id = %s AND items.sold LIKE %s""", 
                 (search_pattern, get_current_group_id(), validated_sold))

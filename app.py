@@ -3700,13 +3700,21 @@ def api_items_search():
         name = request.args.get('name', '')
         sold = request.args.get('sold', '')
         
+        print(f"DEBUG: API search called with name='{name}', sold='{sold}'")
+        
         # Handle "All Items" case (empty sold parameter)
         if sold == '':
             # Use '%' to match all sold statuses
             sold = '%'
         
+        print(f"DEBUG: After processing - name='{name}', sold='{sold}'")
+        
         # Get search results
         items = get_data.get_list_of_items_with_name(name, sold)
+        
+        print(f"DEBUG: Found {len(items)} items")
+        for item in items:
+            print(f"DEBUG: Item: {item['name']} (ID: {item['id']})")
         
         # Convert to JSON-serializable format
         results = []
