@@ -368,6 +368,7 @@ function displayResults(items) {
                     addButton.textContent = 'Add eBay ID';
                     addButton.setAttribute('data-item-id', item.id);
                     addButton.setAttribute('data-item-name', item.name);
+                    console.log('Created Add eBay ID button for:', item.name, 'with classes:', addButton.className);
                     ebayIdCell.appendChild(addButton);
                 }
         
@@ -438,9 +439,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
             // Add event listeners to add eBay ID buttons (delegated)
             document.addEventListener('click', function(e) {
+                console.log('Click detected on:', e.target);
+                console.log('Button classes:', e.target.classList);
                 if (e.target.classList.contains('add-ebay-id-btn')) {
+                    console.log('Add eBay ID button clicked!');
                     const itemId = e.target.getAttribute('data-item-id');
                     const itemName = e.target.getAttribute('data-item-name');
+                    console.log('Item data:', { itemId, itemName });
                     
                     openAddEbayIdModal(itemId, itemName);
                 }
