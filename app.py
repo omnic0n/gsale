@@ -2109,8 +2109,8 @@ def get_ebay_listing_details(listing_id):
             user_token = token_result['access_token']
         else:
             # Fallback to legacy token
-        user_token = app.config.get('EBAY_USER_TOKEN')
-        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
         
         if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
             return {
