@@ -639,7 +639,28 @@ def get_item_transaction_details(user_token, item_id):
                     transaction_data['has_actual_fees'] = True
                     print("DEBUG: Using actual fees from legacy API")
                 else:
-                    print("DEBUG: No actual fees found, will use estimates")
+                    print("DEBUG: No actual fees found, calculating estimates")
+                    # Calculate proper fee estimates
+                    if basic_price > 0:
+                        # eBay Final Value Fee: 10% for most categories (up to $750), then 2% above $750
+                        if basic_price <= 750:
+                            transaction_data['final_value_fee'] = basic_price * 0.10
+                        else:
+                            transaction_data['final_value_fee'] = (750 * 0.10) + ((basic_price - 750) * 0.02)
+                        
+                        # PayPal fee: 2.9% + $0.30
+                        transaction_data['paypal_fee'] = (basic_price * 0.029) + 0.30
+                        
+                        # Listing fee
+                        transaction_data['listing_fees'] = 0.35
+                        
+                        # Total fees
+                        transaction_data['total_fees'] = transaction_data['final_value_fee'] + transaction_data['paypal_fee'] + transaction_data['listing_fees']
+                        
+                        # Net earnings
+                        transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['total_fees']
+                        
+                        print(f"DEBUG: Estimated fees - FVF: ${transaction_data['final_value_fee']:.2f}, PayPal: ${transaction_data['paypal_fee']:.2f}, Total: ${transaction_data['total_fees']:.2f}")
             else:
                 print("DEBUG: Could not get transaction identifiers: {}".format(transaction_info['error']))
         else:
@@ -652,12 +673,34 @@ def get_item_transaction_details(user_token, item_id):
             basic_price = get_basic_item_price(user_token, item_id)
             if basic_price > 0:
                 transaction_data['final_price'] = basic_price
-                transaction_data['final_value_fee'] = basic_price * 0.129  # 12.9%
-                transaction_data['sales_tax'] = basic_price * 0.075  # 7.5%
+                
+                # eBay Final Value Fee: 10% for most categories (up to $750), then 2% above $750
+                if basic_price <= 750:
+                    transaction_data['final_value_fee'] = basic_price * 0.10
+                else:
+                    transaction_data['final_value_fee'] = (750 * 0.10) + ((basic_price - 750) * 0.02)
+                
+                # PayPal fee: 2.9% + $0.30 (if using PayPal)
                 transaction_data['paypal_fee'] = (basic_price * 0.029) + 0.30
-                transaction_data['total_fees'] = transaction_data['final_value_fee'] + transaction_data['paypal_fee']
-                transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['sales_tax'] - transaction_data['final_value_fee']
-                print("DEBUG: Using estimated calculations")
+                
+                # eBay listing fee: Usually $0.35 for basic listings
+                transaction_data['listing_fees'] = 0.35
+                
+                # Sales tax: Usually not charged by seller (buyer pays)
+                transaction_data['sales_tax'] = 0
+                
+                # Total fees calculation
+                transaction_data['total_fees'] = transaction_data['final_value_fee'] + transaction_data['paypal_fee'] + transaction_data['listing_fees']
+                
+                # Net earnings = final price - total fees
+                transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['total_fees']
+                
+                print("DEBUG: Using eBay fee estimates:")
+                print(f"  Final Value Fee (10%): ${transaction_data['final_value_fee']:.2f}")
+                print(f"  PayPal Fee: ${transaction_data['paypal_fee']:.2f}")
+                print(f"  Listing Fee: ${transaction_data['listing_fees']:.2f}")
+                print(f"  Total Fees: ${transaction_data['total_fees']:.2f}")
+                print(f"  Net Earnings: ${transaction_data['net_earnings']:.2f}")
         
         print("DEBUG: Final transaction data: {}".format(transaction_data))
         return {
@@ -689,12 +732,15 @@ def get_orders_for_item(user_token, item_id):
             'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
         }
         
-        # Search for orders with this item ID
+        # Search for orders with this item ID - try different filter approaches
         params = {
-            'filter': 'lineItemId:{}'.format(item_id),
             'fieldGroups': 'TAX_BREAKDOWN',
             'limit': 10
         }
+        
+        # Try to find orders by item ID using different approaches
+        # First try: search recent orders and filter by item ID
+        print(f"DEBUG: Searching for orders containing item ID: {item_id}")
         
         print("DEBUG: Order API call - URL: {}, Params: {}".format(url, params))
         
@@ -708,9 +754,20 @@ def get_orders_for_item(user_token, item_id):
             
             print("DEBUG: Found {} orders".format(len(orders)))
             
+            # Search through orders to find the one containing our item ID
+            matching_orders = []
+            for order in orders:
+                line_items = order.get('lineItems', [])
+                for line_item in line_items:
+                    line_item_id = line_item.get('lineItemId')
+                    if line_item_id == item_id:
+                        matching_orders.append(order)
+                        print(f"DEBUG: Found matching order: {order.get('orderId')}")
+                        break
+            
             return {
                 'success': True,
-                'orders': orders
+                'orders': matching_orders
             }
         else:
             print("DEBUG: Order API failed with status {}".format(response.status_code))
