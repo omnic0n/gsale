@@ -292,21 +292,32 @@ def get_item_transaction_details(user_token, item_id):
     Get detailed transaction information using modern eBay Order API with TAX_BREAKDOWN
     """
     try:
+        print("DEBUG: Starting transaction details lookup for item: {}".format(item_id))
+        
         # First, try to find orders for this item using modern Order API
+        print("DEBUG: Trying modern Order API...")
         orders_result = get_orders_for_item(user_token, item_id)
         if orders_result['success'] and orders_result['orders']:
+            print("DEBUG: Found orders via modern API, getting details...")
             # Use the first order found
             order_id = orders_result['orders'][0]['orderId']
             order_details = get_order_with_tax_breakdown(user_token, order_id)
             if order_details['success']:
+                print("DEBUG: Successfully got order details from modern API")
                 return {
                     'success': True,
                     'transaction_data': order_details['transaction_data']
                 }
+            else:
+                print("DEBUG: Failed to get order details: {}".format(order_details['error']))
+        else:
+            print("DEBUG: No orders found via modern API: {}".format(orders_result.get('error', 'No orders')))
         
         # Fallback: try legacy approach
+        print("DEBUG: Falling back to legacy approach...")
         transaction_info = get_transaction_identifiers(user_token, item_id)
         if not transaction_info['success']:
+            print("DEBUG: Legacy approach failed: {}".format(transaction_info['error']))
             return transaction_info
         
         # Try each transaction ID
@@ -337,6 +348,7 @@ def get_item_transaction_details(user_token, item_id):
         
         # If still no data, use estimates
         if transaction_data['final_price'] == 0:
+            print("DEBUG: Using estimates as final fallback")
             # Get basic price from selling status
             basic_price = get_basic_item_price(user_token, item_id)
             if basic_price > 0:
@@ -347,12 +359,14 @@ def get_item_transaction_details(user_token, item_id):
                 transaction_data['total_fees'] = transaction_data['final_value_fee'] + transaction_data['paypal_fee']
                 transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['sales_tax'] - transaction_data['final_value_fee']
         
+        print("DEBUG: Final transaction data: {}".format(transaction_data))
         return {
             'success': True,
             'transaction_data': transaction_data
         }
             
     except Exception as e:
+        print("DEBUG: Exception in get_item_transaction_details: {}".format(str(e)))
         return {
             'success': False,
             'error': 'Order API error: {}'.format(str(e))
@@ -382,23 +396,31 @@ def get_orders_for_item(user_token, item_id):
             'limit': 10
         }
         
+        print("DEBUG: Order API call - URL: {}, Params: {}".format(url, params))
+        
         response = requests.get(url, headers=headers, params=params)
+        
+        print("DEBUG: Order API response - Status: {}, Text: {}".format(response.status_code, response.text[:200]))
         
         if response.status_code == 200:
             data = response.json()
             orders = data.get('orders', [])
+            
+            print("DEBUG: Found {} orders".format(len(orders)))
             
             return {
                 'success': True,
                 'orders': orders
             }
         else:
+            print("DEBUG: Order API failed with status {}".format(response.status_code))
             return {
                 'success': False,
                 'error': 'Order API error: {} - {}'.format(response.status_code, response.text)
             }
             
     except Exception as e:
+        print("DEBUG: Order API exception: {}".format(str(e)))
         return {
             'success': False,
             'error': 'Order API error: {}'.format(str(e))
@@ -426,10 +448,16 @@ def get_order_with_tax_breakdown(user_token, order_id):
             'fieldGroups': 'TAX_BREAKDOWN'
         }
         
+        print("DEBUG: Getting order details - URL: {}, Order ID: {}".format(url, order_id))
+        
         response = requests.get(url, headers=headers, params=params)
+        
+        print("DEBUG: Order details response - Status: {}, Text: {}".format(response.status_code, response.text[:200]))
         
         if response.status_code == 200:
             data = response.json()
+            
+            print("DEBUG: Order data keys: {}".format(list(data.keys())))
             
             # Extract financial details from modern Order API response
             transaction_data = {
@@ -447,9 +475,11 @@ def get_order_with_tax_breakdown(user_token, order_id):
             pricing_summary = data.get('pricingSummary', {})
             if pricing_summary:
                 transaction_data['final_price'] = float(pricing_summary.get('total', 0))
+                print("DEBUG: Pricing summary: {}".format(pricing_summary))
             
             # Get tax breakdown
             tax_details = data.get('taxDetails', [])
+            print("DEBUG: Tax details: {}".format(tax_details))
             for tax in tax_details:
                 tax_type = tax.get('taxType', '').lower()
                 tax_amount = float(tax.get('amount', {}).get('value', 0))
@@ -462,6 +492,7 @@ def get_order_with_tax_breakdown(user_token, order_id):
             
             # Get fee breakdown
             fee_details = data.get('feeDetails', [])
+            print("DEBUG: Fee details: {}".format(fee_details))
             for fee in fee_details:
                 fee_type = fee.get('feeType', '').lower()
                 fee_amount = float(fee.get('amount', {}).get('value', 0))
@@ -477,17 +508,21 @@ def get_order_with_tax_breakdown(user_token, order_id):
             transaction_data['total_fees'] = transaction_data['listing_fees'] + transaction_data['final_value_fee'] + transaction_data['paypal_fee']
             transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['sales_tax'] - transaction_data['final_value_fee']
             
+            print("DEBUG: Calculated transaction data: {}".format(transaction_data))
+            
             return {
                 'success': True,
                 'transaction_data': transaction_data
             }
         else:
+            print("DEBUG: Order details API failed with status {}".format(response.status_code))
             return {
                 'success': False,
                 'error': 'Order API error: {} - {}'.format(response.status_code, response.text)
             }
             
     except Exception as e:
+        print("DEBUG: Order details API exception: {}".format(str(e)))
         return {
             'success': False,
             'error': 'Order API error: {}'.format(str(e))
