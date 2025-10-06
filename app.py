@@ -547,7 +547,7 @@ def get_sold_items_basic(user_token):
 
 def get_item_transaction_details(user_token, item_id):
     """
-    Get detailed transaction information using modern eBay Order API with TAX_BREAKDOWN
+    Get detailed transaction information including fees using modern eBay Order API with TAX_BREAKDOWN
     """
     try:
         print("DEBUG: Starting transaction details lookup for item: {}".format(item_id))
@@ -567,9 +567,18 @@ def get_item_transaction_details(user_token, item_id):
                 order_details = get_order_with_tax_breakdown(user_token, order_id)
                 if order_details['success']:
                     print("DEBUG: Successfully got order details from modern API")
+                    
+                    # Try to get additional fee information
+                    fee_details = get_ebay_fees_from_order_api(order_id)
+                    if fee_details['success']:
+                        # Merge fee data with transaction data
+                        transaction_data = order_details['transaction_data']
+                        transaction_data.update(fee_details['fee_data'])
+                        print("DEBUG: Enhanced with fee breakdown data")
+                    
                     return {
                         'success': True,
-                        'transaction_data': order_details['transaction_data']
+                        'transaction_data': transaction_data
                     }
                 else:
                     print("DEBUG: Failed to get order details: {}".format(order_details['error']))
@@ -903,6 +912,164 @@ def get_transaction_identifiers(user_token, item_id):
             'success': False,
             'error': 'API error: {}'.format(str(e))
         }
+
+# eBay Fee Retrieval Functions
+def get_ebay_fees_from_order_api(order_id):
+    """
+    Retrieve fee information using Order API
+    """
+    try:
+        token_result = get_valid_ebay_token()
+        if not token_result['success']:
+            return token_result
+        
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        url = f"{api_base_url}/sell/fulfillment/v1/order/{order_id}"
+        
+        headers = {
+            'Authorization': f"Bearer {token_result['access_token']}",
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        # Request fee breakdown specifically
+        params = {
+            'fieldGroups': 'TAX_BREAKDOWN,FEE_BREAKDOWN'
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return extract_fee_data(data)
+        else:
+            return {'success': False, 'error': f'Order API failed: {response.status_code}'}
+            
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def extract_fee_data(order_data):
+    """
+    Extract fee information from Order API response
+    """
+    try:
+        fee_data = {}
+        
+        # Extract from lineItems
+        line_items = order_data.get('lineItems', [])
+        total_fees = 0
+        
+        for item in line_items:
+            # Final Value Fee
+            fvf = item.get('finalValueFee', {})
+            if fvf:
+                fee_data['final_value_fee'] = float(fvf.get('value', 0))
+                total_fees += fee_data['final_value_fee']
+            
+            # Insertion Fee
+            insertion_fee = item.get('insertionFee', {})
+            if insertion_fee:
+                fee_data['insertion_fee'] = float(insertion_fee.get('value', 0))
+                total_fees += fee_data['insertion_fee']
+        
+        # Extract from pricingSummary
+        pricing = order_data.get('pricingSummary', {})
+        if pricing:
+            fee_data['total_fees'] = total_fees
+            fee_data['net_amount'] = float(pricing.get('total', 0)) - total_fees
+        
+        return {
+            'success': True,
+            'fee_data': fee_data
+        }
+        
+    except Exception as e:
+        return {'success': False, 'error': f'Fee extraction error: {str(e)}'}
+
+def get_ebay_final_value_fees_trading_api(order_ids):
+    """
+    Retrieve Final Value Fees using Trading API GetOrders (Most Reliable)
+    """
+    try:
+        token_result = get_valid_ebay_token()
+        if not token_result['success']:
+            return token_result
+        
+        url = "https://api.ebay.com/ws/api.dll"
+        
+        headers = {
+            'X-EBAY-API-CALL-NAME': 'GetOrders',
+            'X-EBAY-API-VERSION': '1193',
+            'X-EBAY-API-SITEID': '0',
+            'X-EBAY-API-COMPATIBILITY-LEVEL': '1193',
+            'Content-Type': 'text/xml'
+        }
+        
+        # Build XML request with order IDs
+        order_xml = ''.join([f'<OrderID>{order_id}</OrderID>' for order_id in order_ids])
+        
+        xml_body = f"""
+        <?xml version="1.0" encoding="utf-8"?>
+        <GetOrdersRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+            <RequesterCredentials>
+                <eBayAuthToken>{token_result['access_token']}</eBayAuthToken>
+            </RequesterCredentials>
+            <OrderIDArray>
+                {order_xml}
+            </OrderIDArray>
+            <IncludeFinalValueFee>true</IncludeFinalValueFee>
+            <DetailLevel>ReturnAll</DetailLevel>
+        </GetOrdersRequest>
+        """
+        
+        response = requests.post(url, headers=headers, data=xml_body)
+        
+        if response.status_code == 200:
+            return parse_fvf_from_xml(response.text)
+        else:
+            return {'success': False, 'error': f'GetOrders failed: {response.status_code}'}
+            
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def parse_fvf_from_xml(xml_response):
+    """
+    Parse Final Value Fee data from Trading API XML response
+    """
+    try:
+        import xml.etree.ElementTree as ET
+        
+        root = ET.fromstring(xml_response)
+        
+        # Check for errors
+        errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
+        if errors:
+            error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
+            if error_msg is not None:
+                return {'success': False, 'error': f'eBay API error: {error_msg.text}'}
+        
+        # Extract FVF data
+        fvf_data = []
+        orders = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Order')
+        
+        for order in orders:
+            order_id = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderID')
+            fvf = order.find('.//{urn:ebay:apis:eBLBaseComponents}FinalValueFee')
+            
+            if order_id is not None and fvf is not None:
+                fvf_data.append({
+                    'order_id': order_id.text,
+                    'final_value_fee': float(fvf.text) if fvf.text else 0.0
+                })
+        
+        return {
+            'success': True,
+            'fvf_data': fvf_data
+        }
+        
+    except Exception as e:
+        return {'success': False, 'error': f'XML parsing error: {str(e)}'}
 
 def get_specific_transaction_details(user_token, transaction_id, transaction_type):
     """
