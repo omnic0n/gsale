@@ -28,7 +28,7 @@
                 <th>Group</th>
                 <th>Net</th>
                 <th>Storage</th>
-                <th>Edit</th>
+                <th>eBay</th>
             </tr>
         </thead>
         <tbody id="resultsTableBody">
@@ -37,108 +37,36 @@
     </table>
 </div>
 
-<!-- Custom Edit Item Modal - Outside of main content -->
-<div id="editItemModal" class="custom-modal" style="display: none;">
-    <div class="custom-modal-backdrop" onclick="closeEditModal()"></div>
+<!-- Add eBay ID Modal -->
+<div id="addEbayIdModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeAddEbayIdModal()"></div>
     <div class="custom-modal-dialog">
         <div class="custom-modal-content">
             <div class="custom-modal-header">
-                <h5 class="custom-modal-title">Edit Item</h5>
-                <button type="button" class="btn-close" onclick="closeEditModal()">
+                <h5 class="custom-modal-title">Add eBay Item ID</h5>
+                <button type="button" class="btn-close" onclick="closeAddEbayIdModal()">
                     <span>&times;</span>
                 </button>
             </div>
-            <form id="editItemForm" method="POST" action="/items/modify_ajax">
+            <form id="addEbayIdForm" method="POST" action="/items/modify_ajax">
                 <div class="custom-modal-body">
-                    <input type="hidden" id="editItemId" name="id">
+                    <input type="hidden" id="addEbayIdItemId" name="id">
                     <input type="hidden" name="return_to" value="items_search">
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemName">Name</label>
-                                <input type="text" class="form-control" id="editItemName" name="name" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemGroup">Group</label>
-                                <select class="form-control" id="editItemGroup" name="group" required>
-                                    <!-- Groups will be populated by JavaScript -->
-                                </select>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label for="addEbayIdItemName">Item Name</label>
+                        <input type="text" class="form-control" id="addEbayIdItemName" readonly>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemCategory">Category</label>
-                                <select class="form-control" id="editItemCategory" name="category" required>
-                                    <!-- Categories will be populated by JavaScript -->
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemStorage">Storage</label>
-                                <input type="text" class="form-control" id="editItemStorage" name="storage">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemEbayId">eBay Item ID</label>
-                                <small class="text-muted d-block">(Optional)</small>
-                                <input type="text" class="form-control" id="editItemEbayId" name="ebay_item_id" placeholder="eBay Item ID">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemReturned">Returned</label>
-                                <select class="form-control" id="editItemReturned" name="returned">
-                                    <option value="0">False</option>
-                                    <option value="1">True</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemListDate">List Date</label>
-                                <input type="date" class="form-control" id="editItemListDate" name="list_date" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemSaleDate">Sale Date</label>
-                                <input type="date" class="form-control" id="editItemSaleDate" name="sale_date">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemPrice">Price</label>
-                                <input type="number" step="0.01" class="form-control" id="editItemPrice" name="price">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editItemShippingFee">Shipping Fee</label>
-                                <input type="number" step="0.01" class="form-control" id="editItemShippingFee" name="shipping_fee">
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label for="addEbayIdInput">eBay Item ID</label>
+                        <small class="text-muted d-block">Enter the eBay item ID (e.g., 267415513883)</small>
+                        <input type="text" class="form-control" id="addEbayIdInput" name="ebay_item_id" placeholder="eBay Item ID" required>
                     </div>
                 </div>
                 <div class="custom-modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeAddEbayIdModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add eBay ID</button>
                 </div>
             </form>
         </div>
@@ -410,112 +338,57 @@ function displayResults(items) {
         const storageCell = document.createElement('td');
         storageCell.textContent = item.storage || '-';
         
-        // Create edit cell
-        const editCell = document.createElement('td');
-        const editButton = document.createElement('button');
-        editButton.type = 'button';
-        editButton.className = 'btn btn-sm btn-outline-primary edit-item-btn';
-        editButton.style.minWidth = '60px';
-        editButton.textContent = 'Edit';
-        editButton.setAttribute('data-item-id', item.id);
-        editButton.setAttribute('data-item-name', item.name);
-        editButton.setAttribute('data-group-id', item.group_id);
-        editButton.setAttribute('data-category-id', item.category_id || '');
-        editButton.setAttribute('data-storage', item.storage || '');
-        editButton.setAttribute('data-ebay-item-id', item.ebay_item_id || '');
-        editButton.setAttribute('data-returned', item.returned || '0');
-        editButton.setAttribute('data-list-date', item.list_date || '');
-        editButton.setAttribute('data-gross-price', item.gross_price || '');
-        editButton.setAttribute('data-shipping-fee', item.shipping_fee || '');
-        editButton.setAttribute('data-sale-date', item.sale_date || '');
-        editCell.appendChild(editButton);
+                // Create eBay ID cell
+                const ebayIdCell = document.createElement('td');
+                if (item.ebay_item_id) {
+                    // Show eBay link if ID exists
+                    const ebayLink = document.createElement('a');
+                    ebayLink.href = `https://www.ebay.com/itm/${item.ebay_item_id}`;
+                    ebayLink.target = '_blank';
+                    ebayLink.className = 'btn btn-sm btn-outline-success';
+                    ebayLink.innerHTML = '<i class="fas fa-external-link-alt"></i> eBay';
+                    ebayIdCell.appendChild(ebayLink);
+                } else {
+                    // Show add button if no ID
+                    const addButton = document.createElement('button');
+                    addButton.type = 'button';
+                    addButton.className = 'btn btn-sm btn-outline-primary add-ebay-id-btn';
+                    addButton.style.minWidth = '80px';
+                    addButton.textContent = 'Add eBay ID';
+                    addButton.setAttribute('data-item-id', item.id);
+                    addButton.setAttribute('data-item-name', item.name);
+                    ebayIdCell.appendChild(addButton);
+                }
         
         // Append all cells to row
-        row.appendChild(nameCell);
-        row.appendChild(soldCell);
-        row.appendChild(groupCell);
-        row.appendChild(netCell);
-        row.appendChild(storageCell);
-        row.appendChild(editCell);
+                row.appendChild(nameCell);
+                row.appendChild(soldCell);
+                row.appendChild(groupCell);
+                row.appendChild(netCell);
+                row.appendChild(storageCell);
+                row.appendChild(ebayIdCell);
         
         // Append row to tbody
         tbody.appendChild(row);
     });
 }
 
-// Modal functions
-let groupsData = [];
-let categoriesData = [];
+        // Add eBay ID Modal functions
+        function openAddEbayIdModal(itemId, itemName) {
+            console.log('Opening Add eBay ID modal for:', { itemId, itemName });
+            
+            // Set form values
+            document.getElementById('addEbayIdItemId').value = itemId;
+            document.getElementById('addEbayIdItemName').value = itemName;
+            document.getElementById('addEbayIdInput').value = '';
+            
+            // Show modal
+            document.getElementById('addEbayIdModal').style.display = 'flex';
+        }
 
-function openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId, returned, listDate, grossPrice, shippingFee, saleDate) {
-    console.log('Opening modal with data:', { itemId, name, groupId, categoryId, storage, ebayItemId, returned, listDate, grossPrice, shippingFee, saleDate });
-    
-    // Set form values
-    document.getElementById('editItemId').value = itemId;
-    document.getElementById('editItemName').value = name;
-    document.getElementById('editItemGroup').value = groupId;
-    document.getElementById('editItemStorage').value = storage || '';
-    document.getElementById('editItemEbayId').value = ebayItemId || '';
-    document.getElementById('editItemReturned').value = returned || '0';
-    document.getElementById('editItemListDate').value = listDate || new Date().toISOString().split('T')[0];
-    document.getElementById('editItemSaleDate').value = saleDate || '';
-    document.getElementById('editItemPrice').value = grossPrice || '';
-    document.getElementById('editItemShippingFee').value = shippingFee || '';
-    
-    // Set the correct category
-    const categorySelect = document.getElementById('editItemCategory');
-    if (categoryId && categorySelect) {
-        categorySelect.value = categoryId;
-    } else if (categorySelect.options.length > 0) {
-        // Fallback to first category if no category_id provided
-        categorySelect.value = categorySelect.options[0].value;
-    }
-    
-    // Show modal
-    document.getElementById('editItemModal').style.display = 'flex';
-}
-
-function closeEditModal() {
-    document.getElementById('editItemModal').style.display = 'none';
-}
-
-function loadGroupsAndCategories() {
-    // Load groups
-    fetch('/api/groups')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                groupsData = data.groups;
-                const groupSelect = document.getElementById('editItemGroup');
-                groupSelect.innerHTML = '';
-                groupsData.forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group.id;
-                    option.textContent = group.name;
-                    groupSelect.appendChild(option);
-                });
-            }
-        })
-        .catch(error => console.error('Error loading groups:', error));
-    
-    // Load categories
-    fetch('/api/categories')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                categoriesData = data.categories;
-                const categorySelect = document.getElementById('editItemCategory');
-                categorySelect.innerHTML = '';
-                categoriesData.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.id;
-                    option.textContent = category.type;
-                    categorySelect.appendChild(option);
-                });
-            }
-        })
-        .catch(error => console.error('Error loading categories:', error));
-}
+        function closeAddEbayIdModal() {
+            document.getElementById('addEbayIdModal').style.display = 'none';
+        }
 
 // Add event listeners
 document.addEventListener('DOMContentLoaded', function() {
@@ -526,30 +399,19 @@ document.addEventListener('DOMContentLoaded', function() {
     nameInput.addEventListener('input', performSearch);
     soldSelect.addEventListener('change', performSearch);
     
-    // Load groups and categories for modal
-    loadGroupsAndCategories();
     
-    // Add event listeners to edit buttons (delegated)
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('edit-item-btn')) {
-            const itemId = e.target.getAttribute('data-item-id');
-            const name = e.target.getAttribute('data-item-name');
-            const groupId = e.target.getAttribute('data-group-id');
-            const categoryId = e.target.getAttribute('data-category-id');
-            const storage = e.target.getAttribute('data-storage');
-            const ebayItemId = e.target.getAttribute('data-ebay-item-id');
-            const returned = e.target.getAttribute('data-returned');
-            const listDate = e.target.getAttribute('data-list-date');
-            const grossPrice = e.target.getAttribute('data-gross-price');
-            const shippingFee = e.target.getAttribute('data-shipping-fee');
-            const saleDate = e.target.getAttribute('data-sale-date');
-            
-            openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId, returned, listDate, grossPrice, shippingFee, saleDate);
-        }
-    });
+            // Add event listeners to add eBay ID buttons (delegated)
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('add-ebay-id-btn')) {
+                    const itemId = e.target.getAttribute('data-item-id');
+                    const itemName = e.target.getAttribute('data-item-name');
+                    
+                    openAddEbayIdModal(itemId, itemName);
+                }
+            });
     
-    // Handle form submission
-    document.getElementById('editItemForm').addEventListener('submit', function(e) {
+    // Handle Add eBay ID form submission
+    document.getElementById('addEbayIdForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         const formData = new FormData(this);
@@ -562,16 +424,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Close modal
-                closeEditModal();
+                closeAddEbayIdModal();
                 // Reload search results to show updated data
                 performSearch();
             } else {
-                alert('Error updating item: ' + data.message);
+                alert('Error adding eBay ID: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error updating item. Please try again.');
+            alert('Error adding eBay ID. Please try again.');
         });
     });
     
