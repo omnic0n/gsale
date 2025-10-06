@@ -2904,12 +2904,15 @@ def bought_items():
 
     form.group.choices = [(group['id'], group['name']) for group in groups]
     
-    # Ensure we have at least one item entry
-    if not form.items.entries:
-        form.items.append_entry()
+    # Force initialization of the FieldList with proper entries
+    while form.items.entries:
+        form.items.pop_entry()  # Remove any existing entries
+    form.items.append_entry()  # Add one proper entry
     
     # Set category choices for each item in the form
     for item_form in form.items:
+        print(f"DEBUG: Item form type: {type(item_form)}")
+        print(f"DEBUG: Item form name field type: {type(item_form.name)}")
         item_form.category.choices = [(category['id'], category['type']) for category in categories]
 
     if group_id:
