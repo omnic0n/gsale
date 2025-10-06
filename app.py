@@ -1353,7 +1353,7 @@ def admin_ebay_listings():
         else:
             listings = []
             total_listings = 0
-            flash(f"Error fetching eBay listings: {ebay_result['error']}", 'error')
+            flash("Error fetching eBay listings: {}".format(ebay_result['error']), 'error')
         
         return render_template('admin_ebay_listings.html', 
                              listings=listings, 
@@ -1361,7 +1361,7 @@ def admin_ebay_listings():
                              error=ebay_result.get('error'))
     
     except Exception as e:
-        print(f"Error in admin eBay listings: {e}")
+        print("Error in admin eBay listings: {}".format(e))
         flash('An error occurred while loading eBay listings.', 'error')
         return render_template('admin_ebay_listings.html', 
                              listings=[], 
