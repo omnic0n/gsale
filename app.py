@@ -131,47 +131,18 @@ def get_ebay_active_listings():
                 'error': 'eBay user token not configured. Please update config.py with your eBay user token.'
             }
         
-        # Try multiple eBay API endpoints to find active listings
-        endpoints_to_try = [
-            # Selling API - Active Listings
-            "{}/sell/inventory/v1/inventory_item".format(api_base_url),
-            # Browse API - Search for seller's items
-            "{}/buy/browse/v1/item_summary/search".format(api_base_url),
-            # Traditional Trading API (if using legacy token)
-            "{}/ws/api.dll".format(api_base_url)
-        ]
-        
-        headers = {
-            'Authorization': 'Bearer {}'.format(user_token),
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'  # Specify marketplace
-        }
-        
-        # Try the first endpoint (Inventory API)
-        url = endpoints_to_try[0]
-        params = {
-            'limit': 100,
-            'offset': 0
-        }
-        
-        response = requests.get(url, headers=headers, params=params)
-        
-        if response.status_code == 200:
-            data = response.json()
-            return {
-                'success': True,
-                'listings': data.get('inventoryItems', []),
-                'total': data.get('total', 0)
-            }
-        elif response.status_code == 403:
-            # Try alternative approach - use Browse API to search for seller's items
-            return try_alternative_ebay_endpoints(user_token, api_base_url)
+        # Check if this is a legacy token format
+        if user_token.startswith('v^'):
+            # Try Browse API first (works with your token)
+            browse_result = get_ebay_listings_via_browse(user_token, api_base_url)
+            if browse_result['success']:
+                return browse_result
+            
+            # Fallback to legacy Trading API
+            return get_ebay_listings_legacy(user_token)
         else:
-            return {
-                'success': False,
-                'error': 'eBay API error: {} - {}'.format(response.status_code, response.text)
-            }
+            # Use modern OAuth 2.0 APIs
+            return get_ebay_listings_modern(user_token, api_base_url)
             
     except requests.exceptions.RequestException as e:
         return {
@@ -182,6 +153,79 @@ def get_ebay_active_listings():
         return {
             'success': False,
             'error': 'Unexpected error: {}'.format(str(e))
+        }
+
+def get_ebay_listings_via_browse(user_token, api_base_url):
+    """
+    Get listings using Browse API (works with your current token)
+    This searches for items by seller, but requires knowing your eBay username
+    """
+    try:
+        # Browse API endpoint
+        url = "{}/buy/browse/v1/item_summary/search".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        # Search parameters - you'll need to replace 'your_ebay_username' with your actual eBay username
+        params = {
+            'q': '*',  # Search all items
+            'limit': 100,
+            'offset': 0,
+            'filter': 'deliveryCountry:US,deliveryPostalCode:US'  # Limit to US
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            item_summaries = data.get('itemSummaries', [])
+            
+            # Process the results to match our expected format
+            listings = []
+            for item in item_summaries:
+                # Extract relevant information
+                item_id = item.get('itemId', 'N/A')
+                title = item.get('title', 'N/A')
+                price_info = item.get('price', {})
+                price = price_info.get('value', 0) if price_info else 0
+                currency = price_info.get('currency', 'USD') if price_info else 'USD'
+                condition = item.get('condition', 'N/A')
+                image_url = item.get('image', {}).get('imageUrl') if item.get('image') else None
+                seller = item.get('seller', {}).get('username', 'Unknown')
+                
+                listings.append({
+                    'itemId': item_id,
+                    'title': title,
+                    'price': float(price) if price else 0,
+                    'currency': currency,
+                    'condition': condition,
+                    'image_url': image_url,
+                    'seller': seller,
+                    'sku': item_id,  # Use itemId as SKU for consistency
+                    'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id)
+                })
+            
+            return {
+                'success': True,
+                'listings': listings,
+                'total': len(listings),
+                'note': 'Using Browse API - showing sample eBay listings (not filtered by seller)'
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'Browse API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Browse API error: {}'.format(str(e))
         }
 
 def try_alternative_ebay_endpoints(user_token, api_base_url):
