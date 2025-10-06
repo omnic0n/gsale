@@ -563,8 +563,8 @@ def get_item_transaction_details(user_token, item_id):
             if orders_result['success'] and orders_result['orders']:
                 print("DEBUG: Found orders via modern API, getting details...")
                 # Use the first order found
-                order_id = orders_result['orders'][0]['orderId']
-                order_details = get_order_with_tax_breakdown(user_token, order_id)
+                order_data = orders_result['orders'][0]
+                order_details = get_order_with_tax_breakdown(user_token, order_data)
                 if order_details['success']:
                     print("DEBUG: Successfully got order details from modern API")
                     
@@ -717,99 +717,202 @@ def get_item_transaction_details(user_token, item_id):
 
 def get_orders_for_item(user_token, item_id):
     """
-    Get orders for a specific item using modern eBay Order API
+    Get orders for a specific item using Trading API GetOrders call
     """
     try:
-        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        import xml.etree.ElementTree as ET
+        from datetime import datetime, timedelta
         
-        # Use modern Order API to search for orders containing this item
-        url = "{}/sell/fulfillment/v1/order".format(api_base_url)
+        url = "https://api.ebay.com/ws/api.dll"
+        
+        # Calculate date range - last 30 days (eBay recommendation)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+        
+        # Format dates for eBay API
+        start_date_str = start_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+        end_date_str = end_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+        
+        print(f"DEBUG: Searching orders from {start_date_str} to {end_date_str}")
+        
+        xml_request = f"""<?xml version="1.0" encoding="utf-8"?>
+        <GetOrdersRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+            <RequesterCredentials>
+                <eBayAuthToken>{user_token}</eBayAuthToken>
+            </RequesterCredentials>
+            <CreateTimeFrom>{start_date_str}</CreateTimeFrom>
+            <CreateTimeTo>{end_date_str}</CreateTimeTo>
+            <DetailLevel>ReturnAll</DetailLevel>
+            <IncludeFinalValueFee>true</IncludeFinalValueFee>
+            <Version>1193</Version>
+        </GetOrdersRequest>"""
         
         headers = {
-            'Authorization': 'Bearer {}'.format(user_token),
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+            'X-EBAY-API-COMPATIBILITY-LEVEL': '1193',
+            'X-EBAY-API-DEV-NAME': app.config.get('EBAY_DEV_NAME', 'your_dev_name'),
+            'X-EBAY-API-APP-NAME': app.config.get('EBAY_APP_NAME', 'your_app_name'),
+            'X-EBAY-API-CERT-NAME': app.config.get('EBAY_CERT_NAME', 'your_cert_name'),
+            'X-EBAY-API-CALL-NAME': 'GetOrders',
+            'X-EBAY-API-SITEID': '0',
+            'Content-Type': 'text/xml'
         }
         
-        # Search for orders with this item ID - try different filter approaches
-        params = {
-            'fieldGroups': 'TAX_BREAKDOWN',
-            'limit': 10
-        }
+        print("DEBUG: Calling GetOrders with Trading API")
+        response = requests.post(url, data=xml_request, headers=headers)
         
-        # Try to find orders by item ID using different approaches
-        # First try: search recent orders and filter by item ID
-        print(f"DEBUG: Searching for orders containing item ID: {item_id}")
-        
-        print("DEBUG: Order API call - URL: {}, Params: {}".format(url, params))
-        
-        response = requests.get(url, headers=headers, params=params)
-        
-        print("DEBUG: Order API response - Status: {}, Text: {}".format(response.status_code, response.text[:200]))
+        print("DEBUG: GetOrders response - Status: {}, Text: {}".format(response.status_code, response.text[:200]))
         
         if response.status_code == 200:
-            data = response.json()
-            orders = data.get('orders', [])
+            root = ET.fromstring(response.text)
             
-            print("DEBUG: Found {} orders".format(len(orders)))
+            # Check for errors
+            errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
+            if errors:
+                error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
+                if error_msg is not None:
+                    return {
+                        'success': False,
+                        'error': f'eBay API error: {error_msg.text}'
+                    }
             
-            # Search through orders to find the one containing our item ID
+            # Iterate through orders and transactions
             matching_orders = []
-            for order in orders:
-                line_items = order.get('lineItems', [])
-                for line_item in line_items:
-                    line_item_id = line_item.get('lineItemId')
-                    if line_item_id == item_id:
-                        matching_orders.append(order)
-                        print(f"DEBUG: Found matching order: {order.get('orderId')}")
-                        break
+            orders = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Order')
             
+            print(f"DEBUG: Found {len(orders)} orders in date range")
+            
+            for order in orders:
+                order_id = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderID')
+                transactions = order.findall('.//{urn:ebay:apis:eBLBaseComponents}Transaction')
+                
+                print(f"DEBUG: Order {order_id.text if order_id is not None else 'Unknown'} has {len(transactions)} transactions")
+                
+                # Iterate through transactions in this order
+                for transaction in transactions:
+                    item_elem = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Item')
+                    if item_elem is not None:
+                        item_id_elem = item_elem.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
+                        if item_id_elem is not None and item_id_elem.text == item_id:
+                            print(f"DEBUG: Found matching item {item_id} in order {order_id.text}")
+                            matching_orders.append({
+                                'orderId': order_id.text if order_id is not None else 'Unknown',
+                                'transaction': transaction,
+                                'order': order
+                            })
+                            break
+            
+            print(f"DEBUG: Found {len(matching_orders)} matching orders")
             return {
                 'success': True,
                 'orders': matching_orders
             }
         else:
-            print("DEBUG: Order API failed with status {}".format(response.status_code))
+            print("DEBUG: GetOrders failed with status {}".format(response.status_code))
             return {
                 'success': False,
-                'error': 'Order API error: {} - {}'.format(response.status_code, response.text)
+                'error': f'GetOrders failed: {response.status_code} - {response.text}'
             }
             
     except Exception as e:
-        print("DEBUG: Order API exception: {}".format(str(e)))
+        print("DEBUG: GetOrders exception: {}".format(str(e)))
         return {
             'success': False,
-            'error': 'Order API error: {}'.format(str(e))
+            'error': f'GetOrders error: {str(e)}'
         }
 
-def get_order_with_tax_breakdown(user_token, order_id):
+def get_order_with_tax_breakdown(user_token, order_data):
     """
-    Get detailed order information using modern eBay Order API with TAX_BREAKDOWN
+    Extract detailed order information from Trading API GetOrders response
     """
     try:
-        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        import xml.etree.ElementTree as ET
         
-        # Use modern Order API to get specific order details
-        url = "{}/sell/fulfillment/v1/order/{}".format(api_base_url, order_id)
+        order = order_data['order']
+        transaction = order_data['transaction']
         
-        headers = {
-            'Authorization': 'Bearer {}'.format(user_token),
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        print(f"DEBUG: Processing order {order_data['orderId']}")
+        
+        transaction_data = {
+            'final_price': 0,
+            'listing_fees': 0,
+            'final_value_fee': 0,
+            'paypal_fee': 0,
+            'sales_tax': 0,
+            'net_earnings': 0,
+            'total_fees': 0,
+            'has_actual_fees': True,
+            'order_id': order_data['orderId']
         }
         
-        # Include TAX_BREAKDOWN field group for detailed financial information
-        params = {
-            'fieldGroups': 'TAX_BREAKDOWN'
+        # Extract transaction price
+        transaction_price = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}TransactionPrice')
+        if transaction_price is not None:
+            transaction_data['final_price'] = float(transaction_price.text) if transaction_price.text else 0
+        
+        # Extract order total (might be different from transaction price)
+        order_total = order.find('.//{urn:ebay:apis:eBLBaseComponents}Total')
+        if order_total is not None:
+            transaction_data['final_price'] = float(order_total.text) if order_total.text else transaction_data['final_price']
+        
+        # Extract Final Value Fee
+        fvf = order.find('.//{urn:ebay:apis:eBLBaseComponents}FinalValueFee')
+        if fvf is not None:
+            transaction_data['final_value_fee'] = float(fvf.text) if fvf.text else 0
+        
+        # Extract sales tax
+        sales_tax = order.find('.//{urn:ebay:apis:eBLBaseComponents}SalesTax')
+        if sales_tax is not None:
+            transaction_data['sales_tax'] = float(sales_tax.text) if sales_tax.text else 0
+        
+        # Extract fees from Fees section
+        fees_section = order.find('.//{urn:ebay:apis:eBLBaseComponents}Fees')
+        if fees_section is not None:
+            fees = fees_section.findall('.//{urn:ebay:apis:eBLBaseComponents}Fee')
+            for fee in fees:
+                fee_name = fee.find('.//{urn:ebay:apis:eBLBaseComponents}Name')
+                fee_amount = fee.find('.//{urn:ebay:apis:eBLBaseComponents}Fee')
+                
+                if fee_name is not None and fee_amount is not None:
+                    fee_name_text = fee_name.text.lower() if fee_name.text else ''
+                    fee_amount_val = float(fee_amount.text) if fee_amount.text else 0
+                    
+                    if 'final value' in fee_name_text:
+                        transaction_data['final_value_fee'] += fee_amount_val
+                    elif 'paypal' in fee_name_text:
+                        transaction_data['paypal_fee'] += fee_amount_val
+                    elif 'listing' in fee_name_text or 'insertion' in fee_name_text:
+                        transaction_data['listing_fees'] += fee_amount_val
+        
+        # Calculate total fees
+        transaction_data['total_fees'] = (
+            transaction_data['final_value_fee'] + 
+            transaction_data['paypal_fee'] + 
+            transaction_data['listing_fees']
+        )
+        
+        # Calculate net earnings
+        transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['total_fees']
+        
+        print(f"DEBUG: Extracted order data:")
+        print(f"  Final Price: ${transaction_data['final_price']:.2f}")
+        print(f"  Final Value Fee: ${transaction_data['final_value_fee']:.2f}")
+        print(f"  PayPal Fee: ${transaction_data['paypal_fee']:.2f}")
+        print(f"  Listing Fees: ${transaction_data['listing_fees']:.2f}")
+        print(f"  Sales Tax: ${transaction_data['sales_tax']:.2f}")
+        print(f"  Total Fees: ${transaction_data['total_fees']:.2f}")
+        print(f"  Net Earnings: ${transaction_data['net_earnings']:.2f}")
+        
+        return {
+            'success': True,
+            'transaction_data': transaction_data
         }
         
-        print("DEBUG: Getting order details - URL: {}, Order ID: {}".format(url, order_id))
-        
-        response = requests.get(url, headers=headers, params=params)
-        
-        print("DEBUG: Order details response - Status: {}, Text: {}".format(response.status_code, response.text[:200]))
+    except Exception as e:
+        print(f"DEBUG: Error processing order data: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Order processing error: {str(e)}'
+        }
         
         if response.status_code == 200:
             data = response.json()
