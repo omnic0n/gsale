@@ -27,7 +27,8 @@
                 <th>Sold</th>
                 <th>Group</th>
                 <th>Net</th>
-                <th>Storage</th> 
+                <th>Storage</th>
+                <th>Edit</th>
             </tr>
         </thead>
         <tbody id="resultsTableBody">
@@ -35,6 +36,207 @@
         </tbody>
     </table>
 </div>
+
+<!-- Custom Edit Item Modal -->
+<div id="editItemModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-backdrop" onclick="closeEditModal()"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">Edit Item</h5>
+                <button type="button" class="btn-close" onclick="closeEditModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editItemForm" method="POST" action="/items/modify_ajax">
+                <div class="custom-modal-body">
+                    <input type="hidden" id="editItemId" name="id">
+                    <input type="hidden" name="return_to" value="items_search">
+                    
+                    <div class="form-group">
+                        <label for="editItemName">Name</label>
+                        <input type="text" class="form-control" id="editItemName" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemGroup">Group</label>
+                        <select class="form-control" id="editItemGroup" name="group" required>
+                            <!-- Groups will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemCategory">Category</label>
+                        <select class="form-control" id="editItemCategory" name="category" required>
+                            <!-- Categories will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemStorage">Storage</label>
+                        <input type="text" class="form-control" id="editItemStorage" name="storage">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemEbayId">eBay Item ID</label>
+                        <small class="text-muted d-block">(Optional)</small>
+                        <input type="text" class="form-control" id="editItemEbayId" name="ebay_item_id" placeholder="eBay Item ID">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemReturned">Returned</label>
+                        <select class="form-control" id="editItemReturned" name="returned">
+                            <option value="0">False</option>
+                            <option value="1">True</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemListDate">List Date</label>
+                        <input type="date" class="form-control" id="editItemListDate" name="list_date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemSaleDate">Sale Date</label>
+                        <input type="date" class="form-control" id="editItemSaleDate" name="sale_date">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemPrice">Price</label>
+                        <input type="number" step="0.01" class="form-control" id="editItemPrice" name="price">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editItemShippingFee">Shipping Fee</label>
+                        <input type="number" step="0.01" class="form-control" id="editItemShippingFee" name="shipping_fee">
+                    </div>
+                </div>
+                <div class="custom-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Custom Modal Styles */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.custom-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.custom-modal-dialog {
+    position: relative;
+    z-index: 1055;
+    width: 90%;
+    max-width: 600px;
+    margin: 1.75rem auto;
+}
+
+.custom-modal-content {
+    background: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    position: relative;
+    color: black;
+}
+
+.custom-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: white;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: black;
+}
+
+.custom-modal-body {
+    padding: 1rem;
+    background-color: white;
+    color: black;
+}
+
+.custom-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    background-color: white;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: black;
+}
+
+.btn-close:hover {
+    opacity: 0.7;
+}
+
+.custom-modal .form-control {
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #ced4da !important;
+    font-size: 16px !important;
+    padding: 8px 12px !important;
+}
+
+.custom-modal select.form-control {
+    font-size: 16px !important;
+    padding: 8px 12px !important;
+    line-height: 1.5 !important;
+}
+
+.custom-modal label {
+    color: black !important;
+    font-weight: bold;
+    font-size: 16px !important;
+    margin-bottom: 8px !important;
+}
+
+.custom-modal .form-group {
+    margin-bottom: 20px !important;
+}
+</style>
 
 <script>
 let searchTimeout;
@@ -72,7 +274,7 @@ function displayResults(items) {
     tbody.innerHTML = '';
     
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No items found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No items found</td></tr>';
         return;
     }
     
@@ -118,16 +320,106 @@ function displayResults(items) {
         const storageCell = document.createElement('td');
         storageCell.textContent = item.storage || '-';
         
+        // Create edit cell
+        const editCell = document.createElement('td');
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'btn btn-sm btn-outline-primary edit-item-btn';
+        editButton.style.minWidth = '60px';
+        editButton.textContent = 'Edit';
+        editButton.setAttribute('data-item-id', item.id);
+        editButton.setAttribute('data-item-name', item.name);
+        editButton.setAttribute('data-group-id', item.group_id);
+        editButton.setAttribute('data-category-id', item.category_id || '');
+        editButton.setAttribute('data-storage', item.storage || '');
+        editButton.setAttribute('data-ebay-item-id', item.ebay_item_id || '');
+        editCell.appendChild(editButton);
+        
         // Append all cells to row
         row.appendChild(nameCell);
         row.appendChild(soldCell);
         row.appendChild(groupCell);
         row.appendChild(netCell);
         row.appendChild(storageCell);
+        row.appendChild(editCell);
         
         // Append row to tbody
         tbody.appendChild(row);
     });
+}
+
+// Modal functions
+let groupsData = [];
+let categoriesData = [];
+
+function openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId) {
+    console.log('Opening modal with data:', { itemId, name, groupId, categoryId, storage, ebayItemId });
+    
+    // Set form values
+    document.getElementById('editItemId').value = itemId;
+    document.getElementById('editItemName').value = name;
+    document.getElementById('editItemGroup').value = groupId;
+    document.getElementById('editItemStorage').value = storage || '';
+    document.getElementById('editItemEbayId').value = ebayItemId || '';
+    document.getElementById('editItemReturned').value = '0'; // Default to False
+    document.getElementById('editItemListDate').value = new Date().toISOString().split('T')[0]; // Today's date
+    document.getElementById('editItemSaleDate').value = '';
+    document.getElementById('editItemPrice').value = '0';
+    document.getElementById('editItemShippingFee').value = '0';
+    
+    // Set the correct category
+    const categorySelect = document.getElementById('editItemCategory');
+    if (categoryId && categorySelect) {
+        categorySelect.value = categoryId;
+    } else if (categorySelect.options.length > 0) {
+        // Fallback to first category if no category_id provided
+        categorySelect.value = categorySelect.options[0].value;
+    }
+    
+    // Show modal
+    document.getElementById('editItemModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editItemModal').style.display = 'none';
+}
+
+function loadGroupsAndCategories() {
+    // Load groups
+    fetch('/api/groups')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                groupsData = data.groups;
+                const groupSelect = document.getElementById('editItemGroup');
+                groupSelect.innerHTML = '';
+                groupsData.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = group.name;
+                    groupSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading groups:', error));
+    
+    // Load categories
+    fetch('/api/categories')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                categoriesData = data.categories;
+                const categorySelect = document.getElementById('editItemCategory');
+                categorySelect.innerHTML = '';
+                categoriesData.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.type;
+                    categorySelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading categories:', error));
 }
 
 // Add event listeners
@@ -138,6 +430,50 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add input event listener for real-time search
     nameInput.addEventListener('input', performSearch);
     soldSelect.addEventListener('change', performSearch);
+    
+    // Load groups and categories for modal
+    loadGroupsAndCategories();
+    
+    // Add event listeners to edit buttons (delegated)
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-item-btn')) {
+            const itemId = e.target.getAttribute('data-item-id');
+            const name = e.target.getAttribute('data-item-name');
+            const groupId = e.target.getAttribute('data-group-id');
+            const categoryId = e.target.getAttribute('data-category-id');
+            const storage = e.target.getAttribute('data-storage');
+            const ebayItemId = e.target.getAttribute('data-ebay-item-id');
+            
+            openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId);
+        }
+    });
+    
+    // Handle form submission
+    document.getElementById('editItemForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('/items/modify_ajax', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal
+                closeEditModal();
+                // Reload search results to show updated data
+                performSearch();
+            } else {
+                alert('Error updating item: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating item. Please try again.');
+        });
+    });
     
     // Perform initial search to show available items by default
     performSearch();

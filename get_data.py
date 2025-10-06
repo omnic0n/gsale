@@ -294,12 +294,15 @@ def get_list_of_items_with_name(name, sold):
                 items.sold,
                 items.id,
                 items.storage,
+                items.ebay_item_id,
+                COALESCE(categories.uuid_id, items.category_id) AS category_id,
                 (sale.price - sale.shipping_fee) AS net,
                 collection.id as group_id,
                 collection.name as group_name
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
                 INNER JOIN sale sale ON items.id = sale.id
+                LEFT JOIN categories ON items.category_id = categories.id
                 WHERE items.name LIKE %s AND collection.group_id = %s AND items.sold LIKE %s""", 
                 (search_pattern, get_current_group_id(), validated_sold))
     return list(cur.fetchall())

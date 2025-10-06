@@ -3716,12 +3716,46 @@ def api_items_search():
                 'name': item['name'],
                 'sold': item['sold'],
                 'storage': item['storage'],
+                'ebay_item_id': item['ebay_item_id'],
+                'category_id': item['category_id'],
                 'net': item['net'],
                 'group_id': item['group_id'],
                 'group_name': item['group_name']
             })
         
         return jsonify({'success': True, 'items': results})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/groups', methods=['GET'])
+@login_required
+def api_groups():
+    """API endpoint to get all groups for the current user"""
+    try:
+        groups = get_data.get_all_from_groups('%')
+        results = []
+        for group in groups:
+            results.append({
+                'id': group['id'],
+                'name': group['name']
+            })
+        return jsonify({'success': True, 'groups': results})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/categories', methods=['GET'])
+@login_required
+def api_categories():
+    """API endpoint to get all categories"""
+    try:
+        categories = get_data.get_all_from_categories()
+        results = []
+        for category in categories:
+            results.append({
+                'id': category['id'],
+                'type': category['type']
+            })
+        return jsonify({'success': True, 'categories': results})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
