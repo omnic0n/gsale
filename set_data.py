@@ -71,16 +71,20 @@ def set_bought_items_improved(details):
             
             # Get eBay item ID for this item (optional)
             ebay_item_key = f"items-{item_index}-ebay_item_id"
-            ebay_item_id = details.get(ebay_item_key, '').strip()
-            if ebay_item_id and len(ebay_item_id) > 50:
-                ebay_item_id = ebay_item_id[:50]  # Truncate if too long
+            ebay_item_id = details.get(ebay_item_key, '')
+            if ebay_item_id:
+                ebay_item_id = ebay_item_id.strip()
+                if len(ebay_item_id) > 50:
+                    ebay_item_id = ebay_item_id[:50]  # Truncate if too long
+            else:
+                ebay_item_id = None
             
             # Insert item with eBay item ID
             item_id = generate_uuid()
             cur.execute("""
                 INSERT INTO items(id, name, group_id, category_id, storage, list_date, ebay_item_id) 
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (item_id, item_name, details['group'], category_id, details['storage'], details['list_date'], ebay_item_id or None))
+            """, (item_id, item_name, details['group'], category_id, details['storage'], details['list_date'], ebay_item_id))
             
             # Insert sale record
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",

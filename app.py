@@ -2917,7 +2917,7 @@ def bought_items():
         form.list_date.data = group_data['date']
 
     if request.method == "POST":
-        details = request.form
+        details = request.form.to_dict()
         print("DEBUG: Form data received:", details)
         
         group_data = get_data.get_all_from_group(details['group'])
