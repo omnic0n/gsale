@@ -24,7 +24,7 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    {{ item_form.name.label(class="form-control-label") }}
+                                    <label class="form-control-label">Item Name</label>
                                     {% if item_form.name.errors %}
                                         {{ item_form.name(class="form-control form-control-lg is-invalid") }}
                                         <div class="invalid-feedback">
@@ -39,7 +39,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    {{ item_form.category.label(class="form-control-label") }}
+                                    <label class="form-control-label">Category</label>
                                     {% if item_form.category.errors %}
                                         {{ item_form.category(class="form-control form-control-lg is-invalid") }}
                                         <div class="invalid-feedback">
@@ -54,7 +54,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    {{ item_form.ebay_item_id.label(class="form-control-label") }}
+                                    <label class="form-control-label">eBay Item ID</label>
                                     <small class="text-muted">(Optional)</small>
                                     {% if item_form.ebay_item_id.errors %}
                                         {{ item_form.ebay_item_id(class="form-control form-control-lg is-invalid") }}
@@ -136,7 +136,7 @@
     </div>
 
     <script>
-        let itemCount = {{ form.items.entries|length }};
+        let itemCount = {{ form.items.entries|length if form.items.entries else 1 }};
         const maxItems = 50;
         
         function updateItemCount() {
@@ -153,9 +153,12 @@
             
             // Get category choices from the first item
             const firstCategorySelect = document.querySelector('.item-row select[name*="category"]');
-            const categoryChoices = Array.from(firstCategorySelect.options).map(option => 
-                `<option value="${option.value}">${option.text}</option>`
-            ).join('');
+            let categoryChoices = '';
+            if (firstCategorySelect) {
+                categoryChoices = Array.from(firstCategorySelect.options).map(option => 
+                    `<option value="${option.value}">${option.text}</option>`
+                ).join('');
+            }
             
             const newItemHtml = `
                 <div class="item-row border rounded p-3 mb-3" data-index="${newIndex}">
