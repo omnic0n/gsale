@@ -289,17 +289,27 @@ def get_sold_items_basic(user_token):
 
 def get_item_transaction_details(user_token, item_id):
     """
-    Get detailed transaction information using GetItemTransactions API with proper transaction identifiers
+    Get detailed transaction information using modern eBay Order API with TAX_BREAKDOWN
     """
     try:
-        import xml.etree.ElementTree as ET
+        # First, try to find orders for this item using modern Order API
+        orders_result = get_orders_for_item(user_token, item_id)
+        if orders_result['success'] and orders_result['orders']:
+            # Use the first order found
+            order_id = orders_result['orders'][0]['orderId']
+            order_details = get_order_with_tax_breakdown(user_token, order_id)
+            if order_details['success']:
+                return {
+                    'success': True,
+                    'transaction_data': order_details['transaction_data']
+                }
         
-        # First, get transaction IDs and order IDs from the item
+        # Fallback: try legacy approach
         transaction_info = get_transaction_identifiers(user_token, item_id)
         if not transaction_info['success']:
             return transaction_info
         
-        # Try to get detailed transaction data using the identifiers
+        # Try each transaction ID
         transaction_data = {
             'final_price': 0,
             'listing_fees': 0,
@@ -311,7 +321,6 @@ def get_item_transaction_details(user_token, item_id):
             'has_actual_fees': False
         }
         
-        # Try each transaction ID
         for transaction_id, transaction_type in transaction_info['transactions']:
             detailed_data = get_specific_transaction_details(user_token, transaction_id, transaction_type)
             if detailed_data['success'] and detailed_data['transaction_data']['final_price'] > 0:
@@ -346,7 +355,142 @@ def get_item_transaction_details(user_token, item_id):
     except Exception as e:
         return {
             'success': False,
-            'error': 'Transaction API error: {}'.format(str(e))
+            'error': 'Order API error: {}'.format(str(e))
+        }
+
+def get_orders_for_item(user_token, item_id):
+    """
+    Get orders for a specific item using modern eBay Order API
+    """
+    try:
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        
+        # Use modern Order API to search for orders containing this item
+        url = "{}/sell/fulfillment/v1/order".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        # Search for orders with this item ID
+        params = {
+            'filter': 'lineItemId:{}'.format(item_id),
+            'fieldGroups': 'TAX_BREAKDOWN',
+            'limit': 10
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            orders = data.get('orders', [])
+            
+            return {
+                'success': True,
+                'orders': orders
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'Order API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Order API error: {}'.format(str(e))
+        }
+
+def get_order_with_tax_breakdown(user_token, order_id):
+    """
+    Get detailed order information using modern eBay Order API with TAX_BREAKDOWN
+    """
+    try:
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        
+        # Use modern Order API to get specific order details
+        url = "{}/sell/fulfillment/v1/order/{}".format(api_base_url, order_id)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        # Include TAX_BREAKDOWN field group for detailed financial information
+        params = {
+            'fieldGroups': 'TAX_BREAKDOWN'
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Extract financial details from modern Order API response
+            transaction_data = {
+                'final_price': 0,
+                'listing_fees': 0,
+                'final_value_fee': 0,
+                'paypal_fee': 0,
+                'sales_tax': 0,
+                'net_earnings': 0,
+                'total_fees': 0,
+                'has_actual_fees': True  # Modern API provides actual data
+            }
+            
+            # Get order total
+            pricing_summary = data.get('pricingSummary', {})
+            if pricing_summary:
+                transaction_data['final_price'] = float(pricing_summary.get('total', 0))
+            
+            # Get tax breakdown
+            tax_details = data.get('taxDetails', [])
+            for tax in tax_details:
+                tax_type = tax.get('taxType', '').lower()
+                tax_amount = float(tax.get('amount', {}).get('value', 0))
+                
+                if 'sales' in tax_type or 'vat' in tax_type:
+                    transaction_data['sales_tax'] += tax_amount
+                elif 'shipping' in tax_type:
+                    # Shipping tax is separate from sales tax
+                    pass
+            
+            # Get fee breakdown
+            fee_details = data.get('feeDetails', [])
+            for fee in fee_details:
+                fee_type = fee.get('feeType', '').lower()
+                fee_amount = float(fee.get('amount', {}).get('value', 0))
+                
+                if 'final value' in fee_type or 'transaction' in fee_type:
+                    transaction_data['final_value_fee'] += fee_amount
+                elif 'listing' in fee_type:
+                    transaction_data['listing_fees'] += fee_amount
+                elif 'paypal' in fee_type or 'payment' in fee_type:
+                    transaction_data['paypal_fee'] += fee_amount
+            
+            # Calculate totals
+            transaction_data['total_fees'] = transaction_data['listing_fees'] + transaction_data['final_value_fee'] + transaction_data['paypal_fee']
+            transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['sales_tax'] - transaction_data['final_value_fee']
+            
+            return {
+                'success': True,
+                'transaction_data': transaction_data
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'Order API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Order API error: {}'.format(str(e))
         }
 
 def get_transaction_identifiers(user_token, item_id):
