@@ -3727,22 +3727,6 @@ def api_items_search():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/api/groups', methods=['GET'])
-@login_required
-def api_groups():
-    """API endpoint to get all groups for the current user"""
-    try:
-        groups = get_data.get_all_from_groups('%')
-        results = []
-        for group in groups:
-            results.append({
-                'id': group['id'],
-                'name': group['name']
-            })
-        return jsonify({'success': True, 'groups': results})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
-
 @app.route('/api/categories', methods=['GET'])
 @login_required
 def api_categories():
