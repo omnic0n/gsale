@@ -70,6 +70,13 @@
         {{ modify.hidden_tag() }}
     <div class="form-group">
         {{ modify.button(class="btn btn-outline-info") }}
+        {% if item[0]['ebay_item_id'] %}
+        <a href="https://www.ebay.com/itm/{{ item[0]['ebay_item_id'] }}" 
+           target="_blank" 
+           class="btn btn-outline-primary ml-2">
+            <i class="fas fa-external-link-alt"></i> View on eBay
+        </a>
+        {% endif %}
     </div>
     </form>
 
@@ -159,15 +166,6 @@
                     </div>
                 </form>
             </div>
-        </td>
-        {% endif %}
-        {% if item[0]['ebay_item_id'] %}
-        <td align="center">
-            <a href="https://www.ebay.com/itm/{{ item[0]['ebay_item_id'] }}" 
-               target="_blank" 
-               class="btn btn-outline-primary">
-                <i class="fas fa-external-link-alt"></i> View on eBay
-            </a>
         </td>
         {% endif %}
         <td align="right">
