@@ -217,6 +217,20 @@
                                             </div>
                                             {% endif %}
                                             
+                                            {% if listing.subtotal is defined and listing.subtotal > 0 %}
+                                            <div class="mb-3">
+                                                <strong>Subtotal:</strong>
+                                                <span class="text-info fs-5">${{ "%.2f"|format(listing.subtotal) }}</span>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if listing.shipping is defined and listing.shipping > 0 %}
+                                            <div class="mb-3">
+                                                <strong>Shipping:</strong>
+                                                <span class="text-warning fs-5">${{ "%.2f"|format(listing.shipping) }}</span>
+                                            </div>
+                                            {% endif %}
+                                            
                                             {% if listing.final_price is defined and listing.final_price > 0 %}
                                             <div class="mb-3">
                                                 <strong>Order Total:</strong>

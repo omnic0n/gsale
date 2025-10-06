@@ -673,6 +673,8 @@ def get_item_transaction_details(user_token, item_id):
             basic_price = get_basic_item_price(user_token, item_id)
             if basic_price > 0:
                 transaction_data['final_price'] = basic_price
+                transaction_data['subtotal'] = basic_price  # Assume subtotal equals final price if not available
+                transaction_data['shipping'] = 0  # Assume free shipping if not available
                 
                 # eBay Final Value Fee: 10% for most categories (up to $750), then 2% above $750
                 if basic_price <= 750:
@@ -834,6 +836,8 @@ def get_order_with_tax_breakdown(user_token, order_data):
         
         transaction_data = {
             'final_price': 0,
+            'subtotal': 0,
+            'shipping': 0,
             'listing_fees': 0,
             'final_value_fee': 0,
             'paypal_fee': 0,
@@ -848,6 +852,16 @@ def get_order_with_tax_breakdown(user_token, order_data):
         transaction_price = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}TransactionPrice')
         if transaction_price is not None:
             transaction_data['final_price'] = float(transaction_price.text) if transaction_price.text else 0
+        
+        # Extract subtotal
+        subtotal = order.find('.//{urn:ebay:apis:eBLBaseComponents}Subtotal')
+        if subtotal is not None:
+            transaction_data['subtotal'] = float(subtotal.text) if subtotal.text else 0
+        
+        # Extract shipping cost
+        shipping_cost = order.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingCost')
+        if shipping_cost is not None:
+            transaction_data['shipping'] = float(shipping_cost.text) if shipping_cost.text else 0
         
         # Extract order total (might be different from transaction price)
         order_total = order.find('.//{urn:ebay:apis:eBLBaseComponents}Total')
@@ -895,6 +909,8 @@ def get_order_with_tax_breakdown(user_token, order_data):
         
         print(f"DEBUG: Extracted order data:")
         print(f"  Final Price: ${transaction_data['final_price']:.2f}")
+        print(f"  Subtotal: ${transaction_data['subtotal']:.2f}")
+        print(f"  Shipping: ${transaction_data['shipping']:.2f}")
         print(f"  Final Value Fee: ${transaction_data['final_value_fee']:.2f}")
         print(f"  PayPal Fee: ${transaction_data['paypal_fee']:.2f}")
         print(f"  Listing Fees: ${transaction_data['listing_fees']:.2f}")
@@ -922,6 +938,8 @@ def get_order_with_tax_breakdown(user_token, order_data):
             # Extract financial details from modern Order API response
             transaction_data = {
                 'final_price': 0,
+                'subtotal': 0,
+                'shipping': 0,
                 'listing_fees': 0,
                 'final_value_fee': 0,
                 'paypal_fee': 0,
@@ -1295,6 +1313,8 @@ def get_specific_transaction_details(user_token, transaction_id, transaction_typ
             # Extract transaction financial details
             transaction_data = {
                 'final_price': 0,
+                'subtotal': 0,
+                'shipping': 0,
                 'listing_fees': 0,
                 'final_value_fee': 0,
                 'paypal_fee': 0,
@@ -1407,6 +1427,8 @@ def get_order_details_by_id(user_token, order_id):
             # Extract order financial details
             transaction_data = {
                 'final_price': 0,
+                'subtotal': 0,
+                'shipping': 0,
                 'listing_fees': 0,
                 'final_value_fee': 0,
                 'paypal_fee': 0,
