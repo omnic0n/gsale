@@ -140,9 +140,19 @@ def get_ebay_oauth_url():
             'state': state
         }
         
-        # Create URL with parameters
-        param_string = '&'.join([f"{key}={value}" for key, value in auth_params.items()])
+        # Debug: Print parameters for troubleshooting
+        print(f"DEBUG: eBay OAuth Parameters:")
+        print(f"  Client ID: {auth_params['client_id']}")
+        print(f"  Redirect URI: {auth_params['redirect_uri']}")
+        print(f"  Scope: {auth_params['scope'][:100]}...")
+        print(f"  State: {auth_params['state']}")
+        
+        # Create URL with parameters (URL encode the scope)
+        from urllib.parse import urlencode
+        param_string = urlencode(auth_params)
         full_auth_url = f"{auth_url}?{param_string}"
+        
+        print(f"DEBUG: Generated OAuth URL: {full_auth_url[:200]}...")
         
         return {
             'success': True,
@@ -2019,6 +2029,32 @@ def ebay_logout():
     except Exception as e:
         flash(f'Error clearing eBay tokens: {str(e)}', 'error')
         return redirect(url_for('admin'))
+
+@app.route('/debug/ebay-oauth-url')
+def debug_ebay_oauth_url():
+    """Debug endpoint to test OAuth URL generation"""
+    try:
+        oauth_result = get_ebay_oauth_url()
+        if oauth_result['success']:
+            return f"""
+            <h3>eBay OAuth URL Debug</h3>
+            <p><strong>Status:</strong> Success</p>
+            <p><strong>Generated URL:</strong></p>
+            <textarea rows="10" cols="100" readonly>{oauth_result['auth_url']}</textarea>
+            <p><strong>State:</strong> {oauth_result['state']}</p>
+            <p><strong>Config Values:</strong></p>
+            <ul>
+                <li>Client ID: {app.config.get('EBAY_CLIENT_ID', 'NOT SET')}</li>
+                <li>Redirect URI: {app.config.get('EBAY_REDIRECT_URI', 'NOT SET')}</li>
+                <li>Sandbox Mode: {app.config.get('EBAY_SANDBOX_MODE', 'NOT SET')}</li>
+                <li>Scope: {app.config.get('EBAY_OAUTH_SCOPE', 'NOT SET')[:100]}...</li>
+            </ul>
+            <p><a href="{oauth_result['auth_url']}" target="_blank">Test OAuth URL</a></p>
+            """
+        else:
+            return f"<h3>Error:</h3><p>{oauth_result['error']}</p>"
+    except Exception as e:
+        return f"<h3>Exception:</h3><p>{str(e)}</p>"
 
 @app.route('/api/ebay-oauth-status')
 def api_ebay_oauth_status():
