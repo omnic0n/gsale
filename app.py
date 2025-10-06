@@ -1697,14 +1697,24 @@ def get_ebay_listing_details(listing_id):
     Get detailed information for a specific eBay listing
     """
     try:
-        user_token = app.config.get('EBAY_USER_TOKEN')
-        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        # First try to get OAuth token
+        token_result = get_valid_ebay_token()
         
-        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
-            return {
-                'success': False,
-                'error': 'eBay user token not configured'
-            }
+        if token_result['success']:
+            # Use OAuth 2.0 token
+            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+            user_token = token_result['access_token']
+        else:
+            # Fallback to legacy token
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+            
+            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+                return {
+                    'success': False,
+                    'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.',
+                    'needs_oauth': True
+                }
         
         # eBay API endpoint for getting listing details
         url = "{}/sell/inventory/v1/inventory_item/{}".format(api_base_url, listing_id)
@@ -3173,10 +3183,18 @@ def search_ebay_item():
             return redirect(url_for('admin_ebay_listings'))
         
         # Get financial information for the specific item
-        user_token = app.config.get('EBAY_USER_TOKEN')
-        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
-            flash('eBay user token not configured.', 'error')
-            return redirect(url_for('admin_ebay_listings'))
+        # First try to get OAuth token
+        token_result = get_valid_ebay_token()
+        
+        if token_result['success']:
+            # Use OAuth 2.0 token
+            user_token = token_result['access_token']
+        else:
+            # Fallback to legacy token
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+                flash('eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.', 'error')
+                return redirect(url_for('admin_ebay_listings'))
         
         # Get detailed transaction data for the specific item
         transaction_data = get_item_transaction_details(user_token, item_id)
