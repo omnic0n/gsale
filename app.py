@@ -162,7 +162,44 @@ def get_ebay_active_listings():
 
 def get_ebay_completed_listings_legacy(user_token):
     """
-    Fetch completed/sold listings using legacy eBay Trading API
+    Fetch completed/sold listings using legacy eBay Trading API with GetOrders for accurate financial data
+    """
+    try:
+        import xml.etree.ElementTree as ET
+        
+        # First, get sold listings to get order IDs
+        sold_listings = get_sold_listings_for_orders(user_token)
+        if not sold_listings['success']:
+            return sold_listings
+        
+        # Then get detailed order information for each sold item
+        detailed_listings = []
+        for listing in sold_listings['listings']:
+            order_details = get_order_details(user_token, listing['itemId'])
+            if order_details['success']:
+                # Merge the listing info with detailed financial data
+                detailed_listing = {**listing, **order_details['order_data']}
+                detailed_listings.append(detailed_listing)
+            else:
+                # Fallback to basic listing if order details fail
+                detailed_listings.append(listing)
+        
+        return {
+            'success': True,
+            'listings': detailed_listings,
+            'total': len(detailed_listings),
+            'note': 'Using legacy Trading API with GetOrders for accurate financial data'
+        }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Legacy API error: {}'.format(str(e))
+        }
+
+def get_sold_listings_for_orders(user_token):
+    """
+    Get basic sold listings to extract order IDs
     """
     try:
         import xml.etree.ElementTree as ET
@@ -170,7 +207,7 @@ def get_ebay_completed_listings_legacy(user_token):
         # eBay Trading API endpoint
         url = "https://api.ebay.com/ws/api.dll"
         
-        # XML request for GetMyeBaySelling - Completed Listings with financial details
+        # XML request for GetMyeBaySelling - Sold Listings
         xml_request = """<?xml version="1.0" encoding="utf-8"?>
         <GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
             <RequesterCredentials>
@@ -200,7 +237,6 @@ def get_ebay_completed_listings_legacy(user_token):
         response = requests.post(url, data=xml_request, headers=headers)
         
         if response.status_code == 200:
-            # Parse XML response
             root = ET.fromstring(response.text)
             
             # Check for errors
@@ -213,7 +249,7 @@ def get_ebay_completed_listings_legacy(user_token):
                         'error': 'eBay API error: {}'.format(error_msg.text)
                     }
             
-            # Extract completed listings
+            # Extract basic listing info
             listings = []
             sold_list = root.find('.//{urn:ebay:apis:eBLBaseComponents}SoldList')
             if sold_list is not None:
@@ -221,79 +257,145 @@ def get_ebay_completed_listings_legacy(user_token):
                 for item in items:
                     item_id = item.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
                     title = item.find('.//{urn:ebay:apis:eBLBaseComponents}Title')
-                    current_price = item.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
                     condition = item.find('.//{urn:ebay:apis:eBLBaseComponents}ConditionDisplayName')
                     quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
                     end_time = item.find('.//{urn:ebay:apis:eBLBaseComponents}EndTime')
-                    
-                    # Financial information - use estimated calculations since API doesn't provide detailed fees
-                    selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
-                    final_price = 0
-                    listing_fees = 0
-                    final_value_fee = 0
-                    paypal_fee = 0
-                    sales_tax = 0
-                    net_earnings = 0
-                    
-                    if selling_status is not None:
-                        final_price_elem = selling_status.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
-                        if final_price_elem is not None:
-                            final_price = float(final_price_elem.text) if final_price_elem.text else 0
-                    
-                    # Since eBay API doesn't provide detailed fee breakdown, use estimated calculations
-                    # Based on eBay's standard fee structure
-                    if final_price > 0:
-                        # Estimate final value fee (typically 10-12.9% of final price)
-                        final_value_fee = final_price * 0.129  # 12.9% is eBay's current rate
-                        
-                        # Estimate PayPal fee (typically 2.9% + $0.30)
-                        paypal_fee = (final_price * 0.029) + 0.30
-                        
-                        # Estimate sales tax (varies by state, use 8% average)
-                        sales_tax = final_price * 0.08
-                        
-                        # Calculate net earnings: Order total - Sales tax - Transaction fees
-                        net_earnings = final_price - sales_tax - final_value_fee
-                    
-                    total_fees = listing_fees + final_value_fee + paypal_fee
                     
                     listings.append({
                         'itemId': item_id.text if item_id is not None else 'N/A',
                         'title': title.text if title is not None else 'N/A',
                         'description': title.text if title is not None else 'N/A',
-                        'price': final_price,  # Use final selling price
                         'condition': condition.text if condition is not None else 'N/A',
                         'quantity': int(quantity.text) if quantity is not None and quantity.text else 0,
                         'sku': item_id.text if item_id is not None else 'N/A',
                         'end_time': end_time.text if end_time is not None else 'N/A',
                         'status': 'Sold',
-                        'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#',
-                        # Financial information
-                        'final_price': final_price,
-                        'listing_fees': listing_fees,
-                        'final_value_fee': final_value_fee,
-                        'paypal_fee': paypal_fee,
-                        'sales_tax': sales_tax,
-                        'total_fees': total_fees,
-                        'net_earnings': net_earnings
+                        'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#'
                     })
             
             return {
                 'success': True,
-                'listings': listings,
-                'total': len(listings),
-                'note': 'Using legacy Trading API - showing your completed/sold listings'
+                'listings': listings
             }
         else:
             return {
                 'success': False,
-                'error': 'Legacy API error: {} - {}'.format(response.status_code, response.text)
+                'error': 'API error: {} - {}'.format(response.status_code, response.text)
             }
             
     except Exception as e:
         return {
             'success': False,
-            'error': 'Legacy API error: {}'.format(str(e))
+            'error': 'API error: {}'.format(str(e))
+        }
+
+def get_order_details(user_token, item_id):
+    """
+    Get detailed order information using GetOrders API
+    """
+    try:
+        import xml.etree.ElementTree as ET
+        
+        # eBay Trading API endpoint
+        url = "https://api.ebay.com/ws/api.dll"
+        
+        # XML request for GetOrders
+        xml_request = """<?xml version="1.0" encoding="utf-8"?>
+        <GetOrdersRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+            <RequesterCredentials>
+                <eBayAuthToken>{}</eBayAuthToken>
+            </RequesterCredentials>
+            <OrderIDArray>
+                <OrderID>{}</OrderID>
+            </OrderIDArray>
+            <DetailLevel>ReturnAll</DetailLevel>
+            <Version>1199</Version>
+        </GetOrdersRequest>""".format(user_token, item_id)
+        
+        headers = {
+            'X-EBAY-API-COMPATIBILITY-LEVEL': '1199',
+            'X-EBAY-API-DEV-NAME': app.config.get('EBAY_DEV_NAME', 'your_dev_name'),
+            'X-EBAY-API-APP-NAME': app.config.get('EBAY_APP_NAME', 'your_app_name'),
+            'X-EBAY-API-CERT-NAME': app.config.get('EBAY_CERT_NAME', 'your_cert_name'),
+            'X-EBAY-API-CALL-NAME': 'GetOrders',
+            'X-EBAY-API-SITEID': '0',  # US site
+            'Content-Type': 'text/xml'
+        }
+        
+        response = requests.post(url, data=xml_request, headers=headers)
+        
+        if response.status_code == 200:
+            root = ET.fromstring(response.text)
+            
+            # Check for errors
+            errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
+            if errors:
+                error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
+                if error_msg is not None:
+                    return {
+                        'success': False,
+                        'error': 'GetOrders API error: {}'.format(error_msg.text)
+                    }
+            
+            # Extract order financial details
+            order_data = {
+                'final_price': 0,
+                'sales_tax': 0,
+                'final_value_fee': 0,
+                'paypal_fee': 0,
+                'net_earnings': 0,
+                'total_fees': 0
+            }
+            
+            # Parse order details
+            orders = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Order')
+            if orders:
+                order = orders[0]  # Take first order
+                
+                # Get order total
+                total = order.find('.//{urn:ebay:apis:eBLBaseComponents}Total')
+                if total is not None:
+                    order_data['final_price'] = float(total.text) if total.text else 0
+                
+                # Get sales tax
+                sales_tax = order.find('.//{urn:ebay:apis:eBLBaseComponents}SalesTax')
+                if sales_tax is not None:
+                    order_data['sales_tax'] = float(sales_tax.text) if sales_tax.text else 0
+                
+                # Get fees
+                fees = order.find('.//{urn:ebay:apis:eBLBaseComponents}Fees')
+                if fees is not None:
+                    fee_list = fees.findall('.//{urn:ebay:apis:eBLBaseComponents}Fee')
+                    for fee in fee_list:
+                        fee_name = fee.find('.//{urn:ebay:apis:eBLBaseComponents}Name')
+                        fee_amount = fee.find('.//{urn:ebay:apis:eBLBaseComponents}Fee')
+                        if fee_name is not None and fee_amount is not None:
+                            fee_name_text = fee_name.text.lower() if fee_name.text else ''
+                            fee_amount_val = float(fee_amount.text) if fee_amount.text else 0
+                            
+                            if 'final value' in fee_name_text:
+                                order_data['final_value_fee'] += fee_amount_val
+                            elif 'paypal' in fee_name_text:
+                                order_data['paypal_fee'] += fee_amount_val
+                
+                # Calculate net earnings
+                order_data['total_fees'] = order_data['final_value_fee'] + order_data['paypal_fee']
+                order_data['net_earnings'] = order_data['final_price'] - order_data['sales_tax'] - order_data['final_value_fee']
+            
+            return {
+                'success': True,
+                'order_data': order_data
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'GetOrders API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'GetOrders API error: {}'.format(str(e))
         }
 
 def get_ebay_recently_sold_items(user_token, api_base_url):

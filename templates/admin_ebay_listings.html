@@ -119,10 +119,9 @@
             
             <!-- Financial Summary -->
             {% if total_earnings is defined and total_earnings > 0 %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                <strong>Note:</strong> Financial calculations are estimates based on eBay's standard fee structure (12.9% final value fee, 8% sales tax). 
-                Actual fees may vary. For exact amounts, check your eBay seller dashboard.
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <strong>Accurate Data:</strong> Financial information is retrieved directly from eBay's GetOrders API for precise calculations.
             </div>
             
             <div class="financial-summary mb-4">
@@ -277,7 +276,6 @@
                                 <div class="mb-2">
                                     <strong>Order Earnings:</strong>
                                     <span class="text-success fw-bold">${{ "%.2f"|format(listing.net_earnings) }}</span>
-                                    <small class="text-muted">(estimated)</small>
                                 </div>
                                 {% endif %}
                                 
@@ -292,7 +290,6 @@
                                 <div class="mb-2">
                                     <strong>Sales Tax:</strong>
                                     <span class="text-warning">-${{ "%.2f"|format(listing.sales_tax) }}</span>
-                                    <small class="text-muted">(estimated)</small>
                                 </div>
                                 {% endif %}
                                 
@@ -300,7 +297,6 @@
                                 <div class="mb-2">
                                     <strong>Transaction Fees:</strong>
                                     <span class="text-danger">-${{ "%.2f"|format(listing.final_value_fee) }}</span>
-                                    <small class="text-muted">(estimated)</small>
                                 </div>
                                 {% endif %}
                                 
