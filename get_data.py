@@ -287,7 +287,11 @@ def get_list_of_items_with_name(name, sold):
     validated_name = validate_string_input(name, max_length=100)
     validated_sold = validate_numeric_input(sold, min_val=0, max_val=1, default='')
     
+    print(f"DEBUG: get_list_of_items_with_name - original name='{name}', validated name='{validated_name}'")
+    
     search_pattern = '%{}%'.format(validated_name)
+    print(f"DEBUG: search_pattern='{search_pattern}', sold='{validated_sold}', group_id='{get_current_group_id()}'")
+    
     cur = mysql.connection.cursor()
     cur.execute("""SELECT 
                 items.name, 
