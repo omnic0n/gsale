@@ -90,9 +90,16 @@
                             </span>
                         </div>
                         <div class="card-body">
-                            <div class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
-                                <strong>Financial Data:</strong> Using modern eBay Order API with TAX_BREAKDOWN field group for accurate fees, taxes, and financial details. Falls back to legacy APIs if needed.
+                            <div class="alert alert-warning">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Financial Data:</strong> 
+                                <span id="api-status">Detecting API capabilities...</span>
+                                <br>
+                                <small>
+                                    • <strong>Modern Order API:</strong> Requires OAuth 2.0 token with TAX_BREAKDOWN field group<br>
+                                    • <strong>Legacy Trading API:</strong> Uses GetMyeBaySelling and GetItemTransactions<br>
+                                    • <strong>Estimates:</strong> Fallback calculations based on eBay's current fee structure
+                                </small>
                             </div>
                             
                             <div class="financial-summary mb-4">

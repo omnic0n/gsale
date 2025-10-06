@@ -294,24 +294,31 @@ def get_item_transaction_details(user_token, item_id):
     try:
         print("DEBUG: Starting transaction details lookup for item: {}".format(item_id))
         
-        # First, try to find orders for this item using modern Order API
-        print("DEBUG: Trying modern Order API...")
-        orders_result = get_orders_for_item(user_token, item_id)
-        if orders_result['success'] and orders_result['orders']:
-            print("DEBUG: Found orders via modern API, getting details...")
-            # Use the first order found
-            order_id = orders_result['orders'][0]['orderId']
-            order_details = get_order_with_tax_breakdown(user_token, order_id)
-            if order_details['success']:
-                print("DEBUG: Successfully got order details from modern API")
-                return {
-                    'success': True,
-                    'transaction_data': order_details['transaction_data']
-                }
+        # Check if token is OAuth 2.0 (starts with 'v1.1#') or legacy
+        is_oauth_token = user_token.startswith('v1.1#')
+        print("DEBUG: Token type - OAuth 2.0: {}".format(is_oauth_token))
+        
+        # Only try modern Order API if we have an OAuth 2.0 token
+        if is_oauth_token:
+            print("DEBUG: Trying modern Order API with OAuth 2.0 token...")
+            orders_result = get_orders_for_item(user_token, item_id)
+            if orders_result['success'] and orders_result['orders']:
+                print("DEBUG: Found orders via modern API, getting details...")
+                # Use the first order found
+                order_id = orders_result['orders'][0]['orderId']
+                order_details = get_order_with_tax_breakdown(user_token, order_id)
+                if order_details['success']:
+                    print("DEBUG: Successfully got order details from modern API")
+                    return {
+                        'success': True,
+                        'transaction_data': order_details['transaction_data']
+                    }
+                else:
+                    print("DEBUG: Failed to get order details: {}".format(order_details['error']))
             else:
-                print("DEBUG: Failed to get order details: {}".format(order_details['error']))
+                print("DEBUG: No orders found via modern API: {}".format(orders_result.get('error', 'No orders')))
         else:
-            print("DEBUG: No orders found via modern API: {}".format(orders_result.get('error', 'No orders')))
+            print("DEBUG: Skipping modern Order API - using legacy token")
         
         # Fallback: try legacy approach
         print("DEBUG: Falling back to legacy approach...")
@@ -336,6 +343,7 @@ def get_item_transaction_details(user_token, item_id):
             detailed_data = get_specific_transaction_details(user_token, transaction_id, transaction_type)
             if detailed_data['success'] and detailed_data['transaction_data']['final_price'] > 0:
                 transaction_data = detailed_data['transaction_data']
+                print("DEBUG: Found transaction data via legacy API")
                 break
         
         # If no transaction data found, try order IDs
@@ -344,6 +352,7 @@ def get_item_transaction_details(user_token, item_id):
                 order_data = get_order_details_by_id(user_token, order_id)
                 if order_data['success'] and order_data['transaction_data']['final_price'] > 0:
                     transaction_data = order_data['transaction_data']
+                    print("DEBUG: Found order data via legacy API")
                     break
         
         # If still no data, use estimates
@@ -358,6 +367,7 @@ def get_item_transaction_details(user_token, item_id):
                 transaction_data['paypal_fee'] = (basic_price * 0.029) + 0.30
                 transaction_data['total_fees'] = transaction_data['final_value_fee'] + transaction_data['paypal_fee']
                 transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['sales_tax'] - transaction_data['final_value_fee']
+                print("DEBUG: Using estimated calculations")
         
         print("DEBUG: Final transaction data: {}".format(transaction_data))
         return {
