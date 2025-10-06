@@ -189,6 +189,11 @@
                                             <div class="mb-3">
                                                 <strong>Item ID:</strong> {{ listing.itemId }}
                                             </div>
+                                            {% if listing.order_id %}
+                                            <div class="mb-3">
+                                                <strong>Order ID:</strong> {{ listing.order_id }}
+                                            </div>
+                                            {% endif %}
                                             <div class="mb-3">
                                                 <strong>Condition:</strong> {{ listing.condition }}
                                             </div>
@@ -253,10 +258,15 @@
                                 </div>
                                 <div class="col-md-4 text-end">
                                     <div class="mb-3">
-                                        <a href="https://www.ebay.com/itm/{{ listing.sku or listing.itemId }}" 
+                                        <a href="{{ listing.ebay_url }}" 
                                            class="btn btn-primary" 
                                            target="_blank">
-                                            <i class="fas fa-external-link-alt"></i> View on eBay
+                                            <i class="fas fa-external-link-alt"></i> 
+                                            {% if listing.url_type == 'Order' %}
+                                                View Order on eBay
+                                            {% else %}
+                                                View Item on eBay
+                                            {% endif %}
                                         </a>
                                     </div>
                                     {% if listing.status == 'Sold' %}

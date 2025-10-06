@@ -3383,18 +3383,36 @@ def search_ebay_item():
         transaction_data = get_item_transaction_details(user_token, item_id)
         
         if transaction_data['success']:
+            # Get transaction data
+            trans_data = transaction_data['transaction_data']
+            
+            # Determine the best URL to use - prefer order ID if available
+            order_id = trans_data.get('order_id') or trans_data.get('orderId')
+            print(f"DEBUG: Found order_id: {order_id}")
+            
+            if order_id:
+                ebay_url = f'https://www.ebay.com/sh/ord/details/{order_id}'
+                url_type = 'Order'
+                print(f"DEBUG: Using order URL: {ebay_url}")
+            else:
+                ebay_url = f'https://www.ebay.com/itm/{item_id}'
+                url_type = 'Item'
+                print(f"DEBUG: Using item URL: {ebay_url}")
+            
             # Create a single listing with the financial data
             listing = {
                 'itemId': item_id,
-                'title': 'Item ID: {}'.format(item_id),
+                'title': f'{url_type} ID: {order_id or item_id}',
                 'description': 'Financial details for eBay item',
                 'condition': 'N/A',
                 'quantity': 1,
                 'sku': item_id,
                 'end_time': 'N/A',
                 'status': 'Sold',
-                'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id),
-                **transaction_data['transaction_data']
+                'ebay_url': ebay_url,
+                'order_id': order_id,
+                'url_type': url_type,
+                **trans_data
             }
             
             print(f"DEBUG: Created listing with data: {list(listing.keys())}")
