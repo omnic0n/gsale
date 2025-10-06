@@ -376,31 +376,31 @@ def get_ebay_active_listings():
             # OAuth token not available, try legacy token
             user_token = app.config.get('EBAY_USER_TOKEN')
             api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
-        
-        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
-            return {
-                'success': False,
+            
+            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+                return {
+                    'success': False,
                     'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.',
                     'needs_oauth': True
-            }
-        
-        # Check if this is a legacy token format
-        if user_token.startswith('v^'):
-            # Try legacy Trading API first for completed/sold items
-            legacy_result = get_ebay_completed_listings_legacy(user_token)
-            if legacy_result['success']:
-                return legacy_result
+                }
             
-            # Fallback to Browse API for active listings
-            browse_result = get_ebay_recently_sold_items(user_token, api_base_url)
-            if browse_result['success']:
-                return browse_result
-            
-            # Final fallback to legacy Trading API
-            return get_ebay_listings_legacy(user_token)
-        else:
+            # Check if this is a legacy token format
+            if user_token.startswith('v^'):
+                # Try legacy Trading API first for completed/sold items
+                legacy_result = get_ebay_completed_listings_legacy(user_token)
+                if legacy_result['success']:
+                    return legacy_result
+                
+                # Fallback to Browse API for active listings
+                browse_result = get_ebay_recently_sold_items(user_token, api_base_url)
+                if browse_result['success']:
+                    return browse_result
+                
+                # Final fallback to legacy Trading API
+                return get_ebay_listings_legacy(user_token)
+            else:
                 # Use modern OAuth 2.0 APIs with legacy token
-            return get_ebay_listings_modern(user_token, api_base_url)
+                return get_ebay_listings_modern(user_token, api_base_url)
         else:
             return {
                 'success': False,
