@@ -2348,26 +2348,64 @@ def admin_panel():
 @app.route('/admin/ebay-listings')
 @admin_required
 def admin_ebay_listings():
-    """Admin page to view eBay active listings"""
+    """Admin page to search for specific eBay item financial information"""
+    return render_template('admin_ebay_listings.html', 
+                         listings=[], 
+                         total_listings=0,
+                         total_earnings=0,
+                         total_fees=0,
+                         total_sales=0,
+                         error=None)
+
+@app.route('/admin/ebay-listings/search', methods=['POST'])
+@admin_required
+def search_ebay_item():
+    """Search for specific eBay item financial information"""
     try:
-        # Fetch eBay listings
-        ebay_result = get_ebay_active_listings()
+        item_id = request.form.get('item_id', '').strip()
         
-        if ebay_result['success']:
-            listings = ebay_result['listings']
-            total_listings = ebay_result['total']
+        if not item_id:
+            flash('Please enter an item ID to search.', 'error')
+            return redirect(url_for('admin_ebay_listings'))
+        
+        # Get financial information for the specific item
+        user_token = app.config.get('EBAY_USER_TOKEN')
+        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+            flash('eBay user token not configured.', 'error')
+            return redirect(url_for('admin_ebay_listings'))
+        
+        # Get detailed transaction data for the specific item
+        transaction_data = get_item_transaction_details(user_token, item_id)
+        
+        if transaction_data['success']:
+            # Create a single listing with the financial data
+            listing = {
+                'itemId': item_id,
+                'title': 'Item ID: {}'.format(item_id),
+                'description': 'Financial details for eBay item',
+                'condition': 'N/A',
+                'quantity': 1,
+                'sku': item_id,
+                'end_time': 'N/A',
+                'status': 'Sold',
+                'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id),
+                **transaction_data['transaction_data']
+            }
             
-            # Calculate financial totals
-            total_earnings = sum(listing.get('net_earnings', 0) for listing in listings)
-            total_fees = sum(listing.get('total_fees', 0) for listing in listings)
-            total_sales = sum(listing.get('final_price', 0) for listing in listings)
+            listings = [listing]
+            total_listings = 1
+            total_earnings = listing.get('net_earnings', 0)
+            total_fees = listing.get('total_fees', 0)
+            total_sales = listing.get('final_price', 0)
+            
+            flash('Financial information retrieved for item ID: {}'.format(item_id), 'success')
         else:
             listings = []
             total_listings = 0
             total_earnings = 0
             total_fees = 0
             total_sales = 0
-            flash("Error fetching eBay listings: {}".format(ebay_result['error']), 'error')
+            flash("Error retrieving financial information: {}".format(transaction_data['error']), 'error')
         
         return render_template('admin_ebay_listings.html', 
                              listings=listings, 
@@ -2375,15 +2413,13 @@ def admin_ebay_listings():
                              total_earnings=total_earnings,
                              total_fees=total_fees,
                              total_sales=total_sales,
-                             error=ebay_result.get('error'))
+                             searched_item_id=item_id,
+                             error=transaction_data.get('error'))
     
     except Exception as e:
-        print("Error in admin eBay listings: {}".format(e))
-        flash('An error occurred while loading eBay listings.', 'error')
-        return render_template('admin_ebay_listings.html', 
-                             listings=[], 
-                             total_listings=0,
-                             error=str(e))
+        print("Error in eBay item search: {}".format(e))
+        flash('An error occurred while searching for the item.', 'error')
+        return redirect(url_for('admin_ebay_listings'))
 
 # Admin API endpoints
 @app.route('/admin/api/group-members/<group_id>')
