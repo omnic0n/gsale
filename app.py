@@ -322,38 +322,56 @@ def get_item_transaction_details(user_token, item_id):
         
         # Fallback: try legacy approach
         print("DEBUG: Falling back to legacy approach...")
-        transaction_info = get_transaction_identifiers(user_token, item_id)
-        if not transaction_info['success']:
-            print("DEBUG: Legacy approach failed: {}".format(transaction_info['error']))
-            return transaction_info
         
-        # Try each transaction ID
-        transaction_data = {
-            'final_price': 0,
-            'listing_fees': 0,
-            'final_value_fee': 0,
-            'paypal_fee': 0,
-            'sales_tax': 0,
-            'net_earnings': 0,
-            'total_fees': 0,
-            'has_actual_fees': False
-        }
+        # First try to get basic item info and price
+        basic_price = get_basic_item_price(user_token, item_id)
+        print("DEBUG: Basic item price: {}".format(basic_price))
         
-        for transaction_id, transaction_type in transaction_info['transactions']:
-            detailed_data = get_specific_transaction_details(user_token, transaction_id, transaction_type)
-            if detailed_data['success'] and detailed_data['transaction_data']['final_price'] > 0:
-                transaction_data = detailed_data['transaction_data']
-                print("DEBUG: Found transaction data via legacy API")
-                break
-        
-        # If no transaction data found, try order IDs
-        if transaction_data['final_price'] == 0:
-            for order_id in transaction_info['orders']:
-                order_data = get_order_details_by_id(user_token, order_id)
-                if order_data['success'] and order_data['transaction_data']['final_price'] > 0:
-                    transaction_data = order_data['transaction_data']
-                    print("DEBUG: Found order data via legacy API")
-                    break
+        if basic_price > 0:
+            # Try to get transaction identifiers
+            transaction_info = get_transaction_identifiers(user_token, item_id)
+            if transaction_info['success']:
+                print("DEBUG: Found transaction identifiers: transactions={}, orders={}".format(
+                    len(transaction_info['transactions']), len(transaction_info['orders'])))
+                
+                # Try each transaction ID
+                transaction_data = {
+                    'final_price': basic_price,
+                    'listing_fees': 0,
+                    'final_value_fee': 0,
+                    'paypal_fee': 0,
+                    'sales_tax': 0,
+                    'net_earnings': 0,
+                    'total_fees': 0,
+                    'has_actual_fees': False
+                }
+                
+                for transaction_id, transaction_type in transaction_info['transactions']:
+                    detailed_data = get_specific_transaction_details(user_token, transaction_id, transaction_type)
+                    if detailed_data['success'] and detailed_data['transaction_data']['final_price'] > 0:
+                        transaction_data = detailed_data['transaction_data']
+                        print("DEBUG: Found transaction data via legacy API")
+                        break
+                
+                # If no transaction data found, try order IDs
+                if transaction_data['final_price'] == basic_price and transaction_data['final_value_fee'] == 0:
+                    for order_id in transaction_info['orders']:
+                        order_data = get_order_details_by_id(user_token, order_id)
+                        if order_data['success'] and order_data['transaction_data']['final_price'] > 0:
+                            transaction_data = order_data['transaction_data']
+                            print("DEBUG: Found order data via legacy API")
+                            break
+                
+                # If we found actual fees, use them
+                if transaction_data['final_value_fee'] > 0 or transaction_data['sales_tax'] > 0:
+                    transaction_data['has_actual_fees'] = True
+                    print("DEBUG: Using actual fees from legacy API")
+                else:
+                    print("DEBUG: No actual fees found, will use estimates")
+            else:
+                print("DEBUG: Could not get transaction identifiers: {}".format(transaction_info['error']))
+        else:
+            print("DEBUG: Could not get basic item price")
         
         # If still no data, use estimates
         if transaction_data['final_price'] == 0:
@@ -887,30 +905,53 @@ def get_basic_item_price(user_token, item_id):
             'Content-Type': 'text/xml'
         }
         
+        print("DEBUG: Calling GetMyeBaySelling for item: {}".format(item_id))
+        
         response = requests.post(url, data=xml_request, headers=headers)
+        
+        print("DEBUG: GetMyeBaySelling response status: {}".format(response.status_code))
         
         if response.status_code == 200:
             root = ET.fromstring(response.text)
+            
+            # Check for errors
+            errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
+            if errors:
+                error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
+                if error_msg is not None:
+                    print("DEBUG: GetMyeBaySelling error: {}".format(error_msg.text))
+                    return 0
             
             # Find the specific item and get its price
             sold_list = root.find('.//{urn:ebay:apis:eBLBaseComponents}SoldList')
             if sold_list is not None:
                 items = sold_list.findall('.//{urn:ebay:apis:eBLBaseComponents}Item')
+                print("DEBUG: Found {} sold items in GetMyeBaySelling".format(len(items)))
+                
                 for item in items:
                     item_id_elem = item.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
                     if item_id_elem is not None and item_id_elem.text == item_id:
+                        print("DEBUG: Found matching item in sold list")
                         selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
                         if selling_status is not None:
                             current_price = selling_status.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
                             if current_price is not None:
-                                return float(current_price.text) if current_price.text else 0
+                                price = float(current_price.text) if current_price.text else 0
+                                print("DEBUG: Found item price: {}".format(price))
+                                return price
                         break
+                else:
+                    print("DEBUG: Item not found in sold list")
+            else:
+                print("DEBUG: No sold list found in response")
             
             return 0
         else:
+            print("DEBUG: GetMyeBaySelling failed with status: {}".format(response.status_code))
             return 0
             
     except Exception as e:
+        print("DEBUG: GetMyeBaySelling exception: {}".format(str(e)))
         return 0
 
 
