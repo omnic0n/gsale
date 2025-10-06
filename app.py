@@ -203,6 +203,13 @@ def exchange_ebay_code_for_token(authorization_code):
             session['ebay_refresh_token'] = token_data.get('refresh_token')
             session['ebay_token_expires'] = datetime.now() + timedelta(seconds=token_data.get('expires_in', 7200))
             
+            # Debug: Print token storage
+            print(f"DEBUG: Tokens stored in session:")
+            print(f"  Access Token: {token_data.get('access_token', '')[:20]}...")
+            print(f"  Refresh Token: {token_data.get('refresh_token', '')[:20]}...")
+            print(f"  Expires In: {token_data.get('expires_in')} seconds")
+            print(f"  Session ID: {session.get('_id', 'No session ID')}")
+            
             return {
                 'success': True,
                 'access_token': token_data.get('access_token'),
@@ -293,6 +300,13 @@ def get_valid_ebay_token():
         access_token = session.get('ebay_access_token')
         refresh_token = session.get('ebay_refresh_token')
         token_expires = session.get('ebay_token_expires')
+        
+        # Debug: Print token retrieval
+        print(f"DEBUG: Token retrieval:")
+        print(f"  Access Token: {access_token[:20] if access_token else 'None'}...")
+        print(f"  Refresh Token: {refresh_token[:20] if refresh_token else 'None'}...")
+        print(f"  Token Expires: {token_expires}")
+        print(f"  Session ID: {session.get('_id', 'No session ID')}")
         
         if not access_token:
             return {
@@ -2096,6 +2110,11 @@ def debug_ebay_oauth_url():
 def api_ebay_oauth_status():
     """API endpoint to check eBay OAuth status"""
     try:
+        # Debug: Print session info
+        print(f"DEBUG: OAuth status check:")
+        print(f"  Session ID: {session.get('_id', 'No session ID')}")
+        print(f"  Session keys: {list(session.keys())}")
+        
         token_result = get_valid_ebay_token()
         
         if token_result['success']:
