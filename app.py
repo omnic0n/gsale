@@ -133,12 +133,17 @@ def get_ebay_active_listings():
         
         # Check if this is a legacy token format
         if user_token.startswith('v^'):
-            # Try Browse API first (works with your token) - get recently sold items
+            # Try legacy Trading API first for completed/sold items
+            legacy_result = get_ebay_completed_listings_legacy(user_token)
+            if legacy_result['success']:
+                return legacy_result
+            
+            # Fallback to Browse API for active listings
             browse_result = get_ebay_recently_sold_items(user_token, api_base_url)
             if browse_result['success']:
                 return browse_result
             
-            # Fallback to legacy Trading API
+            # Final fallback to legacy Trading API
             return get_ebay_listings_legacy(user_token)
         else:
             # Use modern OAuth 2.0 APIs
@@ -153,6 +158,103 @@ def get_ebay_active_listings():
         return {
             'success': False,
             'error': 'Unexpected error: {}'.format(str(e))
+        }
+
+def get_ebay_completed_listings_legacy(user_token):
+    """
+    Fetch completed/sold listings using legacy eBay Trading API
+    """
+    try:
+        import xml.etree.ElementTree as ET
+        
+        # eBay Trading API endpoint
+        url = "https://api.ebay.com/ws/api.dll"
+        
+        # XML request for GetMyeBaySelling - Completed Listings
+        xml_request = """<?xml version="1.0" encoding="utf-8"?>
+        <GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+            <RequesterCredentials>
+                <eBayAuthToken>{}</eBayAuthToken>
+            </RequesterCredentials>
+            <SoldList>
+                <Include>true</Include>
+                <Pagination>
+                    <EntriesPerPage>100</EntriesPerPage>
+                    <PageNumber>1</PageNumber>
+                </Pagination>
+            </SoldList>
+            <DetailLevel>ReturnAll</DetailLevel>
+            <Version>1199</Version>
+        </GetMyeBaySellingRequest>""".format(user_token)
+        
+        headers = {
+            'X-EBAY-API-COMPATIBILITY-LEVEL': '1199',
+            'X-EBAY-API-DEV-NAME': app.config.get('EBAY_DEV_NAME', 'your_dev_name'),
+            'X-EBAY-API-APP-NAME': app.config.get('EBAY_APP_NAME', 'your_app_name'),
+            'X-EBAY-API-CERT-NAME': app.config.get('EBAY_CERT_NAME', 'your_cert_name'),
+            'X-EBAY-API-CALL-NAME': 'GetMyeBaySelling',
+            'X-EBAY-API-SITEID': '0',  # US site
+            'Content-Type': 'text/xml'
+        }
+        
+        response = requests.post(url, data=xml_request, headers=headers)
+        
+        if response.status_code == 200:
+            # Parse XML response
+            root = ET.fromstring(response.text)
+            
+            # Check for errors
+            errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
+            if errors:
+                error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
+                if error_msg is not None:
+                    return {
+                        'success': False,
+                        'error': 'eBay API error: {}'.format(error_msg.text)
+                    }
+            
+            # Extract completed listings
+            listings = []
+            sold_list = root.find('.//{urn:ebay:apis:eBLBaseComponents}SoldList')
+            if sold_list is not None:
+                items = sold_list.findall('.//{urn:ebay:apis:eBLBaseComponents}Item')
+                for item in items:
+                    item_id = item.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
+                    title = item.find('.//{urn:ebay:apis:eBLBaseComponents}Title')
+                    current_price = item.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
+                    condition = item.find('.//{urn:ebay:apis:eBLBaseComponents}ConditionDisplayName')
+                    quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
+                    end_time = item.find('.//{urn:ebay:apis:eBLBaseComponents}EndTime')
+                    
+                    listings.append({
+                        'itemId': item_id.text if item_id is not None else 'N/A',
+                        'title': title.text if title is not None else 'N/A',
+                        'description': title.text if title is not None else 'N/A',
+                        'price': float(current_price.text) if current_price is not None and current_price.text else 0,
+                        'condition': condition.text if condition is not None else 'N/A',
+                        'quantity': int(quantity.text) if quantity is not None and quantity.text else 0,
+                        'sku': item_id.text if item_id is not None else 'N/A',
+                        'end_time': end_time.text if end_time is not None else 'N/A',
+                        'status': 'Sold',
+                        'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#'
+                    })
+            
+            return {
+                'success': True,
+                'listings': listings,
+                'total': len(listings),
+                'note': 'Using legacy Trading API - showing your completed/sold listings'
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'Legacy API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Legacy API error: {}'.format(str(e))
         }
 
 def get_ebay_recently_sold_items(user_token, api_base_url):
@@ -180,7 +282,7 @@ def get_ebay_recently_sold_items(user_token, api_base_url):
         # Search parameters for recently sold items
         max_listings = app.config.get('EBAY_MAX_LISTINGS', 200)
         params = {
-            'q': '*',  # Search all items
+            'q': 'pokemon cards',  # More specific search term
             'limit': min(max_listings, 200),  # Maximum allowed by Browse API is 200
             'offset': 0,
             'filter': 'deliveryCountry:US,conditionIds:{1000|1500|2000|2500|3000|4000|5000}',  # Various conditions
@@ -209,6 +311,10 @@ def get_ebay_recently_sold_items(user_token, api_base_url):
                 # Get end time (when the item ended/sold)
                 end_time = item.get('itemEndDate', 'N/A')
                 
+                # Check if item has ended (completed/sold)
+                item_web_url = item.get('itemWebUrl', '')
+                is_completed = 'ended' in item_web_url.lower() or end_time != 'N/A'
+                
                 listings.append({
                     'itemId': item_id,
                     'title': title,
@@ -223,14 +329,14 @@ def get_ebay_recently_sold_items(user_token, api_base_url):
                     'category': item.get('categories', [{}])[0].get('categoryName', 'N/A') if item.get('categories') else 'N/A',
                     'quantity': 1,  # Browse API doesn't provide quantity info
                     'end_time': end_time,
-                    'status': 'Sold'  # Mark as sold since we're looking at completed items
+                    'status': 'Sold' if is_completed else 'Active'  # Mark as sold if completed
                 })
             
             return {
                 'success': True,
                 'listings': listings,
                 'total': len(listings),
-                'note': 'Using Browse API - showing recently sold items from eBay (last 2 weeks)'
+                'note': 'Using Browse API - showing eBay items (mix of active and recently sold)'
             }
         else:
             return {
