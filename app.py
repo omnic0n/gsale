@@ -133,8 +133,8 @@ def get_ebay_active_listings():
         
         # Check if this is a legacy token format
         if user_token.startswith('v^'):
-            # Try Browse API first (works with your token)
-            browse_result = get_ebay_listings_via_browse(user_token, api_base_url)
+            # Try Browse API first (works with your token) - get recently sold items
+            browse_result = get_ebay_recently_sold_items(user_token, api_base_url)
             if browse_result['success']:
                 return browse_result
             
@@ -155,6 +155,95 @@ def get_ebay_active_listings():
             'error': 'Unexpected error: {}'.format(str(e))
         }
 
+def get_ebay_recently_sold_items(user_token, api_base_url):
+    """
+    Get recently sold items from eBay using Browse API (works with your current token)
+    This searches for completed/sold items from the last 2 weeks
+    """
+    try:
+        from datetime import datetime, timedelta
+        
+        # Calculate date 2 weeks ago
+        two_weeks_ago = datetime.now() - timedelta(weeks=2)
+        date_filter = two_weeks_ago.strftime('%Y-%m-%d')
+        
+        # Browse API endpoint for completed items
+        url = "{}/buy/browse/v1/item_summary/search".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        # Search parameters for recently sold items
+        max_listings = app.config.get('EBAY_MAX_LISTINGS', 200)
+        params = {
+            'q': '*',  # Search all items
+            'limit': min(max_listings, 200),  # Maximum allowed by Browse API is 200
+            'offset': 0,
+            'filter': 'deliveryCountry:US,conditionIds:{1000|1500|2000|2500|3000|4000|5000}',  # Various conditions
+            'sort': 'endTime:desc'  # Sort by end time descending (most recent first)
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            item_summaries = data.get('itemSummaries', [])
+            
+            # Process the results to match our expected format
+            listings = []
+            for item in item_summaries:
+                # Extract relevant information
+                item_id = item.get('itemId', 'N/A')
+                title = item.get('title', 'N/A')
+                price_info = item.get('price', {})
+                price = price_info.get('value', 0) if price_info else 0
+                currency = price_info.get('currency', 'USD') if price_info else 'USD'
+                condition = item.get('condition', 'N/A')
+                image_url = item.get('image', {}).get('imageUrl') if item.get('image') else None
+                seller = item.get('seller', {}).get('username', 'Unknown')
+                
+                # Get end time (when the item ended/sold)
+                end_time = item.get('itemEndDate', 'N/A')
+                
+                listings.append({
+                    'itemId': item_id,
+                    'title': title,
+                    'description': title,  # Use title as description since Browse API doesn't provide separate description
+                    'price': float(price) if price else 0,
+                    'currency': currency,
+                    'condition': condition,
+                    'image_url': image_url,
+                    'seller': seller,
+                    'sku': item_id,  # Use itemId as SKU for consistency
+                    'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id),
+                    'category': item.get('categories', [{}])[0].get('categoryName', 'N/A') if item.get('categories') else 'N/A',
+                    'quantity': 1,  # Browse API doesn't provide quantity info
+                    'end_time': end_time,
+                    'status': 'Sold'  # Mark as sold since we're looking at completed items
+                })
+            
+            return {
+                'success': True,
+                'listings': listings,
+                'total': len(listings),
+                'note': 'Using Browse API - showing recently sold items from eBay (last 2 weeks)'
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'Browse API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Browse API error: {}'.format(str(e))
+        }
+
 def get_ebay_listings_via_browse(user_token, api_base_url):
     """
     Get listings using Browse API (works with your current token)
@@ -172,9 +261,10 @@ def get_ebay_listings_via_browse(user_token, api_base_url):
         }
         
         # Search parameters - you'll need to replace 'your_ebay_username' with your actual eBay username
+        max_listings = app.config.get('EBAY_MAX_LISTINGS', 200)
         params = {
             'q': '*',  # Search all items
-            'limit': 100,
+            'limit': min(max_listings, 200),  # Maximum allowed by Browse API is 200
             'offset': 0,
             'filter': 'deliveryCountry:US,deliveryPostalCode:US'  # Limit to US
         }
@@ -339,7 +429,7 @@ def get_ebay_listings_modern(user_token, api_base_url):
         }
         
         params = {
-            'limit': 100,
+            'limit': 200,  # Maximum allowed by eBay APIs
             'offset': 0
         }
         
@@ -386,7 +476,7 @@ def try_alternative_ebay_endpoints(user_token, api_base_url):
         # Search parameters - you might need to adjust these
         params = {
             'q': '*',  # Search for all items
-            'limit': 100,
+            'limit': 200,  # Maximum allowed by Browse API
             'offset': 0,
             'filter': 'conditionIds:{1000|1500|2000|2500|3000|4000|5000}'  # Various conditions
         }
