@@ -315,6 +315,15 @@ def get_valid_ebay_token():
                 'needs_auth': True
             }
         
+        # Check if this is a legacy token format (starts with v^)
+        if access_token.startswith('v^'):
+            print(f"DEBUG: Legacy token detected, treating as valid")
+            return {
+                'success': True,
+                'access_token': access_token,
+                'is_legacy': True
+            }
+        
         # Check if token is expired
         if token_expires and datetime.now() >= token_expires:
             if refresh_token:
