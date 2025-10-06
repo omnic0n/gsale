@@ -2907,7 +2907,12 @@ def bought_items():
     # Force initialization of the FieldList with proper entries
     while form.items.entries:
         form.items.pop_entry()  # Remove any existing entries
-    form.items.append_entry()  # Add one proper entry
+    
+    # Create a proper ItemDetailForm instance and add it
+    from forms import ItemDetailForm
+    item_form = ItemDetailForm()
+    item_form.category.choices = [(category['id'], category['type']) for category in categories]
+    form.items.append_entry(item_form)
     
     # Set category choices for each item in the form
     for item_form in form.items:
