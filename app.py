@@ -131,18 +131,27 @@ def get_ebay_active_listings():
                 'error': 'eBay user token not configured. Please update config.py with your eBay user token.'
             }
         
-        # eBay API endpoint for getting active listings
-        url = "{}/sell/inventory/v1/inventory_item".format(api_base_url)
+        # Try multiple eBay API endpoints to find active listings
+        endpoints_to_try = [
+            # Selling API - Active Listings
+            "{}/sell/inventory/v1/inventory_item".format(api_base_url),
+            # Browse API - Search for seller's items
+            "{}/buy/browse/v1/item_summary/search".format(api_base_url),
+            # Traditional Trading API (if using legacy token)
+            "{}/ws/api.dll".format(api_base_url)
+        ]
         
         headers = {
             'Authorization': 'Bearer {}'.format(user_token),
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'  # Specify marketplace
         }
         
-        # Parameters for active listings
+        # Try the first endpoint (Inventory API)
+        url = endpoints_to_try[0]
         params = {
-            'limit': 100,  # Maximum items per request
+            'limit': 100,
             'offset': 0
         }
         
@@ -155,6 +164,9 @@ def get_ebay_active_listings():
                 'listings': data.get('inventoryItems', []),
                 'total': data.get('total', 0)
             }
+        elif response.status_code == 403:
+            # Try alternative approach - use Browse API to search for seller's items
+            return try_alternative_ebay_endpoints(user_token, api_base_url)
         else:
             return {
                 'success': False,
@@ -170,6 +182,51 @@ def get_ebay_active_listings():
         return {
             'success': False,
             'error': 'Unexpected error: {}'.format(str(e))
+        }
+
+def try_alternative_ebay_endpoints(user_token, api_base_url):
+    """
+    Try alternative eBay API endpoints when the main one fails
+    """
+    try:
+        # Try Browse API to search for items
+        url = "{}/buy/browse/v1/item_summary/search".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        
+        # Search parameters - you might need to adjust these
+        params = {
+            'q': '*',  # Search for all items
+            'limit': 100,
+            'offset': 0,
+            'filter': 'conditionIds:{1000|1500|2000|2500|3000|4000|5000}'  # Various conditions
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': True,
+                'listings': data.get('itemSummaries', []),
+                'total': data.get('total', 0),
+                'note': 'Using Browse API - may show all items, not just yours'
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'eBay API access denied. Please check: 1) Your token has the correct permissions (selling.read, selling.write), 2) Your token is not expired, 3) You are using the correct token format. Error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Alternative API error: {}'.format(str(e))
         }
 
 def get_ebay_listing_details(listing_id):
