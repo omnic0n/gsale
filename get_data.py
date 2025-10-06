@@ -325,8 +325,13 @@ def get_list_of_items_with_name(name, sold):
     
     # Now filter by sold status if needed
     if validated_sold != '%':
-        filtered_items = [item for item in all_items if str(item['sold']) == str(validated_sold)]
-        print(f"DEBUG: After filtering by sold='{validated_sold}': {len(filtered_items)} items")
+        # Handle empty string case - treat as "not sold" (0)
+        if validated_sold == '':
+            filtered_items = [item for item in all_items if str(item['sold']) == '0']
+            print(f"DEBUG: After filtering by sold='' (treated as 0): {len(filtered_items)} items")
+        else:
+            filtered_items = [item for item in all_items if str(item['sold']) == str(validated_sold)]
+            print(f"DEBUG: After filtering by sold='{validated_sold}': {len(filtered_items)} items")
         return filtered_items
     else:
         print(f"DEBUG: No sold status filter applied, returning all {len(all_items)} items")
