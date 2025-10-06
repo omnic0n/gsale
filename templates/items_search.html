@@ -363,9 +363,9 @@ function openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId) {
     document.getElementById('editItemEbayId').value = ebayItemId || '';
     document.getElementById('editItemReturned').value = '0'; // Default to False
     document.getElementById('editItemListDate').value = new Date().toISOString().split('T')[0]; // Today's date
-    document.getElementById('editItemSaleDate').value = '';
-    document.getElementById('editItemPrice').value = '0';
-    document.getElementById('editItemShippingFee').value = '0';
+    document.getElementById('editItemSaleDate').value = ''; // Leave empty for optional date
+    document.getElementById('editItemPrice').value = '';
+    document.getElementById('editItemShippingFee').value = '';
     
     // Set the correct category
     const categorySelect = document.getElementById('editItemCategory');

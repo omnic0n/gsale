@@ -160,13 +160,19 @@ def set_sale_data(details):
         raise ValueError("Invalid shipping fee")
     
     cur = mysql.connection.cursor()
+    
+    # Handle sale_date - convert empty string to None
+    sale_date = details.get('sale_date', '').strip()
+    if not sale_date:
+        sale_date = None
+    
     cur.execute("""
         UPDATE sale s
         INNER JOIN items i ON s.id = i.id
         INNER JOIN collection c ON i.group_id = c.id
         SET s.date = %s, s.price = %s, s.shipping_fee = %s 
         WHERE s.id = %s AND c.account = %s
-    """, (details['sale_date'], price, shipping_fee, details['id'], session.get('id')))
+    """, (sale_date, price, shipping_fee, details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
 
