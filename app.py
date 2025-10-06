@@ -170,7 +170,7 @@ def get_ebay_completed_listings_legacy(user_token):
         # eBay Trading API endpoint
         url = "https://api.ebay.com/ws/api.dll"
         
-        # XML request for GetMyeBaySelling - Completed Listings
+        # XML request for GetMyeBaySelling - Completed Listings with financial details
         xml_request = """<?xml version="1.0" encoding="utf-8"?>
         <GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
             <RequesterCredentials>
@@ -226,17 +226,59 @@ def get_ebay_completed_listings_legacy(user_token):
                     quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
                     end_time = item.find('.//{urn:ebay:apis:eBLBaseComponents}EndTime')
                     
+                    # Financial information
+                    selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
+                    final_price = 0
+                    listing_fees = 0
+                    final_value_fee = 0
+                    paypal_fee = 0
+                    net_earnings = 0
+                    
+                    if selling_status is not None:
+                        final_price_elem = selling_status.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
+                        if final_price_elem is not None:
+                            final_price = float(final_price_elem.text) if final_price_elem.text else 0
+                    
+                    # Try to get fee information (if available)
+                    fees = item.find('.//{urn:ebay:apis:eBLBaseComponents}Fees')
+                    if fees is not None:
+                        fee_list = fees.findall('.//{urn:ebay:apis:eBLBaseComponents}Fee')
+                        for fee in fee_list:
+                            fee_name = fee.find('.//{urn:ebay:apis:eBLBaseComponents}Name')
+                            fee_amount = fee.find('.//{urn:ebay:apis:eBLBaseComponents}Fee')
+                            if fee_name is not None and fee_amount is not None:
+                                fee_name_text = fee_name.text.lower() if fee_name.text else ''
+                                fee_amount_val = float(fee_amount.text) if fee_amount.text else 0
+                                
+                                if 'listing' in fee_name_text:
+                                    listing_fees += fee_amount_val
+                                elif 'final value' in fee_name_text:
+                                    final_value_fee += fee_amount_val
+                                elif 'paypal' in fee_name_text:
+                                    paypal_fee += fee_amount_val
+                    
+                    # Calculate net earnings (approximate)
+                    total_fees = listing_fees + final_value_fee + paypal_fee
+                    net_earnings = final_price - total_fees
+                    
                     listings.append({
                         'itemId': item_id.text if item_id is not None else 'N/A',
                         'title': title.text if title is not None else 'N/A',
                         'description': title.text if title is not None else 'N/A',
-                        'price': float(current_price.text) if current_price is not None and current_price.text else 0,
+                        'price': final_price,  # Use final selling price
                         'condition': condition.text if condition is not None else 'N/A',
                         'quantity': int(quantity.text) if quantity is not None and quantity.text else 0,
                         'sku': item_id.text if item_id is not None else 'N/A',
                         'end_time': end_time.text if end_time is not None else 'N/A',
                         'status': 'Sold',
-                        'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#'
+                        'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#',
+                        # Financial information
+                        'final_price': final_price,
+                        'listing_fees': listing_fees,
+                        'final_value_fee': final_value_fee,
+                        'paypal_fee': paypal_fee,
+                        'total_fees': total_fees,
+                        'net_earnings': net_earnings
                     })
             
             return {
@@ -1888,14 +1930,25 @@ def admin_ebay_listings():
         if ebay_result['success']:
             listings = ebay_result['listings']
             total_listings = ebay_result['total']
+            
+            # Calculate financial totals
+            total_earnings = sum(listing.get('net_earnings', 0) for listing in listings)
+            total_fees = sum(listing.get('total_fees', 0) for listing in listings)
+            total_sales = sum(listing.get('final_price', 0) for listing in listings)
         else:
             listings = []
             total_listings = 0
+            total_earnings = 0
+            total_fees = 0
+            total_sales = 0
             flash("Error fetching eBay listings: {}".format(ebay_result['error']), 'error')
         
         return render_template('admin_ebay_listings.html', 
                              listings=listings, 
                              total_listings=total_listings,
+                             total_earnings=total_earnings,
+                             total_fees=total_fees,
+                             total_sales=total_sales,
                              error=ebay_result.get('error'))
     
     except Exception as e:

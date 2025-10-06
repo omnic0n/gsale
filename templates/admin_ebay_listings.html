@@ -113,9 +113,41 @@
                 </a>
                 <span class="text-muted ms-3">
                     <i class="fas fa-info-circle"></i> 
-                    Total Active Listings: <strong>{{ total_listings }}</strong>
+                    Total Sold Items: <strong>{{ total_listings }}</strong>
                 </span>
             </div>
+            
+            <!-- Financial Summary -->
+            {% if total_earnings is defined and total_earnings > 0 %}
+            <div class="financial-summary mb-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Earnings</h5>
+                                <h3 class="mb-0">${{ "%.2f"|format(total_earnings) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Sales</h5>
+                                <h3 class="mb-0">${{ "%.2f"|format(total_sales) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Fees</h5>
+                                <h3 class="mb-0">${{ "%.2f"|format(total_fees) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             
             {% if listings %}
                 {% for listing in listings %}
@@ -232,6 +264,20 @@
                                 {% if listing.end_time and listing.end_time != 'N/A' %}
                                 <div class="mb-2">
                                     <strong>Sold Date:</strong> {{ listing.end_time }}
+                                </div>
+                                {% endif %}
+                                
+                                {% if listing.net_earnings is defined %}
+                                <div class="mb-2">
+                                    <strong>Net Earnings:</strong>
+                                    <span class="text-success fw-bold">${{ "%.2f"|format(listing.net_earnings) }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if listing.total_fees is defined and listing.total_fees > 0 %}
+                                <div class="mb-2">
+                                    <strong>Total Fees:</strong>
+                                    <span class="text-danger">${{ "%.2f"|format(listing.total_fees) }}</span>
                                 </div>
                                 {% endif %}
                                 
