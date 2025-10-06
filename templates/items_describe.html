@@ -68,12 +68,12 @@
 
     <form method="POST" action="">
         {{ modify.hidden_tag() }}
-    <div class="form-group">
+    <div class="form-group d-flex justify-content-between align-items-center">
         {{ modify.button(class="btn btn-outline-info") }}
         {% if item[0]['ebay_item_id'] %}
         <a href="https://www.ebay.com/itm/{{ item[0]['ebay_item_id'] }}" 
            target="_blank" 
-           class="btn btn-outline-primary ml-2">
+           class="btn btn-outline-primary">
             <i class="fas fa-external-link-alt"></i> View on eBay
         </a>
         {% endif %}
