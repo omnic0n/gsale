@@ -3599,10 +3599,10 @@ def search_ebay_item():
             user_token = token_result['access_token']
         else:
             # Fallback to legacy token
-        user_token = app.config.get('EBAY_USER_TOKEN')
-        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
                 flash('eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.', 'error')
-            return redirect(url_for('admin_ebay_listings'))
+                return redirect(url_for('admin_ebay_listings'))
         
         # Get detailed transaction data for the specific item
         transaction_data = get_item_transaction_details(user_token, item_id)
