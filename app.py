@@ -1977,11 +1977,11 @@ def ebay_login():
             return redirect(oauth_result['auth_url'])
         else:
             flash(f'eBay OAuth error: {oauth_result["error"]}', 'error')
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin_panel'))
             
     except Exception as e:
         flash(f'eBay OAuth error: {str(e)}', 'error')
-        return redirect(url_for('admin'))
+        return redirect(url_for('admin_panel'))
 
 @app.route('/ebay-callback', methods=['GET', 'POST'])
 def ebay_callback():
@@ -1990,28 +1990,28 @@ def ebay_callback():
         # Verify state parameter
         if request.args.get('state') != session.get('ebay_oauth_state'):
             flash('Invalid state parameter. Please try again.', 'error')
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin_panel'))
         
         # Get authorization code
         code = request.args.get('code')
         if not code:
             error_msg = request.args.get('error', 'Authorization code not received.')
             flash(f'eBay OAuth error: {error_msg}', 'error')
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin_panel'))
         
         # Exchange code for tokens
         token_result = exchange_ebay_code_for_token(code)
         
         if token_result['success']:
             flash('eBay OAuth authentication successful!', 'success')
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin_panel'))
         else:
             flash(f'eBay OAuth error: {token_result["error"]}', 'error')
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin_panel'))
             
     except Exception as e:
         flash(f'eBay OAuth error: {str(e)}', 'error')
-        return redirect(url_for('admin'))
+        return redirect(url_for('admin_panel'))
 
 @app.route('/ebay-logout')
 def ebay_logout():
@@ -2024,11 +2024,11 @@ def ebay_logout():
         session.pop('ebay_oauth_state', None)
         
         flash('eBay OAuth tokens cleared successfully!', 'success')
-        return redirect(url_for('admin'))
+        return redirect(url_for('admin_panel'))
         
     except Exception as e:
         flash(f'Error clearing eBay tokens: {str(e)}', 'error')
-        return redirect(url_for('admin'))
+        return redirect(url_for('admin_panel'))
 
 @app.route('/debug/ebay-oauth-url')
 def debug_ebay_oauth_url():
