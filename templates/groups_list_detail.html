@@ -284,6 +284,7 @@
                 data-group-id="{{ group_id[0]['id'] }}"
                 data-category-id="{{ item['category_id'] }}"
                 data-storage="{{ item['storage'] }}"
+                data-ebay-item-id="{{ item['ebay_item_id'] or '' }}"
                 data-sale-date="{{ item['sale_date'] if item['sale_date'] else '' }}"
                 data-price="{{ item['gross'] if item['gross'] else '' }}"
                 data-shipping-fee="{{ item['shipping_fee'] if item['shipping_fee'] else '' }}">Edit</button></td>
@@ -366,6 +367,12 @@
                     </div>
                     
                     <div class="form-group">
+                        <label for="editItemEbayId">eBay Item ID</label>
+                        <small class="text-muted d-block">(Optional)</small>
+                        <input type="text" class="form-control" id="editItemEbayId" name="ebay_item_id" placeholder="eBay Item ID">
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="editItemReturned">Returned</label>
                         <select class="form-control" id="editItemReturned" name="returned">
                             <option value="0">False</option>
@@ -404,14 +411,15 @@
 
 <script>
 // Custom modal functions
-function openEditModal(itemId, name, groupId, categoryId, storage, saleDate, price, shippingFee) {
-    console.log('Opening modal with data:', { itemId, name, groupId, categoryId, storage, saleDate, price, shippingFee });
+function openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId, saleDate, price, shippingFee) {
+    console.log('Opening modal with data:', { itemId, name, groupId, categoryId, storage, ebayItemId, saleDate, price, shippingFee });
     
     // Set form values
     document.getElementById('editItemId').value = itemId;
     document.getElementById('editItemName').value = name;
     document.getElementById('editItemGroup').value = groupId;
     document.getElementById('editItemStorage').value = storage || '';
+    document.getElementById('editItemEbayId').value = ebayItemId || '';
     document.getElementById('editItemReturned').value = '0'; // Default to False
     document.getElementById('editItemListDate').value = new Date().toISOString().split('T')[0]; // Today's date
     document.getElementById('editItemSaleDate').value = saleDate || '';
@@ -448,15 +456,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const groupId = this.getAttribute('data-group-id');
             const categoryId = this.getAttribute('data-category-id');
             const storage = this.getAttribute('data-storage');
+            const ebayItemId = this.getAttribute('data-ebay-item-id');
             const saleDate = this.getAttribute('data-sale-date');
             const price = this.getAttribute('data-price');
             const shippingFee = this.getAttribute('data-shipping-fee');
             
             // Debug: log the data
-            console.log('Item data:', { itemId, name, groupId, categoryId, storage, saleDate, price, shippingFee });
+            console.log('Item data:', { itemId, name, groupId, categoryId, storage, ebayItemId, saleDate, price, shippingFee });
             
             // Open modal
-            openEditModal(itemId, name, groupId, categoryId, storage, saleDate, price, shippingFee);
+            openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId, saleDate, price, shippingFee);
         });
     });
 });
