@@ -3551,7 +3551,7 @@ def search_ebay_item():
             print(f"DEBUG: Found order_id: {order_id}")
             
             if order_id:
-                ebay_url = f'https://www.ebay.com/sh/ord/details/{order_id}'
+                ebay_url = f'https://www.ebay.com/mesh/ord/details?orderid={order_id}'
                 url_type = 'Order'
                 print(f"DEBUG: Using order URL: {ebay_url}")
             else:
