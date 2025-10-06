@@ -374,33 +374,33 @@ def get_ebay_active_listings():
             return get_ebay_listings_oauth(token_result['access_token'], api_base_url)
         elif token_result.get('needs_auth'):
             # OAuth token not available, try legacy token
-            user_token = app.config.get('EBAY_USER_TOKEN')
-            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
-            
-            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
-                return {
-                    'success': False,
+        user_token = app.config.get('EBAY_USER_TOKEN')
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        
+        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+            return {
+                'success': False,
                     'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.',
                     'needs_oauth': True
-                }
+            }
+        
+        # Check if this is a legacy token format
+        if user_token.startswith('v^'):
+            # Try legacy Trading API first for completed/sold items
+            legacy_result = get_ebay_completed_listings_legacy(user_token)
+            if legacy_result['success']:
+                return legacy_result
             
-            # Check if this is a legacy token format
-            if user_token.startswith('v^'):
-                # Try legacy Trading API first for completed/sold items
-                legacy_result = get_ebay_completed_listings_legacy(user_token)
-                if legacy_result['success']:
-                    return legacy_result
-                
-                # Fallback to Browse API for active listings
-                browse_result = get_ebay_recently_sold_items(user_token, api_base_url)
-                if browse_result['success']:
-                    return browse_result
-                
-                # Final fallback to legacy Trading API
-                return get_ebay_listings_legacy(user_token)
-            else:
+            # Fallback to Browse API for active listings
+            browse_result = get_ebay_recently_sold_items(user_token, api_base_url)
+            if browse_result['success']:
+                return browse_result
+            
+            # Final fallback to legacy Trading API
+            return get_ebay_listings_legacy(user_token)
+        else:
                 # Use modern OAuth 2.0 APIs with legacy token
-                return get_ebay_listings_modern(user_token, api_base_url)
+            return get_ebay_listings_modern(user_token, api_base_url)
         else:
             return {
                 'success': False,
@@ -2109,15 +2109,15 @@ def get_ebay_listing_details(listing_id):
             user_token = token_result['access_token']
         else:
             # Fallback to legacy token
-            user_token = app.config.get('EBAY_USER_TOKEN')
-            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
-            
-            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
-                return {
-                    'success': False,
+        user_token = app.config.get('EBAY_USER_TOKEN')
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        
+        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+            return {
+                'success': False,
                     'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.',
                     'needs_oauth': True
-                }
+            }
         
         # eBay API endpoint for getting listing details
         url = "{}/sell/inventory/v1/inventory_item/{}".format(api_base_url, listing_id)
@@ -3599,10 +3599,10 @@ def search_ebay_item():
             user_token = token_result['access_token']
         else:
             # Fallback to legacy token
-            user_token = app.config.get('EBAY_USER_TOKEN')
-            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+        user_token = app.config.get('EBAY_USER_TOKEN')
+        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
                 flash('eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.', 'error')
-                return redirect(url_for('admin_ebay_listings'))
+            return redirect(url_for('admin_ebay_listings'))
         
         # Get detailed transaction data for the specific item
         transaction_data = get_item_transaction_details(user_token, item_id)
@@ -3700,21 +3700,13 @@ def api_items_search():
         name = request.args.get('name', '')
         sold = request.args.get('sold', '')
         
-        print(f"DEBUG: API search called with name='{name}', sold='{sold}'")
-        
         # Handle "All Items" case (empty sold parameter)
         if sold == '':
             # Use '%' to match all sold statuses
             sold = '%'
         
-        print(f"DEBUG: After processing - name='{name}', sold='{sold}'")
-        
         # Get search results
         items = get_data.get_list_of_items_with_name(name, sold)
-        
-        print(f"DEBUG: Found {len(items)} items")
-        for item in items:
-            print(f"DEBUG: Item: {item['name']} (ID: {item['id']})")
         
         # Convert to JSON-serializable format
         results = []

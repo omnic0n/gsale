@@ -287,14 +287,8 @@ def get_list_of_items_with_name(name, sold):
     validated_name = validate_string_input(name, max_length=100)
     validated_sold = validate_numeric_input(sold, min_val=0, max_val=1, default='')
     
-    print(f"DEBUG: get_list_of_items_with_name - original name='{name}', validated name='{validated_name}'")
-    
     search_pattern = '%{}%'.format(validated_name)
-    print(f"DEBUG: search_pattern='{search_pattern}', sold='{validated_sold}', group_id='{get_current_group_id()}'")
-    
     cur = mysql.connection.cursor()
-    # First, let's see what items exist with this name regardless of sold status
-    print(f"DEBUG: Searching for items with pattern '{search_pattern}' in group '{get_current_group_id()}'")
     
     cur.execute("""SELECT 
                 items.name, 
@@ -319,22 +313,16 @@ def get_list_of_items_with_name(name, sold):
                 (search_pattern, get_current_group_id()))
     
     all_items = list(cur.fetchall())
-    print(f"DEBUG: Found {len(all_items)} items with this name pattern:")
-    for item in all_items:
-        print(f"DEBUG:   - '{item['name']}' (ID: {item['id']}, sold: {item['sold']})")
     
     # Now filter by sold status if needed
     if validated_sold != '%':
         # Handle empty string case - treat as "not sold" (0)
         if validated_sold == '':
             filtered_items = [item for item in all_items if str(item['sold']) == '0']
-            print(f"DEBUG: After filtering by sold='' (treated as 0): {len(filtered_items)} items")
         else:
             filtered_items = [item for item in all_items if str(item['sold']) == str(validated_sold)]
-            print(f"DEBUG: After filtering by sold='{validated_sold}': {len(filtered_items)} items")
         return filtered_items
     else:
-        print(f"DEBUG: No sold status filter applied, returning all {len(all_items)} items")
         return all_items
 
 def get_data_from_item_groups(group_id):

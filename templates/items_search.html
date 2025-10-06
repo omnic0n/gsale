@@ -368,7 +368,6 @@ function displayResults(items) {
                     addButton.textContent = 'Add eBay ID';
                     addButton.setAttribute('data-item-id', item.id);
                     addButton.setAttribute('data-item-name', item.name);
-                    console.log('Created Add eBay ID button for:', item.name, 'with classes:', addButton.className);
                     ebayIdCell.appendChild(addButton);
                 }
         
@@ -387,20 +386,12 @@ function displayResults(items) {
 
         // Add eBay ID Modal functions
         function openAddEbayIdModal(itemId, itemName) {
-            console.log('Opening Add eBay ID modal for:', { itemId, itemName });
-            
             // Fetch current item data to populate required fields
-            console.log('Fetching item data for:', itemName);
             fetch(`/api/items/search?name=${encodeURIComponent(itemName)}&sold=`)
-                .then(response => {
-                    console.log('API response status:', response.status);
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    console.log('API response data:', data);
                     if (data.success && data.items.length > 0) {
                         const item = data.items.find(i => i.id === itemId);
-                        console.log('Found item:', item);
                         if (item) {
                             // Set form values
                             document.getElementById('addEbayIdItemId').value = itemId;
@@ -418,16 +409,12 @@ function displayResults(items) {
                             document.getElementById('addEbayIdCurrentPrice').value = item.gross_price || '';
                             document.getElementById('addEbayIdCurrentShippingFee').value = item.shipping_fee || '';
                             
-                            console.log('About to show modal');
                             // Show modal
                             document.getElementById('addEbayIdModal').style.display = 'flex';
-                            console.log('Modal should be visible now');
                         } else {
-                            console.error('Item not found in search results');
                             alert('Item not found in search results');
                         }
                     } else {
-                        console.error('No items found or API error:', data);
                         alert('No items found or API error');
                     }
                 })
@@ -453,13 +440,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
             // Add event listeners to add eBay ID buttons (delegated)
             document.addEventListener('click', function(e) {
-                console.log('Click detected on:', e.target);
-                console.log('Button classes:', e.target.classList);
                 if (e.target.classList.contains('add-ebay-id-btn')) {
-                    console.log('Add eBay ID button clicked!');
                     const itemId = e.target.getAttribute('data-item-id');
                     const itemName = e.target.getAttribute('data-item-name');
-                    console.log('Item data:', { itemId, itemName });
                     
                     openAddEbayIdModal(itemId, itemName);
                 }
