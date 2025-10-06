@@ -568,13 +568,18 @@ def get_item_transaction_details(user_token, item_id):
                 if order_details['success']:
                     print("DEBUG: Successfully got order details from modern API")
                     
+                    # Get transaction data
+                    transaction_data = order_details['transaction_data']
+                    
                     # Try to get additional fee information
                     fee_details = get_ebay_fees_from_order_api(order_id)
                     if fee_details['success']:
                         # Merge fee data with transaction data
-                        transaction_data = order_details['transaction_data']
                         transaction_data.update(fee_details['fee_data'])
                         print("DEBUG: Enhanced with fee breakdown data")
+                        print(f"DEBUG: Fee data added: {fee_details['fee_data']}")
+                    else:
+                        print(f"DEBUG: Fee details failed: {fee_details.get('error', 'Unknown error')}")
                     
                     return {
                         'success': True,
@@ -954,37 +959,48 @@ def extract_fee_data(order_data):
     Extract fee information from Order API response
     """
     try:
+        print("DEBUG: Extracting fee data from order response")
+        print(f"DEBUG: Order data keys: {list(order_data.keys())}")
+        
         fee_data = {}
         
         # Extract from lineItems
         line_items = order_data.get('lineItems', [])
+        print(f"DEBUG: Found {len(line_items)} line items")
         total_fees = 0
         
-        for item in line_items:
+        for i, item in enumerate(line_items):
+            print(f"DEBUG: Line item {i}: {list(item.keys())}")
+            
             # Final Value Fee
             fvf = item.get('finalValueFee', {})
             if fvf:
                 fee_data['final_value_fee'] = float(fvf.get('value', 0))
                 total_fees += fee_data['final_value_fee']
+                print(f"DEBUG: Final Value Fee: {fee_data['final_value_fee']}")
             
             # Insertion Fee
             insertion_fee = item.get('insertionFee', {})
             if insertion_fee:
                 fee_data['insertion_fee'] = float(insertion_fee.get('value', 0))
                 total_fees += fee_data['insertion_fee']
+                print(f"DEBUG: Insertion Fee: {fee_data['insertion_fee']}")
         
         # Extract from pricingSummary
         pricing = order_data.get('pricingSummary', {})
         if pricing:
             fee_data['total_fees'] = total_fees
             fee_data['net_amount'] = float(pricing.get('total', 0)) - total_fees
+            print(f"DEBUG: Total fees: {total_fees}, Net amount: {fee_data['net_amount']}")
         
+        print(f"DEBUG: Final fee data: {fee_data}")
         return {
             'success': True,
             'fee_data': fee_data
         }
         
     except Exception as e:
+        print(f"DEBUG: Fee extraction error: {str(e)}")
         return {'success': False, 'error': f'Fee extraction error: {str(e)}'}
 
 def get_ebay_final_value_fees_trading_api(order_ids):
@@ -3381,11 +3397,16 @@ def search_ebay_item():
                 **transaction_data['transaction_data']
             }
             
+            print(f"DEBUG: Created listing with data: {list(listing.keys())}")
+            print(f"DEBUG: Fee-related fields: final_value_fee={listing.get('final_value_fee')}, total_fees={listing.get('total_fees')}, sales_tax={listing.get('sales_tax')}")
+            
             listings = [listing]
             total_listings = 1
             total_earnings = listing.get('net_earnings', 0)
-            total_fees = listing.get('total_fees', 0)
+            total_fees = listing.get('total_fees', 0) or listing.get('final_value_fee', 0)
             total_sales = listing.get('final_price', 0)
+            
+            print(f"DEBUG: Financial totals - Earnings: {total_earnings}, Fees: {total_fees}, Sales: {total_sales}")
             
             flash('Financial information retrieved for item ID: {}'.format(item_id), 'success')
         else:
