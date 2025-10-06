@@ -226,12 +226,13 @@ def get_ebay_completed_listings_legacy(user_token):
                     quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
                     end_time = item.find('.//{urn:ebay:apis:eBLBaseComponents}EndTime')
                     
-                    # Financial information
+                    # Financial information - corrected calculation
                     selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
                     final_price = 0
                     listing_fees = 0
                     final_value_fee = 0
                     paypal_fee = 0
+                    sales_tax = 0
                     net_earnings = 0
                     
                     if selling_status is not None:
@@ -252,14 +253,17 @@ def get_ebay_completed_listings_legacy(user_token):
                                 
                                 if 'listing' in fee_name_text:
                                     listing_fees += fee_amount_val
-                                elif 'final value' in fee_name_text:
+                                elif 'final value' in fee_name_text or 'transaction' in fee_name_text:
                                     final_value_fee += fee_amount_val
                                 elif 'paypal' in fee_name_text:
                                     paypal_fee += fee_amount_val
+                                elif 'tax' in fee_name_text:
+                                    sales_tax += fee_amount_val
                     
-                    # Calculate net earnings (approximate)
+                    # Calculate net earnings correctly (like eBay's "Order earnings")
+                    # Order earnings = Order total - Sales tax - Transaction fees
                     total_fees = listing_fees + final_value_fee + paypal_fee
-                    net_earnings = final_price - total_fees
+                    net_earnings = final_price - sales_tax - final_value_fee
                     
                     listings.append({
                         'itemId': item_id.text if item_id is not None else 'N/A',
@@ -277,6 +281,7 @@ def get_ebay_completed_listings_legacy(user_token):
                         'listing_fees': listing_fees,
                         'final_value_fee': final_value_fee,
                         'paypal_fee': paypal_fee,
+                        'sales_tax': sales_tax,
                         'total_fees': total_fees,
                         'net_earnings': net_earnings
                     })

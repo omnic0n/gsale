@@ -269,15 +269,29 @@
                                 
                                 {% if listing.net_earnings is defined %}
                                 <div class="mb-2">
-                                    <strong>Net Earnings:</strong>
+                                    <strong>Order Earnings:</strong>
                                     <span class="text-success fw-bold">${{ "%.2f"|format(listing.net_earnings) }}</span>
                                 </div>
                                 {% endif %}
                                 
-                                {% if listing.total_fees is defined and listing.total_fees > 0 %}
+                                {% if listing.final_price is defined and listing.final_price > 0 %}
                                 <div class="mb-2">
-                                    <strong>Total Fees:</strong>
-                                    <span class="text-danger">${{ "%.2f"|format(listing.total_fees) }}</span>
+                                    <strong>Order Total:</strong>
+                                    <span class="text-primary">${{ "%.2f"|format(listing.final_price) }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if listing.sales_tax is defined and listing.sales_tax > 0 %}
+                                <div class="mb-2">
+                                    <strong>Sales Tax:</strong>
+                                    <span class="text-warning">-${{ "%.2f"|format(listing.sales_tax) }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if listing.final_value_fee is defined and listing.final_value_fee > 0 %}
+                                <div class="mb-2">
+                                    <strong>Transaction Fees:</strong>
+                                    <span class="text-danger">-${{ "%.2f"|format(listing.final_value_fee) }}</span>
                                 </div>
                                 {% endif %}
                                 
