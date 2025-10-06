@@ -21,17 +21,17 @@
                         <div id="itemsContainer">
                             <!-- Always use HTML fallback approach -->
                             <div class="item-row border rounded p-3 mb-3" data-index="0">
-                                <div class="row">
-                                    <div class="col-md-4">
+                                <div class="row align-items-end">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <label class="form-control-label">Item Name</label>
-                                            <input class="form-control form-control-lg" name="items-0-name" type="text" required>
+                                            <input class="form-control" name="items-0-name" type="text" required>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label class="form-control-label">Category</label>
-                                            <select class="form-control form-control-lg" name="items-0-category" required>
+                                            <select class="form-control" name="items-0-category" required>
                                                 <option value="">Select Category</option>
                                                 {% for category in categories %}
                                                 <option value="{{ category.id }}">{{ category.type }}</option>
@@ -42,14 +42,13 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label class="form-control-label">eBay Item ID</label>
-                                            <small class="text-muted">(Optional)</small>
-                                            <input class="form-control form-control-lg" name="items-0-ebay_item_id" type="text" placeholder="eBay Item ID">
+                                            <small class="text-muted d-block">(Optional)</small>
+                                            <input class="form-control" name="items-0-ebay_item_id" type="text" placeholder="eBay Item ID">
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-1">
                                         <div class="form-group">
-                                            <label class="form-control-label">&nbsp;</label>
-                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn d-block" style="display: none;">
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" style="display: none;">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -137,41 +136,40 @@
                 ).join('');
             }
             
-            const newItemHtml = `
-                <div class="item-row border rounded p-3 mb-3" data-index="${newIndex}">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-control-label">Item Name</label>
-                                <input class="form-control form-control-lg" name="items-${newIndex}-name" type="text" required>
+                    const newItemHtml = `
+                        <div class="item-row border rounded p-3 mb-3" data-index="${newIndex}">
+                            <div class="row align-items-end">
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label class="form-control-label">Item Name</label>
+                                        <input class="form-control" name="items-${newIndex}-name" type="text" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-control-label">Category</label>
+                                        <select class="form-control" name="items-${newIndex}-category" required>
+                                            ${categoryChoices}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-control-label">eBay Item ID</label>
+                                        <small class="text-muted d-block">(Optional)</small>
+                                        <input class="form-control" name="items-${newIndex}-ebay_item_id" type="text" placeholder="eBay Item ID">
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-control-label">Category</label>
-                                <select class="form-control form-control-lg" name="items-${newIndex}-category" required>
-                                    ${categoryChoices}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-control-label">eBay Item ID</label>
-                                <small class="text-muted">(Optional)</small>
-                                <input class="form-control form-control-lg" name="items-${newIndex}-ebay_item_id" type="text" placeholder="eBay Item ID">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="form-control-label">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn d-block">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                    `;
             
             container.insertAdjacentHTML('beforeend', newItemHtml);
             itemCount++;
