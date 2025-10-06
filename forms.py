@@ -31,11 +31,15 @@ class ListForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
+class ItemDetailForm(FlaskForm):
+    """Form for individual item details"""
+    name = StringField('Item Name', validators=[DataRequired(), Length(max=150)])
+    category = SelectField('Category', coerce=str, validators=[DataRequired()])
+    ebay_item_id = StringField('eBay Item ID', validators=[Length(max=50)])
+
 class PurchaseForm(FlaskForm):
-    itemList = FieldList(StringField(validators=[DataRequired()]), min_entries=0)
+    items = FieldList(FormField(ItemDetailForm), min_entries=1, max_entries=50)
     group = SelectField('group', coerce=str)
-    category = SelectField('category', coerce=str)
-    price = StringField('price')
     list_date = DateField('List Date',
                         default=datetime.today,
                         validators=[DataRequired()], format='%Y-%m-%d')

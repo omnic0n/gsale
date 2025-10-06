@@ -2685,9 +2685,17 @@ class NetworkManager: NSObject {
         return isNegative ? -value : value
     }
     
-    // MARK: - Add Item
+    // MARK: - Item Detail Structure
     
-    func addItem(itemName: String, groupId: String, categoryId: String, storage: String, listDate: String) async throws -> Bool {
+    struct ItemDetail {
+        let name: String
+        let categoryId: String
+        let ebayItemId: String?
+    }
+    
+    // MARK: - Add Items (Improved)
+    
+    func addItems(items: [ItemDetail], groupId: String, storage: String, listDate: String) async throws -> Bool {
         guard let cookie = UserManager.shared.cookie else {
             throw NetworkError.unauthorized
         }
@@ -2695,14 +2703,21 @@ class NetworkManager: NSObject {
         let url = URL(string: "\(baseURL)/items/bought")!
         var request = URLRequest(url: url)
         
-        // Build form data
-        let parameters = [
-            "item-0": itemName,  // The backend expects item-0, item-1, etc.
+        // Build form data for new structure
+        var parameters: [String: String] = [
             "group": groupId,
-            "category": categoryId,  // Now categoryId is already a String (UUID)
             "storage": storage,
             "list_date": listDate
         ]
+        
+        // Add each item with its details
+        for (index, item) in items.enumerated() {
+            parameters["items-\(index)-name"] = item.name
+            parameters["items-\(index)-category"] = item.categoryId
+            if let ebayId = item.ebayItemId, !ebayId.isEmpty {
+                parameters["items-\(index)-ebay_item_id"] = ebayId
+            }
+        }
         
         let formData = parameters.map { key, value in
             let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
@@ -2714,7 +2729,6 @@ class NetworkManager: NSObject {
         
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        // Handle cookie format - it might already include "session=" prefix
         let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
         request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
@@ -2722,12 +2736,21 @@ class NetworkManager: NSObject {
         request.setValue("\(bodyData.count)", forHTTPHeaderField: "Content-Length")
         request.httpBody = bodyData
         
-        
         let (data, response) = try await session.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.noData
         }
+        
+        return httpResponse.statusCode == 200 || httpResponse.statusCode == 302
+    }
+    
+    // MARK: - Add Item (Legacy - for backward compatibility)
+    
+    func addItem(itemName: String, groupId: String, categoryId: String, storage: String, listDate: String) async throws -> Bool {
+        let item = ItemDetail(name: itemName, categoryId: categoryId, ebayItemId: nil)
+        return try await addItems(items: [item], groupId: groupId, storage: storage, listDate: listDate)
+    }
         
         
         // Handle various success statuses

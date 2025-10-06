@@ -4,38 +4,117 @@
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Add Item</legend>
-                <div class="form-group">
-                    <button type="button" id="addNewField">Add Item</button>
-                    <button type="button" id="removeNewField" class="remove">Remove Item</button>
+                <legend class="border-bottom mb-4">Add Items</legend>
+                
+                <!-- Item Management Buttons -->
+                <div class="form-group mb-4">
+                    <button type="button" id="addNewItem" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                    <button type="button" id="removeLastItem" class="btn btn-danger btn-sm">
+                        <i class="fas fa-minus"></i> Remove Last Item
+                    </button>
+                    <span id="itemCount" class="ml-3 text-muted">1 item(s)</span>
                 </div>
-                {{ form.itemList }}
-                <div class="form-group">
-                    {{ form.group.label(class="form-control-label") }}
-                    {% if form.group.errors %}
-                        {{ form.group(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.group.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
+
+                <!-- Items Container -->
+                <div id="itemsContainer">
+                    {% for item_form in form.items %}
+                    <div class="item-row border rounded p-3 mb-3" data-index="{{ loop.index0 }}">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ item_form.name.label(class="form-control-label") }}
+                                    {% if item_form.name.errors %}
+                                        {{ item_form.name(class="form-control form-control-lg is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in item_form.name.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ item_form.name(class="form-control form-control-lg") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    {{ item_form.category.label(class="form-control-label") }}
+                                    {% if item_form.category.errors %}
+                                        {{ item_form.category(class="form-control form-control-lg is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in item_form.category.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ item_form.category(class="form-control form-control-lg") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    {{ item_form.ebay_item_id.label(class="form-control-label") }}
+                                    <small class="text-muted">(Optional)</small>
+                                    {% if item_form.ebay_item_id.errors %}
+                                        {{ item_form.ebay_item_id(class="form-control form-control-lg is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in item_form.ebay_item_id.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ item_form.ebay_item_id(class="form-control form-control-lg", placeholder="eBay Item ID") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-control-label">&nbsp;</label>
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn d-block" style="display: none;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    {% else %}
-                        {{ form.group(class="form-control form-control-lg") }}
-                    {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
-                <div class="form-group">
-                    {{ form.category.label(class="form-control-label") }}
-                    {% if form.category.errors %}
-                        {{ form.category(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.category.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
+
+                <!-- Common Fields -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.group.label(class="form-control-label") }}
+                            {% if form.group.errors %}
+                                {{ form.group(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.group.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.group(class="form-control form-control-lg") }}
+                            {% endif %}
                         </div>
-                    {% else %}
-                        {{ form.category(class="form-control form-control-lg") }}
-                    {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.storage.label(class="form-control-label") }}
+                            {% if form.storage.errors %}
+                                {{ form.storage(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.storage.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.storage(class="form-control form-control-lg") }}
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
+                
                 <div class="form-group">
                     {{ form.list_date.label(class="form-control-label") }}
                     {% if form.list_date.errors %}
@@ -49,23 +128,108 @@
                         {{ form.list_date(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
-                <div class="form-group">
-                    {{ form.storage.label(class="form-control-label") }}
-                    {% if form.storage.errors %}
-                        {{ form.storage(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.group.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.storage(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
     </div>
+
+    <script>
+        let itemCount = {{ form.items.entries|length }};
+        const maxItems = 50;
+        
+        function updateItemCount() {
+            document.getElementById('itemCount').textContent = itemCount + ' item(s)';
+            document.getElementById('removeLastItem').style.display = itemCount > 1 ? 'inline-block' : 'none';
+            document.getElementById('addNewItem').style.display = itemCount < maxItems ? 'inline-block' : 'none';
+        }
+        
+        function addNewItem() {
+            if (itemCount >= maxItems) return;
+            
+            const container = document.getElementById('itemsContainer');
+            const newIndex = itemCount;
+            
+            // Get category choices from the first item
+            const firstCategorySelect = document.querySelector('.item-row select[name*="category"]');
+            const categoryChoices = Array.from(firstCategorySelect.options).map(option => 
+                `<option value="${option.value}">${option.text}</option>`
+            ).join('');
+            
+            const newItemHtml = `
+                <div class="item-row border rounded p-3 mb-3" data-index="${newIndex}">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-control-label">Item Name</label>
+                                <input class="form-control form-control-lg" name="items-${newIndex}-name" type="text" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-control-label">Category</label>
+                                <select class="form-control form-control-lg" name="items-${newIndex}-category" required>
+                                    ${categoryChoices}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-control-label">eBay Item ID</label>
+                                <small class="text-muted">(Optional)</small>
+                                <input class="form-control form-control-lg" name="items-${newIndex}-ebay_item_id" type="text" placeholder="eBay Item ID">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-control-label">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn d-block">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', newItemHtml);
+            itemCount++;
+            updateItemCount();
+        }
+        
+        function removeLastItem() {
+            if (itemCount <= 1) return;
+            
+            const container = document.getElementById('itemsContainer');
+            const lastItem = container.lastElementChild;
+            if (lastItem) {
+                lastItem.remove();
+                itemCount--;
+                updateItemCount();
+            }
+        }
+        
+        function removeItem(element) {
+            if (itemCount <= 1) return;
+            
+            element.closest('.item-row').remove();
+            itemCount--;
+            updateItemCount();
+        }
+        
+        // Event listeners
+        document.getElementById('addNewItem').addEventListener('click', addNewItem);
+        document.getElementById('removeLastItem').addEventListener('click', removeLastItem);
+        
+        // Delegate event listener for remove buttons
+        document.getElementById('itemsContainer').addEventListener('click', function(e) {
+            if (e.target.closest('.remove-item-btn')) {
+                removeItem(e.target);
+            }
+        });
+        
+        // Initialize
+        updateItemCount();
+    </script>
 {% endblock content %}

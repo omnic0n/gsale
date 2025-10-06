@@ -2903,7 +2903,10 @@ def bought_items():
     form = PurchaseForm()
 
     form.group.choices = [(group['id'], group['name']) for group in groups]
-    form.category.choices = [(category['id'], category['type']) for category in categories]
+    
+    # Set category choices for each item in the form
+    for item_form in form.items:
+        item_form.category.choices = [(category['id'], category['type']) for category in categories]
 
     if group_id:
         group_data = get_data.get_all_from_group(group_id)
@@ -2915,13 +2918,17 @@ def bought_items():
 
     if request.method == "POST":
         details = request.form
-        print(details)
+        print("DEBUG: Form data received:", details)
+        
         group_data = get_data.get_all_from_group(details['group'])
         if not group_data:
             flash('Group not found or access denied.', 'error')
             return redirect(url_for('index'))
-        set_data.set_bought_items(details)
+        
+        # Process the new form structure
+        set_data.set_bought_items_improved(details)
         return redirect(url_for('group_detail',group_id=group_data['id']))
+    
     return render_template('items_purchased.html', form=form)
 
 @app.route('/items/modify',methods=["POST","GET"])

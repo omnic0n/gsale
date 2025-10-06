@@ -34,16 +34,14 @@ def set_mark_sold(id, sold):
     mysql.connection.commit()
     cur.close()
 
-def set_bought_items(details):
+def set_bought_items_improved(details):
+    """Improved function to handle bulk item adding with individual categories and eBay item IDs"""
     # Validate inputs
     if not isinstance(details, dict):
         raise ValueError("Invalid details format")
     
     if not isinstance(details.get('group'), str) or len(details.get('group', '')) > 50:
         raise ValueError("Invalid group ID")
-    
-    if not isinstance(details.get('category'), str) or len(details.get('category', '')) > 36:
-        raise ValueError("Invalid category ID")
     
     if not isinstance(details.get('storage', ''), str) or len(details.get('storage', '')) > 50:
         raise ValueError("Invalid storage")
@@ -52,19 +50,50 @@ def set_bought_items(details):
         raise ValueError("Invalid list date")
     
     cur = mysql.connection.cursor()
-    for item in details:
-        if item.startswith("item"):
-            # Validate item name
-            if not isinstance(details[item], str) or len(details[item]) > 150:
+    
+    # Process items from the new form structure
+    item_count = 0
+    for key, value in details.items():
+        if key.startswith("items-") and "-name" in key:
+            # Extract item index from key like "items-0-name"
+            item_index = key.split("-")[1]
+            
+            # Get item name
+            item_name = value
+            if not isinstance(item_name, str) or len(item_name) > 150 or not item_name.strip():
                 continue  # Skip invalid items
             
+            # Get category for this item
+            category_key = f"items-{item_index}-category"
+            category_id = details.get(category_key)
+            if not isinstance(category_id, str) or len(category_id) > 36:
+                continue  # Skip items without valid category
+            
+            # Get eBay item ID for this item (optional)
+            ebay_item_key = f"items-{item_index}-ebay_item_id"
+            ebay_item_id = details.get(ebay_item_key, '').strip()
+            if ebay_item_id and len(ebay_item_id) > 50:
+                ebay_item_id = ebay_item_id[:50]  # Truncate if too long
+            
+            # Insert item with eBay item ID
             item_id = generate_uuid()
-            cur.execute("INSERT INTO items(id, name, group_id, category_id, storage, list_date) VALUES (%s, %s, %s, %s, %s, %s)", 
-                        (item_id, details[item], details['group'], details['category'], details['storage'], details['list_date']))
+            cur.execute("""
+                INSERT INTO items(id, name, group_id, category_id, storage, list_date, ebay_item_id) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (item_id, item_name, details['group'], category_id, details['storage'], details['list_date'], ebay_item_id or None))
+            
+            # Insert sale record
             cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, 0, 0, %s)",
                         (item_id, date.today().strftime("%Y-%m-%d")))
-            mysql.connection.commit()
+            
+            item_count += 1
+            print(f"DEBUG: Added item '{item_name}' with category '{category_id}' and eBay ID '{ebay_item_id}'")
+    
+    mysql.connection.commit()
     cur.close()
+    
+    print(f"DEBUG: Successfully added {item_count} items")
+    return item_count
 
 def set_quick_sale(details):
     # Validate inputs
