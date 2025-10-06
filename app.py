@@ -24,7 +24,8 @@ import get_data, set_data
 import files
 import function
 import config
-import ebay_api
+import requests
+import json
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Required for session functionality
@@ -113,6 +114,106 @@ def admin_required(f):
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
     return decorated_function
+
+# eBay API Functions
+def get_ebay_active_listings():
+    """
+    Fetch active listings from eBay API using the user token
+    """
+    try:
+        # Get the eBay user token from config
+        user_token = app.config.get('EBAY_USER_TOKEN')
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        
+        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+            return {
+                'success': False,
+                'error': 'eBay user token not configured. Please update config.py with your eBay user token.'
+            }
+        
+        # eBay API endpoint for getting active listings
+        url = "{}/sell/inventory/v1/inventory_item".format(api_base_url)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+        
+        # Parameters for active listings
+        params = {
+            'limit': 100,  # Maximum items per request
+            'offset': 0
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': True,
+                'listings': data.get('inventoryItems', []),
+                'total': data.get('total', 0)
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'eBay API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except requests.exceptions.RequestException as e:
+        return {
+            'success': False,
+            'error': 'Network error: {}'.format(str(e))
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Unexpected error: {}'.format(str(e))
+        }
+
+def get_ebay_listing_details(listing_id):
+    """
+    Get detailed information for a specific eBay listing
+    """
+    try:
+        user_token = app.config.get('EBAY_USER_TOKEN')
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        
+        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+            return {
+                'success': False,
+                'error': 'eBay user token not configured'
+            }
+        
+        # eBay API endpoint for getting listing details
+        url = "{}/sell/inventory/v1/inventory_item/{}".format(api_base_url, listing_id)
+        
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+        
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': True,
+                'listing': data
+            }
+        else:
+            return {
+                'success': False,
+                'error': 'eBay API error: {} - {}'.format(response.status_code, response.text)
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': 'Error fetching listing details: {}'.format(str(e))
+        }
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1345,7 +1446,7 @@ def admin_ebay_listings():
     """Admin page to view eBay active listings"""
     try:
         # Fetch eBay listings
-        ebay_result = ebay_api.get_ebay_active_listings()
+        ebay_result = get_ebay_active_listings()
         
         if ebay_result['success']:
             listings = ebay_result['listings']
