@@ -24,6 +24,7 @@ import get_data, set_data
 import files
 import function
 import config
+import ebay_api
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Required for session functionality
@@ -1337,6 +1338,35 @@ def admin_panel():
         print("Error in admin panel: {}".format(e))
         flash('An error occurred while loading the admin panel.', 'error')
         return redirect(url_for('index'))
+
+@app.route('/admin/ebay-listings')
+@admin_required
+def admin_ebay_listings():
+    """Admin page to view eBay active listings"""
+    try:
+        # Fetch eBay listings
+        ebay_result = ebay_api.get_ebay_active_listings()
+        
+        if ebay_result['success']:
+            listings = ebay_result['listings']
+            total_listings = ebay_result['total']
+        else:
+            listings = []
+            total_listings = 0
+            flash(f"Error fetching eBay listings: {ebay_result['error']}", 'error')
+        
+        return render_template('admin_ebay_listings.html', 
+                             listings=listings, 
+                             total_listings=total_listings,
+                             error=ebay_result.get('error'))
+    
+    except Exception as e:
+        print(f"Error in admin eBay listings: {e}")
+        flash('An error occurred while loading eBay listings.', 'error')
+        return render_template('admin_ebay_listings.html', 
+                             listings=[], 
+                             total_listings=0,
+                             error=str(e))
 
 # Admin API endpoints
 @app.route('/admin/api/group-members/<group_id>')
