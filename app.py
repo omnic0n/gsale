@@ -572,7 +572,7 @@ def get_item_transaction_details(user_token, item_id):
                     transaction_data = order_details['transaction_data']
                     
                     # Try to get additional fee information
-                    fee_details = get_ebay_fees_from_order_api(order_id)
+                    fee_details = get_ebay_fees_from_order_api(order_data['orderId'])
                     if fee_details['success']:
                         # Merge fee data with transaction data
                         transaction_data.update(fee_details['fee_data'])
