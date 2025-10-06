@@ -374,8 +374,8 @@ def get_ebay_active_listings():
             return get_ebay_listings_oauth(token_result['access_token'], api_base_url)
         elif token_result.get('needs_auth'):
             # OAuth token not available, try legacy token
-        user_token = app.config.get('EBAY_USER_TOKEN')
-        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
         
         if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
             return {
