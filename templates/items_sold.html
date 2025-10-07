@@ -57,10 +57,70 @@
                         {{ form.shipping_fee(class="form-control form-control-lg", value=0) }}
                     {% endif %}
                 </div>
+                
+                <!-- eBay Data Status -->
+                <div id="ebay-status" class="form-group" style="display: none;">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="ebay-status-text">Loading eBay data...</span>
+                    </div>
+                </div>
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}
             </div>
         </form>
     </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const itemSelect = document.getElementById('id');
+    const priceInput = document.getElementById('price');
+    const shippingInput = document.getElementById('shipping_fee');
+    const ebayStatus = document.getElementById('ebay-status');
+    const ebayStatusText = document.getElementById('ebay-status-text');
+    
+    // Add event listener for item selection change
+    itemSelect.addEventListener('change', function() {
+        const selectedItemId = this.value;
+        
+        if (selectedItemId) {
+            // Show loading status
+            ebayStatus.style.display = 'block';
+            ebayStatusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking eBay data...';
+            
+            // Fetch eBay data for the selected item
+            fetch(`/api/ebay-item-data/${selectedItemId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.ebay_data) {
+                        // Prepopulate with eBay data
+                        priceInput.value = data.ebay_data.net_earnings || '';
+                        shippingInput.value = data.ebay_data.shipping || '0';
+                        
+                        ebayStatusText.innerHTML = '<i class="fas fa-check-circle text-success"></i> eBay data loaded successfully!';
+                        ebayStatus.className = 'form-group alert alert-success';
+                    } else {
+                        // No eBay data available
+                        ebayStatusText.innerHTML = '<i class="fas fa-info-circle text-info"></i> No eBay data found for this item.';
+                        ebayStatus.className = 'form-group alert alert-info';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching eBay data:', error);
+                    ebayStatusText.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> Could not fetch eBay data.';
+                    ebayStatus.className = 'form-group alert alert-warning';
+                });
+        } else {
+            // Hide status when no item is selected
+            ebayStatus.style.display = 'none';
+        }
+    });
+    
+    // Trigger change event on page load if an item is already selected
+    if (itemSelect.value) {
+        itemSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
 {% endblock content %}

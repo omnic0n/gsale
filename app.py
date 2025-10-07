@@ -3055,6 +3055,40 @@ def sold_items():
     form = SaleForm()
     form.id.choices = [(item['id'], item['name']) for item in items]
     form.id.data = item_id
+    
+    # Check if the selected item has an eBay item ID and fetch financial data
+    ebay_price = None
+    ebay_shipping = None
+    if item_id:
+        item_data = get_data.get_data_for_item_describe(item_id)
+        if item_data and item_data[0].get('ebay_item_id'):
+            ebay_item_id = item_data[0]['ebay_item_id']
+            print(f"DEBUG: Found eBay item ID {ebay_item_id} for item {item_id}")
+            
+            # Get eBay financial data
+            token_result = get_valid_ebay_token()
+            if token_result['success']:
+                user_token = token_result['access_token']
+            else:
+                user_token = app.config.get('EBAY_USER_TOKEN')
+            
+            if user_token and user_token != 'YOUR_EBAY_USER_TOKEN_HERE':
+                print(f"DEBUG: Fetching eBay financial data for item {ebay_item_id}")
+                transaction_data = get_item_transaction_details(user_token, ebay_item_id)
+                
+                if transaction_data['success']:
+                    trans_data = transaction_data['transaction_data']
+                    ebay_price = trans_data.get('net_earnings', 0)
+                    ebay_shipping = trans_data.get('shipping', 0)
+                    print(f"DEBUG: eBay data - Price: {ebay_price}, Shipping: {ebay_shipping}")
+                else:
+                    print(f"DEBUG: Failed to get eBay data: {transaction_data.get('error', 'Unknown error')}")
+    
+    # Prepopulate form with eBay data if available
+    if ebay_price is not None:
+        form.price.data = str(ebay_price)
+    if ebay_shipping is not None:
+        form.shipping_fee.data = str(ebay_shipping)
 
     if request.method == "POST":
         details = request.form
@@ -3062,6 +3096,60 @@ def sold_items():
         set_data.set_sale_data(details)
         return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
+
+@app.route('/api/ebay-item-data/<item_id>')
+@login_required
+def get_ebay_item_data(item_id):
+    """API endpoint to fetch eBay financial data for a specific item"""
+    try:
+        # Get item data
+        item_data = get_data.get_data_for_item_describe(item_id)
+        if not item_data or not item_data[0].get('ebay_item_id'):
+            return jsonify({
+                'success': False,
+                'message': 'No eBay item ID found for this item'
+            })
+        
+        ebay_item_id = item_data[0]['ebay_item_id']
+        
+        # Get eBay financial data
+        token_result = get_valid_ebay_token()
+        if token_result['success']:
+            user_token = token_result['access_token']
+        else:
+            user_token = app.config.get('EBAY_USER_TOKEN')
+        
+        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+            return jsonify({
+                'success': False,
+                'message': 'eBay authentication required'
+            })
+        
+        # Fetch transaction details
+        transaction_data = get_item_transaction_details(user_token, ebay_item_id)
+        
+        if transaction_data['success']:
+            trans_data = transaction_data['transaction_data']
+            return jsonify({
+                'success': True,
+                'ebay_data': {
+                    'net_earnings': trans_data.get('net_earnings', 0),
+                    'shipping': trans_data.get('shipping', 0),
+                    'final_price': trans_data.get('final_price', 0),
+                    'total_fees': trans_data.get('total_fees', 0)
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': f"Could not fetch eBay data: {transaction_data.get('error', 'Unknown error')}"
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error fetching eBay data: {str(e)}'
+        })
 
 #List Section
 
