@@ -85,6 +85,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedItemId = this.value;
         
         if (selectedItemId) {
+            // Clear existing values first
+            priceInput.value = '';
+            shippingInput.value = '0';
+            
             // Show loading status
             ebayStatus.style.display = 'block';
             ebayStatusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking eBay data...';
@@ -93,26 +97,47 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(`/api/ebay-item-data/${selectedItemId}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log('eBay data response:', data);
+                    
                     if (data.success && data.ebay_data) {
                         // Prepopulate with eBay data
-                        priceInput.value = data.ebay_data.net_earnings || '';
-                        shippingInput.value = data.ebay_data.shipping || '0';
+                        const netEarnings = data.ebay_data.net_earnings || '';
+                        const shipping = data.ebay_data.shipping || '0';
+                        
+                        console.log('Setting values - Price:', netEarnings, 'Shipping:', shipping);
+                        
+                        priceInput.value = netEarnings;
+                        shippingInput.value = shipping;
+                        
+                        // Trigger change events to ensure form validation
+                        priceInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        shippingInput.dispatchEvent(new Event('change', { bubbles: true }));
                         
                         ebayStatusText.innerHTML = '<i class="fas fa-check-circle text-success"></i> eBay data loaded successfully!';
                         ebayStatus.className = 'form-group alert alert-success';
                     } else {
-                        // No eBay data available
+                        // No eBay data available - clear the fields
+                        priceInput.value = '';
+                        shippingInput.value = '0';
+                        
                         ebayStatusText.innerHTML = '<i class="fas fa-info-circle text-info"></i> No eBay data found for this item.';
                         ebayStatus.className = 'form-group alert alert-info';
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching eBay data:', error);
+                    
+                    // Clear fields on error
+                    priceInput.value = '';
+                    shippingInput.value = '0';
+                    
                     ebayStatusText.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> Could not fetch eBay data.';
                     ebayStatus.className = 'form-group alert alert-warning';
                 });
         } else {
-            // Hide status when no item is selected
+            // Clear fields when no item is selected
+            priceInput.value = '';
+            shippingInput.value = '0';
             ebayStatus.style.display = 'none';
         }
     });
