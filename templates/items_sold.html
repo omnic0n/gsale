@@ -58,12 +58,9 @@
                     {% endif %}
                 </div>
                 
-                <!-- eBay Data Status -->
+                <!-- eBay Data Status (subtle) -->
                 <div id="ebay-status" class="form-group" style="display: none;">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <span id="ebay-status-text">Loading eBay data...</span>
-                    </div>
+                    <small class="text-muted" id="ebay-status-text">Loading eBay data...</small>
                 </div>
             </fieldset>
             <div class="form-group">
@@ -91,20 +88,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show loading status
             ebayStatus.style.display = 'block';
-            ebayStatusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking eBay data...';
+            ebayStatusText.innerHTML = 'Checking eBay data...';
             
             // Fetch eBay data for the selected item
             fetch(`/api/ebay-item-data/${selectedItemId}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log('eBay data response:', data);
-                    
                     if (data.success && data.ebay_data) {
                         // Prepopulate with eBay data
                         const netEarnings = data.ebay_data.net_earnings || '';
                         const shipping = data.ebay_data.shipping || '0';
-                        
-                        console.log('Setting values - Price:', netEarnings, 'Shipping:', shipping);
                         
                         priceInput.value = netEarnings;
                         shippingInput.value = shipping;
@@ -113,15 +106,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         priceInput.dispatchEvent(new Event('change', { bubbles: true }));
                         shippingInput.dispatchEvent(new Event('change', { bubbles: true }));
                         
-                        ebayStatusText.innerHTML = '<i class="fas fa-check-circle text-success"></i> eBay data loaded successfully!';
-                        ebayStatus.className = 'form-group alert alert-success';
+                        // Hide status after successful load
+                        ebayStatus.style.display = 'none';
                     } else {
                         // No eBay data available - clear the fields
                         priceInput.value = '';
                         shippingInput.value = '0';
                         
-                        ebayStatusText.innerHTML = '<i class="fas fa-info-circle text-info"></i> No eBay data found for this item.';
-                        ebayStatus.className = 'form-group alert alert-info';
+                        // Hide status when no data found
+                        ebayStatus.style.display = 'none';
                     }
                 })
                 .catch(error => {
@@ -131,8 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     priceInput.value = '';
                     shippingInput.value = '0';
                     
-                    ebayStatusText.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> Could not fetch eBay data.';
-                    ebayStatus.className = 'form-group alert alert-warning';
+                    // Hide status on error
+                    ebayStatus.style.display = 'none';
                 });
         } else {
             // Clear fields when no item is selected
