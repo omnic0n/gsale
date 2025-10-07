@@ -3086,9 +3086,9 @@ def sold_items():
     
     # Prepopulate form with eBay data if available
     if ebay_price is not None:
-        form.price.data = str(ebay_price)
+        form.price.data = str(round(float(ebay_price), 2))
     if ebay_shipping is not None:
-        form.shipping_fee.data = str(ebay_shipping)
+        form.shipping_fee.data = str(round(float(ebay_shipping), 2))
 
     if request.method == "POST":
         details = request.form
@@ -3133,10 +3133,10 @@ def get_ebay_item_data(item_id):
             return jsonify({
                 'success': True,
                 'ebay_data': {
-                    'net_earnings': trans_data.get('net_earnings', 0),
-                    'shipping': trans_data.get('shipping', 0),
-                    'final_price': trans_data.get('final_price', 0),
-                    'total_fees': trans_data.get('total_fees', 0)
+                    'net_earnings': round(float(trans_data.get('net_earnings', 0)), 2),
+                    'shipping': round(float(trans_data.get('shipping', 0)), 2),
+                    'final_price': round(float(trans_data.get('final_price', 0)), 2),
+                    'total_fees': round(float(trans_data.get('total_fees', 0)), 2)
                 }
             })
         else:
