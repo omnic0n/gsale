@@ -200,17 +200,27 @@ def exchange_ebay_code_for_token(authorization_code):
         if response.status_code == 200:
             token_data = response.json()
             
-            # Store tokens in session or database
+            # Calculate expiration time
+            expires_at = datetime.now() + timedelta(seconds=token_data.get('expires_in', 7200))
+            
+            # Store tokens in session (for immediate use)
             session['ebay_access_token'] = token_data.get('access_token')
             session['ebay_refresh_token'] = token_data.get('refresh_token')
-            session['ebay_token_expires'] = datetime.now() + timedelta(seconds=token_data.get('expires_in', 7200))
+            session['ebay_token_expires'] = expires_at
+            
+            # Store tokens in database (for persistence and background refresh)
+            store_ebay_tokens_in_db(
+                token_data.get('access_token'),
+                token_data.get('refresh_token'),
+                expires_at
+            )
             
             # Debug: Print token storage
-            print(f"DEBUG: Tokens stored in session:")
+            print(f"DEBUG: Tokens stored in session and database:")
             print(f"  Access Token: {token_data.get('access_token', '')[:20]}...")
             print(f"  Refresh Token: {token_data.get('refresh_token', '')[:20]}...")
             print(f"  Expires In: {token_data.get('expires_in')} seconds")
-            print(f"  Session ID: {session.get('_id', 'No session ID')}")
+            print(f"  Expires At: {expires_at}")
             
             return {
                 'success': True,
@@ -260,11 +270,23 @@ def refresh_ebay_token(refresh_token):
         if response.status_code == 200:
             token_data = response.json()
             
+            # Calculate expiration time
+            expires_at = datetime.now() + timedelta(seconds=token_data.get('expires_in', 7200))
+            
             # Update session tokens
             session['ebay_access_token'] = token_data.get('access_token')
             if token_data.get('refresh_token'):
                 session['ebay_refresh_token'] = token_data.get('refresh_token')
-            session['ebay_token_expires'] = datetime.now() + timedelta(seconds=token_data.get('expires_in', 7200))
+            session['ebay_token_expires'] = expires_at
+            
+            # Update database tokens
+            store_ebay_tokens_in_db(
+                token_data.get('access_token'),
+                token_data.get('refresh_token', refresh_token),  # Use old refresh token if new one not provided
+                expires_at
+            )
+            
+            print(f"DEBUG: Token refreshed and stored in session and database")
             
             return {
                 'success': True,
@@ -298,10 +320,25 @@ def get_valid_ebay_token():
     Get a valid eBay access token, automatically refreshing if necessary
     """
     try:
-        # Check if we have a token in session
+        # First check session tokens
         access_token = session.get('ebay_access_token')
         refresh_token = session.get('ebay_refresh_token')
         token_expires = session.get('ebay_token_expires')
+        
+        # If no session tokens, try to get from database
+        if not access_token:
+            print("DEBUG: No session tokens found, checking database...")
+            db_tokens = get_ebay_tokens_from_db()
+            if db_tokens:
+                access_token = db_tokens['access_token']
+                refresh_token = db_tokens['refresh_token']
+                token_expires = db_tokens['expires_at']
+                
+                # Restore to session for immediate use
+                session['ebay_access_token'] = access_token
+                session['ebay_refresh_token'] = refresh_token
+                session['ebay_token_expires'] = token_expires
+                print("DEBUG: Tokens restored from database to session")
         
         # Debug: Print token retrieval
         print(f"DEBUG: Token validation check:")
@@ -311,7 +348,7 @@ def get_valid_ebay_token():
         print(f"  Current Time: {datetime.now()}")
         
         if not access_token:
-            print("DEBUG: No access token found")
+            print("DEBUG: No access token found in session or database")
             return {
                 'success': False,
                 'error': 'No eBay access token found. Please authenticate first.',
@@ -368,24 +405,118 @@ def get_valid_ebay_token():
             'needs_auth': True
         }
 
-# Background Token Refresh System
+# Enhanced Token Management System
+def store_ebay_tokens_in_db(access_token, refresh_token, expires_at, user_id=None):
+    """
+    Store eBay tokens in database for persistence across sessions
+    """
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Use session user ID if not provided
+        if not user_id:
+            user_id = session.get('id')
+        
+        if not user_id:
+            print("DEBUG: No user ID available for token storage")
+            return False
+        
+        # Insert or update tokens for this user
+        cur.execute("""
+            INSERT INTO ebay_tokens (user_id, access_token, refresh_token, expires_at, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE
+            access_token = VALUES(access_token),
+            refresh_token = VALUES(refresh_token),
+            expires_at = VALUES(expires_at),
+            updated_at = NOW()
+        """, (user_id, access_token, refresh_token, expires_at))
+        
+        mysql.connection.commit()
+        print(f"DEBUG: Tokens stored in database for user {user_id}")
+        return True
+        
+    except Exception as e:
+        print(f"DEBUG: Failed to store tokens in database: {str(e)}")
+        return False
+
+def get_ebay_tokens_from_db(user_id=None):
+    """
+    Retrieve eBay tokens from database
+    """
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Use session user ID if not provided
+        if not user_id:
+            user_id = session.get('id')
+        
+        if not user_id:
+            return None
+        
+        cur.execute("""
+            SELECT access_token, refresh_token, expires_at
+            FROM ebay_tokens
+            WHERE user_id = %s
+            ORDER BY updated_at DESC
+            LIMIT 1
+        """, (user_id,))
+        
+        result = cur.fetchone()
+        if result:
+            return {
+                'access_token': result[0],
+                'refresh_token': result[1],
+                'expires_at': result[2]
+            }
+        
+        return None
+        
+    except Exception as e:
+        print(f"DEBUG: Failed to retrieve tokens from database: {str(e)}")
+        return None
+
 def background_token_refresh():
     """
     Background task to automatically refresh eBay tokens before they expire
     """
     while True:
         try:
-            # Check every 30 minutes
-            time.sleep(1800)  # 30 minutes
-            
-            # Get all active sessions (this is a simplified approach)
-            # In a production environment, you'd want to store tokens in a database
-            # and iterate through all users with valid refresh tokens
+            # Check every 15 minutes for more frequent refresh
+            time.sleep(900)  # 15 minutes
             
             print("DEBUG: Background token refresh check running...")
             
-            # For now, we'll just log that the check ran
-            # The actual refresh happens when get_valid_ebay_token() is called
+            # Get all users with tokens that will expire soon
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT user_id, access_token, refresh_token, expires_at
+                FROM ebay_tokens
+                WHERE expires_at <= DATE_ADD(NOW(), INTERVAL 20 MINUTE)
+                AND refresh_token IS NOT NULL
+            """)
+            
+            tokens_to_refresh = cur.fetchall()
+            
+            for token_data in tokens_to_refresh:
+                user_id, access_token, refresh_token, expires_at = token_data
+                
+                print(f"DEBUG: Refreshing token for user {user_id}, expires at {expires_at}")
+                
+                # Refresh the token
+                refresh_result = refresh_ebay_token(refresh_token)
+                
+                if refresh_result['success']:
+                    # Update database with new tokens
+                    store_ebay_tokens_in_db(
+                        refresh_result['access_token'],
+                        refresh_result.get('refresh_token', refresh_token),
+                        datetime.now() + timedelta(seconds=refresh_result.get('expires_in', 7200)),
+                        user_id
+                    )
+                    print(f"DEBUG: Successfully refreshed token for user {user_id}")
+                else:
+                    print(f"DEBUG: Failed to refresh token for user {user_id}: {refresh_result['error']}")
             
         except Exception as e:
             print(f"DEBUG: Background token refresh error: {str(e)}")
@@ -3101,7 +3232,6 @@ def sold_items():
     
     # Check if the selected item has an eBay item ID and fetch financial data
     ebay_price = None
-    ebay_shipping = None
     if item_id:
         item_data = get_data.get_data_for_item_describe(item_id)
         if item_data and item_data[0].get('ebay_item_id'):
@@ -3122,16 +3252,13 @@ def sold_items():
                 if transaction_data['success']:
                     trans_data = transaction_data['transaction_data']
                     ebay_price = trans_data.get('net_earnings', 0)
-                    ebay_shipping = trans_data.get('shipping', 0)
-                    print(f"DEBUG: eBay data - Price: {ebay_price}, Shipping: {ebay_shipping}")
+                    print(f"DEBUG: eBay data - Price: {ebay_price}")
                 else:
                     print(f"DEBUG: Failed to get eBay data: {transaction_data.get('error', 'Unknown error')}")
     
-    # Prepopulate form with eBay data if available
+    # Prepopulate form with eBay price only (shipping will be entered manually)
     if ebay_price is not None:
         form.price.data = str(round(float(ebay_price), 2))
-    if ebay_shipping is not None:
-        form.shipping_fee.data = str(round(float(ebay_shipping), 2))
 
     if request.method == "POST":
         details = request.form
@@ -3177,7 +3304,6 @@ def get_ebay_item_data(item_id):
                 'success': True,
                 'ebay_data': {
                     'net_earnings': round(float(trans_data.get('net_earnings', 0)), 2),
-                    'shipping': round(float(trans_data.get('shipping', 0)), 2),
                     'final_price': round(float(trans_data.get('final_price', 0)), 2),
                     'total_fees': round(float(trans_data.get('total_fees', 0)), 2)
                 }

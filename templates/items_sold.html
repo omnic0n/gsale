@@ -95,23 +95,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.ebay_data) {
-                        // Prepopulate with eBay data
+                        // Prepopulate with eBay earnings only (shipping entered manually)
                         const netEarnings = data.ebay_data.net_earnings || '';
-                        const shipping = data.ebay_data.shipping || '0';
                         
                         priceInput.value = netEarnings;
-                        shippingInput.value = shipping;
+                        // Leave shipping field empty for manual entry
                         
-                        // Trigger change events to ensure form validation
+                        // Trigger change event to ensure form validation
                         priceInput.dispatchEvent(new Event('change', { bubbles: true }));
-                        shippingInput.dispatchEvent(new Event('change', { bubbles: true }));
                         
                         // Hide status after successful load
                         ebayStatus.style.display = 'none';
                     } else {
-                        // No eBay data available - clear the fields
+                        // No eBay data available - clear the price field
                         priceInput.value = '';
-                        shippingInput.value = '0';
+                        // Leave shipping field empty for manual entry
                         
                         // Hide status when no data found
                         ebayStatus.style.display = 'none';
@@ -120,17 +118,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(error => {
                     console.error('Error fetching eBay data:', error);
                     
-                    // Clear fields on error
+                    // Clear price field on error, leave shipping for manual entry
                     priceInput.value = '';
-                    shippingInput.value = '0';
                     
                     // Hide status on error
                     ebayStatus.style.display = 'none';
                 });
         } else {
-            // Clear fields when no item is selected
+            // Clear price field when no item is selected, leave shipping for manual entry
             priceInput.value = '';
-            shippingInput.value = '0';
             ebayStatus.style.display = 'none';
         }
     });
