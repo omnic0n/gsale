@@ -3552,6 +3552,67 @@ def sold_items():
         return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
 
+@app.route('/api/check-tokens', methods=['GET'])
+def check_tokens():
+    """
+    Check what tokens are currently stored in the database
+    """
+    try:
+        # Ensure MySQL connection
+        if not mysql.connection:
+            mysql.connect()
+        
+        cur = mysql.connection.cursor()
+        
+        # Check if table exists
+        cur.execute("SHOW TABLES LIKE 'ebay_tokens'")
+        table_exists = cur.fetchone()
+        
+        if not table_exists:
+            return jsonify({
+                'success': False,
+                'error': 'ebay_tokens table does not exist'
+            })
+        
+        # Get all tokens
+        cur.execute("SELECT user_id, access_token, refresh_token, expires_at, created_at, updated_at FROM ebay_tokens")
+        tokens = cur.fetchall()
+        
+        # Format the results
+        token_list = []
+        for token in tokens:
+            if isinstance(token, dict):
+                token_data = {
+                    'user_id': token.get('user_id'),
+                    'has_access_token': bool(token.get('access_token')),
+                    'has_refresh_token': bool(token.get('refresh_token')),
+                    'expires_at': str(token.get('expires_at')) if token.get('expires_at') else None,
+                    'created_at': str(token.get('created_at')) if token.get('created_at') else None,
+                    'updated_at': str(token.get('updated_at')) if token.get('updated_at') else None
+                }
+            else:
+                token_data = {
+                    'user_id': token[0] if len(token) > 0 else None,
+                    'has_access_token': bool(token[1]) if len(token) > 1 else False,
+                    'has_refresh_token': bool(token[2]) if len(token) > 2 else False,
+                    'expires_at': str(token[3]) if len(token) > 3 and token[3] else None,
+                    'created_at': str(token[4]) if len(token) > 4 and token[4] else None,
+                    'updated_at': str(token[5]) if len(token) > 5 and token[5] else None
+                }
+            token_list.append(token_data)
+        
+        return jsonify({
+            'success': True,
+            'tokens': token_list,
+            'total_tokens': len(token_list)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Check tokens error: {str(e)}'
+        })
+
 @app.route('/api/test-refresh', methods=['POST'])
 def test_refresh():
     """
