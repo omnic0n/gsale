@@ -2935,8 +2935,27 @@ def api_ebay_debug_refresh():
     try:
         print("DEBUG: Starting debug refresh process...")
         
-        # Check if we have tokens in database
+        # First check if the table exists and has any data
         cur = mysql.connection.cursor()
+        cur.execute("SHOW TABLES LIKE 'ebay_tokens'")
+        table_exists = cur.fetchone()
+        
+        if not table_exists:
+            return jsonify({
+                'success': False,
+                'error': 'ebay_tokens table does not exist. Please run the SQL migration first.',
+                'debug_info': {
+                    'table_exists': False,
+                    'suggestion': 'Run: CREATE TABLE IF NOT EXISTS ebay_tokens (...)'
+                }
+            })
+        
+        # Check total count of tokens
+        cur.execute("SELECT COUNT(*) FROM ebay_tokens")
+        total_count = cur.fetchone()[0]
+        print(f"DEBUG: Total tokens in database: {total_count}")
+        
+        # Check if we have tokens in database
         cur.execute("""
             SELECT user_id, access_token, refresh_token, expires_at, updated_at
             FROM ebay_tokens
@@ -2945,14 +2964,19 @@ def api_ebay_debug_refresh():
         """)
         
         tokens_in_db = cur.fetchall()
-        print(f"DEBUG: Found {len(tokens_in_db)} tokens in database")
+        print(f"DEBUG: Found {len(tokens_in_db)} tokens with refresh tokens in database")
+        
+        # Debug: Print the actual data returned
+        for i, token_data in enumerate(tokens_in_db):
+            print(f"DEBUG: Token {i}: {token_data}")
         
         if not tokens_in_db:
             return jsonify({
                 'success': False,
-                'error': 'No tokens found in database. Please authenticate with eBay first.',
+                'error': 'No tokens with refresh tokens found in database. Please authenticate with eBay first.',
                 'debug_info': {
-                    'tokens_in_db': 0,
+                    'total_tokens': total_count,
+                    'tokens_with_refresh': len(tokens_in_db),
                     'session_tokens': {
                         'access_token': bool(session.get('ebay_access_token')),
                         'refresh_token': bool(session.get('ebay_refresh_token')),
@@ -3032,6 +3056,11 @@ def api_ebay_debug_refresh():
                 'client_secret_configured': bool(app.config.get('EBAY_CLIENT_SECRET')),
                 'oauth_scope_configured': bool(app.config.get('EBAY_OAUTH_SCOPE')),
                 'sandbox_mode': app.config.get('EBAY_SANDBOX_MODE', False)
+            },
+            'recommendations': {
+                're_authenticate': 'If refresh tokens are invalid, you need to re-authenticate with eBay',
+                'clear_old_tokens': 'Consider clearing old tokens from database',
+                'check_credentials': 'Verify eBay Client ID and Secret are correct'
             }
         })
             
@@ -3041,6 +3070,31 @@ def api_ebay_debug_refresh():
             'success': False,
             'error': str(e),
             'traceback': traceback.format_exc()
+        })
+
+@app.route('/api/ebay-clear-tokens', methods=['POST'])
+def api_ebay_clear_tokens():
+    """Clear all eBay tokens from database and session"""
+    try:
+        # Clear from database
+        cur = mysql.connection.cursor()
+        cur.execute("DELETE FROM ebay_tokens")
+        mysql.connection.commit()
+        
+        # Clear from session
+        session.pop('ebay_access_token', None)
+        session.pop('ebay_refresh_token', None)
+        session.pop('ebay_token_expires', None)
+        
+        return jsonify({
+            'success': True,
+            'message': 'All eBay tokens cleared from database and session. Please re-authenticate with eBay.'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
         })
 
 @app.route('/logout')
