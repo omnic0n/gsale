@@ -3115,6 +3115,174 @@ def api_ebay_clear_tokens():
             'error': str(e)
         })
 
+@app.route('/ebay-debug')
+@login_required
+def ebay_debug_page():
+    """Debug page for eBay token refresh issues"""
+    return render_template('ebay_debug.html')
+
+@app.route('/api/ebay-debug-web', methods=['POST'])
+@login_required
+def api_ebay_debug_web():
+    """Web-based debug endpoint for eBay token refresh"""
+    try:
+        print("DEBUG: Starting web debug refresh process...")
+        
+        # First check if the table exists and has any data
+        cur = mysql.connection.cursor()
+        cur.execute("SHOW TABLES LIKE 'ebay_tokens'")
+        table_exists = cur.fetchone()
+        
+        print(f"DEBUG: Table exists check result: {table_exists}")
+        
+        if not table_exists:
+            return jsonify({
+                'success': False,
+                'error': 'ebay_tokens table does not exist. Please run the SQL migration first.',
+                'debug_info': {
+                    'table_exists': False,
+                    'suggestion': 'Run the SQL script: sql/create_ebay_tokens_table.sql'
+                }
+            })
+        
+        # Try to get token count, but don't fail if there's an issue
+        try:
+            cur.execute("SELECT COUNT(*) FROM ebay_tokens")
+            count_result = cur.fetchone()
+            print(f"DEBUG: Count result type: {type(count_result)}, value: {count_result}")
+            
+            # Handle different MySQL result formats
+            if count_result is None:
+                total_count = 0
+            elif isinstance(count_result, (tuple, list)) and len(count_result) > 0:
+                total_count = count_result[0]
+            elif isinstance(count_result, dict):
+                total_count = count_result.get('COUNT(*)', 0)
+            else:
+                total_count = int(count_result) if count_result else 0
+                
+            print(f"DEBUG: Total tokens in database: {total_count}")
+        except Exception as count_error:
+            print(f"DEBUG: Error getting count: {count_error}")
+            total_count = "unknown"
+        
+        # Check if we have tokens in database
+        cur.execute("""
+            SELECT user_id, access_token, refresh_token, expires_at, updated_at
+            FROM ebay_tokens
+            WHERE refresh_token IS NOT NULL
+            ORDER BY updated_at DESC
+        """)
+        
+        tokens_in_db = cur.fetchall()
+        print(f"DEBUG: Found {len(tokens_in_db)} tokens with refresh tokens in database")
+        
+        # Debug: Print the actual data returned
+        for i, token_data in enumerate(tokens_in_db):
+            print(f"DEBUG: Token {i}: {token_data}")
+        
+        if not tokens_in_db:
+            return jsonify({
+                'success': False,
+                'error': 'No tokens with refresh tokens found in database. Please authenticate with eBay first.',
+                'debug_info': {
+                    'total_tokens': total_count,
+                    'tokens_with_refresh': len(tokens_in_db),
+                    'session_tokens': {
+                        'access_token': bool(session.get('ebay_access_token')),
+                        'refresh_token': bool(session.get('ebay_refresh_token')),
+                        'expires_at': session.get('ebay_token_expires')
+                    }
+                }
+            })
+        
+        debug_results = []
+        
+        for token_data in tokens_in_db:
+            user_id, access_token, refresh_token, expires_at, updated_at = token_data
+            
+            print(f"DEBUG: Testing refresh for user {user_id}")
+            print(f"DEBUG: Current token expires at: {expires_at}")
+            print(f"DEBUG: Last updated at: {updated_at}")
+            
+            # Test the refresh
+            refresh_result = refresh_ebay_token(refresh_token)
+            
+            # Handle both string and datetime formats
+            def format_datetime(dt):
+                if dt is None:
+                    return None
+                if isinstance(dt, str):
+                    return dt
+                return dt.isoformat()
+            
+            debug_info = {
+                'user_id': user_id,
+                'refresh_success': refresh_result['success'],
+                'error': refresh_result.get('error'),
+                'old_expires_at': format_datetime(expires_at),
+                'old_updated_at': format_datetime(updated_at)
+            }
+            
+            if refresh_result['success']:
+                # Check if database was actually updated
+                cur.execute("""
+                    SELECT expires_at, updated_at
+                    FROM ebay_tokens
+                    WHERE user_id = %s
+                """, (user_id,))
+                
+                updated_token = cur.fetchone()
+                if updated_token:
+                    debug_info['new_expires_at'] = format_datetime(updated_token[0])
+                    debug_info['new_updated_at'] = format_datetime(updated_token[1])
+                    
+                    # Compare timestamps properly
+                    old_updated = updated_at
+                    new_updated = updated_token[1]
+                    
+                    # Convert to datetime if they're strings
+                    if isinstance(old_updated, str):
+                        from datetime import datetime
+                        old_updated = datetime.fromisoformat(old_updated.replace('Z', '+00:00'))
+                    if isinstance(new_updated, str):
+                        from datetime import datetime
+                        new_updated = datetime.fromisoformat(new_updated.replace('Z', '+00:00'))
+                    
+                    debug_info['database_updated'] = new_updated > old_updated
+                else:
+                    debug_info['database_updated'] = False
+                    debug_info['error'] = 'Token not found after refresh'
+            else:
+                debug_info['database_updated'] = False
+            
+            debug_results.append(debug_info)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Debug refresh completed',
+            'debug_results': debug_results,
+            'config_check': {
+                'client_id_configured': bool(app.config.get('EBAY_CLIENT_ID')),
+                'client_secret_configured': bool(app.config.get('EBAY_CLIENT_SECRET')),
+                'oauth_scope_configured': bool(app.config.get('EBAY_OAUTH_SCOPE')),
+                'sandbox_mode': app.config.get('EBAY_SANDBOX_MODE', False)
+            },
+            'recommendations': {
+                're_authenticate': 'If refresh tokens are invalid, you need to re-authenticate with eBay',
+                'clear_old_tokens': 'Consider clearing old tokens from database',
+                'check_credentials': 'Verify eBay Client ID and Secret are correct'
+            }
+        })
+            
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        })
+
 @app.route('/logout')
 def logout():
     # Get the current page from referrer, but handle edge cases
