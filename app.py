@@ -2940,19 +2940,22 @@ def api_ebay_debug_refresh():
         cur.execute("SHOW TABLES LIKE 'ebay_tokens'")
         table_exists = cur.fetchone()
         
+        print(f"DEBUG: Table exists check result: {table_exists}")
+        
         if not table_exists:
             return jsonify({
                 'success': False,
                 'error': 'ebay_tokens table does not exist. Please run the SQL migration first.',
                 'debug_info': {
                     'table_exists': False,
-                    'suggestion': 'Run: CREATE TABLE IF NOT EXISTS ebay_tokens (...)'
+                    'suggestion': 'Run the SQL script: sql/create_ebay_tokens_table.sql'
                 }
             })
         
         # Check total count of tokens
         cur.execute("SELECT COUNT(*) FROM ebay_tokens")
-        total_count = cur.fetchone()[0]
+        count_result = cur.fetchone()
+        total_count = count_result[0] if count_result else 0
         print(f"DEBUG: Total tokens in database: {total_count}")
         
         # Check if we have tokens in database
