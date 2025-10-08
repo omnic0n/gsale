@@ -433,20 +433,22 @@ def get_ebay_tokens_from_db(user_id=None):
         
         cur = mysql.connection.cursor()
         
-        # Use session user ID if not provided
+        # If no user_id provided, get the most recent token
         if not user_id:
-            user_id = session.get('id')
-        
-        if not user_id:
-            return None
-        
-        cur.execute("""
-            SELECT access_token, refresh_token, expires_at
-            FROM ebay_tokens
-            WHERE user_id = %s
-            ORDER BY updated_at DESC
-            LIMIT 1
-        """, (user_id,))
+            cur.execute("""
+                SELECT access_token, refresh_token, expires_at, user_id
+                FROM ebay_tokens
+                ORDER BY updated_at DESC
+                LIMIT 1
+            """)
+        else:
+            cur.execute("""
+                SELECT access_token, refresh_token, expires_at, user_id
+                FROM ebay_tokens
+                WHERE user_id = %s
+                ORDER BY updated_at DESC
+                LIMIT 1
+            """, (user_id,))
         
         result = cur.fetchone()
         if result:
@@ -455,13 +457,15 @@ def get_ebay_tokens_from_db(user_id=None):
                 return {
                     'access_token': result.get('access_token'),
                     'refresh_token': result.get('refresh_token'),
-                    'expires_at': result.get('expires_at')
+                    'expires_at': result.get('expires_at'),
+                    'user_id': result.get('user_id')
                 }
             else:
                 return {
                     'access_token': result[0],
                     'refresh_token': result[1],
-                    'expires_at': result[2]
+                    'expires_at': result[2],
+                    'user_id': result[3] if len(result) > 3 else None
                 }
         
         return None
