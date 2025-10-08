@@ -4057,11 +4057,17 @@ def admin_panel():
         flash('An error occurred while loading the admin panel.', 'error')
         return redirect(url_for('index'))
 
-@app.route('/admin/ebay-listings')
-@admin_required
-def admin_ebay_listings():
-    """Admin page to search for specific eBay item financial information"""
-    return render_template('admin_ebay_listings.html', 
+@app.route('/settings')
+@login_required
+def settings():
+    """Settings page for users to manage their preferences and eBay listings"""
+    return render_template('settings.html')
+
+@app.route('/settings/ebay-listings')
+@login_required
+def settings_ebay_listings():
+    """Settings page to search for specific eBay item financial information"""
+    return render_template('settings_ebay_listings.html', 
                          listings=[], 
                          total_listings=0,
                          total_earnings=0,
@@ -4069,16 +4075,16 @@ def admin_ebay_listings():
                          total_sales=0,
                          error=None)
 
-@app.route('/admin/ebay-listings/search', methods=['POST'])
-@admin_required
-def search_ebay_item():
+@app.route('/settings/ebay-listings/search', methods=['POST'])
+@login_required
+def search_ebay_item_settings():
     """Search for specific eBay item financial information"""
     try:
         item_id = request.form.get('item_id', '').strip()
         
         if not item_id:
             flash('Please enter an item ID to search.', 'error')
-            return redirect(url_for('admin_ebay_listings'))
+            return redirect(url_for('settings_ebay_listings'))
         
         # Get financial information for the specific item
         # First try to get OAuth token
@@ -4092,7 +4098,7 @@ def search_ebay_item():
             user_token = app.config.get('EBAY_USER_TOKEN')
             if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
                 flash('eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.', 'error')
-                return redirect(url_for('admin_ebay_listings'))
+                return redirect(url_for('settings_ebay_listings'))
         
         # Get detailed transaction data for the specific item
         transaction_data = get_item_transaction_details(user_token, item_id)
@@ -4144,7 +4150,7 @@ def search_ebay_item():
             total_sales = 0
             flash("Error retrieving financial information: {}".format(transaction_data['error']), 'error')
         
-        return render_template('admin_ebay_listings.html', 
+        return render_template('settings_ebay_listings.html', 
                              listings=listings, 
                              total_listings=total_listings,
                              total_earnings=total_earnings,
@@ -4156,7 +4162,8 @@ def search_ebay_item():
     except Exception as e:
         print("Error in eBay item search: {}".format(e))
         flash('An error occurred while searching for the item.', 'error')
-        return redirect(url_for('admin_ebay_listings'))
+        return redirect(url_for('settings_ebay_listings'))
+
 
 # Admin API endpoints
 @app.route('/admin/api/group-members/<group_id>')
