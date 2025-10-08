@@ -2952,11 +2952,26 @@ def api_ebay_debug_refresh():
                 }
             })
         
-        # Check total count of tokens
-        cur.execute("SELECT COUNT(*) FROM ebay_tokens")
-        count_result = cur.fetchone()
-        total_count = count_result[0] if count_result else 0
-        print(f"DEBUG: Total tokens in database: {total_count}")
+        # Try to get token count, but don't fail if there's an issue
+        try:
+            cur.execute("SELECT COUNT(*) FROM ebay_tokens")
+            count_result = cur.fetchone()
+            print(f"DEBUG: Count result type: {type(count_result)}, value: {count_result}")
+            
+            # Handle different MySQL result formats
+            if count_result is None:
+                total_count = 0
+            elif isinstance(count_result, (tuple, list)) and len(count_result) > 0:
+                total_count = count_result[0]
+            elif isinstance(count_result, dict):
+                total_count = count_result.get('COUNT(*)', 0)
+            else:
+                total_count = int(count_result) if count_result else 0
+                
+            print(f"DEBUG: Total tokens in database: {total_count}")
+        except Exception as count_error:
+            print(f"DEBUG: Error getting count: {count_error}")
+            total_count = "unknown"
         
         # Check if we have tokens in database
         cur.execute("""
