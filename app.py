@@ -128,7 +128,6 @@ def get_ebay_oauth_url():
         session['ebay_oauth_state'] = state
         
         # Debug: Print state generation
-        print(f"DEBUG: Generated OAuth state: {state}")
         
         # Determine environment URLs
         if app.config.get('EBAY_SANDBOX_MODE', False):
@@ -146,7 +145,6 @@ def get_ebay_oauth_url():
         }
         
         # Debug: Print parameters for troubleshooting
-        print(f"DEBUG: eBay OAuth Parameters:")
         print(f"  Client ID: {auth_params['client_id']}")
         print(f"  Redirect URI: {auth_params['redirect_uri']}")
         print(f"  Scope: {auth_params['scope'][:100]}...")
@@ -157,7 +155,6 @@ def get_ebay_oauth_url():
         param_string = urlencode(auth_params)
         full_auth_url = f"{auth_url}?{param_string}"
         
-        print(f"DEBUG: Generated OAuth URL: {full_auth_url[:200]}...")
         
         return {
             'success': True,
@@ -216,11 +213,6 @@ def exchange_ebay_code_for_token(authorization_code):
             )
             
             # Debug: Print token storage
-            print(f"DEBUG: Tokens stored in session and database:")
-            print(f"  Access Token: {token_data.get('access_token', '')[:20]}...")
-            print(f"  Refresh Token: {token_data.get('refresh_token', '')[:20]}...")
-            print(f"  Expires In: {token_data.get('expires_in')} seconds")
-            print(f"  Expires At: {expires_at}")
             
             return {
                 'success': True,
@@ -741,23 +733,18 @@ def get_item_transaction_details(user_token, item_id):
     Get detailed transaction information including fees using modern eBay Order API with TAX_BREAKDOWN
     """
     try:
-        print("DEBUG: Starting transaction details lookup for item: {}".format(item_id))
         
         # Check if token is OAuth 2.0 (starts with 'v1.1#' or 'v^1.1#') or legacy
         is_oauth_token = user_token.startswith('v1.1#') or user_token.startswith('v^1.1#')
-        print("DEBUG: Token type - OAuth 2.0: {}".format(is_oauth_token))
         
         # Only try modern Order API if we have an OAuth 2.0 token
         if is_oauth_token:
-            print("DEBUG: Trying modern Order API with OAuth 2.0 token...")
             orders_result = get_orders_for_item(user_token, item_id)
             if orders_result['success'] and orders_result['orders']:
-                print("DEBUG: Found orders via modern API, getting details...")
                 # Use the first order found
                 order_data = orders_result['orders'][0]
                 order_details = get_order_with_tax_breakdown(user_token, order_data)
                 if order_details['success']:
-                    print("DEBUG: Successfully got order details from modern API")
                     
                     # Get transaction data
                     transaction_data = order_details['transaction_data']
@@ -767,35 +754,25 @@ def get_item_transaction_details(user_token, item_id):
                     if fee_details['success']:
                         # Merge fee data with transaction data
                         transaction_data.update(fee_details['fee_data'])
-                        print("DEBUG: Enhanced with fee breakdown data")
-                        print(f"DEBUG: Fee data added: {fee_details['fee_data']}")
                     else:
-                        print(f"DEBUG: Fee details failed: {fee_details.get('error', 'Unknown error')}")
                     
                     return {
                         'success': True,
                         'transaction_data': transaction_data
                     }
                 else:
-                    print("DEBUG: Failed to get order details: {}".format(order_details['error']))
             else:
-                print("DEBUG: No orders found via modern API: {}".format(orders_result.get('error', 'No orders')))
         else:
-            print("DEBUG: Skipping modern Order API - using legacy token")
         
         # Fallback: try legacy approach
-        print("DEBUG: Falling back to legacy approach...")
         
         # First try to get basic item info and price
         basic_price = get_basic_item_price(user_token, item_id)
-        print("DEBUG: Basic item price: {}".format(basic_price))
         
         if basic_price > 0:
             # Try to get transaction identifiers
             transaction_info = get_transaction_identifiers(user_token, item_id)
             if transaction_info['success']:
-                print("DEBUG: Found transaction identifiers: transactions={}, orders={}".format(
-                    len(transaction_info['transactions']), len(transaction_info['orders'])))
                 
                 # Try each transaction ID
                 transaction_data = {
@@ -813,7 +790,6 @@ def get_item_transaction_details(user_token, item_id):
                     detailed_data = get_specific_transaction_details(user_token, transaction_id, transaction_type)
                     if detailed_data['success'] and detailed_data['transaction_data']['final_price'] > 0:
                         transaction_data = detailed_data['transaction_data']
-                        print("DEBUG: Found transaction data via legacy API")
                         break
                 
                 # If no transaction data found, try order IDs
@@ -822,15 +798,12 @@ def get_item_transaction_details(user_token, item_id):
                         order_data = get_order_details_by_id(user_token, order_id)
                         if order_data['success'] and order_data['transaction_data']['final_price'] > 0:
                             transaction_data = order_data['transaction_data']
-                            print("DEBUG: Found order data via legacy API")
                             break
                 
                 # If we found actual fees, use them
                 if transaction_data['final_value_fee'] > 0 or transaction_data['sales_tax'] > 0:
                     transaction_data['has_actual_fees'] = True
-                    print("DEBUG: Using actual fees from legacy API")
                 else:
-                    print("DEBUG: No actual fees found, calculating estimates")
                     # Calculate proper fee estimates
                     if basic_price > 0:
                         # eBay Final Value Fee: 10% for most categories (up to $750), then 2% above $750
@@ -895,7 +868,6 @@ def get_item_transaction_details(user_token, item_id):
                 print(f"  Total Fees: ${transaction_data['total_fees']:.2f}")
                 print(f"  Net Earnings: ${transaction_data['net_earnings']:.2f}")
         
-        print("DEBUG: Final transaction data: {}".format(transaction_data))
         return {
             'success': True,
             'transaction_data': transaction_data
@@ -3398,7 +3370,6 @@ def bought_items():
 
     if request.method == "POST":
         details = request.form.to_dict()
-        print("DEBUG: Form data received:", details)
         
         group_data = get_data.get_all_from_group(details['group'])
         if not group_data:
@@ -3544,7 +3515,6 @@ def sold_items():
         item_data = get_data.get_data_for_item_describe(item_id)
         if item_data and item_data[0].get('ebay_item_id'):
             ebay_item_id = item_data[0]['ebay_item_id']
-            print(f"DEBUG: Found eBay item ID {ebay_item_id} for item {item_id}")
             
             # Get eBay financial data
             token_result = get_valid_ebay_token()
@@ -3554,15 +3524,12 @@ def sold_items():
                 user_token = app.config.get('EBAY_USER_TOKEN')
             
             if user_token and user_token != 'YOUR_EBAY_USER_TOKEN_HERE':
-                print(f"DEBUG: Fetching eBay financial data for item {ebay_item_id}")
                 transaction_data = get_item_transaction_details(user_token, ebay_item_id)
                 
                 if transaction_data['success']:
                     trans_data = transaction_data['transaction_data']
                     ebay_price = trans_data.get('net_earnings', 0)
-                    print(f"DEBUG: eBay data - Price: {ebay_price}")
                 else:
-                    print(f"DEBUG: Failed to get eBay data: {transaction_data.get('error', 'Unknown error')}")
     
     # Prepopulate form with eBay price only (shipping will be entered manually)
     if ebay_price is not None:
@@ -4178,16 +4145,13 @@ def search_ebay_item():
             
             # Determine the best URL to use - prefer order ID if available
             order_id = trans_data.get('order_id') or trans_data.get('orderId')
-            print(f"DEBUG: Found order_id: {order_id}")
             
             if order_id:
                 ebay_url = f'https://www.ebay.com/mesh/ord/details?orderid={order_id}'
                 url_type = 'Order'
-                print(f"DEBUG: Using order URL: {ebay_url}")
             else:
                 ebay_url = f'https://www.ebay.com/itm/{item_id}'
                 url_type = 'Item'
-                print(f"DEBUG: Using item URL: {ebay_url}")
             
             # Create a single listing with the financial data
             listing = {
@@ -4205,8 +4169,6 @@ def search_ebay_item():
                 **trans_data
             }
             
-            print(f"DEBUG: Created listing with data: {list(listing.keys())}")
-            print(f"DEBUG: Fee-related fields: final_value_fee={listing.get('final_value_fee')}, total_fees={listing.get('total_fees')}, sales_tax={listing.get('sales_tax')}")
             
             listings = [listing]
             total_listings = 1
@@ -4214,7 +4176,6 @@ def search_ebay_item():
             total_fees = listing.get('total_fees', 0) or listing.get('final_value_fee', 0)
             total_sales = listing.get('final_price', 0)
             
-            print(f"DEBUG: Financial totals - Earnings: {total_earnings}, Fees: {total_fees}, Sales: {total_sales}")
             
             flash('Financial information retrieved for item ID: {}'.format(item_id), 'success')
         else:
