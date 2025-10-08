@@ -476,48 +476,50 @@ def background_token_refresh():
             # Check every 15 minutes for more frequent refresh
             time.sleep(900)  # 15 minutes
             
-            # Ensure MySQL connection is available
-            if not mysql.connection:
-                try:
-                    mysql.connect()
-                except Exception as conn_error:
-                    time.sleep(300)  # Wait 5 minutes before retrying
-                    continue
-            
-            # Get all users with tokens that will expire soon
-            cur = mysql.connection.cursor()
-            cur.execute("""
-                SELECT user_id, access_token, refresh_token, expires_at
-                FROM ebay_tokens
-                WHERE expires_at <= DATE_ADD(NOW(), INTERVAL 20 MINUTE)
-                AND refresh_token IS NOT NULL
-            """)
-            
-            tokens_to_refresh = cur.fetchall()
-            
-            for token_data in tokens_to_refresh:
-                # Handle both dict and tuple formats
-                if isinstance(token_data, dict):
-                    user_id, access_token, refresh_token, expires_at = (
-                        token_data.get('user_id'),
-                        token_data.get('access_token'),
-                        token_data.get('refresh_token'),
-                        token_data.get('expires_at')
-                    )
-                else:
-                    user_id, access_token, refresh_token, expires_at = token_data
+            # Create application context for background thread
+            with app.app_context():
+                # Ensure MySQL connection is available
+                if not mysql.connection:
+                    try:
+                        mysql.connect()
+                    except Exception as conn_error:
+                        time.sleep(300)  # Wait 5 minutes before retrying
+                        continue
                 
-                # Refresh the token
-                refresh_result = refresh_ebay_token(refresh_token)
+                # Get all users with tokens that will expire soon
+                cur = mysql.connection.cursor()
+                cur.execute("""
+                    SELECT user_id, access_token, refresh_token, expires_at
+                    FROM ebay_tokens
+                    WHERE expires_at <= DATE_ADD(NOW(), INTERVAL 20 MINUTE)
+                    AND refresh_token IS NOT NULL
+                """)
                 
-                if refresh_result['success']:
-                    # Update database with new tokens
-                    store_ebay_tokens_in_db(
-                        refresh_result['access_token'],
-                        refresh_result.get('refresh_token', refresh_token),
-                        datetime.now() + timedelta(seconds=refresh_result.get('expires_in', 7200)),
-                        user_id
-                    )
+                tokens_to_refresh = cur.fetchall()
+                
+                for token_data in tokens_to_refresh:
+                    # Handle both dict and tuple formats
+                    if isinstance(token_data, dict):
+                        user_id, access_token, refresh_token, expires_at = (
+                            token_data.get('user_id'),
+                            token_data.get('access_token'),
+                            token_data.get('refresh_token'),
+                            token_data.get('expires_at')
+                        )
+                    else:
+                        user_id, access_token, refresh_token, expires_at = token_data
+                    
+                    # Refresh the token
+                    refresh_result = refresh_ebay_token(refresh_token)
+                    
+                    if refresh_result['success']:
+                        # Update database with new tokens
+                        store_ebay_tokens_in_db(
+                            refresh_result['access_token'],
+                            refresh_result.get('refresh_token', refresh_token),
+                            datetime.now() + timedelta(seconds=refresh_result.get('expires_in', 7200)),
+                            user_id
+                        )
             
         except Exception as e:
             time.sleep(300)  # Wait 5 minutes before retrying
@@ -828,15 +830,13 @@ def get_item_transaction_details(user_token, item_id):
                         # Net earnings
                         transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['total_fees']
                         
-                        print(f"DEBUG: Estimated fees - FVF: ${transaction_data['final_value_fee']:.2f}, PayPal: ${transaction_data['paypal_fee']:.2f}, Total: ${transaction_data['total_fees']:.2f}")
             else:
-                print("DEBUG: Could not get transaction identifiers: {}".format(transaction_info['error']))
+                pass  # Fee calculation failed, continue with basic data
         else:
-            print("DEBUG: Could not get basic item price")
+            pass  # Transaction data not available
         
         # If still no data, use estimates
         if transaction_data['final_price'] == 0:
-            print("DEBUG: Using estimates as final fallback")
             # Get basic price from selling status
             basic_price = get_basic_item_price(user_token, item_id)
             if basic_price > 0:
@@ -865,7 +865,6 @@ def get_item_transaction_details(user_token, item_id):
                 # Net earnings = final price - total fees
                 transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['total_fees']
                 
-                print("DEBUG: Using eBay fee estimates:")
                 print(f"  Final Value Fee (10%): ${transaction_data['final_value_fee']:.2f}")
                 print(f"  PayPal Fee: ${transaction_data['paypal_fee']:.2f}")
                 print(f"  Listing Fee: ${transaction_data['listing_fees']:.2f}")
@@ -878,7 +877,6 @@ def get_item_transaction_details(user_token, item_id):
         }
             
     except Exception as e:
-        print("DEBUG: Exception in get_item_transaction_details: {}".format(str(e)))
         return {
             'success': False,
             'error': 'Order API error: {}'.format(str(e))
@@ -902,7 +900,6 @@ def get_orders_for_item(user_token, item_id):
         start_date_str = start_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
         end_date_str = end_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
         
-        print(f"DEBUG: Searching orders from {start_date_str} to {end_date_str}")
         
         xml_request = f"""<?xml version="1.0" encoding="utf-8"?>
         <GetOrdersRequest xmlns="urn:ebay:apis:eBLBaseComponents">
@@ -926,10 +923,8 @@ def get_orders_for_item(user_token, item_id):
             'Content-Type': 'text/xml'
         }
         
-        print("DEBUG: Calling GetOrders with Trading API")
         response = requests.post(url, data=xml_request, headers=headers)
         
-        print("DEBUG: GetOrders response - Status: {}, Text: {}".format(response.status_code, response.text[:200]))
         
         if response.status_code == 200:
             root = ET.fromstring(response.text)
