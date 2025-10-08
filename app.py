@@ -3052,12 +3052,22 @@ def api_ebay_debug_refresh():
                 
                 updated_token = cur.fetchone()
                 if updated_token:
-                    debug_info['new_expires_at'] = format_datetime(updated_token[0])
-                    debug_info['new_updated_at'] = format_datetime(updated_token[1])
+                    print(f"DEBUG: Updated token type: {type(updated_token)}, value: {updated_token}")
+                    
+                    # Handle both dict and tuple formats
+                    if isinstance(updated_token, dict):
+                        new_expires_at = updated_token.get('expires_at')
+                        new_updated_at = updated_token.get('updated_at')
+                    else:
+                        new_expires_at = updated_token[0]
+                        new_updated_at = updated_token[1]
+                    
+                    debug_info['new_expires_at'] = format_datetime(new_expires_at)
+                    debug_info['new_updated_at'] = format_datetime(new_updated_at)
                     
                     # Compare timestamps properly
                     old_updated = updated_at
-                    new_updated = updated_token[1]
+                    new_updated = new_updated_at
                     
                     # Convert to datetime if they're strings
                     if isinstance(old_updated, str):
@@ -3256,12 +3266,22 @@ def api_ebay_debug_web():
                 
                 updated_token = cur.fetchone()
                 if updated_token:
-                    debug_info['new_expires_at'] = format_datetime(updated_token[0])
-                    debug_info['new_updated_at'] = format_datetime(updated_token[1])
+                    print(f"DEBUG: Updated token type: {type(updated_token)}, value: {updated_token}")
+                    
+                    # Handle both dict and tuple formats
+                    if isinstance(updated_token, dict):
+                        new_expires_at = updated_token.get('expires_at')
+                        new_updated_at = updated_token.get('updated_at')
+                    else:
+                        new_expires_at = updated_token[0]
+                        new_updated_at = updated_token[1]
+                    
+                    debug_info['new_expires_at'] = format_datetime(new_expires_at)
+                    debug_info['new_updated_at'] = format_datetime(new_updated_at)
                     
                     # Compare timestamps properly
                     old_updated = updated_at
-                    new_updated = updated_token[1]
+                    new_updated = new_updated_at
                     
                     # Convert to datetime if they're strings
                     if isinstance(old_updated, str):
