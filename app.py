@@ -246,11 +246,16 @@ def refresh_ebay_token(refresh_token):
     Refresh eBay access token using refresh token
     """
     try:
+        print(f"DEBUG: Starting token refresh process...")
+        print(f"DEBUG: Refresh token: {refresh_token[:20] if refresh_token else 'None'}...")
+        
         # Determine environment URLs
         if app.config.get('EBAY_SANDBOX_MODE', False):
             token_url = 'https://api.sandbox.ebay.com/identity/v1/oauth2/token'
         else:
             token_url = 'https://api.ebay.com/identity/v1/oauth2/token'
+        
+        print(f"DEBUG: Using token URL: {token_url}")
         
         # Prepare refresh request
         headers = {
@@ -264,11 +269,21 @@ def refresh_ebay_token(refresh_token):
             'scope': app.config['EBAY_OAUTH_SCOPE']
         }
         
+        print(f"DEBUG: Request data: grant_type=refresh_token, scope={app.config['EBAY_OAUTH_SCOPE'][:50]}...")
+        
         # Make refresh request
         response = requests.post(token_url, headers=headers, data=data)
         
+        print(f"DEBUG: eBay API response status: {response.status_code}")
+        print(f"DEBUG: eBay API response text: {response.text[:200]}...")
+        
         if response.status_code == 200:
             token_data = response.json()
+            
+            print(f"DEBUG: Token refresh successful!")
+            print(f"DEBUG: New access token: {token_data.get('access_token', '')[:20]}...")
+            print(f"DEBUG: New refresh token: {token_data.get('refresh_token', '')[:20]}...")
+            print(f"DEBUG: Expires in: {token_data.get('expires_in')} seconds")
             
             # Calculate expiration time
             expires_at = datetime.now() + timedelta(seconds=token_data.get('expires_in', 7200))
@@ -279,13 +294,16 @@ def refresh_ebay_token(refresh_token):
                 session['ebay_refresh_token'] = token_data.get('refresh_token')
             session['ebay_token_expires'] = expires_at
             
+            print(f"DEBUG: Session tokens updated")
+            
             # Update database tokens
-            store_ebay_tokens_in_db(
+            db_result = store_ebay_tokens_in_db(
                 token_data.get('access_token'),
                 token_data.get('refresh_token', refresh_token),  # Use old refresh token if new one not provided
                 expires_at
             )
             
+            print(f"DEBUG: Database update result: {db_result}")
             print(f"DEBUG: Token refreshed and stored in session and database")
             
             return {
@@ -295,15 +313,21 @@ def refresh_ebay_token(refresh_token):
                 'expires_in': token_data.get('expires_in')
             }
         else:
+            error_msg = f'Token refresh failed: {response.status_code} - {response.text}'
+            print(f"DEBUG: {error_msg}")
             return {
                 'success': False,
-                'error': f'Token refresh failed: {response.status_code} - {response.text}'
+                'error': error_msg
             }
             
     except Exception as e:
+        error_msg = f'Token refresh error: {str(e)}'
+        print(f"DEBUG: {error_msg}")
+        import traceback
+        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
         return {
             'success': False,
-            'error': f'Token refresh error: {str(e)}'
+            'error': error_msg
         }
 
 def get_ebay_basic_auth():
@@ -2903,6 +2927,99 @@ def api_ebay_refresh_status():
         return jsonify({
             'success': False,
             'error': str(e)
+        })
+
+@app.route('/api/ebay-debug-refresh', methods=['POST'])
+def api_ebay_debug_refresh():
+    """Debug endpoint to test token refresh with detailed logging"""
+    try:
+        print("DEBUG: Starting debug refresh process...")
+        
+        # Check if we have tokens in database
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT user_id, access_token, refresh_token, expires_at, updated_at
+            FROM ebay_tokens
+            WHERE refresh_token IS NOT NULL
+            ORDER BY updated_at DESC
+        """)
+        
+        tokens_in_db = cur.fetchall()
+        print(f"DEBUG: Found {len(tokens_in_db)} tokens in database")
+        
+        if not tokens_in_db:
+            return jsonify({
+                'success': False,
+                'error': 'No tokens found in database. Please authenticate with eBay first.',
+                'debug_info': {
+                    'tokens_in_db': 0,
+                    'session_tokens': {
+                        'access_token': bool(session.get('ebay_access_token')),
+                        'refresh_token': bool(session.get('ebay_refresh_token')),
+                        'expires_at': session.get('ebay_token_expires')
+                    }
+                }
+            })
+        
+        debug_results = []
+        
+        for token_data in tokens_in_db:
+            user_id, access_token, refresh_token, expires_at, updated_at = token_data
+            
+            print(f"DEBUG: Testing refresh for user {user_id}")
+            print(f"DEBUG: Current token expires at: {expires_at}")
+            print(f"DEBUG: Last updated at: {updated_at}")
+            
+            # Test the refresh
+            refresh_result = refresh_ebay_token(refresh_token)
+            
+            debug_info = {
+                'user_id': user_id,
+                'refresh_success': refresh_result['success'],
+                'error': refresh_result.get('error'),
+                'old_expires_at': expires_at.isoformat(),
+                'old_updated_at': updated_at.isoformat()
+            }
+            
+            if refresh_result['success']:
+                # Check if database was actually updated
+                cur.execute("""
+                    SELECT expires_at, updated_at
+                    FROM ebay_tokens
+                    WHERE user_id = %s
+                """, (user_id,))
+                
+                updated_token = cur.fetchone()
+                if updated_token:
+                    debug_info['new_expires_at'] = updated_token[0].isoformat()
+                    debug_info['new_updated_at'] = updated_token[1].isoformat()
+                    debug_info['database_updated'] = updated_token[1] > updated_at
+                else:
+                    debug_info['database_updated'] = False
+                    debug_info['error'] = 'Token not found after refresh'
+            else:
+                debug_info['database_updated'] = False
+            
+            debug_results.append(debug_info)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Debug refresh completed',
+            'debug_results': debug_results,
+            'config_check': {
+                'client_id_configured': bool(app.config.get('EBAY_CLIENT_ID')),
+                'client_secret_configured': bool(app.config.get('EBAY_CLIENT_SECRET')),
+                'oauth_scope_configured': bool(app.config.get('EBAY_OAUTH_SCOPE')),
+                'sandbox_mode': app.config.get('EBAY_SANDBOX_MODE', False)
+            }
+        })
+            
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
         })
 
 @app.route('/logout')
