@@ -471,80 +471,30 @@ def get_ebay_tokens_from_db(user_id=None):
     except Exception as e:
         return None
 
-def background_token_refresh():
+def refresh_token_if_needed():
     """
-    Background task to automatically refresh eBay tokens before they expire
+    Check if token needs refresh and refresh it if necessary
     """
-    while True:
-        try:
-            # Check every 15 minutes for more frequent refresh
-            time.sleep(900)  # 15 minutes
-            
-            # Create application context for background thread
-            with app.app_context():
-                # Ensure MySQL connection is available
-                if not mysql.connection:
-                    try:
-                        mysql.connect()
-                    except Exception as conn_error:
-                        time.sleep(300)  # Wait 5 minutes before retrying
-                        continue
-                
-                # Get all users with tokens that will expire soon
-                cur = mysql.connection.cursor()
-                cur.execute("""
-                    SELECT user_id, access_token, refresh_token, expires_at
-                    FROM ebay_tokens
-                    WHERE expires_at <= DATE_ADD(NOW(), INTERVAL 20 MINUTE)
-                    AND refresh_token IS NOT NULL
-                """)
-                
-                tokens_to_refresh = cur.fetchall()
-                
-                for token_data in tokens_to_refresh:
-                    # Handle both dict and tuple formats
-                    if isinstance(token_data, dict):
-                        user_id, access_token, refresh_token, expires_at = (
-                            token_data.get('user_id'),
-                            token_data.get('access_token'),
-                            token_data.get('refresh_token'),
-                            token_data.get('expires_at')
-                        )
-                    else:
-                        user_id, access_token, refresh_token, expires_at = token_data
-                    
-                    # Refresh the token
-                    refresh_result = refresh_ebay_token(refresh_token)
-                    
-                    if refresh_result['success']:
-                        # Update database with new tokens
-                        store_ebay_tokens_in_db(
-                            refresh_result['access_token'],
-                            refresh_result.get('refresh_token', refresh_token),
-                            datetime.now() + timedelta(seconds=refresh_result.get('expires_in', 7200)),
-                            user_id
-                        )
-            
-        except Exception as e:
-            time.sleep(300)  # Wait 5 minutes before retrying
-
-# Global variable to track if background refresh is already started
-_background_refresh_started = False
-
-def start_background_refresh():
-    """
-    Start the background token refresh thread
-    """
-    global _background_refresh_started
-    
-    if _background_refresh_started:
-        return True
-        
     try:
-        refresh_thread = threading.Thread(target=background_token_refresh, daemon=True)
-        refresh_thread.start()
-        _background_refresh_started = True
-        return True
+        # Get tokens from database
+        db_tokens = get_ebay_tokens_from_db()
+        
+        if not db_tokens or not db_tokens.get('refresh_token'):
+            return False
+        
+        # Check if token expires within the next 30 minutes
+        expires_at = db_tokens.get('expires_at')
+        if expires_at:
+            if isinstance(expires_at, str):
+                expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+            
+            # If token expires within 30 minutes, refresh it
+            if expires_at <= datetime.now() + timedelta(minutes=30):
+                refresh_result = refresh_ebay_token(db_tokens['refresh_token'])
+                return refresh_result['success']
+        
+        return True  # Token is still valid
+        
     except Exception as e:
         return False
 
@@ -3505,6 +3455,9 @@ def quick_sell():
 @app.route('/items/sold',methods=["POST","GET"])
 @login_required
 def sold_items():
+    # Refresh eBay token if needed before processing
+    refresh_token_if_needed()
+    
     item_id = request.args.get('item', type = str)
     items = get_data.get_all_items_not_sold()
 
@@ -4390,7 +4343,4 @@ def api_add_group():
 
 
 if __name__ == '__main__':
-    # Start background token refresh system
-    start_background_refresh()
-    
     app.run(debug=True, port=app.config['PORT'])
