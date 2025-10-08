@@ -480,12 +480,14 @@ def background_token_refresh():
     """
     Background task to automatically refresh eBay tokens before they expire
     """
+    print("DEBUG: Background token refresh thread started successfully")
+    
     while True:
         try:
             # Check every 15 minutes for more frequent refresh
             time.sleep(900)  # 15 minutes
             
-            print("DEBUG: Background token refresh check running...")
+            print(f"DEBUG: Background token refresh check running at {datetime.now()}...")
             
             # Get all users with tokens that will expire soon
             cur = mysql.connection.cursor()
@@ -497,6 +499,7 @@ def background_token_refresh():
             """)
             
             tokens_to_refresh = cur.fetchall()
+            print(f"DEBUG: Found {len(tokens_to_refresh)} tokens that need refreshing")
             
             for token_data in tokens_to_refresh:
                 user_id, access_token, refresh_token, expires_at = token_data
@@ -518,8 +521,13 @@ def background_token_refresh():
                 else:
                     print(f"DEBUG: Failed to refresh token for user {user_id}: {refresh_result['error']}")
             
+            if not tokens_to_refresh:
+                print("DEBUG: No tokens need refreshing at this time")
+            
         except Exception as e:
             print(f"DEBUG: Background token refresh error: {str(e)}")
+            import traceback
+            print(f"DEBUG: Full traceback: {traceback.format_exc()}")
             time.sleep(300)  # Wait 5 minutes before retrying
 
 def start_background_refresh():
@@ -529,9 +537,14 @@ def start_background_refresh():
     try:
         refresh_thread = threading.Thread(target=background_token_refresh, daemon=True)
         refresh_thread.start()
-        print("DEBUG: Background token refresh thread started")
+        print("DEBUG: Background token refresh thread started successfully")
+        print("DEBUG: Thread will check for expiring tokens every 15 minutes")
+        return True
     except Exception as e:
         print(f"DEBUG: Failed to start background refresh thread: {str(e)}")
+        import traceback
+        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
+        return False
 
 # eBay API Functions
 def get_ebay_active_listings():
@@ -2761,6 +2774,50 @@ def api_ebay_refresh_token():
                 'success': False,
                 'error': refresh_result['error']
             })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/ebay-force-refresh', methods=['POST'])
+def api_ebay_force_refresh():
+    """API endpoint to force refresh all eBay tokens immediately"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT user_id, access_token, refresh_token, expires_at
+            FROM ebay_tokens
+            WHERE refresh_token IS NOT NULL
+        """)
+        
+        tokens_to_refresh = cur.fetchall()
+        refreshed_count = 0
+        failed_count = 0
+        
+        for token_data in tokens_to_refresh:
+            user_id, access_token, refresh_token, expires_at = token_data
+            
+            refresh_result = refresh_ebay_token(refresh_token)
+            
+            if refresh_result['success']:
+                store_ebay_tokens_in_db(
+                    refresh_result['access_token'],
+                    refresh_result.get('refresh_token', refresh_token),
+                    datetime.now() + timedelta(seconds=refresh_result.get('expires_in', 7200)),
+                    user_id
+                )
+                refreshed_count += 1
+            else:
+                failed_count += 1
+        
+        return jsonify({
+            'success': True,
+            'message': f'Force refresh completed. {refreshed_count} tokens refreshed, {failed_count} failed.',
+            'refreshed_count': refreshed_count,
+            'failed_count': failed_count
+        })
             
     except Exception as e:
         return jsonify({
