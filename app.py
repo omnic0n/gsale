@@ -2567,7 +2567,7 @@ def ebay_callback():
                 # Continue with OAuth flow
             else:
                 flash('Invalid state parameter. Please try again.', 'error')
-                return redirect(url_for('admin_panel'))
+                return redirect(url_for('settings_ebay_listings'))
         
         # Debug: Print all request parameters
         print(f"DEBUG: All request parameters:")
@@ -2580,7 +2580,7 @@ def ebay_callback():
             error_msg = request.args.get('error', 'Authorization code not received.')
             print(f"DEBUG: No authorization code received. Error: {error_msg}")
             flash(f'eBay OAuth error: {error_msg}', 'error')
-            return redirect(url_for('admin_panel'))
+            return redirect(url_for('settings_ebay_listings'))
         
         print(f"DEBUG: Authorization code received: {code[:20]}...")
         
@@ -2589,15 +2589,15 @@ def ebay_callback():
         
         if token_result['success']:
             flash('eBay OAuth authentication successful!', 'success')
-            return redirect(url_for('admin_panel'))
+            return redirect(url_for('settings_ebay_listings'))
         else:
             flash(f'eBay OAuth error: {token_result["error"]}', 'error')
-            return redirect(url_for('admin_panel'))
+            return redirect(url_for('settings_ebay_listings'))
             
     except Exception as e:
         print(f"DEBUG: eBay OAuth callback exception: {str(e)}")
         flash(f'eBay OAuth error: {str(e)}', 'error')
-        return redirect(url_for('admin_panel'))
+        return redirect(url_for('settings_ebay_listings'))
 
 @app.route('/ebay-logout')
 def ebay_logout():
