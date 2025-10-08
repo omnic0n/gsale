@@ -755,14 +755,18 @@ def get_item_transaction_details(user_token, item_id):
                         # Merge fee data with transaction data
                         transaction_data.update(fee_details['fee_data'])
                     else:
+                        pass  # Fee details failed, continue with basic transaction data
                     
                     return {
                         'success': True,
                         'transaction_data': transaction_data
                     }
                 else:
+                    pass  # Order details failed
             else:
+                pass  # No orders found
         else:
+            pass  # Skipping modern Order API
         
         # Fallback: try legacy approach
         
