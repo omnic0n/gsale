@@ -530,13 +530,23 @@ def background_token_refresh():
             print(f"DEBUG: Full traceback: {traceback.format_exc()}")
             time.sleep(300)  # Wait 5 minutes before retrying
 
+# Global variable to track if background refresh is already started
+_background_refresh_started = False
+
 def start_background_refresh():
     """
     Start the background token refresh thread
     """
+    global _background_refresh_started
+    
+    if _background_refresh_started:
+        print("DEBUG: Background refresh thread already started, skipping...")
+        return True
+        
     try:
         refresh_thread = threading.Thread(target=background_token_refresh, daemon=True)
         refresh_thread.start()
+        _background_refresh_started = True
         print("DEBUG: Background token refresh thread started successfully")
         print("DEBUG: Thread will check for expiring tokens every 15 minutes")
         return True
@@ -2817,6 +2827,45 @@ def api_ebay_force_refresh():
             'message': f'Force refresh completed. {refreshed_count} tokens refreshed, {failed_count} failed.',
             'refreshed_count': refreshed_count,
             'failed_count': failed_count
+        })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/ebay-refresh-status', methods=['GET'])
+def api_ebay_refresh_status():
+    """API endpoint to check the status of automatic token refresh"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get token count and expiration info
+        cur.execute("""
+            SELECT 
+                COUNT(*) as total_tokens,
+                COUNT(CASE WHEN refresh_token IS NOT NULL THEN 1 END) as tokens_with_refresh,
+                COUNT(CASE WHEN expires_at <= DATE_ADD(NOW(), INTERVAL 20 MINUTE) THEN 1 END) as tokens_expiring_soon,
+                MIN(expires_at) as earliest_expiration,
+                MAX(expires_at) as latest_expiration
+            FROM ebay_tokens
+        """)
+        
+        stats = cur.fetchone()
+        
+        return jsonify({
+            'success': True,
+            'background_refresh_active': _background_refresh_started,
+            'token_stats': {
+                'total_tokens': stats[0],
+                'tokens_with_refresh': stats[1],
+                'tokens_expiring_soon': stats[2],
+                'earliest_expiration': stats[3].isoformat() if stats[3] else None,
+                'latest_expiration': stats[4].isoformat() if stats[4] else None
+            },
+            'refresh_schedule': 'Every 15 minutes',
+            'refresh_threshold': '20 minutes before expiration'
         })
             
     except Exception as e:
