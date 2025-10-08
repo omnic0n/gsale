@@ -4057,11 +4057,6 @@ def admin_panel():
         flash('An error occurred while loading the admin panel.', 'error')
         return redirect(url_for('index'))
 
-@app.route('/settings')
-@login_required
-def settings():
-    """Settings page for users to manage their preferences and eBay listings"""
-    return render_template('settings.html')
 
 @app.route('/settings/ebay-listings')
 @login_required
