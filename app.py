@@ -285,12 +285,14 @@ def refresh_ebay_token(refresh_token):
                 'expires_in': token_data.get('expires_in')
             }
         else:
+            print(f"Token refresh failed: {response.status_code} - {response.text}")
             return {
                 'success': False,
                 'error': f'Token refresh failed: {response.status_code} - {response.text}'
             }
             
     except Exception as e:
+        print(f"Token refresh error: {str(e)}")
         return {
             'success': False,
             'error': f'Token refresh error: {str(e)}'
@@ -483,6 +485,7 @@ def background_token_refresh():
                     try:
                         mysql.connect()
                     except Exception as conn_error:
+                        print(f"Background refresh: MySQL connection failed: {conn_error}")
                         time.sleep(300)  # Wait 5 minutes before retrying
                         continue
                 
@@ -496,6 +499,7 @@ def background_token_refresh():
                 """)
                 
                 tokens_to_refresh = cur.fetchall()
+                print(f"Background refresh: Found {len(tokens_to_refresh)} tokens to refresh")
                 
                 for token_data in tokens_to_refresh:
                     # Handle both dict and tuple formats
@@ -509,10 +513,13 @@ def background_token_refresh():
                     else:
                         user_id, access_token, refresh_token, expires_at = token_data
                     
+                    print(f"Background refresh: Refreshing token for user {user_id}")
+                    
                     # Refresh the token
                     refresh_result = refresh_ebay_token(refresh_token)
                     
                     if refresh_result['success']:
+                        print(f"Background refresh: Successfully refreshed token for user {user_id}")
                         # Update database with new tokens
                         store_ebay_tokens_in_db(
                             refresh_result['access_token'],
@@ -520,8 +527,11 @@ def background_token_refresh():
                             datetime.now() + timedelta(seconds=refresh_result.get('expires_in', 7200)),
                             user_id
                         )
+                    else:
+                        print(f"Background refresh: Failed to refresh token for user {user_id}: {refresh_result.get('error', 'Unknown error')}")
             
         except Exception as e:
+            print(f"Background refresh: Exception occurred: {str(e)}")
             time.sleep(300)  # Wait 5 minutes before retrying
 
 # Global variable to track if background refresh is already started
@@ -3542,7 +3552,39 @@ def sold_items():
         return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
 
-@app.route('/api/ebay-item-data/<item_id>')
+@app.route('/api/test-refresh', methods=['POST'])
+def test_refresh():
+    """
+    Test endpoint to manually trigger token refresh
+    """
+    try:
+        # Get tokens from database
+        db_tokens = get_ebay_tokens_from_db()
+        
+        if not db_tokens or not db_tokens.get('refresh_token'):
+            return jsonify({
+                'success': False,
+                'error': 'No refresh token found in database'
+            })
+        
+        print(f"Testing refresh with token: {db_tokens['refresh_token'][:20]}...")
+        
+        # Try to refresh the token
+        refresh_result = refresh_ebay_token(db_tokens['refresh_token'])
+        
+        return jsonify({
+            'success': refresh_result['success'],
+            'error': refresh_result.get('error'),
+            'has_refresh_token': bool(db_tokens.get('refresh_token')),
+            'token_expires_at': str(db_tokens.get('expires_at')) if db_tokens.get('expires_at') else None
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Test refresh error: {str(e)}'
+        })
+
 @login_required
 def get_ebay_item_data(item_id):
     """API endpoint to fetch eBay financial data for a specific item"""
