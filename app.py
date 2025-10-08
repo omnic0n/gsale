@@ -3547,6 +3547,7 @@ def sold_items():
     return render_template('items_sold.html', form=form)
 
 
+@app.route('/api/ebay-item-data/<item_id>')
 @login_required
 def get_ebay_item_data(item_id):
     """API endpoint to fetch eBay financial data for a specific item"""
