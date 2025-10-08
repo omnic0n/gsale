@@ -411,6 +411,16 @@ def store_ebay_tokens_in_db(access_token, refresh_token, expires_at, user_id=Non
     Store eBay tokens in database for persistence across sessions
     """
     try:
+        # Ensure MySQL connection is available
+        if not mysql.connection:
+            print("DEBUG: MySQL connection not available in store_ebay_tokens_in_db, attempting to reconnect...")
+            try:
+                mysql.connect()
+                print("DEBUG: MySQL connection re-established for token storage")
+            except Exception as conn_error:
+                print(f"DEBUG: Failed to reconnect to MySQL for token storage: {str(conn_error)}")
+                return False
+        
         cur = mysql.connection.cursor()
         
         # Use session user ID if not provided
@@ -445,6 +455,16 @@ def get_ebay_tokens_from_db(user_id=None):
     Retrieve eBay tokens from database
     """
     try:
+        # Ensure MySQL connection is available
+        if not mysql.connection:
+            print("DEBUG: MySQL connection not available in get_ebay_tokens_from_db, attempting to reconnect...")
+            try:
+                mysql.connect()
+                print("DEBUG: MySQL connection re-established for token retrieval")
+            except Exception as conn_error:
+                print(f"DEBUG: Failed to reconnect to MySQL for token retrieval: {str(conn_error)}")
+                return None
+        
         cur = mysql.connection.cursor()
         
         # Use session user ID if not provided
@@ -488,6 +508,17 @@ def background_token_refresh():
             time.sleep(900)  # 15 minutes
             
             print(f"DEBUG: Background token refresh check running at {datetime.now()}...")
+            
+            # Ensure MySQL connection is available
+            if not mysql.connection:
+                print("DEBUG: MySQL connection not available, attempting to reconnect...")
+                try:
+                    mysql.connect()
+                    print("DEBUG: MySQL connection re-established")
+                except Exception as conn_error:
+                    print(f"DEBUG: Failed to reconnect to MySQL: {str(conn_error)}")
+                    time.sleep(300)  # Wait 5 minutes before retrying
+                    continue
             
             # Get all users with tokens that will expire soon
             cur = mysql.connection.cursor()
