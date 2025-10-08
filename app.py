@@ -3534,6 +3534,7 @@ def sold_items():
                     trans_data = transaction_data['transaction_data']
                     ebay_price = trans_data.get('net_earnings', 0)
                 else:
+                    ebay_price = None
     
     # Prepopulate form with eBay price only (shipping will be entered manually)
     if ebay_price is not None:
