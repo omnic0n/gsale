@@ -285,14 +285,12 @@ def refresh_ebay_token(refresh_token):
                 'expires_in': token_data.get('expires_in')
             }
         else:
-            print(f"Token refresh failed: {response.status_code} - {response.text}")
             return {
                 'success': False,
                 'error': f'Token refresh failed: {response.status_code} - {response.text}'
             }
             
     except Exception as e:
-        print(f"Token refresh error: {str(e)}")
         return {
             'success': False,
             'error': f'Token refresh error: {str(e)}'
@@ -489,7 +487,6 @@ def background_token_refresh():
                     try:
                         mysql.connect()
                     except Exception as conn_error:
-                        print(f"Background refresh: MySQL connection failed: {conn_error}")
                         time.sleep(300)  # Wait 5 minutes before retrying
                         continue
                 
@@ -503,7 +500,6 @@ def background_token_refresh():
                 """)
                 
                 tokens_to_refresh = cur.fetchall()
-                print(f"Background refresh: Found {len(tokens_to_refresh)} tokens to refresh")
                 
                 for token_data in tokens_to_refresh:
                     # Handle both dict and tuple formats
@@ -517,13 +513,10 @@ def background_token_refresh():
                     else:
                         user_id, access_token, refresh_token, expires_at = token_data
                     
-                    print(f"Background refresh: Refreshing token for user {user_id}")
-                    
                     # Refresh the token
                     refresh_result = refresh_ebay_token(refresh_token)
                     
                     if refresh_result['success']:
-                        print(f"Background refresh: Successfully refreshed token for user {user_id}")
                         # Update database with new tokens
                         store_ebay_tokens_in_db(
                             refresh_result['access_token'],
@@ -531,11 +524,8 @@ def background_token_refresh():
                             datetime.now() + timedelta(seconds=refresh_result.get('expires_in', 7200)),
                             user_id
                         )
-                    else:
-                        print(f"Background refresh: Failed to refresh token for user {user_id}: {refresh_result.get('error', 'Unknown error')}")
             
         except Exception as e:
-            print(f"Background refresh: Exception occurred: {str(e)}")
             time.sleep(300)  # Wait 5 minutes before retrying
 
 # Global variable to track if background refresh is already started
@@ -3556,99 +3546,6 @@ def sold_items():
         return redirect(url_for('describe_item',item=details['id']))
     return render_template('items_sold.html', form=form)
 
-@app.route('/api/check-tokens', methods=['GET'])
-def check_tokens():
-    """
-    Check what tokens are currently stored in the database
-    """
-    try:
-        # Ensure MySQL connection
-        if not mysql.connection:
-            mysql.connect()
-        
-        cur = mysql.connection.cursor()
-        
-        # Check if table exists
-        cur.execute("SHOW TABLES LIKE 'ebay_tokens'")
-        table_exists = cur.fetchone()
-        
-        if not table_exists:
-            return jsonify({
-                'success': False,
-                'error': 'ebay_tokens table does not exist'
-            })
-        
-        # Get all tokens
-        cur.execute("SELECT user_id, access_token, refresh_token, expires_at, created_at, updated_at FROM ebay_tokens")
-        tokens = cur.fetchall()
-        
-        # Format the results
-        token_list = []
-        for token in tokens:
-            if isinstance(token, dict):
-                token_data = {
-                    'user_id': token.get('user_id'),
-                    'has_access_token': bool(token.get('access_token')),
-                    'has_refresh_token': bool(token.get('refresh_token')),
-                    'expires_at': str(token.get('expires_at')) if token.get('expires_at') else None,
-                    'created_at': str(token.get('created_at')) if token.get('created_at') else None,
-                    'updated_at': str(token.get('updated_at')) if token.get('updated_at') else None
-                }
-            else:
-                token_data = {
-                    'user_id': token[0] if len(token) > 0 else None,
-                    'has_access_token': bool(token[1]) if len(token) > 1 else False,
-                    'has_refresh_token': bool(token[2]) if len(token) > 2 else False,
-                    'expires_at': str(token[3]) if len(token) > 3 and token[3] else None,
-                    'created_at': str(token[4]) if len(token) > 4 and token[4] else None,
-                    'updated_at': str(token[5]) if len(token) > 5 and token[5] else None
-                }
-            token_list.append(token_data)
-        
-        return jsonify({
-            'success': True,
-            'tokens': token_list,
-            'total_tokens': len(token_list)
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Check tokens error: {str(e)}'
-        })
-
-@app.route('/api/test-refresh', methods=['POST'])
-def test_refresh():
-    """
-    Test endpoint to manually trigger token refresh
-    """
-    try:
-        # Get tokens from database
-        db_tokens = get_ebay_tokens_from_db()
-        
-        if not db_tokens or not db_tokens.get('refresh_token'):
-            return jsonify({
-                'success': False,
-                'error': 'No refresh token found in database'
-            })
-        
-        print(f"Testing refresh with token: {db_tokens['refresh_token'][:20]}...")
-        
-        # Try to refresh the token
-        refresh_result = refresh_ebay_token(db_tokens['refresh_token'])
-        
-        return jsonify({
-            'success': refresh_result['success'],
-            'error': refresh_result.get('error'),
-            'has_refresh_token': bool(db_tokens.get('refresh_token')),
-            'token_expires_at': str(db_tokens.get('expires_at')) if db_tokens.get('expires_at') else None
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Test refresh error: {str(e)}'
-        })
 
 @login_required
 def get_ebay_item_data(item_id):
