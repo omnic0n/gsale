@@ -2973,12 +2973,20 @@ def api_ebay_debug_refresh():
             # Test the refresh
             refresh_result = refresh_ebay_token(refresh_token)
             
+            # Handle both string and datetime formats
+            def format_datetime(dt):
+                if dt is None:
+                    return None
+                if isinstance(dt, str):
+                    return dt
+                return dt.isoformat()
+            
             debug_info = {
                 'user_id': user_id,
                 'refresh_success': refresh_result['success'],
                 'error': refresh_result.get('error'),
-                'old_expires_at': expires_at.isoformat(),
-                'old_updated_at': updated_at.isoformat()
+                'old_expires_at': format_datetime(expires_at),
+                'old_updated_at': format_datetime(updated_at)
             }
             
             if refresh_result['success']:
@@ -2991,9 +2999,22 @@ def api_ebay_debug_refresh():
                 
                 updated_token = cur.fetchone()
                 if updated_token:
-                    debug_info['new_expires_at'] = updated_token[0].isoformat()
-                    debug_info['new_updated_at'] = updated_token[1].isoformat()
-                    debug_info['database_updated'] = updated_token[1] > updated_at
+                    debug_info['new_expires_at'] = format_datetime(updated_token[0])
+                    debug_info['new_updated_at'] = format_datetime(updated_token[1])
+                    
+                    # Compare timestamps properly
+                    old_updated = updated_at
+                    new_updated = updated_token[1]
+                    
+                    # Convert to datetime if they're strings
+                    if isinstance(old_updated, str):
+                        from datetime import datetime
+                        old_updated = datetime.fromisoformat(old_updated.replace('Z', '+00:00'))
+                    if isinstance(new_updated, str):
+                        from datetime import datetime
+                        new_updated = datetime.fromisoformat(new_updated.replace('Z', '+00:00'))
+                    
+                    debug_info['database_updated'] = new_updated > old_updated
                 else:
                     debug_info['database_updated'] = False
                     debug_info['error'] = 'Token not found after refresh'
