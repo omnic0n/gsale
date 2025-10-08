@@ -3006,7 +3006,18 @@ def api_ebay_debug_refresh():
         debug_results = []
         
         for token_data in tokens_in_db:
-            user_id, access_token, refresh_token, expires_at, updated_at = token_data
+            print(f"DEBUG: Token data type: {type(token_data)}, value: {token_data}")
+            
+            # Handle both dict and tuple formats
+            if isinstance(token_data, dict):
+                user_id = token_data.get('user_id')
+                access_token = token_data.get('access_token')
+                refresh_token = token_data.get('refresh_token')
+                expires_at = token_data.get('expires_at')
+                updated_at = token_data.get('updated_at')
+            else:
+                # Assume tuple format
+                user_id, access_token, refresh_token, expires_at, updated_at = token_data
             
             print(f"DEBUG: Testing refresh for user {user_id}")
             print(f"DEBUG: Current token expires at: {expires_at}")
@@ -3199,7 +3210,18 @@ def api_ebay_debug_web():
         debug_results = []
         
         for token_data in tokens_in_db:
-            user_id, access_token, refresh_token, expires_at, updated_at = token_data
+            print(f"DEBUG: Token data type: {type(token_data)}, value: {token_data}")
+            
+            # Handle both dict and tuple formats
+            if isinstance(token_data, dict):
+                user_id = token_data.get('user_id')
+                access_token = token_data.get('access_token')
+                refresh_token = token_data.get('refresh_token')
+                expires_at = token_data.get('expires_at')
+                updated_at = token_data.get('updated_at')
+            else:
+                # Assume tuple format
+                user_id, access_token, refresh_token, expires_at, updated_at = token_data
             
             print(f"DEBUG: Testing refresh for user {user_id}")
             print(f"DEBUG: Current token expires at: {expires_at}")
