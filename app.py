@@ -419,7 +419,7 @@ def store_ebay_tokens_in_db(access_token, refresh_token, expires_at, user_id=Non
 
 def get_ebay_tokens_from_db(user_id=None):
     """
-    Retrieve eBay tokens from database
+    Retrieve eBay tokens from database for a specific user
     """
     try:
         # Ensure MySQL connection is available
@@ -431,22 +431,20 @@ def get_ebay_tokens_from_db(user_id=None):
         
         cur = mysql.connection.cursor()
         
-        # If no user_id provided, get the most recent token
+        # Use session user ID if not provided
         if not user_id:
-            cur.execute("""
-                SELECT access_token, refresh_token, expires_at, user_id
-                FROM ebay_tokens
-                ORDER BY updated_at DESC
-                LIMIT 1
-            """)
-        else:
-            cur.execute("""
-                SELECT access_token, refresh_token, expires_at, user_id
-                FROM ebay_tokens
-                WHERE user_id = %s
-                ORDER BY updated_at DESC
-                LIMIT 1
-            """, (user_id,))
+            user_id = session.get('id')
+        
+        if not user_id:
+            return None
+        
+        cur.execute("""
+            SELECT access_token, refresh_token, expires_at, user_id
+            FROM ebay_tokens
+            WHERE user_id = %s
+            ORDER BY updated_at DESC
+            LIMIT 1
+        """, (user_id,))
         
         result = cur.fetchone()
         if result:
@@ -2603,7 +2601,7 @@ def ebay_callback():
 
 @app.route('/ebay-logout')
 def ebay_logout():
-    """Clear eBay OAuth tokens"""
+    """Clear eBay OAuth tokens for current user"""
     try:
         # Clear eBay OAuth session data
         session.pop('ebay_access_token', None)
@@ -2611,12 +2609,24 @@ def ebay_logout():
         session.pop('ebay_token_expires', None)
         session.pop('ebay_oauth_state', None)
         
+        # Clear tokens from database for current user
+        user_id = session.get('id')
+        if user_id:
+            try:
+                if not mysql.connection:
+                    mysql.connect()
+                cur = mysql.connection.cursor()
+                cur.execute("DELETE FROM ebay_tokens WHERE user_id = %s", (user_id,))
+                mysql.connection.commit()
+            except Exception as db_error:
+                print(f"Error clearing database tokens: {db_error}")
+        
         flash('eBay OAuth tokens cleared successfully!', 'success')
-        return redirect(url_for('admin_panel'))
+        return redirect(url_for('settings_ebay_listings'))
         
     except Exception as e:
         flash(f'Error clearing eBay tokens: {str(e)}', 'error')
-        return redirect(url_for('admin_panel'))
+        return redirect(url_for('settings_ebay_listings'))
 
 @app.route('/debug/ebay-oauth-url')
 def debug_ebay_oauth_url():
