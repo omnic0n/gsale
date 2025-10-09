@@ -455,7 +455,6 @@ class NetworkManager: NSObject {
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue("*/*", forHTTPHeaderField: "Accept")
-        request.setValue("\(bodyData.count)", forHTTPHeaderField: "Content-Length")
         request.httpBody = bodyData
         
         
@@ -2212,8 +2211,7 @@ class NetworkManager: NSObject {
             // Check if we got a login page instead of the categories page  
             if responseString.contains("<title>Login</title>") || 
                responseString.contains("Please log in") ||
-               responseString.contains("You should be redirected") ||
-               !responseString.contains("Add Item") {
+               responseString.contains("You should be redirected") {
                 return fallbackCategories
             }
             
@@ -2224,10 +2222,7 @@ class NetworkManager: NSObject {
                 try? responseString.write(to: filePath, atomically: true, encoding: .utf8)
             }
             
-            // Check if HTML contains the category select element
-            if responseString.contains("name=\"category\"") {
-            } else {
-            }
+            // Optional sanity check; proceed to parse regardless of exact marker
             
             let parsedCategories = parseCategories(from: responseString)
             
@@ -2251,8 +2246,8 @@ class NetworkManager: NSObject {
         // Need to specifically target the category select, not group select
         
         do {
-            // First find the category select section
-            let selectRegex = try NSRegularExpression(pattern: #"<select[^>]*name="category"[^>]*>(.*?)</select>"#, options: [.dotMatchesLineSeparators])
+            // First find the category select section (supports both name="category" and name="items-0-category")
+            let selectRegex = try NSRegularExpression(pattern: #"<select[^>]*name=\"(?:category|items-0-category)\"[^>]*>(.*?)</select>"#, options: [.dotMatchesLineSeparators])
             let selectMatches = selectRegex.matches(in: html, options: [], range: NSRange(html.startIndex..<html.endIndex, in: html))
             
             
@@ -2685,9 +2680,9 @@ class NetworkManager: NSObject {
         return isNegative ? -value : value
     }
     
-    // MARK: - Item Detail Structure
+    // MARK: - Add Item Payload (avoid name collision with app-wide ItemDetail model)
     
-    struct ItemDetail {
+    struct AddItemPayload {
         let name: String
         let categoryId: String
         let ebayItemId: String?
@@ -2695,7 +2690,7 @@ class NetworkManager: NSObject {
     
     // MARK: - Add Items (Improved)
     
-    func addItems(items: [ItemDetail], groupId: String, storage: String, listDate: String) async throws -> Bool {
+    func addItems(items: [AddItemPayload], groupId: String, storage: String, listDate: String) async throws -> Bool {
         guard let cookie = UserManager.shared.cookie else {
             throw NetworkError.unauthorized
         }
@@ -2733,7 +2728,6 @@ class NetworkManager: NSObject {
         request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue("*/*", forHTTPHeaderField: "Accept")
-        request.setValue("\(bodyData.count)", forHTTPHeaderField: "Content-Length")
         request.httpBody = bodyData
         
         let (data, response) = try await session.data(for: request)
@@ -2748,41 +2742,10 @@ class NetworkManager: NSObject {
     // MARK: - Add Item (Legacy - for backward compatibility)
     
     func addItem(itemName: String, groupId: String, categoryId: String, storage: String, listDate: String) async throws -> Bool {
-        let item = ItemDetail(name: itemName, categoryId: categoryId, ebayItemId: nil)
+        let item = AddItemPayload(name: itemName, categoryId: categoryId, ebayItemId: nil)
         return try await addItems(items: [item], groupId: groupId, storage: storage, listDate: listDate)
     }
-        
-        
-        // Handle various success statuses
-        if httpResponse.statusCode == 200 || httpResponse.statusCode == 302 {
-            // Check if we got a login page
-            if let responseString = String(data: data, encoding: .utf8) {
-                if responseString.contains("<title>Login</title>") || responseString.contains("Please log in") {
-                    throw NetworkError.unauthorized
-                }
-                
-                // Check for any error messages in the response
-                if responseString.contains("error") || responseString.contains("Error") {
-                    // Still consider it a success if it's a 200/302 - might be a form validation issue
-                }
-                
-                return true
-            }
-        }
-        
-        if httpResponse.statusCode == 500 {
-            let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw NetworkError.serverError("Server error (500) - \(responseString)")
-        } else if httpResponse.statusCode == 400 {
-            let responseString = String(data: data, encoding: .utf8) ?? "Bad request"
-            throw NetworkError.serverError("Bad request (400) - \(responseString)")
-        } else if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
-            throw NetworkError.unauthorized
-        } else {
-            let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw NetworkError.serverError("HTTP \(httpResponse.statusCode) - \(responseString)")
-        }
-    }
+    
 
     // MARK: - Mark Item Sold
     func markItemSold(itemId: String, soldDate: String, price: String, shippingFee: String) async throws {
