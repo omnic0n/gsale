@@ -123,8 +123,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Store cities for each state
     const citiesByState = {};
+    
+    // Debug: Log all neighborhoods data
+    console.log('Neighborhoods data:', {{ neighborhoods | tojson }});
+    
     {% for neighborhood in neighborhoods %}
     {% if neighborhood.neighborhood.state and neighborhood.neighborhood.city %}
+    console.log('Processing: State={{ neighborhood.neighborhood.state }}, City={{ neighborhood.neighborhood.city }}');
     if (!citiesByState['{{ neighborhood.neighborhood.state }}']) {
         citiesByState['{{ neighborhood.neighborhood.state }}'] = [];
     }
@@ -134,6 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endif %}
     {% endfor %}
     
+    // Debug: Log the citiesByState object
+    console.log('Cities by state:', citiesByState);
+    
     // Sort cities for each state
     Object.keys(citiesByState).forEach(state => {
         citiesByState[state].sort();
@@ -142,18 +150,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update city dropdown when state changes
     stateSelect.addEventListener('change', function() {
         const selectedState = this.value;
+        console.log('State changed to:', selectedState);
         
         // Clear current city options
         citySelect.innerHTML = '<option value="">All Cities</option>';
         
         // Add cities for selected state
         if (selectedState && citiesByState[selectedState]) {
+            console.log('Cities for', selectedState, ':', citiesByState[selectedState]);
             citiesByState[selectedState].forEach(city => {
                 const option = document.createElement('option');
                 option.value = city;
                 option.textContent = city;
                 citySelect.appendChild(option);
             });
+        } else {
+            console.log('No cities found for state:', selectedState);
         }
     });
     
