@@ -1401,7 +1401,7 @@ def get_user_neighborhoods():
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
-            SELECT id, name, description, city, state, score, created_at, updated_at
+            SELECT id, name, description, city, state, created_at, updated_at
             FROM neighborhoods
             WHERE user_id = %s
             ORDER BY name ASC
@@ -1419,7 +1419,7 @@ def get_neighborhood_by_id(neighborhood_id):
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
-            SELECT id, name, description, city, state, score, created_at, updated_at
+            SELECT id, name, description, city, state, created_at, updated_at
             FROM neighborhoods
             WHERE id = %s AND user_id = %s
         """, (neighborhood_id, session.get('id')))

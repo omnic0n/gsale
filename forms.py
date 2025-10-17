@@ -139,10 +139,6 @@ class NeighborhoodForm(FlaskForm):
     description = TextAreaField('Description', validators=[Length(max=500)])
     city = StringField('City', validators=[Length(max=100)])
     state = StringField('State', validators=[Length(max=50)])
-    score = SelectField('Score (1-10)', 
-                        choices=[(1, '1 - Poor'), (2, '2'), (3, '3'), (4, '4'), (5, '5 - Average'), 
-                                (6, '6'), (7, '7'), (8, '8'), (9, '9'), (10, '10 - Excellent')],
-                        coerce=int, default=5)
     submit = SubmitField('Create Neighborhood')
 
 class NeighborhoodReportForm(FlaskForm):

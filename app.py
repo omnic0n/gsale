@@ -4429,8 +4429,7 @@ def manage_neighborhoods():
                 'name': request.form.get('name', '').strip(),
                 'description': request.form.get('description', '').strip(),
                 'city': request.form.get('city', '').strip(),
-                'state': request.form.get('state', '').strip(),
-                'score': int(request.form.get('score', 5))
+                'state': request.form.get('state', '').strip()
             }
             
             success, message = set_data.create_neighborhood(details)
@@ -4447,8 +4446,7 @@ def manage_neighborhoods():
                     'name': request.form.get('name', '').strip(),
                     'description': request.form.get('description', '').strip(),
                     'city': request.form.get('city', '').strip(),
-                    'state': request.form.get('state', '').strip(),
-                    'score': int(request.form.get('score', 5))
+                    'state': request.form.get('state', '').strip()
                 }
                 
                 success, message = set_data.update_neighborhood(neighborhood_id, details)

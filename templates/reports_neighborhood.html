@@ -3,17 +3,12 @@
 <script>
 // Wait for page to load
 setTimeout(function() {
-    console.log('Page loaded, initializing filters...');
-    
     const stateSelect = document.getElementById('state_filter');
     const citySelect = document.getElementById('city_filter');
     
     if (!stateSelect || !citySelect) {
-        console.error('Could not find state or city select elements');
         return;
     }
-    
-    console.log('Found elements:', stateSelect, citySelect);
     
     // Store cities for each state
     const citiesByState = {};
@@ -35,31 +30,23 @@ setTimeout(function() {
         citiesByState[stateKey].sort();
     });
     
-    console.log('Cities by state:', citiesByState);
-    
     // Update city dropdown when state changes
     stateSelect.addEventListener('change', function() {
         const selectedState = this.value;
-        console.log('State changed to:', selectedState);
         
         // Clear current city options
         citySelect.innerHTML = '<option value="">All Cities</option>';
         
         // Add cities for selected state
         if (selectedState && citiesByState[selectedState]) {
-            console.log('Cities for', selectedState, ':', citiesByState[selectedState]);
             citiesByState[selectedState].forEach(city => {
                 const option = document.createElement('option');
                 option.value = city;
                 option.textContent = city;
                 citySelect.appendChild(option);
             });
-        } else {
-            console.log('No cities found for state:', selectedState);
         }
     });
-    
-    console.log('Filters initialized successfully');
     
     // If there's a selected city from form submission, populate it
     {% if selected_city %}
@@ -142,7 +129,6 @@ setTimeout(function() {
                     <th>Neighborhood</th>
                     <th>City</th>
                     <th>State</th>
-                    <th>Score</th>
                 </tr>
             </thead>
             <tbody>
@@ -175,11 +161,6 @@ setTimeout(function() {
                         {% else %}
                             N/A
                         {% endif %}
-                    </td>
-                    <td>
-                        <span class="badge {% if neighborhood.score >= 8 %}badge-success{% elif neighborhood.score >= 6 %}badge-warning{% else %}badge-danger{% endif %}">
-                            {{ neighborhood.score }}/10
-                        </span>
                     </td>
                 </tr>
                 {% endfor %}

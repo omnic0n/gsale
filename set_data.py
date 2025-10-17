@@ -1719,10 +1719,6 @@ def create_neighborhood(details):
         if not isinstance(details.get('state'), str) or len(details.get('state', '')) > 50:
             raise ValueError("Invalid state")
         
-        score = int(details.get('score', 5))
-        if score < 1 or score > 10:
-            raise ValueError("Score must be between 1 and 10")
-        
         cur = mysql.connection.cursor()
         
         # Check if neighborhood with same name already exists for this user
@@ -1738,9 +1734,9 @@ def create_neighborhood(details):
         # Create the neighborhood
         neighborhood_id = generate_uuid()
         cur.execute("""
-            INSERT INTO neighborhoods (id, name, description, city, state, score, user_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (neighborhood_id, details['name'], details['description'], details['city'], details['state'], score, session.get('id')))
+            INSERT INTO neighborhoods (id, name, description, city, state, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (neighborhood_id, details['name'], details['description'], details['city'], details['state'], session.get('id')))
         
         mysql.connection.commit()
         cur.close()
@@ -1768,10 +1764,6 @@ def update_neighborhood(neighborhood_id, details):
         if not isinstance(details.get('state'), str) or len(details.get('state', '')) > 50:
             raise ValueError("Invalid state")
         
-        score = int(details.get('score', 5))
-        if score < 1 or score > 10:
-            raise ValueError("Score must be between 1 and 10")
-        
         cur = mysql.connection.cursor()
         
         # Check if neighborhood exists and belongs to current user
@@ -1797,9 +1789,9 @@ def update_neighborhood(neighborhood_id, details):
         # Update the neighborhood
         cur.execute("""
             UPDATE neighborhoods 
-            SET name = %s, description = %s, city = %s, state = %s, score = %s, updated_at = CURRENT_TIMESTAMP
+            SET name = %s, description = %s, city = %s, state = %s, updated_at = CURRENT_TIMESTAMP
             WHERE id = %s AND user_id = %s
-        """, (details['name'], details['description'], details['city'], details['state'], score, neighborhood_id, session.get('id')))
+        """, (details['name'], details['description'], details['city'], details['state'], neighborhood_id, session.get('id')))
         
         mysql.connection.commit()
         cur.close()
