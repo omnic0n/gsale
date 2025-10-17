@@ -43,6 +43,11 @@ setTimeout(function() {
     
     console.log('Cities by state:', citiesByState);
     
+    // Debug: Show all states and their cities
+    Object.keys(citiesByState).forEach(state => {
+        console.log('State:', state, 'has cities:', citiesByState[state]);
+    });
+    
     // Update city dropdown when state changes
     stateSelect.addEventListener('change', function() {
         const selectedState = this.value;
