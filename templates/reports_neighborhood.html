@@ -1,9 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
 <script>
-// Simple test to see if script runs
-alert('Script is running!');
-
 // Wait for page to load
 setTimeout(function() {
     console.log('Page loaded, initializing filters...');
@@ -107,7 +104,7 @@ setTimeout(function() {
                                 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
                                 'DC': 'District of Columbia'
                             } %}
-                            <option value="{{ state_code }}" {% if state_code == selected_state %}selected{% endif %}>
+                            <option value="{{ state_code }}">
                                 {{ state_names.get(state_code, state_code) }}
                             </option>
                         {% endfor %}
