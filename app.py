@@ -3228,26 +3228,36 @@ def reports_neighborhood():
     # Get all neighborhoods for the current user
     neighborhoods = get_data.get_user_neighborhoods()
     
-    # Get all available years
-    years = get_data.get_years()
-    year_choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
+    # Get selected filters from request
+    selected_state = request.form.get('state', '') if request.method == "POST" else ''
+    selected_city = request.form.get('city', '') if request.method == "POST" else ''
     
-    # Get selected year from request
-    selected_year = request.form.get('year', 'all') if request.method == "POST" else 'all'
-    
-    # Get neighborhood data with summaries
-    neighborhood_data = []
+    # Filter neighborhoods based on state and city
+    filtered_neighborhoods = []
     for neighborhood in neighborhoods:
-        summary = get_data.get_neighborhood_summary(neighborhood['id'], selected_year)
+        # Apply state filter
+        if selected_state and neighborhood.get('state') != selected_state:
+            continue
+        # Apply city filter
+        if selected_city and neighborhood.get('city') != selected_city:
+            continue
+        filtered_neighborhoods.append(neighborhood)
+    
+    # Get unique cities for the city dropdown
+    city_choices = sorted(list(set([n.get('city') for n in neighborhoods if n.get('city')])))
+    
+    # Get neighborhood data with summaries (no longer needed since we removed metrics)
+    neighborhood_data = []
+    for neighborhood in filtered_neighborhoods:
         neighborhood_data.append({
-            'neighborhood': neighborhood,
-            'summary': summary
+            'neighborhood': neighborhood
         })
     
     return render_template('reports_neighborhood.html', 
                          neighborhoods=neighborhood_data, 
-                         year_choices=year_choices,
-                         selected_year=selected_year)
+                         city_choices=city_choices,
+                         selected_state=selected_state,
+                         selected_city=selected_city)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])

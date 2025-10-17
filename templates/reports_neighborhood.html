@@ -6,13 +6,81 @@
     
     <form method="POST" class="mb-4">
         <div class="form-group">
-            <label for="year_filter">Year Filter:</label>
-            <select name="year" id="year_filter" class="form-control" style="width: auto; display: inline-block;">
-                {% for year_value, year_label in year_choices %}
-                    <option value="{{ year_value }}" {% if year_value == selected_year %}selected{% endif %}>{{ year_label }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-primary ml-2">Filter</button>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="state_filter">State Filter:</label>
+                    <select name="state" id="state_filter" class="form-control">
+                        <option value="">All States</option>
+                        <option value="AL" {% if selected_state == 'AL' %}selected{% endif %}>Alabama</option>
+                        <option value="AK" {% if selected_state == 'AK' %}selected{% endif %}>Alaska</option>
+                        <option value="AZ" {% if selected_state == 'AZ' %}selected{% endif %}>Arizona</option>
+                        <option value="AR" {% if selected_state == 'AR' %}selected{% endif %}>Arkansas</option>
+                        <option value="CA" {% if selected_state == 'CA' %}selected{% endif %}>California</option>
+                        <option value="CO" {% if selected_state == 'CO' %}selected{% endif %}>Colorado</option>
+                        <option value="CT" {% if selected_state == 'CT' %}selected{% endif %}>Connecticut</option>
+                        <option value="DE" {% if selected_state == 'DE' %}selected{% endif %}>Delaware</option>
+                        <option value="FL" {% if selected_state == 'FL' %}selected{% endif %}>Florida</option>
+                        <option value="GA" {% if selected_state == 'GA' %}selected{% endif %}>Georgia</option>
+                        <option value="HI" {% if selected_state == 'HI' %}selected{% endif %}>Hawaii</option>
+                        <option value="ID" {% if selected_state == 'ID' %}selected{% endif %}>Idaho</option>
+                        <option value="IL" {% if selected_state == 'IL' %}selected{% endif %}>Illinois</option>
+                        <option value="IN" {% if selected_state == 'IN' %}selected{% endif %}>Indiana</option>
+                        <option value="IA" {% if selected_state == 'IA' %}selected{% endif %}>Iowa</option>
+                        <option value="KS" {% if selected_state == 'KS' %}selected{% endif %}>Kansas</option>
+                        <option value="KY" {% if selected_state == 'KY' %}selected{% endif %}>Kentucky</option>
+                        <option value="LA" {% if selected_state == 'LA' %}selected{% endif %}>Louisiana</option>
+                        <option value="ME" {% if selected_state == 'ME' %}selected{% endif %}>Maine</option>
+                        <option value="MD" {% if selected_state == 'MD' %}selected{% endif %}>Maryland</option>
+                        <option value="MA" {% if selected_state == 'MA' %}selected{% endif %}>Massachusetts</option>
+                        <option value="MI" {% if selected_state == 'MI' %}selected{% endif %}>Michigan</option>
+                        <option value="MN" {% if selected_state == 'MN' %}selected{% endif %}>Minnesota</option>
+                        <option value="MS" {% if selected_state == 'MS' %}selected{% endif %}>Mississippi</option>
+                        <option value="MO" {% if selected_state == 'MO' %}selected{% endif %}>Missouri</option>
+                        <option value="MT" {% if selected_state == 'MT' %}selected{% endif %}>Montana</option>
+                        <option value="NE" {% if selected_state == 'NE' %}selected{% endif %}>Nebraska</option>
+                        <option value="NV" {% if selected_state == 'NV' %}selected{% endif %}>Nevada</option>
+                        <option value="NH" {% if selected_state == 'NH' %}selected{% endif %}>New Hampshire</option>
+                        <option value="NJ" {% if selected_state == 'NJ' %}selected{% endif %}>New Jersey</option>
+                        <option value="NM" {% if selected_state == 'NM' %}selected{% endif %}>New Mexico</option>
+                        <option value="NY" {% if selected_state == 'NY' %}selected{% endif %}>New York</option>
+                        <option value="NC" {% if selected_state == 'NC' %}selected{% endif %}>North Carolina</option>
+                        <option value="ND" {% if selected_state == 'ND' %}selected{% endif %}>North Dakota</option>
+                        <option value="OH" {% if selected_state == 'OH' %}selected{% endif %}>Ohio</option>
+                        <option value="OK" {% if selected_state == 'OK' %}selected{% endif %}>Oklahoma</option>
+                        <option value="OR" {% if selected_state == 'OR' %}selected{% endif %}>Oregon</option>
+                        <option value="PA" {% if selected_state == 'PA' %}selected{% endif %}>Pennsylvania</option>
+                        <option value="RI" {% if selected_state == 'RI' %}selected{% endif %}>Rhode Island</option>
+                        <option value="SC" {% if selected_state == 'SC' %}selected{% endif %}>South Carolina</option>
+                        <option value="SD" {% if selected_state == 'SD' %}selected{% endif %}>South Dakota</option>
+                        <option value="TN" {% if selected_state == 'TN' %}selected{% endif %}>Tennessee</option>
+                        <option value="TX" {% if selected_state == 'TX' %}selected{% endif %}>Texas</option>
+                        <option value="UT" {% if selected_state == 'UT' %}selected{% endif %}>Utah</option>
+                        <option value="VT" {% if selected_state == 'VT' %}selected{% endif %}>Vermont</option>
+                        <option value="VA" {% if selected_state == 'VA' %}selected{% endif %}>Virginia</option>
+                        <option value="WA" {% if selected_state == 'WA' %}selected{% endif %}>Washington</option>
+                        <option value="WV" {% if selected_state == 'WV' %}selected{% endif %}>West Virginia</option>
+                        <option value="WI" {% if selected_state == 'WI' %}selected{% endif %}>Wisconsin</option>
+                        <option value="WY" {% if selected_state == 'WY' %}selected{% endif %}>Wyoming</option>
+                        <option value="DC" {% if selected_state == 'DC' %}selected{% endif %}>District of Columbia</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="city_filter">City Filter:</label>
+                    <select name="city" id="city_filter" class="form-control">
+                        <option value="">All Cities</option>
+                        {% for city in city_choices %}
+                            <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label>&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="/reports/neighborhood" class="btn btn-secondary ml-2">Clear</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </form>
     
@@ -80,3 +148,54 @@
 </div>
 
 {% endblock content %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stateSelect = document.getElementById('state_filter');
+    const citySelect = document.getElementById('city_filter');
+    
+    // Store all cities for each state
+    const citiesByState = {
+        {% for neighborhood in neighborhoods %}
+        {% if neighborhood.neighborhood.state and neighborhood.neighborhood.city %}
+        '{{ neighborhood.neighborhood.state }}': '{{ neighborhood.neighborhood.city }}',
+        {% endif %}
+        {% endfor %}
+    };
+    
+    // Update city dropdown when state changes
+    stateSelect.addEventListener('change', function() {
+        const selectedState = this.value;
+        
+        // Clear current city options
+        citySelect.innerHTML = '<option value="">All Cities</option>';
+        
+        // Add cities for selected state
+        if (selectedState) {
+            const cities = Object.keys(citiesByState).filter(state => state === selectedState)
+                .map(state => citiesByState[state])
+                .filter((city, index, arr) => arr.indexOf(city) === index) // Remove duplicates
+                .sort();
+            
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+        } else {
+            // Show all cities when no state is selected
+            const allCities = Object.values(citiesByState)
+                .filter((city, index, arr) => arr.indexOf(city) === index) // Remove duplicates
+                .sort();
+            
+            allCities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+        }
+    });
+});
+</script>
