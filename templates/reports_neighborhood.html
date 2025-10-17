@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 {% block content %}
+<script>
+alert('Script is running!');
+</script>
 <div class="content-wrapper">
     <h1>Neighborhood Sales Report</h1>
     <p>Analyze sales performance by neighborhood with scoring system</p>
@@ -116,7 +119,6 @@
 
 {% endblock content %}
 
-{% block scripts %}
 <script>
 // Simple test to see if script runs
 alert('Script is running!');
@@ -185,4 +187,3 @@ window.onload = function() {
     console.log('Filters initialized successfully');
 };
 </script>
-{% endblock %}
