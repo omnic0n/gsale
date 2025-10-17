@@ -37,8 +37,8 @@ setTimeout(function() {
     {% endfor %}
     
     // Sort cities for each state
-    Object.keys(citiesByState).forEach(state => {
-        citiesByState[state].sort();
+    Object.keys(citiesByState).forEach(stateKey => {
+        citiesByState[stateKey].sort();
     });
     
     console.log('Cities by state:', citiesByState);
