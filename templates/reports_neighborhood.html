@@ -11,57 +11,24 @@
                     <label for="state_filter">State Filter:</label>
                     <select name="state" id="state_filter" class="form-control">
                         <option value="">All States</option>
-                        <option value="AL" {% if selected_state == 'AL' %}selected{% endif %}>Alabama</option>
-                        <option value="AK" {% if selected_state == 'AK' %}selected{% endif %}>Alaska</option>
-                        <option value="AZ" {% if selected_state == 'AZ' %}selected{% endif %}>Arizona</option>
-                        <option value="AR" {% if selected_state == 'AR' %}selected{% endif %}>Arkansas</option>
-                        <option value="CA" {% if selected_state == 'CA' %}selected{% endif %}>California</option>
-                        <option value="CO" {% if selected_state == 'CO' %}selected{% endif %}>Colorado</option>
-                        <option value="CT" {% if selected_state == 'CT' %}selected{% endif %}>Connecticut</option>
-                        <option value="DE" {% if selected_state == 'DE' %}selected{% endif %}>Delaware</option>
-                        <option value="FL" {% if selected_state == 'FL' %}selected{% endif %}>Florida</option>
-                        <option value="GA" {% if selected_state == 'GA' %}selected{% endif %}>Georgia</option>
-                        <option value="HI" {% if selected_state == 'HI' %}selected{% endif %}>Hawaii</option>
-                        <option value="ID" {% if selected_state == 'ID' %}selected{% endif %}>Idaho</option>
-                        <option value="IL" {% if selected_state == 'IL' %}selected{% endif %}>Illinois</option>
-                        <option value="IN" {% if selected_state == 'IN' %}selected{% endif %}>Indiana</option>
-                        <option value="IA" {% if selected_state == 'IA' %}selected{% endif %}>Iowa</option>
-                        <option value="KS" {% if selected_state == 'KS' %}selected{% endif %}>Kansas</option>
-                        <option value="KY" {% if selected_state == 'KY' %}selected{% endif %}>Kentucky</option>
-                        <option value="LA" {% if selected_state == 'LA' %}selected{% endif %}>Louisiana</option>
-                        <option value="ME" {% if selected_state == 'ME' %}selected{% endif %}>Maine</option>
-                        <option value="MD" {% if selected_state == 'MD' %}selected{% endif %}>Maryland</option>
-                        <option value="MA" {% if selected_state == 'MA' %}selected{% endif %}>Massachusetts</option>
-                        <option value="MI" {% if selected_state == 'MI' %}selected{% endif %}>Michigan</option>
-                        <option value="MN" {% if selected_state == 'MN' %}selected{% endif %}>Minnesota</option>
-                        <option value="MS" {% if selected_state == 'MS' %}selected{% endif %}>Mississippi</option>
-                        <option value="MO" {% if selected_state == 'MO' %}selected{% endif %}>Missouri</option>
-                        <option value="MT" {% if selected_state == 'MT' %}selected{% endif %}>Montana</option>
-                        <option value="NE" {% if selected_state == 'NE' %}selected{% endif %}>Nebraska</option>
-                        <option value="NV" {% if selected_state == 'NV' %}selected{% endif %}>Nevada</option>
-                        <option value="NH" {% if selected_state == 'NH' %}selected{% endif %}>New Hampshire</option>
-                        <option value="NJ" {% if selected_state == 'NJ' %}selected{% endif %}>New Jersey</option>
-                        <option value="NM" {% if selected_state == 'NM' %}selected{% endif %}>New Mexico</option>
-                        <option value="NY" {% if selected_state == 'NY' %}selected{% endif %}>New York</option>
-                        <option value="NC" {% if selected_state == 'NC' %}selected{% endif %}>North Carolina</option>
-                        <option value="ND" {% if selected_state == 'ND' %}selected{% endif %}>North Dakota</option>
-                        <option value="OH" {% if selected_state == 'OH' %}selected{% endif %}>Ohio</option>
-                        <option value="OK" {% if selected_state == 'OK' %}selected{% endif %}>Oklahoma</option>
-                        <option value="OR" {% if selected_state == 'OR' %}selected{% endif %}>Oregon</option>
-                        <option value="PA" {% if selected_state == 'PA' %}selected{% endif %}>Pennsylvania</option>
-                        <option value="RI" {% if selected_state == 'RI' %}selected{% endif %}>Rhode Island</option>
-                        <option value="SC" {% if selected_state == 'SC' %}selected{% endif %}>South Carolina</option>
-                        <option value="SD" {% if selected_state == 'SD' %}selected{% endif %}>South Dakota</option>
-                        <option value="TN" {% if selected_state == 'TN' %}selected{% endif %}>Tennessee</option>
-                        <option value="TX" {% if selected_state == 'TX' %}selected{% endif %}>Texas</option>
-                        <option value="UT" {% if selected_state == 'UT' %}selected{% endif %}>Utah</option>
-                        <option value="VT" {% if selected_state == 'VT' %}selected{% endif %}>Vermont</option>
-                        <option value="VA" {% if selected_state == 'VA' %}selected{% endif %}>Virginia</option>
-                        <option value="WA" {% if selected_state == 'WA' %}selected{% endif %}>Washington</option>
-                        <option value="WV" {% if selected_state == 'WV' %}selected{% endif %}>West Virginia</option>
-                        <option value="WI" {% if selected_state == 'WI' %}selected{% endif %}>Wisconsin</option>
-                        <option value="WY" {% if selected_state == 'WY' %}selected{% endif %}>Wyoming</option>
-                        <option value="DC" {% if selected_state == 'DC' %}selected{% endif %}>District of Columbia</option>
+                        {% for state_code in state_choices %}
+                            {% set state_names = {
+                                'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+                                'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+                                'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+                                'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+                                'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+                                'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+                                'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+                                'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+                                'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+                                'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+                                'DC': 'District of Columbia'
+                            } %}
+                            <option value="{{ state_code }}" {% if state_code == selected_state %}selected{% endif %}>
+                                {{ state_names.get(state_code, state_code) }}
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -154,14 +121,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const stateSelect = document.getElementById('state_filter');
     const citySelect = document.getElementById('city_filter');
     
-    // Store all cities for each state
-    const citiesByState = {
-        {% for neighborhood in neighborhoods %}
-        {% if neighborhood.neighborhood.state and neighborhood.neighborhood.city %}
-        '{{ neighborhood.neighborhood.state }}': '{{ neighborhood.neighborhood.city }}',
-        {% endif %}
-        {% endfor %}
-    };
+    // Store cities for each state
+    const citiesByState = {};
+    {% for neighborhood in neighborhoods %}
+    {% if neighborhood.neighborhood.state and neighborhood.neighborhood.city %}
+    if (!citiesByState['{{ neighborhood.neighborhood.state }}']) {
+        citiesByState['{{ neighborhood.neighborhood.state }}'] = [];
+    }
+    if (!citiesByState['{{ neighborhood.neighborhood.state }}'].includes('{{ neighborhood.neighborhood.city }}')) {
+        citiesByState['{{ neighborhood.neighborhood.state }}'].push('{{ neighborhood.neighborhood.city }}');
+    }
+    {% endif %}
+    {% endfor %}
+    
+    // Sort cities for each state
+    Object.keys(citiesByState).forEach(state => {
+        citiesByState[state].sort();
+    });
     
     // Update city dropdown when state changes
     stateSelect.addEventListener('change', function() {
@@ -171,25 +147,8 @@ document.addEventListener('DOMContentLoaded', function() {
         citySelect.innerHTML = '<option value="">All Cities</option>';
         
         // Add cities for selected state
-        if (selectedState) {
-            const cities = Object.keys(citiesByState).filter(state => state === selectedState)
-                .map(state => citiesByState[state])
-                .filter((city, index, arr) => arr.indexOf(city) === index) // Remove duplicates
-                .sort();
-            
-            cities.forEach(city => {
-                const option = document.createElement('option');
-                option.value = city;
-                option.textContent = city;
-                citySelect.appendChild(option);
-            });
-        } else {
-            // Show all cities when no state is selected
-            const allCities = Object.values(citiesByState)
-                .filter((city, index, arr) => arr.indexOf(city) === index) // Remove duplicates
-                .sort();
-            
-            allCities.forEach(city => {
+        if (selectedState && citiesByState[selectedState]) {
+            citiesByState[selectedState].forEach(city => {
                 const option = document.createElement('option');
                 option.value = city;
                 option.textContent = city;
@@ -197,5 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Trigger change event on page load to set initial city options
+    stateSelect.dispatchEvent(new Event('change'));
 });
 </script>

@@ -3232,6 +3232,10 @@ def reports_neighborhood():
     selected_state = request.form.get('state', '') if request.method == "POST" else ''
     selected_city = request.form.get('city', '') if request.method == "POST" else ''
     
+    # Get unique states and cities that exist in the data
+    state_choices = sorted(list(set([n.get('state') for n in neighborhoods if n.get('state')])))
+    city_choices = sorted(list(set([n.get('city') for n in neighborhoods if n.get('city')])))
+    
     # Filter neighborhoods based on state and city
     filtered_neighborhoods = []
     for neighborhood in neighborhoods:
@@ -3243,10 +3247,7 @@ def reports_neighborhood():
             continue
         filtered_neighborhoods.append(neighborhood)
     
-    # Get unique cities for the city dropdown
-    city_choices = sorted(list(set([n.get('city') for n in neighborhoods if n.get('city')])))
-    
-    # Get neighborhood data with summaries (no longer needed since we removed metrics)
+    # Get neighborhood data
     neighborhood_data = []
     for neighborhood in filtered_neighborhoods:
         neighborhood_data.append({
@@ -3255,6 +3256,7 @@ def reports_neighborhood():
     
     return render_template('reports_neighborhood.html', 
                          neighborhoods=neighborhood_data, 
+                         state_choices=state_choices,
                          city_choices=city_choices,
                          selected_state=selected_state,
                          selected_city=selected_city)
