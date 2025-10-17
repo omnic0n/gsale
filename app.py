@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -3221,6 +3221,43 @@ def api_cities_by_state(state):
 
     return render_template('reports_city.html', form=form)
 
+# Neighborhood Reports
+@app.route('/reports/neighborhood', methods=["GET", "POST"])
+@login_required
+def reports_neighborhood():
+    form = NeighborhoodReportForm()
+    
+    # Get all neighborhoods for the current user
+    neighborhoods = get_data.get_user_neighborhoods()
+    form.neighborhood.choices = [(neighborhood['id'], "{} (Score: {})".format(neighborhood['name'], neighborhood['score'])) for neighborhood in neighborhoods]
+    
+    # Get all available years
+    years = get_data.get_years()
+    form.year.choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
+    
+    if request.method == "POST":
+        details = request.form
+        neighborhood_id = details.get('neighborhood', '').strip()
+        year = details.get('year', 'all')
+        
+        if neighborhood_id:
+            neighborhood = get_data.get_neighborhood_by_id(neighborhood_id)
+            if neighborhood:
+                purchases = get_data.get_neighborhood_purchases(neighborhood_id, year)
+                summary = get_data.get_neighborhood_summary(neighborhood_id, year)
+                return render_template('reports_neighborhood.html', 
+                                     form=form, 
+                                     purchases=purchases, 
+                                     summary=summary, 
+                                     neighborhood=neighborhood, 
+                                     selected_year=year)
+            else:
+                flash('Neighborhood not found', 'error')
+        else:
+            flash('Please select a neighborhood', 'error')
+    
+    return render_template('reports_neighborhood.html', form=form)
+
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
 @login_required
@@ -4352,6 +4389,83 @@ def api_add_group():
             'success': False,
             'message': str(e)
         }), 500
+
+# Neighborhood Management Routes
+@app.route('/settings/neighborhoods', methods=["GET", "POST"])
+@login_required
+def manage_neighborhoods():
+    """Manage neighborhoods - create, edit, delete"""
+    form = NeighborhoodForm()
+    
+    if request.method == "POST":
+        action = request.form.get('action')
+        
+        if action == 'create':
+            # Create new neighborhood
+            details = {
+                'name': request.form.get('name', '').strip(),
+                'description': request.form.get('description', '').strip(),
+                'score': int(request.form.get('score', 5))
+            }
+            
+            success, message = set_data.create_neighborhood(details)
+            if success:
+                flash(message, 'success')
+            else:
+                flash(message, 'error')
+        
+        elif action == 'update':
+            # Update existing neighborhood
+            neighborhood_id = request.form.get('neighborhood_id')
+            if neighborhood_id:
+                details = {
+                    'name': request.form.get('name', '').strip(),
+                    'description': request.form.get('description', '').strip(),
+                    'score': int(request.form.get('score', 5))
+                }
+                
+                success, message = set_data.update_neighborhood(neighborhood_id, details)
+                if success:
+                    flash(message, 'success')
+                else:
+                    flash(message, 'error')
+            else:
+                flash('Neighborhood ID is required.', 'error')
+        
+        elif action == 'delete':
+            # Delete neighborhood
+            neighborhood_id = request.form.get('neighborhood_id')
+            if neighborhood_id:
+                success, message = set_data.delete_neighborhood(neighborhood_id)
+                if success:
+                    flash(message, 'success')
+                else:
+                    flash(message, 'error')
+            else:
+                flash('Neighborhood ID is required.', 'error')
+        
+        return redirect(url_for('manage_neighborhoods'))
+    
+    # Get all neighborhoods for the current user
+    neighborhoods = get_data.get_user_neighborhoods()
+    
+    return render_template('neighborhoods_manage.html', neighborhoods=neighborhoods, form=form)
+
+@app.route('/settings/neighborhoods/edit/<neighborhood_id>')
+@login_required
+def edit_neighborhood(neighborhood_id):
+    """Edit a specific neighborhood"""
+    neighborhood = get_data.get_neighborhood_by_id(neighborhood_id)
+    if not neighborhood:
+        flash('Neighborhood not found', 'error')
+        return redirect(url_for('manage_neighborhoods'))
+    
+    form = NeighborhoodForm()
+    form.name.data = neighborhood['name']
+    form.description.data = neighborhood['description']
+    form.score.data = neighborhood['score']
+    
+    return render_template('neighborhoods_edit.html', neighborhood=neighborhood, form=form)
 
 
 if __name__ == '__main__':

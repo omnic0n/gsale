@@ -1394,3 +1394,159 @@ def get_current_group_info():
         GROUP BY g.id
     """, (get_current_group_id(),))
     return cur.fetchone()
+
+# Neighborhood Functions
+def get_user_neighborhoods():
+    """Get all neighborhoods for the current user"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT id, name, description, score, created_at, updated_at
+            FROM neighborhoods
+            WHERE user_id = %s
+            ORDER BY name ASC
+        """, (session.get('id'),))
+        return list(cur.fetchall())
+    except Exception as e:
+        print("Error in get_user_neighborhoods: {}".format(e))
+        return []
+    finally:
+        if 'cur' in locals():
+            cur.close()
+
+def get_neighborhood_by_id(neighborhood_id):
+    """Get a specific neighborhood by ID"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT id, name, description, score, created_at, updated_at
+            FROM neighborhoods
+            WHERE id = %s AND user_id = %s
+        """, (neighborhood_id, session.get('id')))
+        return cur.fetchone()
+    except Exception as e:
+        print("Error in get_neighborhood_by_id: {}".format(e))
+        return None
+    finally:
+        if 'cur' in locals():
+            cur.close()
+
+def get_neighborhood_purchases(neighborhood_id, year='all'):
+    """Get purchases for a specific neighborhood"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        if year == 'all':
+            cur.execute("""
+                SELECT 
+                    c.id,
+                    c.name,
+                    c.date,
+                    c.price,
+                    c.location_address,
+                    c.latitude,
+                    c.longitude,
+                    COUNT(i.id) as item_count,
+                    SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_count,
+                    COALESCE(SUM(s.price), 0) as total_sales,
+                    COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) as total_profit
+                FROM collection c
+                LEFT JOIN items i ON c.id = i.group_id
+                LEFT JOIN sale s ON i.id = s.id
+                WHERE c.neighborhood_id = %s AND c.group_id = %s
+                GROUP BY c.id, c.name, c.date, c.price, c.location_address, c.latitude, c.longitude
+                ORDER BY c.date DESC
+            """, (neighborhood_id, get_current_group_id()))
+        else:
+            cur.execute("""
+                SELECT 
+                    c.id,
+                    c.name,
+                    c.date,
+                    c.price,
+                    c.location_address,
+                    c.latitude,
+                    c.longitude,
+                    COUNT(i.id) as item_count,
+                    SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_count,
+                    COALESCE(SUM(s.price), 0) as total_sales,
+                    COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) as total_profit
+                FROM collection c
+                LEFT JOIN items i ON c.id = i.group_id
+                LEFT JOIN sale s ON i.id = s.id
+                WHERE c.neighborhood_id = %s AND c.group_id = %s AND YEAR(c.date) = %s
+                GROUP BY c.id, c.name, c.date, c.price, c.location_address, c.latitude, c.longitude
+                ORDER BY c.date DESC
+            """, (neighborhood_id, get_current_group_id(), year))
+        
+        return list(cur.fetchall())
+    except Exception as e:
+        print("Error in get_neighborhood_purchases: {}".format(e))
+        return []
+    finally:
+        if 'cur' in locals():
+            cur.close()
+
+def get_neighborhood_summary(neighborhood_id, year='all'):
+    """Get summary statistics for a neighborhood"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        if year == 'all':
+            cur.execute("""
+                SELECT 
+                    COUNT(DISTINCT c.id) as total_purchases,
+                    COALESCE(SUM(c.price), 0) as total_spent,
+                    COUNT(i.id) as total_items,
+                    SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_items,
+                    COALESCE(SUM(s.price), 0) as total_sales,
+                    COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) as total_profit,
+                    MIN(c.date) as first_purchase,
+                    MAX(c.date) as last_purchase
+                FROM collection c
+                LEFT JOIN items i ON c.id = i.group_id
+                LEFT JOIN sale s ON i.id = s.id
+                WHERE c.neighborhood_id = %s AND c.group_id = %s
+            """, (neighborhood_id, get_current_group_id()))
+        else:
+            cur.execute("""
+                SELECT 
+                    COUNT(DISTINCT c.id) as total_purchases,
+                    COALESCE(SUM(c.price), 0) as total_spent,
+                    COUNT(i.id) as total_items,
+                    SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_items,
+                    COALESCE(SUM(s.price), 0) as total_sales,
+                    COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) as total_profit,
+                    MIN(c.date) as first_purchase,
+                    MAX(c.date) as last_purchase
+                FROM collection c
+                LEFT JOIN items i ON c.id = i.group_id
+                LEFT JOIN sale s ON i.id = s.id
+                WHERE c.neighborhood_id = %s AND c.group_id = %s AND YEAR(c.date) = %s
+            """, (neighborhood_id, get_current_group_id(), year))
+        
+        return cur.fetchone()
+    except Exception as e:
+        print("Error in get_neighborhood_summary: {}".format(e))
+        return None
+    finally:
+        if 'cur' in locals():
+            cur.close()
+
+def get_neighborhood_years(neighborhood_id):
+    """Get all years with purchases for a neighborhood"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT DISTINCT YEAR(date) as year
+            FROM collection
+            WHERE neighborhood_id = %s AND group_id = %s
+            ORDER BY year DESC
+        """, (neighborhood_id, get_current_group_id()))
+        return list(cur.fetchall())
+    except Exception as e:
+        print("Error in get_neighborhood_years: {}".format(e))
+        return []
+    finally:
+        if 'cur' in locals():
+            cur.close()

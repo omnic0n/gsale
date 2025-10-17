@@ -1,0 +1,332 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Neighborhoods{% endblock %}
+
+{% block content %}
+<style>
+/* Custom Modal Styles */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.custom-modal-dialog {
+    position: relative;
+    z-index: 1055;
+    width: 90%;
+    max-width: 500px;
+    margin: 1.75rem auto;
+}
+
+.custom-modal-content {
+    background: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    position: relative;
+}
+
+.custom-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.custom-modal-body {
+    padding: 1rem;
+}
+
+.custom-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close:hover {
+    opacity: 0.7;
+}
+
+.neighborhood-link:hover {
+    text-decoration: underline !important;
+    opacity: 0.8;
+}
+
+.score-badge {
+    font-size: 0.8em;
+    padding: 0.25em 0.5em;
+}
+
+.score-excellent { background-color: #28a745; color: white; }
+.score-good { background-color: #17a2b8; color: white; }
+.score-average { background-color: #ffc107; color: black; }
+.score-poor { background-color: #dc3545; color: white; }
+</style>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h2>Manage Your Neighborhoods</h2>
+            <p class="text-muted">Create and manage neighborhoods to track sales performance by location. Score neighborhoods from 1-10 based on their sales success.</p>
+            
+            <!-- Add New Neighborhood Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Add New Neighborhood</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('manage_neighborhoods') }}">
+                        <input type="hidden" name="action" value="create">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="name">Neighborhood Name:</label>
+                                <input type="text" name="name" class="form-control" 
+                                       placeholder="Enter neighborhood name" required maxlength="100">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="score">Score (1-10):</label>
+                                <select name="score" class="form-control" required>
+                                    <option value="1">1 - Poor</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5" selected>5 - Average</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10 - Excellent</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="description">Description:</label>
+                                <textarea name="description" class="form-control" 
+                                          placeholder="Optional description" rows="1" maxlength="500"></textarea>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">Add Neighborhood</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Existing Neighborhoods -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Neighborhoods</h5>
+                </div>
+                <div class="card-body">
+                    {% if neighborhoods %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Neighborhood Name</th>
+                                        <th>Score</th>
+                                        <th>Description</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for neighborhood in neighborhoods %}
+                                    <tr>
+                                        <td>
+                                            <span class="neighborhood-name">
+                                                <strong>{{ neighborhood.name }}</strong>
+                                            </span>
+                                            <form method="POST" action="{{ url_for('manage_neighborhoods') }}" 
+                                                  class="edit-form d-none">
+                                                <input type="hidden" name="action" value="update">
+                                                <input type="hidden" name="neighborhood_id" value="{{ neighborhood.id }}">
+                                                <div class="input-group">
+                                                    <input type="text" name="name" 
+                                                           class="form-control form-control-sm" 
+                                                           value="{{ neighborhood.name }}" required maxlength="100">
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn btn-success btn-sm">Save</button>
+                                                        <button type="button" class="btn btn-secondary btn-sm cancel-edit">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </td>
+                                        <td>
+                                            <span class="score-badge {% if neighborhood.score >= 8 %}score-excellent{% elif neighborhood.score >= 6 %}score-good{% elif neighborhood.score >= 4 %}score-average{% else %}score-poor{% endif %}">
+                                                {{ neighborhood.score }}/10
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="neighborhood-description">
+                                                {{ neighborhood.description or 'No description' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ neighborhood.created_at.strftime('%Y-%m-%d') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary edit-btn">Edit</button>
+                                                <button type="button" class="btn btn-outline-danger delete-btn" 
+                                                        data-neighborhood-id="{{ neighborhood.id }}" 
+                                                        data-neighborhood-name="{{ neighborhood.name }}">Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">No neighborhoods found. Add your first neighborhood above.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div id="deleteModal" class="custom-modal" style="display: none;">
+                <div class="custom-modal-backdrop" onclick="closeDeleteModal()"></div>
+                <div class="custom-modal-dialog">
+                    <div class="custom-modal-content">
+                        <div class="custom-modal-header">
+                            <h5 class="custom-modal-title">Confirm Delete</h5>
+                            <button type="button" class="btn-close" onclick="closeDeleteModal()" aria-label="Close">×</button>
+                        </div>
+                        <div class="custom-modal-body">
+                            <p>Are you sure you want to delete the neighborhood "<span id="neighborhoodName"></span>"?</p>
+                            <p class="text-info"><small>Any collections assigned to this neighborhood will have their neighborhood assignment removed.</small></p>
+                            <p class="text-warning"><small>This action cannot be undone.</small></p>
+                        </div>
+                        <div class="custom-modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                            <form method="POST" action="{{ url_for('manage_neighborhoods') }}" style="display: inline;">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="neighborhood_id" id="deleteNeighborhoodId">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Wait for jQuery to be available
+function waitForJQuery() {
+    if (typeof $ !== 'undefined') {
+        $(document).ready(function() {
+            console.log('Neighborhoods manage page loaded');
+            
+            // Edit functionality
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const nameSpan = row.querySelector('.neighborhood-name');
+                    const editForm = row.querySelector('.edit-form');
+                    const btnGroup = row.querySelector('.btn-group');
+                    
+                    nameSpan.classList.add('d-none');
+                    editForm.classList.remove('d-none');
+                    btnGroup.classList.add('d-none');
+                });
+            });
+
+            // Cancel edit
+            document.querySelectorAll('.cancel-edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const nameSpan = row.querySelector('.neighborhood-name');
+                    const editForm = row.querySelector('.edit-form');
+                    const btnGroup = row.querySelector('.btn-group');
+                    
+                    nameSpan.classList.remove('d-none');
+                    editForm.classList.add('d-none');
+                    btnGroup.classList.remove('d-none');
+                });
+            });
+
+            // Delete functionality
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    console.log('Delete button clicked');
+                    const neighborhoodId = this.getAttribute('data-neighborhood-id');
+                    const neighborhoodName = this.getAttribute('data-neighborhood-name');
+                    
+                    console.log('Neighborhood ID:', neighborhoodId);
+                    console.log('Neighborhood Name:', neighborhoodName);
+                    
+                    document.getElementById('neighborhoodName').textContent = neighborhoodName;
+                    document.getElementById('deleteNeighborhoodId').value = neighborhoodId;
+                    
+                    console.log('Showing modal...');
+                    showDeleteModal();
+                    console.log('Modal show command executed');
+                });
+            });
+        });
+    } else {
+        // jQuery not loaded yet, retry in 100ms
+        setTimeout(waitForJQuery, 100);
+    }
+}
+
+// Custom modal functions
+function showDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
+}
+
+// Start waiting for jQuery
+waitForJQuery();
+</script>
+{% endblock %}

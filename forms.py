@@ -134,3 +134,17 @@ class ReturnItemForm(FlaskForm):
     return_to = HiddenField('return_to')
     submit = SubmitField('Return Item')
 
+class NeighborhoodForm(FlaskForm):
+    name = StringField('Neighborhood Name', validators=[DataRequired(), Length(min=1, max=100)])
+    description = TextAreaField('Description', validators=[Length(max=500)])
+    score = SelectField('Score (1-10)', 
+                        choices=[(1, '1 - Poor'), (2, '2'), (3, '3'), (4, '4'), (5, '5 - Average'), 
+                                (6, '6'), (7, '7'), (8, '8'), (9, '9'), (10, '10 - Excellent')],
+                        coerce=int, default=5)
+    submit = SubmitField('Create Neighborhood')
+
+class NeighborhoodReportForm(FlaskForm):
+    neighborhood = SelectField('Neighborhood', validators=[DataRequired()], choices=[], coerce=str)
+    year = SelectField('Year', choices=[], coerce=str)
+    submit = SubmitField('Generate Report')
+

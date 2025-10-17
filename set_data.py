@@ -1698,3 +1698,175 @@ def delete_group(group_id):
     except Exception as e:
         print("Error deleting collection: {}".format(e))
         return False, str(e)
+
+# Neighborhood Functions
+def create_neighborhood(details):
+    """Create a new neighborhood"""
+    try:
+        # Validate inputs
+        if not isinstance(details, dict):
+            raise ValueError("Invalid details format")
+        
+        if not isinstance(details.get('name'), str) or len(details.get('name', '')) > 100:
+            raise ValueError("Invalid neighborhood name")
+        
+        if not isinstance(details.get('description'), str) or len(details.get('description', '')) > 500:
+            raise ValueError("Invalid description")
+        
+        score = int(details.get('score', 5))
+        if score < 1 or score > 10:
+            raise ValueError("Score must be between 1 and 10")
+        
+        cur = mysql.connection.cursor()
+        
+        # Check if neighborhood with same name already exists for this user
+        cur.execute("""
+            SELECT id FROM neighborhoods 
+            WHERE name = %s AND user_id = %s
+        """, (details['name'], session.get('id')))
+        
+        if cur.fetchone():
+            cur.close()
+            raise ValueError("A neighborhood with this name already exists")
+        
+        # Create the neighborhood
+        neighborhood_id = generate_uuid()
+        cur.execute("""
+            INSERT INTO neighborhoods (id, name, description, score, user_id)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (neighborhood_id, details['name'], details['description'], score, session.get('id')))
+        
+        mysql.connection.commit()
+        cur.close()
+        return True, "Neighborhood created successfully"
+    except Exception as e:
+        print("Error creating neighborhood: {}".format(e))
+        return False, "Error creating neighborhood: {}".format(str(e))
+
+def update_neighborhood(neighborhood_id, details):
+    """Update an existing neighborhood"""
+    try:
+        # Validate inputs
+        if not isinstance(details, dict):
+            raise ValueError("Invalid details format")
+        
+        if not isinstance(details.get('name'), str) or len(details.get('name', '')) > 100:
+            raise ValueError("Invalid neighborhood name")
+        
+        if not isinstance(details.get('description'), str) or len(details.get('description', '')) > 500:
+            raise ValueError("Invalid description")
+        
+        score = int(details.get('score', 5))
+        if score < 1 or score > 10:
+            raise ValueError("Score must be between 1 and 10")
+        
+        cur = mysql.connection.cursor()
+        
+        # Check if neighborhood exists and belongs to current user
+        cur.execute("""
+            SELECT id FROM neighborhoods 
+            WHERE id = %s AND user_id = %s
+        """, (neighborhood_id, session.get('id')))
+        
+        if not cur.fetchone():
+            cur.close()
+            raise ValueError("Neighborhood not found or access denied")
+        
+        # Check if another neighborhood with same name already exists for this user
+        cur.execute("""
+            SELECT id FROM neighborhoods 
+            WHERE name = %s AND user_id = %s AND id != %s
+        """, (details['name'], session.get('id'), neighborhood_id))
+        
+        if cur.fetchone():
+            cur.close()
+            raise ValueError("A neighborhood with this name already exists")
+        
+        # Update the neighborhood
+        cur.execute("""
+            UPDATE neighborhoods 
+            SET name = %s, description = %s, score = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s AND user_id = %s
+        """, (details['name'], details['description'], score, neighborhood_id, session.get('id')))
+        
+        mysql.connection.commit()
+        cur.close()
+        return True, "Neighborhood updated successfully"
+    except Exception as e:
+        print("Error updating neighborhood: {}".format(e))
+        return False, "Error updating neighborhood: {}".format(str(e))
+
+def delete_neighborhood(neighborhood_id):
+    """Delete a neighborhood"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Check if neighborhood exists and belongs to current user
+        cur.execute("""
+            SELECT id FROM neighborhoods 
+            WHERE id = %s AND user_id = %s
+        """, (neighborhood_id, session.get('id')))
+        
+        if not cur.fetchone():
+            cur.close()
+            raise ValueError("Neighborhood not found or access denied")
+        
+        # Remove neighborhood_id from collections (set to NULL)
+        cur.execute("""
+            UPDATE collection 
+            SET neighborhood_id = NULL 
+            WHERE neighborhood_id = %s AND group_id = %s
+        """, (neighborhood_id, session.get('group_id')))
+        
+        # Delete the neighborhood
+        cur.execute("""
+            DELETE FROM neighborhoods 
+            WHERE id = %s AND user_id = %s
+        """, (neighborhood_id, session.get('id')))
+        
+        mysql.connection.commit()
+        cur.close()
+        return True, "Neighborhood deleted successfully"
+    except Exception as e:
+        print("Error deleting neighborhood: {}".format(e))
+        return False, "Error deleting neighborhood: {}".format(str(e))
+
+def assign_neighborhood_to_collection(collection_id, neighborhood_id):
+    """Assign a neighborhood to a collection"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Check if collection exists and belongs to current user
+        cur.execute("""
+            SELECT id FROM collection 
+            WHERE id = %s AND group_id = %s
+        """, (collection_id, session.get('group_id')))
+        
+        if not cur.fetchone():
+            cur.close()
+            raise ValueError("Collection not found or access denied")
+        
+        # Check if neighborhood exists and belongs to current user
+        if neighborhood_id:
+            cur.execute("""
+                SELECT id FROM neighborhoods 
+                WHERE id = %s AND user_id = %s
+            """, (neighborhood_id, session.get('id')))
+            
+            if not cur.fetchone():
+                cur.close()
+                raise ValueError("Neighborhood not found or access denied")
+        
+        # Update the collection
+        cur.execute("""
+            UPDATE collection 
+            SET neighborhood_id = %s 
+            WHERE id = %s AND group_id = %s
+        """, (neighborhood_id, collection_id, session.get('group_id')))
+        
+        mysql.connection.commit()
+        cur.close()
+        return True, "Neighborhood assigned successfully"
+    except Exception as e:
+        print("Error assigning neighborhood: {}".format(e))
+        return False, "Error assigning neighborhood: {}".format(str(e))
