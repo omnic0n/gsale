@@ -66,6 +66,23 @@ setTimeout(function() {
     });
     
     console.log('Filters initialized successfully');
+    
+    // If there's a selected city from form submission, populate it
+    {% if selected_city %}
+    const selectedCity = '{{ selected_city }}';
+    const selectedState = '{{ selected_state }}';
+    if (selectedState && citiesByState[selectedState]) {
+        citiesByState[selectedState].forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            if (city === selectedCity) {
+                option.selected = true;
+            }
+            citySelect.appendChild(option);
+        });
+    }
+    {% endif %}
 }, 1000); // Wait 1 second for page to fully load
 </script>
 <div class="content-wrapper">
@@ -103,9 +120,6 @@ setTimeout(function() {
                     <label for="city_filter">City Filter:</label>
                     <select name="city" id="city_filter" class="form-control">
                         <option value="">All Cities</option>
-                        {% for city in city_choices %}
-                            <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
-                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-4">
