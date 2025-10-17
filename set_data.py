@@ -1713,6 +1713,12 @@ def create_neighborhood(details):
         if not isinstance(details.get('description'), str) or len(details.get('description', '')) > 500:
             raise ValueError("Invalid description")
         
+        if not isinstance(details.get('city'), str) or len(details.get('city', '')) > 100:
+            raise ValueError("Invalid city")
+        
+        if not isinstance(details.get('state'), str) or len(details.get('state', '')) > 50:
+            raise ValueError("Invalid state")
+        
         score = int(details.get('score', 5))
         if score < 1 or score > 10:
             raise ValueError("Score must be between 1 and 10")
@@ -1732,9 +1738,9 @@ def create_neighborhood(details):
         # Create the neighborhood
         neighborhood_id = generate_uuid()
         cur.execute("""
-            INSERT INTO neighborhoods (id, name, description, score, user_id)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (neighborhood_id, details['name'], details['description'], score, session.get('id')))
+            INSERT INTO neighborhoods (id, name, description, city, state, score, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (neighborhood_id, details['name'], details['description'], details['city'], details['state'], score, session.get('id')))
         
         mysql.connection.commit()
         cur.close()
@@ -1755,6 +1761,12 @@ def update_neighborhood(neighborhood_id, details):
         
         if not isinstance(details.get('description'), str) or len(details.get('description', '')) > 500:
             raise ValueError("Invalid description")
+        
+        if not isinstance(details.get('city'), str) or len(details.get('city', '')) > 100:
+            raise ValueError("Invalid city")
+        
+        if not isinstance(details.get('state'), str) or len(details.get('state', '')) > 50:
+            raise ValueError("Invalid state")
         
         score = int(details.get('score', 5))
         if score < 1 or score > 10:
@@ -1785,9 +1797,9 @@ def update_neighborhood(neighborhood_id, details):
         # Update the neighborhood
         cur.execute("""
             UPDATE neighborhoods 
-            SET name = %s, description = %s, score = %s, updated_at = CURRENT_TIMESTAMP
+            SET name = %s, description = %s, city = %s, state = %s, score = %s, updated_at = CURRENT_TIMESTAMP
             WHERE id = %s AND user_id = %s
-        """, (details['name'], details['description'], score, neighborhood_id, session.get('id')))
+        """, (details['name'], details['description'], details['city'], details['state'], score, neighborhood_id, session.get('id')))
         
         mysql.connection.commit()
         cur.close()

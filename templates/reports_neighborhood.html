@@ -4,165 +4,93 @@
     <h1>Neighborhood Sales Report</h1>
     <p>Analyze sales performance by neighborhood with scoring system</p>
     
-    <form method="POST">
+    <form method="POST" class="mb-4">
         <div class="form-group">
-            {{ form.neighborhood.label(class="form-control-label") }}
-            {{ form.neighborhood(class="form-control") }}
-            {% if form.neighborhood.errors %}
-                <div class="text-danger">
-                    {% for error in form.neighborhood.errors %}
-                        <small>{{ error }}</small>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            <small class="form-text text-muted">Select a neighborhood to analyze</small>
-        </div>
-        
-        <div class="form-group">
-            <label for="neighborhood_year">Year:</label>
-            <select name="year" id="neighborhood_year">
-                <option value="all">All Years</option>
-                {% for year in form.year.choices %}
-                    {% if year[0] != 'all' %}
-                        <option value="{{ year[0] }}">{{ year[1] }}</option>
-                    {% endif %}
+            <label for="year_filter">Year Filter:</label>
+            <select name="year" id="year_filter" class="form-control" style="width: auto; display: inline-block;">
+                {% for year_value, year_label in year_choices %}
+                    <option value="{{ year_value }}" {% if year_value == selected_year %}selected{% endif %}>{{ year_label }}</option>
                 {% endfor %}
             </select>
-            <br>
-            <small>Select a year to filter results (defaults to all years)</small>
+            <button type="submit" class="btn btn-primary ml-2">Filter</button>
         </div>
-        
-        {{ form.submit(class="btn btn-primary") }}
     </form>
     
-    {% if not form.neighborhood.choices %}
+    {% if not neighborhoods %}
     <div class="alert alert-warning mt-3">
         <h4>No Neighborhoods Found</h4>
         <p>No neighborhoods were found. You need to create neighborhoods first in the Settings menu.</p>
         <a href="/settings/neighborhoods" class="btn btn-primary">Manage Neighborhoods</a>
     </div>
+    {% else %}
+    
+    <div class="table-responsive">
+        <table class="blueTable">
+            <thead>
+                <tr>
+                    <th>Neighborhood</th>
+                    <th>City</th>
+                    <th>State</th>
+                    <th>Score</th>
+                    <th>Total Purchases</th>
+                    <th>Total Spent</th>
+                    <th>Total Items</th>
+                    <th>Items Sold</th>
+                    <th>Total Sales</th>
+                    <th>Total Profit</th>
+                    <th>ROI</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in neighborhoods %}
+                {% set neighborhood = data.neighborhood %}
+                {% set summary = data.summary %}
+                <tr>
+                    <td>
+                        <strong>{{ neighborhood.name }}</strong>
+                        {% if neighborhood.description %}
+                            <br><small class="text-muted">{{ neighborhood.description }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ neighborhood.city or 'N/A' }}</td>
+                    <td>{{ neighborhood.state or 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if neighborhood.score >= 8 %}badge-success{% elif neighborhood.score >= 6 %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ neighborhood.score }}/10
+                        </span>
+                    </td>
+                    <td>{{ summary.total_purchases if summary else 0 }}</td>
+                    <td>${{ "%.2f"|format(summary.total_spent) if summary else 0 }}</td>
+                    <td>{{ summary.total_items if summary else 0 }}</td>
+                    <td>{{ summary.sold_items if summary else 0 }}</td>
+                    <td>${{ "%.2f"|format(summary.total_sales) if summary else 0 }}</td>
+                    <td>
+                        {% if summary and summary.total_profit >= 0 %}
+                            <span style="color: green;">${{ "%.2f"|format(summary.total_profit) }}</span>
+                        {% elif summary %}
+                            <span style="color: red;">${{ "%.2f"|format(summary.total_profit) }}</span>
+                        {% else %}
+                            $0.00
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if summary and summary.total_spent > 0 %}
+                            {{ "%.1f"|format((summary.total_profit / summary.total_spent) * 100) }}%
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/reports/neighborhood/detail/{{ neighborhood.id }}?year={{ selected_year }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
     {% endif %}
 </div>
-
-{% if selected_year and selected_year != 'all' and not purchases %}
-<div class="content-wrapper">
-    <div class="alert alert-info">
-        <h4>No Results for {{ neighborhood.name }} in {{ selected_year }}</h4>
-        <p>No purchases were found for the neighborhood "{{ neighborhood.name }}" in the year {{ selected_year }}. Try selecting a different year or neighborhood.</p>
-    </div>
-</div>
-{% endif %}
-
-{% if purchases %}
-<div class="content-wrapper">
-    <h2>Purchases in {{ neighborhood.name }}{% if selected_year and selected_year != 'all' %} ({{ selected_year }}){% endif %}</h2>
-    
-    <!-- Neighborhood Score Display -->
-    <div class="alert alert-info">
-        <h4>Neighborhood Score: {{ neighborhood.score }}/10</h4>
-        <p><strong>Description:</strong> {{ neighborhood.description or 'No description provided' }}</p>
-        <div class="progress mt-2" style="height: 20px;">
-            <div class="progress-bar {% if neighborhood.score >= 8 %}bg-success{% elif neighborhood.score >= 6 %}bg-warning{% else %}bg-danger{% endif %}" 
-                 role="progressbar" style="width: {{ (neighborhood.score / 10) * 100 }}%" 
-                 aria-valuenow="{{ neighborhood.score }}" aria-valuemin="0" aria-valuemax="10">
-                {{ neighborhood.score }}/10
-            </div>
-        </div>
-    </div>
-    
-    {% if summary %}
-    <div class="alert alert-success">
-        <h4>Summary for {{ neighborhood.name }}</h4>
-        <div class="row">
-            <div class="col-md-3">
-                <strong>Total Purchases:</strong> {{ summary.total_purchases }}
-            </div>
-            <div class="col-md-3">
-                <strong>Total Spent:</strong> ${{ "%.2f"|format(summary.total_spent) }}
-            </div>
-            <div class="col-md-3">
-                <strong>Total Items:</strong> {{ summary.total_items }}
-            </div>
-            <div class="col-md-3">
-                <strong>Items Sold:</strong> {{ summary.sold_items }}
-            </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-md-3">
-                <strong>Total Sales:</strong> ${{ "%.2f"|format(summary.total_sales) }}
-            </div>
-            <div class="col-md-3">
-                <strong>Total Profit:</strong> ${{ "%.2f"|format(summary.total_profit) }}
-            </div>
-            <div class="col-md-3">
-                <strong>First Purchase:</strong> {{ summary.first_purchase }}
-            </div>
-            <div class="col-md-3">
-                <strong>Last Purchase:</strong> {{ summary.last_purchase }}
-            </div>
-        </div>
-        {% if summary.total_spent > 0 %}
-        <div class="row mt-2">
-            <div class="col-md-12">
-                <strong>ROI:</strong> {{ "%.1f"|format((summary.total_profit / summary.total_spent) * 100) }}%
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    {% endif %}
-    
-    <table class="blueTable">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Group Name</th>
-                <th>Location</th>
-                <th>Purchase Price</th>
-                <th>Items</th>
-                <th>Sold</th>
-                <th>Sales Revenue</th>
-                <th>Profit</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for purchase in purchases %}
-            <tr>
-                <td>{{ purchase.date }}</td>
-                <td>{{ purchase.name }}</td>
-                <td>
-                    {% if purchase.location_address %}
-                        {{ purchase.location_address }}
-                    {% else %}
-                        <em>No location data</em>
-                    {% endif %}
-                </td>
-                <td>${{ "%.2f"|format(purchase.price) }}</td>
-                <td>{{ purchase.item_count }}</td>
-                <td>{{ purchase.sold_count }}</td>
-                <td>${{ "%.2f"|format(purchase.total_sales) }}</td>
-                <td>
-                    {% if purchase.total_profit >= 0 %}
-                        <span style="color: green;">${{ "%.2f"|format(purchase.total_profit) }}</span>
-                    {% else %}
-                        <span style="color: red;">${{ "%.2f"|format(purchase.total_profit) }}</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="/groups/detail?group_id={{ purchase.id }}" class="btn btn-sm btn-outline-primary">View Details</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    {% if purchases|length == 0 %}
-    <div class="alert alert-warning">
-        <h4>No purchases found</h4>
-        <p>No purchases were found for the neighborhood "{{ neighborhood.name }}"{% if selected_year and selected_year != 'all' %} in the year {{ selected_year }}{% endif %}. Try searching for a different neighborhood{% if selected_year and selected_year != 'all' %} or year{% endif %} or check if collections are properly assigned to neighborhoods.</p>
-    </div>
-    {% endif %}
-</div>
-{% endif %}
 
 {% endblock content %}

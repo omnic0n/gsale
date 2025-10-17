@@ -117,12 +117,22 @@
                     <form method="POST" action="{{ url_for('manage_neighborhoods') }}">
                         <input type="hidden" name="action" value="create">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="name">Neighborhood Name:</label>
                                 <input type="text" name="name" class="form-control" 
                                        placeholder="Enter neighborhood name" required maxlength="100">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-2">
+                                <label for="city">City:</label>
+                                <input type="text" name="city" class="form-control" 
+                                       placeholder="Enter city" maxlength="100">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="state">State:</label>
+                                <input type="text" name="state" class="form-control" 
+                                       placeholder="Enter state" maxlength="50">
+                            </div>
+                            <div class="col-md-2">
                                 <label for="score">Score (1-10):</label>
                                 <select name="score" class="form-control" required>
                                     <option value="1">1 - Poor</option>
@@ -137,7 +147,7 @@
                                     <option value="10">10 - Excellent</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="description">Description:</label>
                                 <textarea name="description" class="form-control" 
                                           placeholder="Optional description" rows="1" maxlength="500"></textarea>
@@ -164,6 +174,8 @@
                                 <thead>
                                     <tr>
                                         <th>Neighborhood Name</th>
+                                        <th>City</th>
+                                        <th>State</th>
                                         <th>Score</th>
                                         <th>Description</th>
                                         <th>Created</th>
@@ -192,6 +204,8 @@
                                                 </div>
                                             </form>
                                         </td>
+                                        <td>{{ neighborhood.city or 'N/A' }}</td>
+                                        <td>{{ neighborhood.state or 'N/A' }}</td>
                                         <td>
                                             <span class="score-badge {% if neighborhood.score >= 8 %}score-excellent{% elif neighborhood.score >= 6 %}score-good{% elif neighborhood.score >= 4 %}score-average{% else %}score-poor{% endif %}">
                                                 {{ neighborhood.score }}/10

@@ -3225,38 +3225,29 @@ def api_cities_by_state(state):
 @app.route('/reports/neighborhood', methods=["GET", "POST"])
 @login_required
 def reports_neighborhood():
-    form = NeighborhoodReportForm()
-    
     # Get all neighborhoods for the current user
     neighborhoods = get_data.get_user_neighborhoods()
-    form.neighborhood.choices = [(neighborhood['id'], "{} (Score: {})".format(neighborhood['name'], neighborhood['score'])) for neighborhood in neighborhoods]
     
     # Get all available years
     years = get_data.get_years()
-    form.year.choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
+    year_choices = [('all', 'All Years')] + [(str(year['year']), str(year['year'])) for year in years]
     
-    if request.method == "POST":
-        details = request.form
-        neighborhood_id = details.get('neighborhood', '').strip()
-        year = details.get('year', 'all')
-        
-        if neighborhood_id:
-            neighborhood = get_data.get_neighborhood_by_id(neighborhood_id)
-            if neighborhood:
-                purchases = get_data.get_neighborhood_purchases(neighborhood_id, year)
-                summary = get_data.get_neighborhood_summary(neighborhood_id, year)
-                return render_template('reports_neighborhood.html', 
-                                     form=form, 
-                                     purchases=purchases, 
-                                     summary=summary, 
-                                     neighborhood=neighborhood, 
-                                     selected_year=year)
-            else:
-                flash('Neighborhood not found', 'error')
-        else:
-            flash('Please select a neighborhood', 'error')
+    # Get selected year from request
+    selected_year = request.form.get('year', 'all') if request.method == "POST" else 'all'
     
-    return render_template('reports_neighborhood.html', form=form)
+    # Get neighborhood data with summaries
+    neighborhood_data = []
+    for neighborhood in neighborhoods:
+        summary = get_data.get_neighborhood_summary(neighborhood['id'], selected_year)
+        neighborhood_data.append({
+            'neighborhood': neighborhood,
+            'summary': summary
+        })
+    
+    return render_template('reports_neighborhood.html', 
+                         neighborhoods=neighborhood_data, 
+                         year_choices=year_choices,
+                         selected_year=selected_year)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
@@ -4390,6 +4381,25 @@ def api_add_group():
             'message': str(e)
         }), 500
 
+@app.route('/reports/neighborhood/detail/<neighborhood_id>')
+@login_required
+def neighborhood_detail(neighborhood_id):
+    """View detailed purchases for a specific neighborhood"""
+    neighborhood = get_data.get_neighborhood_by_id(neighborhood_id)
+    if not neighborhood:
+        flash('Neighborhood not found', 'error')
+        return redirect(url_for('reports_neighborhood'))
+    
+    year = request.args.get('year', 'all')
+    purchases = get_data.get_neighborhood_purchases(neighborhood_id, year)
+    summary = get_data.get_neighborhood_summary(neighborhood_id, year)
+    
+    return render_template('neighborhood_detail.html', 
+                         neighborhood=neighborhood, 
+                         purchases=purchases, 
+                         summary=summary, 
+                         selected_year=year)
+
 # Neighborhood Management Routes
 @app.route('/settings/neighborhoods', methods=["GET", "POST"])
 @login_required
@@ -4405,6 +4415,8 @@ def manage_neighborhoods():
             details = {
                 'name': request.form.get('name', '').strip(),
                 'description': request.form.get('description', '').strip(),
+                'city': request.form.get('city', '').strip(),
+                'state': request.form.get('state', '').strip(),
                 'score': int(request.form.get('score', 5))
             }
             
@@ -4421,6 +4433,8 @@ def manage_neighborhoods():
                 details = {
                     'name': request.form.get('name', '').strip(),
                     'description': request.form.get('description', '').strip(),
+                    'city': request.form.get('city', '').strip(),
+                    'state': request.form.get('state', '').strip(),
                     'score': int(request.form.get('score', 5))
                 }
                 
