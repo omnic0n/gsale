@@ -117,45 +117,57 @@
                     <form method="POST" action="{{ url_for('manage_neighborhoods') }}">
                         <input type="hidden" name="action" value="create">
                         <div class="row">
-                            <div class="col-md-3">
-                                <label for="name">Neighborhood Name:</label>
-                                <input type="text" name="name" class="form-control" 
-                                       placeholder="Enter neighborhood name" required maxlength="100">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="name">Neighborhood Name:</label>
+                                    <input type="text" name="name" class="form-control" 
+                                           placeholder="Enter neighborhood name" required maxlength="100">
+                                </div>
                             </div>
                             <div class="col-md-2">
-                                <label for="city">City:</label>
-                                <input type="text" name="city" class="form-control" 
-                                       placeholder="Enter city" maxlength="100">
+                                <div class="form-group">
+                                    <label for="city">City:</label>
+                                    <input type="text" name="city" class="form-control" 
+                                           placeholder="Enter city" maxlength="100">
+                                </div>
                             </div>
                             <div class="col-md-2">
-                                <label for="state">State:</label>
-                                <input type="text" name="state" class="form-control" 
-                                       placeholder="Enter state" maxlength="50">
+                                <div class="form-group">
+                                    <label for="state">State:</label>
+                                    <input type="text" name="state" class="form-control" 
+                                           placeholder="Enter state" maxlength="50">
+                                </div>
                             </div>
                             <div class="col-md-2">
-                                <label for="score">Score (1-10):</label>
-                                <select name="score" class="form-control" required>
-                                    <option value="1">1 - Poor</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5" selected>5 - Average</option>
-                                    <option value="6">6</option>
-                                    <option value="7">7</option>
-                                    <option value="8">8</option>
-                                    <option value="9">9</option>
-                                    <option value="10">10 - Excellent</option>
-                                </select>
+                                <div class="form-group">
+                                    <label for="score">Score:</label>
+                                    <select name="score" class="form-control" required>
+                                        <option value="1">1 - Poor</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5" selected>5 - Average</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10 - Excellent</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-md-3">
-                                <label for="description">Description:</label>
-                                <textarea name="description" class="form-control" 
-                                          placeholder="Optional description" rows="1" maxlength="500"></textarea>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="description">Description:</label>
+                                    <textarea name="description" class="form-control" 
+                                              placeholder="Optional description" rows="2" maxlength="500"></textarea>
+                                </div>
                             </div>
                         </div>
-                        <div class="row mt-3">
+                        <div class="row">
                             <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary">Add Neighborhood</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Add Neighborhood
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -170,8 +182,8 @@
                 <div class="card-body">
                     {% if neighborhoods %}
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover table-sm">
+                                <thead class="thead-light">
                                     <tr>
                                         <th>Neighborhood Name</th>
                                         <th>City</th>
@@ -193,19 +205,51 @@
                                                   class="edit-form d-none">
                                                 <input type="hidden" name="action" value="update">
                                                 <input type="hidden" name="neighborhood_id" value="{{ neighborhood.id }}">
-                                                <div class="input-group">
+                                                <div class="form-group mb-2">
                                                     <input type="text" name="name" 
                                                            class="form-control form-control-sm" 
-                                                           value="{{ neighborhood.name }}" required maxlength="100">
-                                                    <div class="input-group-append">
-                                                        <button type="submit" class="btn btn-success btn-sm">Save</button>
-                                                        <button type="button" class="btn btn-secondary btn-sm cancel-edit">Cancel</button>
-                                                    </div>
+                                                           value="{{ neighborhood.name }}" required maxlength="100" placeholder="Neighborhood Name">
+                                                </div>
+                                                <div class="form-group mb-2">
+                                                    <input type="text" name="city" 
+                                                           class="form-control form-control-sm" 
+                                                           value="{{ neighborhood.city or '' }}" maxlength="100" placeholder="City">
+                                                </div>
+                                                <div class="form-group mb-2">
+                                                    <input type="text" name="state" 
+                                                           class="form-control form-control-sm" 
+                                                           value="{{ neighborhood.state or '' }}" maxlength="50" placeholder="State">
+                                                </div>
+                                                <div class="form-group mb-2">
+                                                    <select name="score" class="form-control form-control-sm">
+                                                        <option value="1" {% if neighborhood.score == 1 %}selected{% endif %}>1 - Poor</option>
+                                                        <option value="2" {% if neighborhood.score == 2 %}selected{% endif %}>2</option>
+                                                        <option value="3" {% if neighborhood.score == 3 %}selected{% endif %}>3</option>
+                                                        <option value="4" {% if neighborhood.score == 4 %}selected{% endif %}>4</option>
+                                                        <option value="5" {% if neighborhood.score == 5 %}selected{% endif %}>5 - Average</option>
+                                                        <option value="6" {% if neighborhood.score == 6 %}selected{% endif %}>6</option>
+                                                        <option value="7" {% if neighborhood.score == 7 %}selected{% endif %}>7</option>
+                                                        <option value="8" {% if neighborhood.score == 8 %}selected{% endif %}>8</option>
+                                                        <option value="9" {% if neighborhood.score == 9 %}selected{% endif %}>9</option>
+                                                        <option value="10" {% if neighborhood.score == 10 %}selected{% endif %}>10 - Excellent</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group mb-2">
+                                                    <textarea name="description" class="form-control form-control-sm" 
+                                                              rows="2" maxlength="500" placeholder="Description">{{ neighborhood.description or '' }}</textarea>
+                                                </div>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="submit" class="btn btn-success btn-sm">Save</button>
+                                                    <button type="button" class="btn btn-secondary btn-sm cancel-edit">Cancel</button>
                                                 </div>
                                             </form>
                                         </td>
-                                        <td>{{ neighborhood.city or 'N/A' }}</td>
-                                        <td>{{ neighborhood.state or 'N/A' }}</td>
+                                        <td>
+                                            <span class="neighborhood-city">{{ neighborhood.city or 'N/A' }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="neighborhood-state">{{ neighborhood.state or 'N/A' }}</span>
+                                        </td>
                                         <td>
                                             <span class="score-badge {% if neighborhood.score >= 8 %}score-excellent{% elif neighborhood.score >= 6 %}score-good{% elif neighborhood.score >= 4 %}score-average{% else %}score-poor{% endif %}">
                                                 {{ neighborhood.score }}/10
@@ -281,10 +325,19 @@ function waitForJQuery() {
                 btn.addEventListener('click', function() {
                     const row = this.closest('tr');
                     const nameSpan = row.querySelector('.neighborhood-name');
+                    const citySpan = row.querySelector('.neighborhood-city');
+                    const stateSpan = row.querySelector('.neighborhood-state');
+                    const descriptionSpan = row.querySelector('.neighborhood-description');
                     const editForm = row.querySelector('.edit-form');
                     const btnGroup = row.querySelector('.btn-group');
                     
+                    // Hide all display elements
                     nameSpan.classList.add('d-none');
+                    citySpan.classList.add('d-none');
+                    stateSpan.classList.add('d-none');
+                    descriptionSpan.classList.add('d-none');
+                    
+                    // Show edit form
                     editForm.classList.remove('d-none');
                     btnGroup.classList.add('d-none');
                 });
@@ -295,10 +348,19 @@ function waitForJQuery() {
                 btn.addEventListener('click', function() {
                     const row = this.closest('tr');
                     const nameSpan = row.querySelector('.neighborhood-name');
+                    const citySpan = row.querySelector('.neighborhood-city');
+                    const stateSpan = row.querySelector('.neighborhood-state');
+                    const descriptionSpan = row.querySelector('.neighborhood-description');
                     const editForm = row.querySelector('.edit-form');
                     const btnGroup = row.querySelector('.btn-group');
                     
+                    // Show all display elements
                     nameSpan.classList.remove('d-none');
+                    citySpan.classList.remove('d-none');
+                    stateSpan.classList.remove('d-none');
+                    descriptionSpan.classList.remove('d-none');
+                    
+                    // Hide edit form
                     editForm.classList.add('d-none');
                     btnGroup.classList.remove('d-none');
                 });
