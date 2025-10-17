@@ -50,6 +50,7 @@ setTimeout(function() {
         
         // Clear current city options
         citySelect.innerHTML = '<option value="">All Cities</option>';
+        console.log('Cleared city dropdown, current options:', citySelect.innerHTML);
         
         // Add cities for selected state
         if (selectedState && citiesByState[selectedState]) {
@@ -59,7 +60,9 @@ setTimeout(function() {
                 option.value = city;
                 option.textContent = city;
                 citySelect.appendChild(option);
+                console.log('Added city option:', city);
             });
+            console.log('Final city dropdown options:', citySelect.innerHTML);
         } else {
             console.log('No cities found for state:', selectedState);
         }
