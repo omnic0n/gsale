@@ -116,18 +116,14 @@
 
 {% endblock content %}
 
+{% block scripts %}
 <script>
-console.log('Script starting...');
+// Simple test to see if script runs
+alert('Script is running!');
 
-// Wait for DOM to be ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initFilters);
-} else {
-    initFilters();
-}
-
-function initFilters() {
-    console.log('Initializing filters...');
+// Wait for page to load
+window.onload = function() {
+    console.log('Page loaded, initializing filters...');
     
     const stateSelect = document.getElementById('state_filter');
     const citySelect = document.getElementById('city_filter');
@@ -136,6 +132,8 @@ function initFilters() {
         console.error('Could not find state or city select elements');
         return;
     }
+    
+    console.log('Found elements:', stateSelect, citySelect);
     
     // Store cities for each state
     const citiesByState = {};
@@ -185,5 +183,6 @@ function initFilters() {
     });
     
     console.log('Filters initialized successfully');
-}
+};
 </script>
+{% endblock %}
