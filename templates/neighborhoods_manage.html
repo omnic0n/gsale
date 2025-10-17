@@ -134,8 +134,60 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label for="state">State:</label>
-                                    <input type="text" name="state" class="form-control" 
-                                           placeholder="Enter state" maxlength="50">
+                                    <select name="state" class="form-control">
+                                        <option value="">Select State</option>
+                                        <option value="AL">Alabama</option>
+                                        <option value="AK">Alaska</option>
+                                        <option value="AZ">Arizona</option>
+                                        <option value="AR">Arkansas</option>
+                                        <option value="CA">California</option>
+                                        <option value="CO">Colorado</option>
+                                        <option value="CT">Connecticut</option>
+                                        <option value="DE">Delaware</option>
+                                        <option value="FL">Florida</option>
+                                        <option value="GA">Georgia</option>
+                                        <option value="HI">Hawaii</option>
+                                        <option value="ID">Idaho</option>
+                                        <option value="IL">Illinois</option>
+                                        <option value="IN">Indiana</option>
+                                        <option value="IA">Iowa</option>
+                                        <option value="KS">Kansas</option>
+                                        <option value="KY">Kentucky</option>
+                                        <option value="LA">Louisiana</option>
+                                        <option value="ME">Maine</option>
+                                        <option value="MD">Maryland</option>
+                                        <option value="MA">Massachusetts</option>
+                                        <option value="MI">Michigan</option>
+                                        <option value="MN">Minnesota</option>
+                                        <option value="MS">Mississippi</option>
+                                        <option value="MO">Missouri</option>
+                                        <option value="MT">Montana</option>
+                                        <option value="NE">Nebraska</option>
+                                        <option value="NV">Nevada</option>
+                                        <option value="NH">New Hampshire</option>
+                                        <option value="NJ">New Jersey</option>
+                                        <option value="NM">New Mexico</option>
+                                        <option value="NY">New York</option>
+                                        <option value="NC">North Carolina</option>
+                                        <option value="ND">North Dakota</option>
+                                        <option value="OH">Ohio</option>
+                                        <option value="OK">Oklahoma</option>
+                                        <option value="OR">Oregon</option>
+                                        <option value="PA">Pennsylvania</option>
+                                        <option value="RI">Rhode Island</option>
+                                        <option value="SC">South Carolina</option>
+                                        <option value="SD">South Dakota</option>
+                                        <option value="TN">Tennessee</option>
+                                        <option value="TX">Texas</option>
+                                        <option value="UT">Utah</option>
+                                        <option value="VT">Vermont</option>
+                                        <option value="VA">Virginia</option>
+                                        <option value="WA">Washington</option>
+                                        <option value="WV">West Virginia</option>
+                                        <option value="WI">Wisconsin</option>
+                                        <option value="WY">Wyoming</option>
+                                        <option value="DC">District of Columbia</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-2">
@@ -216,9 +268,60 @@
                                                            value="{{ neighborhood.city or '' }}" maxlength="100" placeholder="City">
                                                 </div>
                                                 <div class="form-group mb-2">
-                                                    <input type="text" name="state" 
-                                                           class="form-control form-control-sm" 
-                                                           value="{{ neighborhood.state or '' }}" maxlength="50" placeholder="State">
+                                                    <select name="state" class="form-control form-control-sm">
+                                                        <option value="">Select State</option>
+                                                        <option value="AL" {% if neighborhood.state == 'AL' %}selected{% endif %}>Alabama</option>
+                                                        <option value="AK" {% if neighborhood.state == 'AK' %}selected{% endif %}>Alaska</option>
+                                                        <option value="AZ" {% if neighborhood.state == 'AZ' %}selected{% endif %}>Arizona</option>
+                                                        <option value="AR" {% if neighborhood.state == 'AR' %}selected{% endif %}>Arkansas</option>
+                                                        <option value="CA" {% if neighborhood.state == 'CA' %}selected{% endif %}>California</option>
+                                                        <option value="CO" {% if neighborhood.state == 'CO' %}selected{% endif %}>Colorado</option>
+                                                        <option value="CT" {% if neighborhood.state == 'CT' %}selected{% endif %}>Connecticut</option>
+                                                        <option value="DE" {% if neighborhood.state == 'DE' %}selected{% endif %}>Delaware</option>
+                                                        <option value="FL" {% if neighborhood.state == 'FL' %}selected{% endif %}>Florida</option>
+                                                        <option value="GA" {% if neighborhood.state == 'GA' %}selected{% endif %}>Georgia</option>
+                                                        <option value="HI" {% if neighborhood.state == 'HI' %}selected{% endif %}>Hawaii</option>
+                                                        <option value="ID" {% if neighborhood.state == 'ID' %}selected{% endif %}>Idaho</option>
+                                                        <option value="IL" {% if neighborhood.state == 'IL' %}selected{% endif %}>Illinois</option>
+                                                        <option value="IN" {% if neighborhood.state == 'IN' %}selected{% endif %}>Indiana</option>
+                                                        <option value="IA" {% if neighborhood.state == 'IA' %}selected{% endif %}>Iowa</option>
+                                                        <option value="KS" {% if neighborhood.state == 'KS' %}selected{% endif %}>Kansas</option>
+                                                        <option value="KY" {% if neighborhood.state == 'KY' %}selected{% endif %}>Kentucky</option>
+                                                        <option value="LA" {% if neighborhood.state == 'LA' %}selected{% endif %}>Louisiana</option>
+                                                        <option value="ME" {% if neighborhood.state == 'ME' %}selected{% endif %}>Maine</option>
+                                                        <option value="MD" {% if neighborhood.state == 'MD' %}selected{% endif %}>Maryland</option>
+                                                        <option value="MA" {% if neighborhood.state == 'MA' %}selected{% endif %}>Massachusetts</option>
+                                                        <option value="MI" {% if neighborhood.state == 'MI' %}selected{% endif %}>Michigan</option>
+                                                        <option value="MN" {% if neighborhood.state == 'MN' %}selected{% endif %}>Minnesota</option>
+                                                        <option value="MS" {% if neighborhood.state == 'MS' %}selected{% endif %}>Mississippi</option>
+                                                        <option value="MO" {% if neighborhood.state == 'MO' %}selected{% endif %}>Missouri</option>
+                                                        <option value="MT" {% if neighborhood.state == 'MT' %}selected{% endif %}>Montana</option>
+                                                        <option value="NE" {% if neighborhood.state == 'NE' %}selected{% endif %}>Nebraska</option>
+                                                        <option value="NV" {% if neighborhood.state == 'NV' %}selected{% endif %}>Nevada</option>
+                                                        <option value="NH" {% if neighborhood.state == 'NH' %}selected{% endif %}>New Hampshire</option>
+                                                        <option value="NJ" {% if neighborhood.state == 'NJ' %}selected{% endif %}>New Jersey</option>
+                                                        <option value="NM" {% if neighborhood.state == 'NM' %}selected{% endif %}>New Mexico</option>
+                                                        <option value="NY" {% if neighborhood.state == 'NY' %}selected{% endif %}>New York</option>
+                                                        <option value="NC" {% if neighborhood.state == 'NC' %}selected{% endif %}>North Carolina</option>
+                                                        <option value="ND" {% if neighborhood.state == 'ND' %}selected{% endif %}>North Dakota</option>
+                                                        <option value="OH" {% if neighborhood.state == 'OH' %}selected{% endif %}>Ohio</option>
+                                                        <option value="OK" {% if neighborhood.state == 'OK' %}selected{% endif %}>Oklahoma</option>
+                                                        <option value="OR" {% if neighborhood.state == 'OR' %}selected{% endif %}>Oregon</option>
+                                                        <option value="PA" {% if neighborhood.state == 'PA' %}selected{% endif %}>Pennsylvania</option>
+                                                        <option value="RI" {% if neighborhood.state == 'RI' %}selected{% endif %}>Rhode Island</option>
+                                                        <option value="SC" {% if neighborhood.state == 'SC' %}selected{% endif %}>South Carolina</option>
+                                                        <option value="SD" {% if neighborhood.state == 'SD' %}selected{% endif %}>South Dakota</option>
+                                                        <option value="TN" {% if neighborhood.state == 'TN' %}selected{% endif %}>Tennessee</option>
+                                                        <option value="TX" {% if neighborhood.state == 'TX' %}selected{% endif %}>Texas</option>
+                                                        <option value="UT" {% if neighborhood.state == 'UT' %}selected{% endif %}>Utah</option>
+                                                        <option value="VT" {% if neighborhood.state == 'VT' %}selected{% endif %}>Vermont</option>
+                                                        <option value="VA" {% if neighborhood.state == 'VA' %}selected{% endif %}>Virginia</option>
+                                                        <option value="WA" {% if neighborhood.state == 'WA' %}selected{% endif %}>Washington</option>
+                                                        <option value="WV" {% if neighborhood.state == 'WV' %}selected{% endif %}>West Virginia</option>
+                                                        <option value="WI" {% if neighborhood.state == 'WI' %}selected{% endif %}>Wisconsin</option>
+                                                        <option value="WY" {% if neighborhood.state == 'WY' %}selected{% endif %}>Wyoming</option>
+                                                        <option value="DC" {% if neighborhood.state == 'DC' %}selected{% endif %}>District of Columbia</option>
+                                                    </select>
                                                 </div>
                                                 <div class="form-group mb-2">
                                                     <select name="score" class="form-control form-control-sm">
@@ -248,7 +351,26 @@
                                             <span class="neighborhood-city">{{ neighborhood.city or 'N/A' }}</span>
                                         </td>
                                         <td>
-                                            <span class="neighborhood-state">{{ neighborhood.state or 'N/A' }}</span>
+                                            <span class="neighborhood-state">
+                                                {% if neighborhood.state %}
+                                                    {% set state_names = {
+                                                        'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+                                                        'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+                                                        'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+                                                        'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+                                                        'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+                                                        'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+                                                        'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+                                                        'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+                                                        'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+                                                        'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+                                                        'DC': 'District of Columbia'
+                                                    } %}
+                                                    {{ state_names.get(neighborhood.state, neighborhood.state) }}
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </span>
                                         </td>
                                         <td>
                                             <span class="score-badge {% if neighborhood.score >= 8 %}score-excellent{% elif neighborhood.score >= 6 %}score-good{% elif neighborhood.score >= 4 %}score-average{% else %}score-poor{% endif %}">

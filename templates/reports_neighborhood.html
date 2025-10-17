@@ -32,16 +32,11 @@
                     <th>City</th>
                     <th>State</th>
                     <th>Score</th>
-                    <th>Total Items</th>
-                    <th>Items Sold</th>
-                    <th>Total Profit</th>
-                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for data in neighborhoods %}
                 {% set neighborhood = data.neighborhood %}
-                {% set summary = data.summary %}
                 <tr>
                     <td>
                         <strong>{{ neighborhood.name }}</strong>
@@ -50,25 +45,30 @@
                         {% endif %}
                     </td>
                     <td>{{ neighborhood.city or 'N/A' }}</td>
-                    <td>{{ neighborhood.state or 'N/A' }}</td>
+                    <td>
+                        {% if neighborhood.state %}
+                            {% set state_names = {
+                                'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+                                'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+                                'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+                                'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+                                'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+                                'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+                                'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+                                'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+                                'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+                                'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+                                'DC': 'District of Columbia'
+                            } %}
+                            {{ state_names.get(neighborhood.state, neighborhood.state) }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
                     <td>
                         <span class="badge {% if neighborhood.score >= 8 %}badge-success{% elif neighborhood.score >= 6 %}badge-warning{% else %}badge-danger{% endif %}">
                             {{ neighborhood.score }}/10
                         </span>
-                    </td>
-                    <td>{{ summary.total_items if summary else 0 }}</td>
-                    <td>{{ summary.sold_items if summary else 0 }}</td>
-                    <td>
-                        {% if summary and summary.total_profit >= 0 %}
-                            <span style="color: green;">${{ "%.2f"|format(summary.total_profit) }}</span>
-                        {% elif summary %}
-                            <span style="color: red;">${{ "%.2f"|format(summary.total_profit) }}</span>
-                        {% else %}
-                            $0.00
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="/reports/neighborhood/detail/{{ neighborhood.id }}?year={{ selected_year }}" class="btn btn-sm btn-outline-primary">View Details</a>
                     </td>
                 </tr>
                 {% endfor %}
