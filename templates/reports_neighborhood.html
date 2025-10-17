@@ -24,14 +24,14 @@ setTimeout(function() {
     // Build cities by state from template data
     {% for neighborhood in all_neighborhoods %}
     {% if neighborhood.state and neighborhood.city %}
-    const state = '{{ neighborhood.state }}';
-    const city = '{{ neighborhood.city }}';
+    const stateCode = '{{ neighborhood.state }}';
+    const cityName = '{{ neighborhood.city }}';
     
-    if (!citiesByState[state]) {
-        citiesByState[state] = [];
+    if (!citiesByState[stateCode]) {
+        citiesByState[stateCode] = [];
     }
-    if (citiesByState[state].indexOf(city) === -1) {
-        citiesByState[state].push(city);
+    if (citiesByState[stateCode].indexOf(cityName) === -1) {
+        citiesByState[stateCode].push(cityName);
     }
     {% endif %}
     {% endfor %}
