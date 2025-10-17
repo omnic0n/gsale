@@ -1,7 +1,72 @@
 {% extends "layout.html" %}
 {% block content %}
 <script>
+// Simple test to see if script runs
 alert('Script is running!');
+
+// Wait for page to load
+setTimeout(function() {
+    console.log('Page loaded, initializing filters...');
+    
+    const stateSelect = document.getElementById('state_filter');
+    const citySelect = document.getElementById('city_filter');
+    
+    if (!stateSelect || !citySelect) {
+        console.error('Could not find state or city select elements');
+        return;
+    }
+    
+    console.log('Found elements:', stateSelect, citySelect);
+    
+    // Store cities for each state
+    const citiesByState = {};
+    
+    // Build cities by state from template data
+    {% for neighborhood in neighborhoods %}
+    {% if neighborhood.neighborhood.state and neighborhood.neighborhood.city %}
+    const state = '{{ neighborhood.neighborhood.state }}';
+    const city = '{{ neighborhood.neighborhood.city }}';
+    
+    if (!citiesByState[state]) {
+        citiesByState[state] = [];
+    }
+    if (citiesByState[state].indexOf(city) === -1) {
+        citiesByState[state].push(city);
+    }
+    {% endif %}
+    {% endfor %}
+    
+    // Sort cities for each state
+    Object.keys(citiesByState).forEach(state => {
+        citiesByState[state].sort();
+    });
+    
+    console.log('Cities by state:', citiesByState);
+    
+    // Update city dropdown when state changes
+    stateSelect.addEventListener('change', function() {
+        const selectedState = this.value;
+        console.log('State changed to:', selectedState);
+        
+        // Clear current city options
+        citySelect.innerHTML = '<option value="">All Cities</option>';
+        
+        // Add cities for selected state
+        if (selectedState && citiesByState[selectedState]) {
+            console.log('Cities for', selectedState, ':', citiesByState[selectedState]);
+            citiesByState[selectedState].forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+        } else {
+            console.log('No cities found for state:', selectedState);
+        }
+    });
+    
+    console.log('Filters initialized successfully');
+}, 1000); // Wait 1 second for page to fully load
 </script>
 <div class="content-wrapper">
     <h1>Neighborhood Sales Report</h1>
@@ -118,72 +183,3 @@ alert('Script is running!');
 </div>
 
 {% endblock content %}
-
-<script>
-// Simple test to see if script runs
-alert('Script is running!');
-
-// Wait for page to load
-window.onload = function() {
-    console.log('Page loaded, initializing filters...');
-    
-    const stateSelect = document.getElementById('state_filter');
-    const citySelect = document.getElementById('city_filter');
-    
-    if (!stateSelect || !citySelect) {
-        console.error('Could not find state or city select elements');
-        return;
-    }
-    
-    console.log('Found elements:', stateSelect, citySelect);
-    
-    // Store cities for each state
-    const citiesByState = {};
-    
-    // Build cities by state from template data
-    {% for neighborhood in neighborhoods %}
-    {% if neighborhood.neighborhood.state and neighborhood.neighborhood.city %}
-    const state = '{{ neighborhood.neighborhood.state }}';
-    const city = '{{ neighborhood.neighborhood.city }}';
-    
-    if (!citiesByState[state]) {
-        citiesByState[state] = [];
-    }
-    if (citiesByState[state].indexOf(city) === -1) {
-        citiesByState[state].push(city);
-    }
-    {% endif %}
-    {% endfor %}
-    
-    // Sort cities for each state
-    Object.keys(citiesByState).forEach(state => {
-        citiesByState[state].sort();
-    });
-    
-    console.log('Cities by state:', citiesByState);
-    
-    // Update city dropdown when state changes
-    stateSelect.addEventListener('change', function() {
-        const selectedState = this.value;
-        console.log('State changed to:', selectedState);
-        
-        // Clear current city options
-        citySelect.innerHTML = '<option value="">All Cities</option>';
-        
-        // Add cities for selected state
-        if (selectedState && citiesByState[selectedState]) {
-            console.log('Cities for', selectedState, ':', citiesByState[selectedState]);
-            citiesByState[selectedState].forEach(city => {
-                const option = document.createElement('option');
-                option.value = city;
-                option.textContent = city;
-                citySelect.appendChild(option);
-            });
-        } else {
-            console.log('No cities found for state:', selectedState);
-        }
-    });
-    
-    console.log('Filters initialized successfully');
-};
-</script>
