@@ -3256,6 +3256,7 @@ def reports_neighborhood():
     
     return render_template('reports_neighborhood.html', 
                          neighborhoods=neighborhood_data, 
+                         all_neighborhoods=neighborhoods,  # Pass all neighborhoods for JavaScript
                          state_choices=state_choices,
                          city_choices=city_choices,
                          selected_state=selected_state,

@@ -22,10 +22,10 @@ setTimeout(function() {
     const citiesByState = {};
     
     // Build cities by state from template data
-    {% for neighborhood in neighborhoods %}
-    {% if neighborhood.neighborhood.state and neighborhood.neighborhood.city %}
-    const state = '{{ neighborhood.neighborhood.state }}';
-    const city = '{{ neighborhood.neighborhood.city }}';
+    {% for neighborhood in all_neighborhoods %}
+    {% if neighborhood.state and neighborhood.city %}
+    const state = '{{ neighborhood.state }}';
+    const city = '{{ neighborhood.city }}';
     
     if (!citiesByState[state]) {
         citiesByState[state] = [];
@@ -43,11 +43,6 @@ setTimeout(function() {
     
     console.log('Cities by state:', citiesByState);
     
-    // Debug: Show all states and their cities
-    Object.keys(citiesByState).forEach(state => {
-        console.log('State:', state, 'has cities:', citiesByState[state]);
-    });
-    
     // Update city dropdown when state changes
     stateSelect.addEventListener('change', function() {
         const selectedState = this.value;
@@ -55,7 +50,6 @@ setTimeout(function() {
         
         // Clear current city options
         citySelect.innerHTML = '<option value="">All Cities</option>';
-        console.log('Cleared city dropdown, current options:', citySelect.innerHTML);
         
         // Add cities for selected state
         if (selectedState && citiesByState[selectedState]) {
@@ -65,9 +59,7 @@ setTimeout(function() {
                 option.value = city;
                 option.textContent = city;
                 citySelect.appendChild(option);
-                console.log('Added city option:', city);
             });
-            console.log('Final city dropdown options:', citySelect.innerHTML);
         } else {
             console.log('No cities found for state:', selectedState);
         }
