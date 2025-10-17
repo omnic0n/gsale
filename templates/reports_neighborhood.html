@@ -117,35 +117,50 @@
 {% endblock content %}
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+console.log('Script starting...');
+
+// Wait for DOM to be ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFilters);
+} else {
+    initFilters();
+}
+
+function initFilters() {
+    console.log('Initializing filters...');
+    
     const stateSelect = document.getElementById('state_filter');
     const citySelect = document.getElementById('city_filter');
+    
+    if (!stateSelect || !citySelect) {
+        console.error('Could not find state or city select elements');
+        return;
+    }
     
     // Store cities for each state
     const citiesByState = {};
     
-    // Debug: Log all neighborhoods data
-    console.log('Neighborhoods data:', {{ neighborhoods | tojson }});
-    
+    // Build cities by state from template data
     {% for neighborhood in neighborhoods %}
     {% if neighborhood.neighborhood.state and neighborhood.neighborhood.city %}
-    console.log('Processing: State={{ neighborhood.neighborhood.state }}, City={{ neighborhood.neighborhood.city }}');
-    if (!citiesByState['{{ neighborhood.neighborhood.state }}']) {
-        citiesByState['{{ neighborhood.neighborhood.state }}'] = [];
+    const state = '{{ neighborhood.neighborhood.state }}';
+    const city = '{{ neighborhood.neighborhood.city }}';
+    
+    if (!citiesByState[state]) {
+        citiesByState[state] = [];
     }
-    if (!citiesByState['{{ neighborhood.neighborhood.state }}'].includes('{{ neighborhood.neighborhood.city }}')) {
-        citiesByState['{{ neighborhood.neighborhood.state }}'].push('{{ neighborhood.neighborhood.city }}');
+    if (citiesByState[state].indexOf(city) === -1) {
+        citiesByState[state].push(city);
     }
     {% endif %}
     {% endfor %}
-    
-    // Debug: Log the citiesByState object
-    console.log('Cities by state:', citiesByState);
     
     // Sort cities for each state
     Object.keys(citiesByState).forEach(state => {
         citiesByState[state].sort();
     });
+    
+    console.log('Cities by state:', citiesByState);
     
     // Update city dropdown when state changes
     stateSelect.addEventListener('change', function() {
@@ -169,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Trigger change event on page load to set initial city options
-    stateSelect.dispatchEvent(new Event('change'));
-});
+    console.log('Filters initialized successfully');
+}
 </script>
