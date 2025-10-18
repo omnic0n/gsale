@@ -102,11 +102,15 @@
         
         // Reset sorting when filter changes
         resetSorting();
+        // Auto-submit the form when state changes
+        document.getElementById('filterForm').submit();
     });
     
-    // Reset sorting when city changes
+    // Reset sorting when city changes and auto-submit form
     citySelect.addEventListener('change', function() {
         resetSorting();
+        // Auto-submit the form when city changes
+        document.getElementById('filterForm').submit();
     });
     
     // If there's a selected city from form submission, populate it
