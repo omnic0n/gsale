@@ -95,6 +95,14 @@ setTimeout(function() {
                 citySelect.appendChild(option);
             });
         }
+        
+        // Reset sorting when filter changes
+        resetSorting();
+    });
+    
+    // Reset sorting when city changes
+    citySelect.addEventListener('change', function() {
+        resetSorting();
     });
     
     // If there's a selected city from form submission, populate it
@@ -113,6 +121,9 @@ setTimeout(function() {
         });
     }
     {% endif %}
+    
+    // Reset sorting on page load to ensure clean state
+    resetSorting();
 }, 1000); // Wait 1 second for page to fully load
 
 // JavaScript table sorting function
@@ -198,6 +209,23 @@ function updateSortArrows(columnIndex, direction) {
         link.classList.remove('active');
     });
     document.querySelectorAll('.sort-link')[columnIndex].classList.add('active');
+}
+
+function resetSorting() {
+    // Reset sort state
+    currentSortColumn = -1;
+    currentSortDirection = 'asc';
+    
+    // Reset all arrows
+    document.querySelectorAll('.sort-arrow').forEach(arrow => {
+        arrow.textContent = '↕';
+        arrow.style.opacity = '0.5';
+    });
+    
+    // Remove active state from all headers
+    document.querySelectorAll('.sort-link').forEach(link => {
+        link.classList.remove('active');
+    });
 }
 </script>
 <div class="content-wrapper">
