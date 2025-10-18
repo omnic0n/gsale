@@ -284,8 +284,10 @@ function resetSorting() {
                     <select name="city" id="city_filter" class="form-control">
                         <option value="">All Cities</option>
                         {% if selected_state %}
+                            {% set cities_for_state = [] %}
                             {% for neighborhood in all_neighborhoods %}
-                                {% if neighborhood.state == selected_state and neighborhood.city %}
+                                {% if neighborhood.state == selected_state and neighborhood.city and neighborhood.city not in cities_for_state %}
+                                    {% set _ = cities_for_state.append(neighborhood.city) %}
                                     <option value="{{ neighborhood.city }}" {% if neighborhood.city == selected_city %}selected{% endif %}>{{ neighborhood.city }}</option>
                                 {% endif %}
                             {% endfor %}
