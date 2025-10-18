@@ -15,6 +15,25 @@
 .neighborhood-link:visited {
     color: #6f42c1;
 }
+
+.remove-link {
+    color: #dc3545;
+    text-decoration: none;
+    font-size: 1.2em;
+    padding: 5px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.remove-link:hover {
+    color: #fff;
+    background-color: #dc3545;
+    text-decoration: none;
+}
+
+.remove-link:visited {
+    color: #dc3545;
+}
 </style>
 <div class="content-section">
     <form method="POST" action="">
@@ -89,7 +108,9 @@
                     <span style="color: #999; font-size: 0.85em;">-</span>
                 {% endif %}
             </td>
-            <td><a href="/groups/remove?id={{ group['id'] }}">Remove</td>
+            <td><a href="/groups/remove?id={{ group['id'] }}" class="remove-link" title="Remove Collection">
+                <i class="fas fa-times text-danger"></i>
+            </a></td>
             </tr>
         {% set count.value = count.value + 1 %}
         {% endfor %}

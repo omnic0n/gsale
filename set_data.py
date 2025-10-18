@@ -1727,15 +1727,15 @@ def create_neighborhood(details):
         
         cur = mysql.connection.cursor()
         
-        # Check if neighborhood with same name already exists for this user
+        # Check if neighborhood with same name already exists for this user in the same city and state
         cur.execute("""
             SELECT id FROM neighborhoods 
-            WHERE name = %s AND user_id = %s
-        """, (details['name'], session.get('id')))
+            WHERE name = %s AND user_id = %s AND city = %s AND state = %s
+        """, (details['name'], session.get('id'), details['city'], details['state']))
         
         if cur.fetchone():
             cur.close()
-            raise ValueError("A neighborhood with this name already exists")
+            raise ValueError("A neighborhood with this name already exists in this city and state")
         
         # Create the neighborhood
         neighborhood_id = generate_uuid()
@@ -1782,15 +1782,15 @@ def update_neighborhood(neighborhood_id, details):
             cur.close()
             raise ValueError("Neighborhood not found or access denied")
         
-        # Check if another neighborhood with same name already exists for this user
+        # Check if another neighborhood with same name already exists for this user in the same city and state
         cur.execute("""
             SELECT id FROM neighborhoods 
-            WHERE name = %s AND user_id = %s AND id != %s
-        """, (details['name'], session.get('id'), neighborhood_id))
+            WHERE name = %s AND user_id = %s AND city = %s AND state = %s AND id != %s
+        """, (details['name'], session.get('id'), details['city'], details['state'], neighborhood_id))
         
         if cur.fetchone():
             cur.close()
-            raise ValueError("A neighborhood with this name already exists")
+            raise ValueError("A neighborhood with this name already exists in this city and state")
         
         # Update the neighborhood
         cur.execute("""
