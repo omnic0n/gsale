@@ -1562,8 +1562,8 @@ def get_neighborhood_sales_data(neighborhood_id):
             SELECT COUNT(*) as total_items
             FROM items i
             JOIN collection c ON i.group_id = c.id
-            WHERE c.neighborhood_id = %s AND c.user_id = %s
-        """, (neighborhood_id, session.get('id')))
+            WHERE c.neighborhood_id = %s AND c.group_id = %s
+        """, (neighborhood_id, get_current_group_id()))
         total_items = cur.fetchone()
         
         # Get total items sold in this neighborhood
@@ -1571,8 +1571,8 @@ def get_neighborhood_sales_data(neighborhood_id):
             SELECT COUNT(*) as sold_items
             FROM items i
             JOIN collection c ON i.group_id = c.id
-            WHERE c.neighborhood_id = %s AND c.user_id = %s AND i.sold = 1
-        """, (neighborhood_id, session.get('id')))
+            WHERE c.neighborhood_id = %s AND c.group_id = %s AND i.sold = 1
+        """, (neighborhood_id, get_current_group_id()))
         sold_items = cur.fetchone()
         
         # Get total profit from this neighborhood
@@ -1584,8 +1584,8 @@ def get_neighborhood_sales_data(neighborhood_id):
             FROM items i
             JOIN collection c ON i.group_id = c.id
             LEFT JOIN sale s ON s.id = i.id
-            WHERE c.neighborhood_id = %s AND c.user_id = %s AND i.sold = 1
-        """, (neighborhood_id, session.get('id')))
+            WHERE c.neighborhood_id = %s AND c.group_id = %s AND i.sold = 1
+        """, (neighborhood_id, get_current_group_id()))
         profit_data = cur.fetchone()
         
         cur.close()
