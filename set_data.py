@@ -247,6 +247,7 @@ def set_group_add(group_name, details, image_id):
     latitude = details.get('latitude', None)
     longitude = details.get('longitude', None)
     location_address = details.get('location_address', None)
+    neighborhood_id = details.get('neighborhood_id', None)
     
     # Convert empty strings to None for database
     if latitude == '':
@@ -255,12 +256,14 @@ def set_group_add(group_name, details, image_id):
         longitude = None
     if location_address == '':
         location_address = None
+    if neighborhood_id == '':
+        neighborhood_id = None
     
     cur.execute("""
-        INSERT INTO collection(id, name, date, price, image, account, group_id, latitude, longitude, location_address) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO collection(id, name, date, price, image, account, group_id, latitude, longitude, location_address, neighborhood_id) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """, (group_id, group_name, details['date'], price, image_id, session.get('id'), 
-          session.get('group_id'), latitude, longitude, location_address))
+          session.get('group_id'), latitude, longitude, location_address, neighborhood_id))
     mysql.connection.commit()
     cur.close()
     return group_id
@@ -289,6 +292,7 @@ def set_group_modify(details, image_id):
     latitude = details.get('latitude', None)
     longitude = details.get('longitude', None)
     location_address = details.get('location_address', None)
+    neighborhood_id = details.get('neighborhood_id', None)
     
     # Convert empty strings to None for database
     if latitude == '':
@@ -297,14 +301,16 @@ def set_group_modify(details, image_id):
         longitude = None
     if location_address == '':
         location_address = None
+    if neighborhood_id == '':
+        neighborhood_id = None
     
     cur.execute("""
         UPDATE collection 
         SET name = %s, date = %s, price = %s, image = %s, 
-            latitude = %s, longitude = %s, location_address = %s 
+            latitude = %s, longitude = %s, location_address = %s, neighborhood_id = %s 
         WHERE id = %s AND group_id = %s
     """, (details['name'], details['date'], price, image_id, 
-          latitude, longitude, location_address,
+          latitude, longitude, location_address, neighborhood_id,
           details['id'], session.get('group_id')))
     mysql.connection.commit()
     cur.close()

@@ -76,6 +76,20 @@
                      {{ form.latitude() }}
                      {{ form.longitude() }}
                  </div>
+                 
+                 <!-- Neighborhood Section -->
+                 <div class="form-group">
+                     <label class="form-control-label">Neighborhood</label>
+                     <select name="neighborhood_id" class="form-control form-control-lg">
+                         <option value="">Select Neighborhood (Optional)</option>
+                         {% for neighborhood in neighborhoods %}
+                             <option value="{{ neighborhood.id }}">
+                                 {{ neighborhood.name }}{% if neighborhood.city %} - {{ neighborhood.city }}{% endif %}
+                             </option>
+                         {% endfor %}
+                     </select>
+                     <small class="form-text text-muted">Assign this collection to a specific neighborhood for location-based reporting.</small>
+                 </div>
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}

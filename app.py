@@ -3306,7 +3306,7 @@ def group_add():
                 'success': False,
                 'message': 'Error creating group: {}'.format(str(e))
             }), 500
-    return render_template('groups_add.html', form=form, google_maps_api_key=app.config['GOOGLE_MAPS_API_KEY'])
+    return render_template('groups_add.html', form=form, google_maps_api_key=app.config['GOOGLE_MAPS_API_KEY'], neighborhoods=get_data.get_user_neighborhoods())
 
 @app.route('/display/<filename>')
 @login_required
@@ -3338,7 +3338,7 @@ def modify_group():
             image_id = group_id[0]['image']
         set_data.set_group_modify(details, image_id)
         return redirect(url_for('group_detail',group_id=details['id']))
-    return render_template('modify_group.html', group_id=group_id, form=form, google_maps_api_key=app.config['GOOGLE_MAPS_API_KEY'])
+    return render_template('modify_group.html', group_id=group_id, form=form, google_maps_api_key=app.config['GOOGLE_MAPS_API_KEY'], neighborhoods=get_data.get_user_neighborhoods())
 
 @app.route('/items/mark_sold',methods=["POST","GET"])
 @login_required

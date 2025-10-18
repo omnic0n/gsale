@@ -166,16 +166,18 @@
                 {% endif %}
             </td>
             <td>
-                <div class="neighborhood-assignment">
-                    <select class="form-control form-control-sm neighborhood-select" data-collection-id="{{ group_id[0]['id'] }}">
-                        <option value="">Select Neighborhood</option>
-                        {% for neighborhood in neighborhoods %}
-                            <option value="{{ neighborhood.id }}" {% if group_id[0].get('neighborhood_id') == neighborhood.id %}selected{% endif %}>
+                {% if group_id[0].get('neighborhood_id') %}
+                    {% for neighborhood in neighborhoods %}
+                        {% if neighborhood.id == group_id[0].get('neighborhood_id') %}
+                            <span class="neighborhood-name">
                                 {{ neighborhood.name }}{% if neighborhood.city %} - {{ neighborhood.city }}{% endif %}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
+                            </span>
+                            {% break %}
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <span style="color: #999; font-size: 0.9em;">No neighborhood assigned</span>
+                {% endif %}
             </td>
             <td><a href = "/groups/modify?group_id={{ group_id[0]['id'] }}" class="btn btn-sm btn-outline-primary">Modify Group</a></td>
         </tr>
@@ -574,73 +576,4 @@ document.addEventListener('click', function(event) {
 </script>
 
 {% endblock content %}
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle neighborhood assignment
-    document.querySelectorAll('.neighborhood-select').forEach(select => {
-        select.addEventListener('change', function() {
-            const collectionId = this.dataset.collectionId;
-            const neighborhoodId = this.value;
-            
-            // Show loading state
-            const originalValue = this.value;
-            this.disabled = true;
-            
-            // Make AJAX request to assign neighborhood
-            fetch('/assign-neighborhood', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `collection_id=${collectionId}&neighborhood_id=${neighborhoodId}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    showMessage(data.message, 'success');
-                } else {
-                    // Show error message and revert selection
-                    showMessage(data.message, 'error');
-                    this.value = originalValue;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showMessage('An error occurred while assigning neighborhood', 'error');
-                this.value = originalValue;
-            })
-            .finally(() => {
-                this.disabled = false;
-            });
-        });
-    });
-});
-
-function showMessage(message, type) {
-    // Create a temporary message element
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-    messageDiv.style.position = 'fixed';
-    messageDiv.style.top = '20px';
-    messageDiv.style.right = '20px';
-    messageDiv.style.zIndex = '9999';
-    messageDiv.innerHTML = `
-        ${message}
-        <button type="button" class="close" data-dismiss="alert">
-            <span>&times;</span>
-        </button>
-    `;
-    
-    document.body.appendChild(messageDiv);
-    
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.parentNode.removeChild(messageDiv);
-        }
-    }, 3000);
-}
-</script>
 </html>
