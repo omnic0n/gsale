@@ -1836,15 +1836,15 @@ def delete_neighborhood(neighborhood_id):
         return False, "Error deleting neighborhood: {}".format(str(e))
 
 def assign_neighborhood_to_collection(collection_id, neighborhood_id):
-    """Assign a neighborhood to a collection"""
+    """Assign a collection to a neighborhood"""
     try:
         cur = mysql.connection.cursor()
         
         # Check if collection exists and belongs to current user
         cur.execute("""
             SELECT id FROM collection 
-            WHERE id = %s AND group_id = %s
-        """, (collection_id, session.get('group_id')))
+            WHERE id = %s AND user_id = %s
+        """, (collection_id, session.get('id')))
         
         if not cur.fetchone():
             cur.close()
@@ -1861,16 +1861,16 @@ def assign_neighborhood_to_collection(collection_id, neighborhood_id):
                 cur.close()
                 raise ValueError("Neighborhood not found or access denied")
         
-        # Update the collection
+        # Update the collection with neighborhood assignment
         cur.execute("""
             UPDATE collection 
-            SET neighborhood_id = %s 
-            WHERE id = %s AND group_id = %s
-        """, (neighborhood_id, collection_id, session.get('group_id')))
+            SET neighborhood_id = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s AND user_id = %s
+        """, (neighborhood_id, collection_id, session.get('id')))
         
         mysql.connection.commit()
         cur.close()
-        return True, "Neighborhood assigned successfully"
+        return True, "Collection assigned to neighborhood successfully"
     except Exception as e:
-        print("Error assigning neighborhood: {}".format(e))
-        return False, "Error assigning neighborhood: {}".format(str(e))
+        print("Error assigning collection to neighborhood: {}".format(e))
+        return False, "Error assigning collection to neighborhood: {}".format(str(e))

@@ -3826,6 +3826,9 @@ def group_detail():
     groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
     
+    # Get neighborhoods for assignment dropdown
+    neighborhoods = get_data.get_user_neighborhoods()
+    
     # Get group creator information
     group_creator = get_data.get_group_creator(id)
     
@@ -3840,6 +3843,7 @@ def group_detail():
                             quicksell=quicksell,
                             groups=groups,
                             categories=categories,
+                            neighborhoods=neighborhoods,
                             group_creator=group_creator)
 
 @app.route('/groups/remove',methods=["POST","GET"])
@@ -4488,9 +4492,30 @@ def edit_neighborhood(neighborhood_id):
     form = NeighborhoodForm()
     form.name.data = neighborhood['name']
     form.description.data = neighborhood['description']
-    form.score.data = neighborhood['score']
     
     return render_template('neighborhoods_edit.html', neighborhood=neighborhood, form=form)
+
+@app.route('/assign-neighborhood', methods=['POST'])
+@login_required
+def assign_neighborhood():
+    """Assign a collection to a neighborhood"""
+    try:
+        collection_id = request.form.get('collection_id')
+        neighborhood_id = request.form.get('neighborhood_id')
+        
+        if not collection_id:
+            return jsonify({'success': False, 'message': 'Collection ID is required'}), 400
+        
+        # Allow empty neighborhood_id to unassign
+        success, message = set_data.assign_neighborhood_to_collection(collection_id, neighborhood_id)
+        
+        if success:
+            return jsonify({'success': True, 'message': message})
+        else:
+            return jsonify({'success': False, 'message': message}), 400
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 if __name__ == '__main__':

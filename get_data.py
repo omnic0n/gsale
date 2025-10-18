@@ -221,7 +221,8 @@ def get_data_from_group_list(group_id):
                     collection.latitude,
                     collection.longitude,
                     collection.location_address,
-                    collection.account
+                    collection.account,
+                    collection.neighborhood_id
                     FROM collection collection
                     WHERE collection.id = %s AND collection.group_id = %s""", (group_id, get_current_group_id()))
     return list(cur.fetchall())
