@@ -3248,26 +3248,7 @@ def reports_neighborhood():
             continue
         filtered_neighborhoods.append(neighborhood)
     
-    # Sort filtered neighborhoods based on sort_by parameter
-    if sort_by == 'profit':
-        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['profit'], reverse=True)
-    elif sort_by == 'total_spent':
-        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['total_spent'], reverse=True)
-    elif sort_by == 'total_earned':
-        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['total_earned'], reverse=True)
-    elif sort_by == 'total_items':
-        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['total_items'], reverse=True)
-    elif sort_by == 'sold_items':
-        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['sold_items'], reverse=True)
-    else:
-        # Default sort by state, then city, then name
-        filtered_neighborhoods.sort(key=lambda x: (
-            x.get('state', '') or '',
-            x.get('city', '') or '',
-            x.get('name', '') or ''
-        ))
-    
-    # Get neighborhood data
+    # Get neighborhood data first
     neighborhood_data = []
     for neighborhood in filtered_neighborhoods:
         sales_data = get_data.get_neighborhood_sales_data(neighborhood['id'])
@@ -3275,6 +3256,25 @@ def reports_neighborhood():
             'neighborhood': neighborhood,
             'sales_data': sales_data
         })
+    
+    # Sort neighborhood_data based on sort_by parameter
+    if sort_by == 'profit':
+        neighborhood_data.sort(key=lambda x: x['sales_data']['profit'], reverse=True)
+    elif sort_by == 'total_spent':
+        neighborhood_data.sort(key=lambda x: x['sales_data']['total_spent'], reverse=True)
+    elif sort_by == 'total_earned':
+        neighborhood_data.sort(key=lambda x: x['sales_data']['total_earned'], reverse=True)
+    elif sort_by == 'total_items':
+        neighborhood_data.sort(key=lambda x: x['sales_data']['total_items'], reverse=True)
+    elif sort_by == 'sold_items':
+        neighborhood_data.sort(key=lambda x: x['sales_data']['sold_items'], reverse=True)
+    else:
+        # Default sort by state, then city, then name
+        neighborhood_data.sort(key=lambda x: (
+            x['neighborhood'].get('state', '') or '',
+            x['neighborhood'].get('city', '') or '',
+            x['neighborhood'].get('name', '') or ''
+        ))
     
     return render_template('reports_neighborhood.html', 
                          neighborhoods=neighborhood_data, 
