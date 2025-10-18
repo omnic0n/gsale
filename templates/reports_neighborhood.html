@@ -15,6 +15,22 @@
 .neighborhood-link:visited {
     color: #6f42c1;
 }
+
+.sort-link {
+    color: #333;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.sort-link:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.sort-link.active {
+    color: #007bff;
+    background-color: #f8f9fa;
+}
 </style>
 <script>
 // Wait for page to load
@@ -142,14 +158,14 @@ setTimeout(function() {
         <table class="blueTable">
             <thead>
                 <tr>
-                    <th>Neighborhood</th>
-                    <th>City</th>
-                    <th>State</th>
-                    <th>Total Items</th>
-                    <th>Items Sold</th>
-                    <th>Total Spent</th>
-                    <th>Total Earned</th>
-                    <th>Profit</th>
+                    <th><a href="?sort_by=name{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'name' %} active{% endif %}">Neighborhood</a></th>
+                    <th><a href="?sort_by=name{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'name' %} active{% endif %}">City</a></th>
+                    <th><a href="?sort_by=name{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'name' %} active{% endif %}">State</a></th>
+                    <th><a href="?sort_by=total_items{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'total_items' %} active{% endif %}">Total Items</a></th>
+                    <th><a href="?sort_by=sold_items{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'sold_items' %} active{% endif %}">Items Sold</a></th>
+                    <th><a href="?sort_by=total_spent{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'total_spent' %} active{% endif %}">Total Spent</a></th>
+                    <th><a href="?sort_by=total_earned{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'total_earned' %} active{% endif %}">Total Earned</a></th>
+                    <th><a href="?sort_by=profit{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'profit' %} active{% endif %}">Profit</a></th>
                 </tr>
             </thead>
             <tbody>

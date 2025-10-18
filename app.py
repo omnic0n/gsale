@@ -3228,9 +3228,10 @@ def reports_neighborhood():
     # Get all neighborhoods for the current user
     neighborhoods = get_data.get_user_neighborhoods()
     
-    # Get selected filters from request
+    # Get selected filters and sort option from request
     selected_state = request.form.get('state', '') if request.method == "POST" else ''
     selected_city = request.form.get('city', '') if request.method == "POST" else ''
+    sort_by = request.form.get('sort_by', 'name') if request.method == "POST" else request.args.get('sort_by', 'name')
     
     # Get unique states and cities that exist in the data
     state_choices = sorted(list(set([n.get('state') for n in neighborhoods if n.get('state')])))
@@ -3247,6 +3248,25 @@ def reports_neighborhood():
             continue
         filtered_neighborhoods.append(neighborhood)
     
+    # Sort filtered neighborhoods based on sort_by parameter
+    if sort_by == 'profit':
+        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['profit'], reverse=True)
+    elif sort_by == 'total_spent':
+        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['total_spent'], reverse=True)
+    elif sort_by == 'total_earned':
+        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['total_earned'], reverse=True)
+    elif sort_by == 'total_items':
+        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['total_items'], reverse=True)
+    elif sort_by == 'sold_items':
+        filtered_neighborhoods.sort(key=lambda x: get_data.get_neighborhood_sales_data(x['id'])['sold_items'], reverse=True)
+    else:
+        # Default sort by state, then city, then name
+        filtered_neighborhoods.sort(key=lambda x: (
+            x.get('state', '') or '',
+            x.get('city', '') or '',
+            x.get('name', '') or ''
+        ))
+    
     # Get neighborhood data
     neighborhood_data = []
     for neighborhood in filtered_neighborhoods:
@@ -3262,7 +3282,8 @@ def reports_neighborhood():
                          state_choices=state_choices,
                          city_choices=city_choices,
                          selected_state=selected_state,
-                         selected_city=selected_city)
+                         selected_city=selected_city,
+                         sort_by=sort_by)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
