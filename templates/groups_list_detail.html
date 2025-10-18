@@ -167,16 +167,12 @@
             </td>
             <td>
                 {% if group_id[0].get('neighborhood_id') %}
-                    {% set neighborhood_found = false %}
-                    {% for neighborhood in neighborhoods %}
-                        {% if neighborhood.id == group_id[0].get('neighborhood_id') and not neighborhood_found %}
-                            {% set neighborhood_found = true %}
-                            <span class="neighborhood-name">
-                                {{ neighborhood.name }}{% if neighborhood.city %} - {{ neighborhood.city }}{% endif %}
-                            </span>
-                        {% endif %}
-                    {% endfor %}
-                    {% if not neighborhood_found %}
+                    {% set matching_neighborhood = neighborhoods | selectattr('id', 'equalto', group_id[0].get('neighborhood_id')) | first %}
+                    {% if matching_neighborhood %}
+                        <span class="neighborhood-name">
+                            {{ matching_neighborhood.name }}{% if matching_neighborhood.city %} - {{ matching_neighborhood.city }}{% endif %}
+                        </span>
+                    {% else %}
                         <span style="color: #999; font-size: 0.9em;">Neighborhood not found</span>
                     {% endif %}
                 {% else %}
