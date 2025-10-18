@@ -1618,3 +1618,35 @@ def get_neighborhood_sales_data(neighborhood_id):
     finally:
         if 'cur' in locals():
             cur.close()
+
+def get_neighborhood_collections(neighborhood_id):
+    """Get all collections assigned to a specific neighborhood"""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT 
+                c.id,
+                c.name,
+                c.date,
+                c.price,
+                c.image,
+                c.location_address,
+                c.latitude,
+                c.longitude,
+                COUNT(i.id) as total_items,
+                SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) as sold_items,
+                COALESCE(SUM(s.price), 0) as total_earned
+            FROM collection c
+            LEFT JOIN items i ON i.group_id = c.id
+            LEFT JOIN sale s ON s.id = i.id AND i.sold = 1
+            WHERE c.neighborhood_id = %s AND c.group_id = %s
+            GROUP BY c.id, c.name, c.date, c.price, c.image, c.location_address, c.latitude, c.longitude
+            ORDER BY c.date DESC
+        """, (neighborhood_id, get_current_group_id()))
+        return list(cur.fetchall())
+    except Exception as e:
+        print("Error in get_neighborhood_collections: {}".format(e))
+        return []
+    finally:
+        if 'cur' in locals():
+            cur.close()

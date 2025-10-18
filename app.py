@@ -4403,21 +4403,23 @@ def api_add_group():
 @app.route('/reports/neighborhood/detail/<neighborhood_id>')
 @login_required
 def neighborhood_detail(neighborhood_id):
-    """View detailed purchases for a specific neighborhood"""
+    """Show detailed view of collections for a specific neighborhood"""
+    # Get neighborhood information
     neighborhood = get_data.get_neighborhood_by_id(neighborhood_id)
     if not neighborhood:
         flash('Neighborhood not found', 'error')
         return redirect(url_for('reports_neighborhood'))
     
-    year = request.args.get('year', 'all')
-    purchases = get_data.get_neighborhood_purchases(neighborhood_id, year)
-    summary = get_data.get_neighborhood_summary(neighborhood_id, year)
+    # Get collections for this neighborhood
+    collections = get_data.get_neighborhood_collections(neighborhood_id)
+    
+    # Get sales summary for this neighborhood
+    sales_data = get_data.get_neighborhood_sales_data(neighborhood_id)
     
     return render_template('neighborhood_detail.html', 
-                         neighborhood=neighborhood, 
-                         purchases=purchases, 
-                         summary=summary, 
-                         selected_year=year)
+                         neighborhood=neighborhood,
+                         collections=collections,
+                         sales_data=sales_data)
 
 # Neighborhood Management Routes
 @app.route('/settings/neighborhoods', methods=["GET", "POST"])

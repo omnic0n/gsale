@@ -1,131 +1,168 @@
 {% extends "layout.html" %}
 {% block content %}
+<style>
+.collection-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: white;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.collection-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.collection-image {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-stat {
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.summary-stat h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.summary-stat p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.back-link:hover {
+    color: #495057;
+    text-decoration: underline;
+}
+</style>
+
 <div class="content-wrapper">
-    <h1>{{ neighborhood.name }} - Detailed Report</h1>
-    <p>Detailed purchase analysis for {{ neighborhood.name }}{% if neighborhood.city and neighborhood.state %}, {{ neighborhood.city }}, {{ neighborhood.state }}{% endif %}</p>
-    
-    <!-- Back button -->
-    <a href="/reports/neighborhood" class="btn btn-secondary mb-3">
-        <i class="fas fa-arrow-left"></i> Back to Neighborhood Reports
-    </a>
-    
-    <!-- Neighborhood Score Display -->
-    <div class="alert alert-info">
-        <h4>Neighborhood Score: {{ neighborhood.score }}/10</h4>
-        <p><strong>Description:</strong> {{ neighborhood.description or 'No description provided' }}</p>
-        {% if neighborhood.city or neighborhood.state %}
-        <p><strong>Location:</strong> {{ neighborhood.city or 'N/A' }}{% if neighborhood.city and neighborhood.state %}, {% endif %}{{ neighborhood.state or 'N/A' }}</p>
-        {% endif %}
-        <div class="progress mt-2" style="height: 20px;">
-            <div class="progress-bar {% if neighborhood.score >= 8 %}bg-success{% elif neighborhood.score >= 6 %}bg-warning{% else %}bg-danger{% endif %}" 
-                 role="progressbar" style="width: {{ (neighborhood.score / 10) * 100 }}%" 
-                 aria-valuenow="{{ neighborhood.score }}" aria-valuemin="0" aria-valuemax="10">
-                {{ neighborhood.score }}/10
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/reports/neighborhood" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Neighborhood Report
+            </a>
+            <h1 class="mt-2">{{ neighborhood.name }}</h1>
+            {% if neighborhood.city and neighborhood.state %}
+                <p class="text-muted">{{ neighborhood.city }}, {{ neighborhood.state }}</p>
+            {% endif %}
+            {% if neighborhood.description %}
+                <p>{{ neighborhood.description }}</p>
+            {% endif %}
         </div>
     </div>
-    
-    {% if summary %}
-    <div class="alert alert-success">
-        <h4>Summary for {{ neighborhood.name }}{% if selected_year and selected_year != 'all' %} ({{ selected_year }}){% endif %}</h4>
+
+    <!-- Summary Statistics -->
+    <div class="summary-card">
         <div class="row">
             <div class="col-md-3">
-                <strong>Total Purchases:</strong> {{ summary.total_purchases }}
+                <div class="summary-stat">
+                    <h3>{{ sales_data.total_items }}</h3>
+                    <p>Total Items</p>
+                </div>
             </div>
             <div class="col-md-3">
-                <strong>Total Spent:</strong> ${{ "%.2f"|format(summary.total_spent) }}
+                <div class="summary-stat">
+                    <h3>{{ sales_data.sold_items }}</h3>
+                    <p>Items Sold</p>
+                </div>
             </div>
             <div class="col-md-3">
-                <strong>Total Items:</strong> {{ summary.total_items }}
+                <div class="summary-stat">
+                    <h3>${{ "%.2f"|format(sales_data.total_spent) }}</h3>
+                    <p>Total Spent</p>
+                </div>
             </div>
             <div class="col-md-3">
-                <strong>Items Sold:</strong> {{ summary.sold_items }}
+                <div class="summary-stat">
+                    <h3 class="{% if sales_data.profit > 0 %}text-success{% elif sales_data.profit < 0 %}text-danger{% endif %}">
+                        ${{ "%.2f"|format(sales_data.profit) }}
+                    </h3>
+                    <p>Profit/Loss</p>
+                </div>
             </div>
         </div>
-        <div class="row mt-2">
-            <div class="col-md-3">
-                <strong>Total Sales:</strong> ${{ "%.2f"|format(summary.total_sales) }}
-            </div>
-            <div class="col-md-3">
-                <strong>Total Profit:</strong> ${{ "%.2f"|format(summary.total_profit) }}
-            </div>
-            <div class="col-md-3">
-                <strong>First Purchase:</strong> {{ summary.first_purchase }}
-            </div>
-            <div class="col-md-3">
-                <strong>Last Purchase:</strong> {{ summary.last_purchase }}
-            </div>
+    </div>
+
+    <!-- Collections List -->
+    <div class="row">
+        <div class="col-12">
+            <h3>Collections in {{ neighborhood.name }}</h3>
+            {% if collections %}
+                <div class="row">
+                    {% for collection in collections %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="collection-card">
+                            <div class="row">
+                                <div class="col-4">
+                                    {% if collection.image %}
+                                        <img src="{{ url_for('static', filename='uploads/' + collection.image) }}" 
+                                             class="collection-image" alt="Collection Image">
+                                    {% else %}
+                                        <div class="collection-image bg-light d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-8">
+                                    <h5 class="mb-1">{{ collection.name }}</h5>
+                                    <p class="mb-1 text-muted small">{{ collection.date }}</p>
+                                    <p class="mb-1"><strong>${{ "%.2f"|format(collection.price) }}</strong></p>
+                                    <p class="mb-1 small">
+                                        {{ collection.sold_items }}/{{ collection.total_items }} items sold
+                                    </p>
+                                    {% if collection.total_earned > 0 %}
+                                        <p class="mb-0 small text-success">
+                                            Earned: ${{ "%.2f"|format(collection.total_earned) }}
+                                        </p>
+                                    {% endif %}
+                                    {% if collection.location_address %}
+                                        <p class="mb-0 small text-muted">
+                                            <i class="fas fa-map-marker-alt"></i> 
+                                            {{ collection.location_address.split(',')[:-1] | join(', ') if ',' in collection.location_address else collection.location_address }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="/groups/detail?group_id={{ collection.id }}" class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <h4>No Collections Found</h4>
+                    <p>No collections have been assigned to this neighborhood yet.</p>
+                    <a href="/groups/create" class="btn btn-primary">Create Collection</a>
+                </div>
+            {% endif %}
         </div>
-        {% if summary.total_spent > 0 %}
-        <div class="row mt-2">
-            <div class="col-md-12">
-                <strong>ROI:</strong> {{ "%.1f"|format((summary.total_profit / summary.total_spent) * 100) }}%
-            </div>
-        </div>
-        {% endif %}
     </div>
-    {% endif %}
-    
-    {% if purchases %}
-    <h3>Purchase Details{% if selected_year and selected_year != 'all' %} ({{ selected_year }}){% endif %}</h3>
-    <div class="table-responsive">
-        <table class="blueTable">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Group Name</th>
-                    <th>Location</th>
-                    <th>Purchase Price</th>
-                    <th>Items</th>
-                    <th>Sold</th>
-                    <th>Sales Revenue</th>
-                    <th>Profit</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for purchase in purchases %}
-                <tr>
-                    <td>{{ purchase.date }}</td>
-                    <td>{{ purchase.name }}</td>
-                    <td>
-                        {% if purchase.location_address %}
-                            {{ purchase.location_address }}
-                        {% else %}
-                            <em>No location data</em>
-                        {% endif %}
-                    </td>
-                    <td>${{ "%.2f"|format(purchase.price) }}</td>
-                    <td>{{ purchase.item_count }}</td>
-                    <td>{{ purchase.sold_count }}</td>
-                    <td>${{ "%.2f"|format(purchase.total_sales) }}</td>
-                    <td>
-                        {% if purchase.total_profit >= 0 %}
-                            <span style="color: green;">${{ "%.2f"|format(purchase.total_profit) }}</span>
-                        {% else %}
-                            <span style="color: red;">${{ "%.2f"|format(purchase.total_profit) }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="/groups/detail?group_id={{ purchase.id }}" class="btn btn-sm btn-outline-primary">View Details</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="alert alert-warning">
-        <h4>No purchases found</h4>
-        <p>No purchases were found for the neighborhood "{{ neighborhood.name }}"{% if selected_year and selected_year != 'all' %} in the year {{ selected_year }}{% endif %}. This could mean:</p>
-        <ul>
-            <li>No collections have been assigned to this neighborhood yet</li>
-            <li>No purchases were made in the selected time period</li>
-            <li>The neighborhood was recently created</li>
-        </ul>
-        <p>To assign collections to this neighborhood, edit your groups and select this neighborhood in the location settings.</p>
-    </div>
-    {% endif %}
 </div>
 
 {% endblock content %}

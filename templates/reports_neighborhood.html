@@ -1,5 +1,21 @@
 {% extends "layout.html" %}
 {% block content %}
+<style>
+.neighborhood-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.neighborhood-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.neighborhood-link:visited {
+    color: #6f42c1;
+}
+</style>
 <script>
 // Wait for page to load
 setTimeout(function() {
@@ -142,7 +158,9 @@ setTimeout(function() {
                 {% set sales = data.sales_data %}
                 <tr>
                     <td>
-                        <strong>{{ neighborhood.name }}</strong>
+                        <a href="/reports/neighborhood/detail/{{ neighborhood.id }}" class="neighborhood-link">
+                            <strong>{{ neighborhood.name }}</strong>
+                        </a>
                         {% if neighborhood.description %}
                             <br><small class="text-muted">{{ neighborhood.description }}</small>
                         {% endif %}
