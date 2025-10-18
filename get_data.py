@@ -1561,7 +1561,7 @@ def get_neighborhood_sales_data(neighborhood_id):
         cur.execute("""
             SELECT COUNT(*) as total_items
             FROM items i
-            JOIN collection c ON i.collection_id = c.id
+            JOIN collection c ON i.group_id = c.id
             WHERE c.neighborhood_id = %s AND c.user_id = %s
         """, (neighborhood_id, session.get('id')))
         total_items = cur.fetchone()
@@ -1570,7 +1570,7 @@ def get_neighborhood_sales_data(neighborhood_id):
         cur.execute("""
             SELECT COUNT(*) as sold_items
             FROM items i
-            JOIN collection c ON i.collection_id = c.id
+            JOIN collection c ON i.group_id = c.id
             WHERE c.neighborhood_id = %s AND c.user_id = %s AND i.sold = 1
         """, (neighborhood_id, session.get('id')))
         sold_items = cur.fetchone()
@@ -1579,10 +1579,11 @@ def get_neighborhood_sales_data(neighborhood_id):
         cur.execute("""
             SELECT 
                 COALESCE(SUM(c.price), 0) as total_spent,
-                COALESCE(SUM(i.sold_price), 0) as total_earned,
-                COALESCE(SUM(i.sold_price) - SUM(c.price), 0) as profit
+                COALESCE(SUM(s.price), 0) as total_earned,
+                COALESCE(SUM(s.price) - SUM(c.price), 0) as profit
             FROM items i
-            JOIN collection c ON i.collection_id = c.id
+            JOIN collection c ON i.group_id = c.id
+            LEFT JOIN sale s ON s.id = i.id
             WHERE c.neighborhood_id = %s AND c.user_id = %s AND i.sold = 1
         """, (neighborhood_id, session.get('id')))
         profit_data = cur.fetchone()
