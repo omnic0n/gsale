@@ -1,5 +1,21 @@
 <html>
 {% extends "layout.html" %} {% block content %}
+<style>
+.neighborhood-link {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.85em;
+}
+
+.neighborhood-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.neighborhood-link:visited {
+    color: #6f42c1;
+}
+</style>
 <div class="content-section">
     <form method="POST" action="">
         {{ form.hidden_tag() }}
@@ -33,6 +49,7 @@
             <th>Average</th>
             <th>Date</th>
             <th>Location</th>
+            <th>Neighborhood</th>
             <th>Remove</th>
         </tr>
     </thead>
@@ -54,6 +71,20 @@
                     <a href="https://maps.google.com/?q={{ group['location_address'] | urlencode }}" target="_blank" title="View on Google Maps">
                         📍 <span style="font-size: 0.85em;">{{ (group['location_address'].split(',')[:-1] | join(', '))[:25] }}{% if (group['location_address'].split(',')[:-1] | join(', '))|length > 25 %}...{% endif %}</span>
                     </a>
+                {% else %}
+                    <span style="color: #999; font-size: 0.85em;">-</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if group.get('neighborhood_id') %}
+                    {% set matching_neighborhood = neighborhoods | selectattr('id', 'equalto', group.get('neighborhood_id')) | first %}
+                    {% if matching_neighborhood %}
+                        <a href="/reports/neighborhood/detail/{{ matching_neighborhood.id }}" class="neighborhood-link">
+                            {{ matching_neighborhood.name }}{% if matching_neighborhood.city %} - {{ matching_neighborhood.city }}{% endif %}
+                        </a>
+                    {% else %}
+                        <span style="color: #999; font-size: 0.85em;">Neighborhood not found</span>
+                    {% endif %}
                 {% else %}
                     <span style="color: #999; font-size: 0.85em;">-</span>
                 {% endif %}

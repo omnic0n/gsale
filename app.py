@@ -3623,7 +3623,8 @@ def groups_list():
         date = request.args.get('date', type = str)
 
     groups = get_data.get_all_from_group_and_items(date)
-    return render_template('groups_list.html', groups=groups, form=form)
+    neighborhoods = get_data.get_user_neighborhoods()
+    return render_template('groups_list.html', groups=groups, form=form, neighborhoods=neighborhoods)
 
 @app.route('/items/list', methods=["POST","GET"])
 @login_required
