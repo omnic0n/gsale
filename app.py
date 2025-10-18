@@ -3250,8 +3250,10 @@ def reports_neighborhood():
     # Get neighborhood data
     neighborhood_data = []
     for neighborhood in filtered_neighborhoods:
+        sales_data = get_data.get_neighborhood_sales_data(neighborhood['id'])
         neighborhood_data.append({
-            'neighborhood': neighborhood
+            'neighborhood': neighborhood,
+            'sales_data': sales_data
         })
     
     return render_template('reports_neighborhood.html', 

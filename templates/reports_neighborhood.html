@@ -129,11 +129,17 @@ setTimeout(function() {
                     <th>Neighborhood</th>
                     <th>City</th>
                     <th>State</th>
+                    <th>Total Items</th>
+                    <th>Items Sold</th>
+                    <th>Total Spent</th>
+                    <th>Total Earned</th>
+                    <th>Profit</th>
                 </tr>
             </thead>
             <tbody>
                 {% for data in neighborhoods %}
                 {% set neighborhood = data.neighborhood %}
+                {% set sales = data.sales_data %}
                 <tr>
                     <td>
                         <strong>{{ neighborhood.name }}</strong>
@@ -161,6 +167,15 @@ setTimeout(function() {
                         {% else %}
                             N/A
                         {% endif %}
+                    </td>
+                    <td>{{ sales.total_items }}</td>
+                    <td>{{ sales.sold_items }}</td>
+                    <td>${{ "%.2f"|format(sales.total_spent) }}</td>
+                    <td>${{ "%.2f"|format(sales.total_earned) }}</td>
+                    <td>
+                        <span class="{% if sales.profit > 0 %}text-success{% elif sales.profit < 0 %}text-danger{% endif %}">
+                            ${{ "%.2f"|format(sales.profit) }}
+                        </span>
                     </td>
                 </tr>
                 {% endfor %}

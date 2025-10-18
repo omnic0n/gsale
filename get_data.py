@@ -1551,3 +1551,60 @@ def get_neighborhood_years(neighborhood_id):
     finally:
         if 'cur' in locals():
             cur.close()
+
+def get_neighborhood_sales_data(neighborhood_id):
+    """Get sales data for a specific neighborhood"""
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get total items bought in this neighborhood
+        cur.execute("""
+            SELECT COUNT(*) as total_items
+            FROM items i
+            JOIN collection c ON i.collection_id = c.id
+            WHERE c.neighborhood_id = %s AND c.user_id = %s
+        """, (neighborhood_id, session.get('id')))
+        total_items = cur.fetchone()
+        
+        # Get total items sold in this neighborhood
+        cur.execute("""
+            SELECT COUNT(*) as sold_items
+            FROM items i
+            JOIN collection c ON i.collection_id = c.id
+            WHERE c.neighborhood_id = %s AND c.user_id = %s AND i.sold = 1
+        """, (neighborhood_id, session.get('id')))
+        sold_items = cur.fetchone()
+        
+        # Get total profit from this neighborhood
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(c.price), 0) as total_spent,
+                COALESCE(SUM(i.sold_price), 0) as total_earned,
+                COALESCE(SUM(i.sold_price) - SUM(c.price), 0) as profit
+            FROM items i
+            JOIN collection c ON i.collection_id = c.id
+            WHERE c.neighborhood_id = %s AND c.user_id = %s AND i.sold = 1
+        """, (neighborhood_id, session.get('id')))
+        profit_data = cur.fetchone()
+        
+        cur.close()
+        
+        return {
+            'total_items': total_items['total_items'] if total_items else 0,
+            'sold_items': sold_items['sold_items'] if sold_items else 0,
+            'total_spent': float(profit_data['total_spent']) if profit_data else 0.0,
+            'total_earned': float(profit_data['total_earned']) if profit_data else 0.0,
+            'profit': float(profit_data['profit']) if profit_data else 0.0
+        }
+    except Exception as e:
+        print("Error in get_neighborhood_sales_data: {}".format(e))
+        return {
+            'total_items': 0,
+            'sold_items': 0,
+            'total_spent': 0.0,
+            'total_earned': 0.0,
+            'profit': 0.0
+        }
+    finally:
+        if 'cur' in locals():
+            cur.close()
