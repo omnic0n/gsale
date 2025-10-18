@@ -1575,27 +1575,36 @@ def get_neighborhood_sales_data(neighborhood_id):
         """, (neighborhood_id, get_current_group_id()))
         sold_items = cur.fetchone()
         
-        # Get total profit from this neighborhood
+        # Get total spent (all purchases in this neighborhood)
         cur.execute("""
-            SELECT 
-                COALESCE(SUM(c.price), 0) as total_spent,
-                COALESCE(SUM(s.price), 0) as total_earned,
-                COALESCE(SUM(s.price) - SUM(c.price), 0) as profit
+            SELECT COALESCE(SUM(c.price), 0) as total_spent
+            FROM collection c
+            WHERE c.neighborhood_id = %s AND c.group_id = %s
+        """, (neighborhood_id, get_current_group_id()))
+        total_spent_data = cur.fetchone()
+        
+        # Get total earned (all sales in this neighborhood)
+        cur.execute("""
+            SELECT COALESCE(SUM(s.price), 0) as total_earned
             FROM items i
             JOIN collection c ON i.group_id = c.id
             LEFT JOIN sale s ON s.id = i.id
             WHERE c.neighborhood_id = %s AND c.group_id = %s AND i.sold = 1
         """, (neighborhood_id, get_current_group_id()))
-        profit_data = cur.fetchone()
+        total_earned_data = cur.fetchone()
         
         cur.close()
+        
+        total_spent = float(total_spent_data['total_spent']) if total_spent_data else 0.0
+        total_earned = float(total_earned_data['total_earned']) if total_earned_data else 0.0
+        profit = total_earned - total_spent
         
         return {
             'total_items': total_items['total_items'] if total_items else 0,
             'sold_items': sold_items['sold_items'] if sold_items else 0,
-            'total_spent': float(profit_data['total_spent']) if profit_data else 0.0,
-            'total_earned': float(profit_data['total_earned']) if profit_data else 0.0,
-            'profit': float(profit_data['profit']) if profit_data else 0.0
+            'total_spent': total_spent,
+            'total_earned': total_earned,
+            'profit': profit
         }
     except Exception as e:
         print("Error in get_neighborhood_sales_data: {}".format(e))
