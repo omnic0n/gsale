@@ -108,6 +108,8 @@
         document.getElementById('filterForm').submit();
     });
     
+    // Server-side template now handles city population correctly
+    
     // Reset sorting when city changes and auto-submit form
     citySelect.addEventListener('change', function() {
         resetSorting();
@@ -281,6 +283,13 @@ function resetSorting() {
                     <label for="city_filter">City Filter:</label>
                     <select name="city" id="city_filter" class="form-control">
                         <option value="">All Cities</option>
+                        {% if selected_state %}
+                            {% for neighborhood in all_neighborhoods %}
+                                {% if neighborhood.state == selected_state and neighborhood.city %}
+                                    <option value="{{ neighborhood.city }}" {% if neighborhood.city == selected_city %}selected{% endif %}>{{ neighborhood.city }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
                     </select>
                 </div>
                 <div class="col-md-4">
