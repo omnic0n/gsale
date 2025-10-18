@@ -100,12 +100,21 @@ setTimeout(function() {
 
 // Function to handle table sorting while preserving filters
 function sortTable(sortBy) {
-    const form = document.querySelector('form[method="POST"]');
+    const form = document.getElementById('filterForm');
+    
+    // Remove any existing sort_by input to avoid duplicates
+    const existingSortInput = form.querySelector('input[name="sort_by"]');
+    if (existingSortInput) {
+        existingSortInput.remove();
+    }
+    
+    // Add the new sort parameter
     const sortInput = document.createElement('input');
     sortInput.type = 'hidden';
     sortInput.name = 'sort_by';
     sortInput.value = sortBy;
     form.appendChild(sortInput);
+    
     form.submit();
 }
 </script>
@@ -113,7 +122,14 @@ function sortTable(sortBy) {
     <h1>Neighborhood Sales Report</h1>
     <p>Analyze sales performance by neighborhood with scoring system</p>
     
-    <form method="POST" class="mb-4">
+    <form method="POST" class="mb-4" id="filterForm">
+        <!-- Preserve current filters -->
+        {% if selected_state %}
+        <input type="hidden" name="state" value="{{ selected_state }}">
+        {% endif %}
+        {% if selected_city %}
+        <input type="hidden" name="city" value="{{ selected_city }}">
+        {% endif %}
         <div class="form-group">
             <div class="row">
                 <div class="col-md-4">
