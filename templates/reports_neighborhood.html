@@ -50,8 +50,12 @@
 }
 </style>
 <script>
-// Wait for page to load
-setTimeout(function() {
+// Wrap everything in an IIFE to avoid global scope pollution
+(function() {
+    'use strict';
+    
+    // Wait for page to load
+    setTimeout(function() {
     const stateSelect = document.getElementById('state_filter');
     const citySelect = document.getElementById('city_filter');
     
@@ -130,7 +134,13 @@ setTimeout(function() {
 let currentSortColumn = -1;
 let currentSortDirection = 'asc';
 
-function sortTable(columnIndex) {
+function sortTable(columnIndex, event) {
+    // Prevent event from bubbling up to avoid interfering with navigation
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    
     const table = document.querySelector('.blueTable');
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -227,6 +237,8 @@ function resetSorting() {
         link.classList.remove('active');
     });
 }
+
+})(); // End of IIFE
 </script>
 <div class="content-wrapper">
     <h1>Neighborhood Sales Report</h1>
@@ -295,14 +307,14 @@ function resetSorting() {
         <table class="blueTable">
             <thead>
                 <tr>
-                    <th onclick="sortTable(0)" class="sort-link">Neighborhood <span class="sort-arrow">↕</span></th>
-                    <th onclick="sortTable(1)" class="sort-link">City <span class="sort-arrow">↕</span></th>
-                    <th onclick="sortTable(2)" class="sort-link">State <span class="sort-arrow">↕</span></th>
-                    <th onclick="sortTable(3)" class="sort-link">Total Items <span class="sort-arrow">↕</span></th>
-                    <th onclick="sortTable(4)" class="sort-link">Items Sold <span class="sort-arrow">↕</span></th>
-                    <th onclick="sortTable(5)" class="sort-link">Total Spent <span class="sort-arrow">↕</span></th>
-                    <th onclick="sortTable(6)" class="sort-link">Total Earned <span class="sort-arrow">↕</span></th>
-                    <th onclick="sortTable(7)" class="sort-link">Profit <span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable(0, event)" class="sort-link">Neighborhood <span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable(1, event)" class="sort-link">City <span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable(2, event)" class="sort-link">State <span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable(3, event)" class="sort-link">Total Items <span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable(4, event)" class="sort-link">Items Sold <span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable(5, event)" class="sort-link">Total Spent <span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable(6, event)" class="sort-link">Total Earned <span class="sort-arrow">↕</span></th>
+                    <th onclick="sortTable(7, event)" class="sort-link">Profit <span class="sort-arrow">↕</span></th>
                 </tr>
             </thead>
             <tbody>
