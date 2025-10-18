@@ -97,6 +97,17 @@ setTimeout(function() {
     }
     {% endif %}
 }, 1000); // Wait 1 second for page to fully load
+
+// Function to handle table sorting while preserving filters
+function sortTable(sortBy) {
+    const form = document.querySelector('form[method="POST"]');
+    const sortInput = document.createElement('input');
+    sortInput.type = 'hidden';
+    sortInput.name = 'sort_by';
+    sortInput.value = sortBy;
+    form.appendChild(sortInput);
+    form.submit();
+}
 </script>
 <div class="content-wrapper">
     <h1>Neighborhood Sales Report</h1>
@@ -158,14 +169,14 @@ setTimeout(function() {
         <table class="blueTable">
             <thead>
                 <tr>
-                    <th><a href="?sort_by=name{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'name' %} active{% endif %}">Neighborhood</a></th>
-                    <th><a href="?sort_by=name{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'name' %} active{% endif %}">City</a></th>
-                    <th><a href="?sort_by=name{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'name' %} active{% endif %}">State</a></th>
-                    <th><a href="?sort_by=total_items{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'total_items' %} active{% endif %}">Total Items</a></th>
-                    <th><a href="?sort_by=sold_items{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'sold_items' %} active{% endif %}">Items Sold</a></th>
-                    <th><a href="?sort_by=total_spent{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'total_spent' %} active{% endif %}">Total Spent</a></th>
-                    <th><a href="?sort_by=total_earned{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'total_earned' %} active{% endif %}">Total Earned</a></th>
-                    <th><a href="?sort_by=profit{% if selected_state %}&state={{ selected_state }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}" class="sort-link{% if sort_by == 'profit' %} active{% endif %}">Profit</a></th>
+                    <th><a href="#" onclick="sortTable('name')" class="sort-link{% if sort_by == 'name' %} active{% endif %}">Neighborhood</a></th>
+                    <th><a href="#" onclick="sortTable('name')" class="sort-link{% if sort_by == 'name' %} active{% endif %}">City</a></th>
+                    <th><a href="#" onclick="sortTable('name')" class="sort-link{% if sort_by == 'name' %} active{% endif %}">State</a></th>
+                    <th><a href="#" onclick="sortTable('total_items')" class="sort-link{% if sort_by == 'total_items' %} active{% endif %}">Total Items</a></th>
+                    <th><a href="#" onclick="sortTable('sold_items')" class="sort-link{% if sort_by == 'sold_items' %} active{% endif %}">Items Sold</a></th>
+                    <th><a href="#" onclick="sortTable('total_spent')" class="sort-link{% if sort_by == 'total_spent' %} active{% endif %}">Total Spent</a></th>
+                    <th><a href="#" onclick="sortTable('total_earned')" class="sort-link{% if sort_by == 'total_earned' %} active{% endif %}">Total Earned</a></th>
+                    <th><a href="#" onclick="sortTable('profit')" class="sort-link{% if sort_by == 'profit' %} active{% endif %}">Profit</a></th>
                 </tr>
             </thead>
             <tbody>
