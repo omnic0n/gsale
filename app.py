@@ -3228,10 +3228,9 @@ def reports_neighborhood():
     # Get all neighborhoods for the current user
     neighborhoods = get_data.get_user_neighborhoods()
     
-    # Get selected filters and sort option from request
+    # Get selected filters from request
     selected_state = request.form.get('state', '') if request.method == "POST" else ''
     selected_city = request.form.get('city', '') if request.method == "POST" else ''
-    sort_by = request.form.get('sort_by', 'name') if request.method == "POST" else request.args.get('sort_by', 'name')
     
     # Get unique states and cities that exist in the data
     state_choices = sorted(list(set([n.get('state') for n in neighborhoods if n.get('state')])))
@@ -3248,7 +3247,7 @@ def reports_neighborhood():
             continue
         filtered_neighborhoods.append(neighborhood)
     
-    # Get neighborhood data first
+    # Get neighborhood data
     neighborhood_data = []
     for neighborhood in filtered_neighborhoods:
         sales_data = get_data.get_neighborhood_sales_data(neighborhood['id'])
@@ -3257,33 +3256,13 @@ def reports_neighborhood():
             'sales_data': sales_data
         })
     
-    # Sort neighborhood_data based on sort_by parameter
-    if sort_by == 'profit':
-        neighborhood_data.sort(key=lambda x: x['sales_data']['profit'], reverse=True)
-    elif sort_by == 'total_spent':
-        neighborhood_data.sort(key=lambda x: x['sales_data']['total_spent'], reverse=True)
-    elif sort_by == 'total_earned':
-        neighborhood_data.sort(key=lambda x: x['sales_data']['total_earned'], reverse=True)
-    elif sort_by == 'total_items':
-        neighborhood_data.sort(key=lambda x: x['sales_data']['total_items'], reverse=True)
-    elif sort_by == 'sold_items':
-        neighborhood_data.sort(key=lambda x: x['sales_data']['sold_items'], reverse=True)
-    else:
-        # Default sort by state, then city, then name
-        neighborhood_data.sort(key=lambda x: (
-            x['neighborhood'].get('state', '') or '',
-            x['neighborhood'].get('city', '') or '',
-            x['neighborhood'].get('name', '') or ''
-        ))
-    
     return render_template('reports_neighborhood.html', 
                          neighborhoods=neighborhood_data, 
                          all_neighborhoods=neighborhoods,  # Pass all neighborhoods for JavaScript
                          state_choices=state_choices,
                          city_choices=city_choices,
                          selected_state=selected_state,
-                         selected_city=selected_city,
-                         sort_by=sort_by)
+                         selected_city=selected_city)
 
 #Data Section
 @app.route('/groups/create',methods=["POST","GET"])
