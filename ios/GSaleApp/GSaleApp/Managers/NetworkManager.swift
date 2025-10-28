@@ -745,7 +745,8 @@ class NetworkManager: NSObject {
         
         // Set up session cookies for authentication
         if let cookie = UserManager.shared.cookie {
-            request.setValue(cookie, forHTTPHeaderField: "Cookie")
+            let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
+            request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
         } else {
             throw NetworkError.unauthorized
         }
@@ -1859,7 +1860,8 @@ class NetworkManager: NSObject {
     }
     
     func modifyGroup(groupId: String, name: String, price: Double, date: String) async throws {
-        let url = URL(string: "\(baseURL)/groups/modify")!
+        // Backend expects `group_id` as a query param for modify (used to load existing image)
+        let url = URL(string: "\(baseURL)/groups/modify?group_id=\(groupId)")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -1871,8 +1873,11 @@ class NetworkManager: NSObject {
             throw NetworkError.unauthorized
         }
         
-        // Create form data
-        let formData = "group_id=\(groupId)&name=\(name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name)&price=\(price)&date=\(date.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? date)"
+        // Create form data - backend expects 'id', 'name', 'price', 'date'
+        let nameEncoded = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name
+        let dateEncoded = date.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? date
+        let priceEncoded = String(format: "%.2f", price)
+        let formData = "id=\(groupId)&name=\(nameEncoded)&price=\(priceEncoded)&date=\(dateEncoded)"
         request.httpBody = formData.data(using: .utf8)
         
         
@@ -1889,7 +1894,7 @@ class NetworkManager: NSObject {
         
         guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
             let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
+            throw NetworkError.serverError("HTTP \(httpResponse.statusCode) - \(responseString.prefix(200))")
         }
         
     }
@@ -2291,6 +2296,71 @@ class NetworkManager: NSObject {
         }
         
         return categories
+    }
+
+    // MARK: - Category Management (Native)
+    func addCategory(name: String) async throws -> Bool {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)/categories")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        let params = [
+            "action": "add",
+            "category_name": name
+        ]
+        let body = params.map { k, v in
+            let kk = k.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? k
+            let vv = v.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? v
+            return "\(kk)=\(vv)"
+        }.joined(separator: "&")
+        request.httpBody = body.data(using: .utf8)
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.noData }
+        if httpResponse.statusCode == 401 { throw NetworkError.unauthorized }
+        guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
+            let snippet = String(data: data, encoding: .utf8) ?? ""
+            throw NetworkError.serverError("Add category failed: HTTP \(httpResponse.statusCode) \n\(snippet.prefix(200))")
+        }
+        return true
+    }
+
+    func getUserCategories() async throws -> [Category] {
+        // Reuse existing categories parser from /items/bought page if needed
+        if let cats = try? await getCategories() { return cats }
+        return []
+    }
+
+    func deleteCategory(categoryId: String) async throws -> Bool {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)/categories")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        let params = [
+            "action": "delete",
+            "category_id": categoryId
+        ]
+        let body = params.map { k, v in
+            let kk = k.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? k
+            let vv = v.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? v
+            return "\(kk)=\(vv)"
+        }.joined(separator: "&")
+        request.httpBody = body.data(using: .utf8)
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.noData }
+        if httpResponse.statusCode == 401 { throw NetworkError.unauthorized }
+        guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
+            let snippet = String(data: data, encoding: .utf8) ?? ""
+            throw NetworkError.serverError("Delete category failed: HTTP \(httpResponse.statusCode) \n\(snippet.prefix(200))")
+        }
+        return true
     }
     
     // MARK: - Get All Items

@@ -3334,8 +3334,10 @@ def modify_group():
 
     if request.method == "POST":
         details = request.form
-        if(request.files['image']):
-            image_id = files.upload_image(request.files['image'])
+        # Safely handle optional image upload
+        image_file = request.files.get('image')
+        if image_file and getattr(image_file, 'filename', ''):
+            image_id = files.upload_image(image_file)
         else:
             image_id = group_id[0]['image']
         set_data.set_group_modify(details, image_id)
