@@ -42,12 +42,18 @@ class RemoveDuplicateHeadersMiddleware:
     
     def __call__(self, environ, start_response):
         def new_start_response(status, response_headers, exc_info=None):
-            # Deduplicate headers
+            # Deduplicate headers - explicitly handle Date header
+            # Convert to list to handle iterator
+            headers_list = list(response_headers)
+            
             seen_headers = {}
             deduplicated_headers = []
             cookie_values = []
+            date_header = None
+            date_key = None
             
-            for key, value in response_headers:
+            # Process all headers and deduplicate
+            for key, value in headers_list:
                 key_lower = key.lower()
                 
                 if key_lower == 'set-cookie':
@@ -55,11 +61,21 @@ class RemoveDuplicateHeadersMiddleware:
                     if value not in cookie_values:
                         cookie_values.append(value)
                         deduplicated_headers.append((key, value))
+                elif key_lower == 'date':
+                    # Store only the first Date header encountered
+                    if date_header is None:
+                        date_header = value
+                        date_key = key  # Preserve original case
+                    # Skip all subsequent Date headers
                 elif key_lower not in seen_headers:
                     # Keep first occurrence of other headers
                     seen_headers[key_lower] = True
                     deduplicated_headers.append((key, value))
                 # Skip duplicate non-cookie headers
+            
+            # Add Date header only once, at the end (after all other headers)
+            if date_header is not None:
+                deduplicated_headers.append((date_key or 'Date', date_header))
             
             return start_response(status, deduplicated_headers, exc_info)
         
@@ -165,6 +181,8 @@ def remove_duplicate_headers(response):
     # This ensures we only keep the first occurrence of each header
     headers_dict = {}
     cookie_values = []
+    date_header = None
+    date_key = None
     
     # Iterate through all headers and deduplicate
     for key, value in original_headers:
@@ -174,18 +192,26 @@ def remove_duplicate_headers(response):
             # For Set-Cookie, collect all unique values
             if value not in cookie_values:
                 cookie_values.append(value)
+        elif key_lower == 'date':
+            # Store only the first Date header
+            if date_header is None:
+                date_header = value
+                date_key = key  # Preserve original case
         else:
             # For other headers, keep only the first occurrence
             if key_lower not in headers_dict:
                 headers_dict[key_lower] = (key, value)
     
     # Completely clear and rebuild response headers
-    # Use direct assignment which overwrites any existing header
     response.headers.clear()
     
     # Add all non-cookie headers using direct assignment (overwrites if exists)
     for original_key, value in headers_dict.values():
         response.headers[original_key] = value
+    
+    # Add Date header only once, if it exists
+    if date_header is not None:
+        response.headers[date_key or 'Date'] = date_header
     
     # Add Set-Cookie headers separately
     for cookie_value in cookie_values:
