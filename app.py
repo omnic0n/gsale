@@ -34,6 +34,40 @@ app.secret_key = 'your-secret-key-here'  # Required for session functionality
 # Disable automatic Date header to prevent duplicates
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
+# WSGI Middleware to remove duplicate headers at the WSGI level
+class RemoveDuplicateHeadersMiddleware:
+    """WSGI middleware to remove duplicate headers before sending to nginx"""
+    def __init__(self, app):
+        self.app = app
+    
+    def __call__(self, environ, start_response):
+        def new_start_response(status, response_headers, exc_info=None):
+            # Deduplicate headers
+            seen_headers = {}
+            deduplicated_headers = []
+            cookie_values = []
+            
+            for key, value in response_headers:
+                key_lower = key.lower()
+                
+                if key_lower == 'set-cookie':
+                    # Keep all unique Set-Cookie headers
+                    if value not in cookie_values:
+                        cookie_values.append(value)
+                        deduplicated_headers.append((key, value))
+                elif key_lower not in seen_headers:
+                    # Keep first occurrence of other headers
+                    seen_headers[key_lower] = True
+                    deduplicated_headers.append((key, value))
+                # Skip duplicate non-cookie headers
+            
+            return start_response(status, deduplicated_headers, exc_info)
+        
+        return self.app(environ, new_start_response)
+
+# Wrap the Flask app with the middleware
+app.wsgi_app = RemoveDuplicateHeadersMiddleware(app.wsgi_app)
+
 # Initialize the extension
 try:
     app.config.from_object("config.ProductionConfig")
@@ -145,24 +179,17 @@ def remove_duplicate_headers(response):
             if key_lower not in headers_dict:
                 headers_dict[key_lower] = (key, value)
     
-    # Create a completely fresh Headers object
-    new_headers = Headers()
-    
-    # Add all non-cookie headers (one each)
-    # The Headers class is case-insensitive, so assigning will overwrite any existing header
-    for original_key, value in headers_dict.values():
-        # Explicitly remove if exists, then add
-        # Headers class handles case-insensitivity automatically
-        new_headers[original_key] = value
-    
-    # Add Set-Cookie headers separately using add() method
-    for cookie_value in cookie_values:
-        new_headers.add('Set-Cookie', cookie_value)
-    
-    # Completely replace the headers object to ensure no remnants
+    # Completely clear and rebuild response headers
+    # Use direct assignment which overwrites any existing header
     response.headers.clear()
-    for key, value in new_headers:
-        response.headers.add(key, value)
+    
+    # Add all non-cookie headers using direct assignment (overwrites if exists)
+    for original_key, value in headers_dict.values():
+        response.headers[original_key] = value
+    
+    # Add Set-Cookie headers separately
+    for cookie_value in cookie_values:
+        response.headers.add('Set-Cookie', cookie_value)
     
     return response
 
