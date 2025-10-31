@@ -31,6 +31,8 @@ import json
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Required for session functionality
+# Disable automatic Date header to prevent duplicates
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 # Initialize the extension
 try:
@@ -120,38 +122,47 @@ def admin_required(f):
 @app.after_request
 def remove_duplicate_headers(response):
     """Remove duplicate headers to prevent nginx 'upstream sent duplicate header line' errors"""
-    # Collect all headers, handling duplicates appropriately
+    from werkzeug.datastructures import Headers
+    
+    # Convert headers to a list to avoid iteration issues
+    original_headers = list(response.headers)
+    
+    # Build a mapping of lowercase header names to (original_key, value) tuples
+    # This ensures we only keep the first occurrence of each header
     headers_dict = {}
     cookie_values = []
     
-    # First pass: collect all headers
-    for key, value in response.headers:
+    # Iterate through all headers and deduplicate
+    for key, value in original_headers:
         key_lower = key.lower()
         
         if key_lower == 'set-cookie':
-            # Collect all Set-Cookie values (these are allowed to be multiple)
-            cookie_values.append(value)
-        elif key_lower in headers_dict:
-            # Duplicate header found (non-Set-Cookie)
-            # Keep the first occurrence, ignore duplicates
-            continue
+            # For Set-Cookie, collect all unique values
+            if value not in cookie_values:
+                cookie_values.append(value)
         else:
-            # First occurrence of this header
-            headers_dict[key_lower] = (key, value)
+            # For other headers, keep only the first occurrence
+            if key_lower not in headers_dict:
+                headers_dict[key_lower] = (key, value)
     
-    # Rebuild headers
-    response.headers.clear()
+    # Create a completely fresh Headers object
+    new_headers = Headers()
     
-    # Add all non-cookie headers (one occurrence each)
-    for key_lower, (original_key, value) in headers_dict.items():
-        response.headers[original_key] = value
+    # Add all non-cookie headers (one each)
+    # The Headers class is case-insensitive, so assigning will overwrite any existing header
+    for original_key, value in headers_dict.values():
+        # Explicitly remove if exists, then add
+        # Headers class handles case-insensitivity automatically
+        new_headers[original_key] = value
     
-    # Add all Set-Cookie headers (deduplicated)
-    seen_cookies = set()
+    # Add Set-Cookie headers separately using add() method
     for cookie_value in cookie_values:
-        if cookie_value not in seen_cookies:
-            response.headers.add('Set-Cookie', cookie_value)
-            seen_cookies.add(cookie_value)
+        new_headers.add('Set-Cookie', cookie_value)
+    
+    # Completely replace the headers object to ensure no remnants
+    response.headers.clear()
+    for key, value in new_headers:
+        response.headers.add(key, value)
     
     return response
 
