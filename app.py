@@ -117,6 +117,44 @@ def admin_required(f):
     decorated_function.__name__ = f.__name__
     return decorated_function
 
+@app.after_request
+def remove_duplicate_headers(response):
+    """Remove duplicate headers to prevent nginx 'upstream sent duplicate header line' errors"""
+    # Collect all headers, handling duplicates appropriately
+    headers_dict = {}
+    cookie_values = []
+    
+    # First pass: collect all headers
+    for key, value in response.headers:
+        key_lower = key.lower()
+        
+        if key_lower == 'set-cookie':
+            # Collect all Set-Cookie values (these are allowed to be multiple)
+            cookie_values.append(value)
+        elif key_lower in headers_dict:
+            # Duplicate header found (non-Set-Cookie)
+            # Keep the first occurrence, ignore duplicates
+            continue
+        else:
+            # First occurrence of this header
+            headers_dict[key_lower] = (key, value)
+    
+    # Rebuild headers
+    response.headers.clear()
+    
+    # Add all non-cookie headers (one occurrence each)
+    for key_lower, (original_key, value) in headers_dict.items():
+        response.headers[original_key] = value
+    
+    # Add all Set-Cookie headers (deduplicated)
+    seen_cookies = set()
+    for cookie_value in cookie_values:
+        if cookie_value not in seen_cookies:
+            response.headers.add('Set-Cookie', cookie_value)
+            seen_cookies.add(cookie_value)
+    
+    return response
+
 # eBay OAuth 2.0 Functions
 def get_ebay_oauth_url():
     """
