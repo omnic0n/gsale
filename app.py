@@ -3170,6 +3170,9 @@ def index():
 @login_required
 def reports_profit():
     form = ReportsForm()
+    if request.method == "GET":
+        form.year.data = datetime.now().year
+        form.month.data = datetime.now().month
 
     if request.method == "POST":
         details = request.form
@@ -3217,6 +3220,9 @@ def reports_profit():
 @login_required
 def reports_sale():
     form = ReportsForm()
+    if request.method == "GET":
+        form.year.data = datetime.now().year
+        form.month.data = datetime.now().month
 
     if request.method == "POST":
         details = request.form
@@ -3232,6 +3238,9 @@ def reports_sale():
 @login_required
 def reports_purchases():
     form = ReportsForm()
+    if request.method == "GET":
+        form.year.data = datetime.now().year
+        form.month.data = datetime.now().month
 
     if request.method == "POST":
         details = request.form
@@ -3249,6 +3258,9 @@ def reports_purchases():
 @login_required
 def reports_categories():
     form = ReportsForm()
+    if request.method == "GET":
+        form.year.data = datetime.now().year
+        form.month.data = datetime.now().month
 
     categories = get_data.get_all_from_categories()
     category_counts = get_data.get_category_item_counts()
@@ -3266,6 +3278,9 @@ def reports_categories():
 @login_required
 def reports_locations():
     form = ReportsForm()
+    if request.method == "GET":
+        form.year.data = datetime.now().year
+        form.month.data = datetime.now().month
 
     if request.method == "POST":
         details = request.form
@@ -3371,6 +3386,8 @@ def reports_neighborhood():
 @login_required
 def group_add():
     form = GroupForm()
+    if request.method == "GET":
+        form.listYear.data = datetime.now().year
 
     if request.method == "POST":
         details = request.form
@@ -3716,6 +3733,8 @@ def get_ebay_item_data(item_id):
 @login_required
 def groups_list():
     form = GroupForm()
+    if request.method == "GET":
+        form.listYear.data = datetime.now().year
 
     if request.method == "POST":
         details = request.form
