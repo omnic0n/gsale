@@ -3169,10 +3169,11 @@ def index():
 @app.route('/reports/profit',methods=["GET", "POST"])
 @login_required
 def reports_profit():
-    form = ReportsForm()
     if request.method == "GET":
-        form.year.data = datetime.now().year
-        form.month.data = datetime.now().month
+        form = ReportsForm(formdata=None)
+        form.process(data={'year': datetime.now().year, 'month': datetime.now().month})
+    else:
+        form = ReportsForm()
 
     if request.method == "POST":
         details = request.form
@@ -3219,10 +3220,11 @@ def reports_profit():
 @app.route('/reports/sales',methods=["GET", "POST"])
 @login_required
 def reports_sale():
-    form = ReportsForm()
     if request.method == "GET":
-        form.year.data = datetime.now().year
-        form.month.data = datetime.now().month
+        form = ReportsForm(formdata=None)
+        form.process(data={'year': datetime.now().year, 'month': datetime.now().month})
+    else:
+        form = ReportsForm()
 
     if request.method == "POST":
         details = request.form
@@ -3237,10 +3239,11 @@ def reports_sale():
 @app.route('/reports/purchases',methods=["GET", "POST"])
 @login_required
 def reports_purchases():
-    form = ReportsForm()
     if request.method == "GET":
-        form.year.data = datetime.now().year
-        form.month.data = datetime.now().month
+        form = ReportsForm(formdata=None)
+        form.process(data={'year': datetime.now().year, 'month': datetime.now().month})
+    else:
+        form = ReportsForm()
 
     if request.method == "POST":
         details = request.form
@@ -3257,10 +3260,11 @@ def reports_purchases():
 @app.route('/reports/categories',methods=["GET", "POST"])
 @login_required
 def reports_categories():
-    form = ReportsForm()
     if request.method == "GET":
-        form.year.data = datetime.now().year
-        form.month.data = datetime.now().month
+        form = ReportsForm(formdata=None)
+        form.process(data={'year': datetime.now().year, 'month': datetime.now().month})
+    else:
+        form = ReportsForm()
 
     categories = get_data.get_all_from_categories()
     category_counts = get_data.get_category_item_counts()
@@ -3277,10 +3281,11 @@ def reports_categories():
 @app.route('/reports/locations',methods=["GET", "POST"])
 @login_required
 def reports_locations():
-    form = ReportsForm()
     if request.method == "GET":
-        form.year.data = datetime.now().year
-        form.month.data = datetime.now().month
+        form = ReportsForm(formdata=None)
+        form.process(data={'year': datetime.now().year, 'month': datetime.now().month})
+    else:
+        form = ReportsForm()
 
     if request.method == "POST":
         details = request.form
@@ -3385,9 +3390,11 @@ def reports_neighborhood():
 @app.route('/groups/create',methods=["POST","GET"])
 @login_required
 def group_add():
-    form = GroupForm()
     if request.method == "GET":
-        form.listYear.data = datetime.now().year
+        form = GroupForm(formdata=None)
+        form.process(data={'listYear': datetime.now().year})
+    else:
+        form = GroupForm()
 
     if request.method == "POST":
         details = request.form
@@ -3732,9 +3739,11 @@ def get_ebay_item_data(item_id):
 @app.route('/groups/list', methods=["POST","GET"])
 @login_required
 def groups_list():
-    form = GroupForm()
     if request.method == "GET":
-        form.listYear.data = datetime.now().year
+        form = GroupForm(formdata=None)
+        form.process(data={'listYear': datetime.now().year})
+    else:
+        form = GroupForm()
 
     if request.method == "POST":
         details = request.form
