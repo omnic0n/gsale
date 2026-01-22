@@ -10,12 +10,39 @@ enum NetworkError: Error {
     case serverError(String)
 }
 
+// Provide user-friendly error messages in alerts
+extension NetworkError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid URL."
+        case .noData:
+            return "No data received from server."
+        case .decodingError:
+            return "Failed to process server response."
+        case .unauthorized:
+            return "Your session has expired. Please log in again."
+        case .serverError(let message):
+            return message
+        }
+    }
+}
+
 class NetworkManager: NSObject {
     static let shared = NetworkManager()
     
     private let baseURL = "https://gsale.levimylesllc.com"
     private let session: URLSession
     private let presentationProvider = AuthenticationSessionPresentationProvider()
+    private var citiesByStateCache: [String: [String]] = [:]
+    private let usStates: [String] = [
+        "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+        "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+        "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+        "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+        "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
+        "DC"
+    ]
     
     // MARK: - Login Delegate for Cookie Extraction
     private class LoginDelegate: NSObject, URLSessionTaskDelegate {
@@ -105,6 +132,125 @@ class NetworkManager: NSObject {
     }
 
     // MARK: - City Reports
+    struct StateCities: Codable { let state: String; let cities: [String] }
+
+    // Fetch cities for a specific state from the API: /reports/api/cities-by-state/{STATE}
+    private func fetchCitiesFor(state: String) async throws -> [String] {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let encodedState = state.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? state
+        let url = URL(string: "\(baseURL)/reports/api/cities-by-state/\(encodedState)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            let snippet = String(data: data, encoding: .utf8) ?? ""
+            throw NetworkError.serverError("Failed cities-by-state/\(state): HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)\n\(snippet.prefix(200))")
+        }
+        // Canonical shape: { "success": true, "cities": [...] }
+        struct CityObj: Codable { let city_name: String?; let city: String?; let name: String? }
+        struct CitiesResponse: Codable { let success: Bool; let cities: [CityObj]?; let error: String? }
+        if let resp = try? JSONDecoder().decode(CitiesResponse.self, from: data) {
+            if resp.success, let cities = resp.cities {
+                let names = cities.compactMap { $0.city_name ?? $0.city ?? $0.name }
+                if !names.isEmpty { return names }
+            }
+            let msg = resp.error ?? "Cities API returned success=false"
+            throw NetworkError.serverError("Cities API error (state=\(state)): \(msg)")
+        }
+        if let arr = try? JSONDecoder().decode([String].self, from: data) { return arr }
+        if let dict = try? JSONDecoder().decode([String: [String]].self, from: data) {
+            if let cities = dict["cities"] { return cities }
+            return dict.values.flatMap { $0 }
+        }
+        // Non-JSON or unexpected: inspect body
+        if let body = String(data: data, encoding: .utf8) {
+            if body.contains("<title>Login</title>") { throw NetworkError.unauthorized }
+            // If it's HTML (redirect or error), surface it
+            if body.lowercased().contains("<html") {
+                throw NetworkError.serverError("Unexpected HTML from API (state=\(state)): \n\(body.prefix(200))")
+            }
+        }
+        // Generic JSON fallback
+        if let any = try? JSONSerialization.jsonObject(with: data) as? Any {
+            if let a = any as? [String] { return a }
+            if let d = any as? [String: Any] {
+                if let c = d["cities"] as? [String] { return c }
+                if let objs = d["cities"] as? [[String: Any]] {
+                    let out = objs.compactMap { ($0["city_name"] as? String) ?? ($0["city"] as? String) ?? ($0["name"] as? String) }
+                    if !out.isEmpty { return out }
+                }
+            }
+            if let objs = any as? [[String: Any]] {
+                var out: [String] = []
+                for o in objs {
+                    if let v = o["city"] as? String { out.append(v) }
+                    else if let v = o["city_name"] as? String { out.append(v) }
+                    else if let v = o["name"] as? String { out.append(v) }
+                }
+                if !out.isEmpty { return out }
+            }
+        }
+        throw NetworkError.serverError("No cities parsed for state=\(state)")
+    }
+
+    func getStatesFromAPI() async throws -> [String] {
+        // Try to parse states from the reports page's state dropdown first
+        if let htmlStates = try? await getStatesFromReportsPage(), !htmlStates.isEmpty {
+            return htmlStates
+        }
+        // Fallback: Derive available states by probing the API for states that return at least one city (best-effort)
+        var available: [String] = []
+        let preferred = ["CA","TX","FL","NY","IL","PA","OH","GA","NC","MI"]
+        let rest = usStates.filter { !preferred.contains($0) }
+        for st in preferred + rest {
+            do {
+                let cities = try await getCitiesForStateFromAPI(state: st)
+                if !cities.isEmpty { available.append(st) }
+            } catch {
+                // Ignore per-state errors; continue
+            }
+        }
+        return available
+    }
+
+    private func getStatesFromReportsPage() async throws -> [String] {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)/reports/city")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("text/html", forHTTPHeaderField: "Accept")
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return [] }
+        guard let html = String(data: data, encoding: .utf8) else { return [] }
+        if html.contains("<title>Login</title>") { throw NetworkError.unauthorized }
+        // Parse <select id="state_select"> or name="state"
+        let pattern = #"<select[^>]*?(?:id|name)\s*=\s*[\"'](?:state_select|state)[\"'][^>]*>([\s\S]*?)</select>"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators, .caseInsensitive]) else { return [] }
+        let ns = html as NSString
+        guard let m = regex.firstMatch(in: html, options: [], range: NSRange(location: 0, length: ns.length)), m.numberOfRanges >= 2, let r = Range(m.range(at: 1), in: html) else { return [] }
+        let selectHTML = String(html[r])
+        guard let optionRegex = try? NSRegularExpression(pattern: #"<option[^>]*value=\"([^\"]*)\"[^>]*>([\s\S]*?)</option>"#, options: [.dotMatchesLineSeparators]) else { return [] }
+        let nsSel = selectHTML as NSString
+        var states: [String] = []
+        for om in optionRegex.matches(in: selectHTML, options: [], range: NSRange(location: 0, length: nsSel.length)) {
+            if om.numberOfRanges >= 3, let rv = Range(om.range(at: 1), in: selectHTML) {
+                let value = String(selectHTML[rv]).trimmingCharacters(in: .whitespacesAndNewlines)
+                if !value.isEmpty { states.append(value) }
+            }
+        }
+        return states
+    }
+
+    func getCitiesForStateFromAPI(state: String) async throws -> [String] {
+        if let cached = citiesByStateCache[state] { return cached }
+        let cities = try await fetchCitiesFor(state: state)
+        citiesByStateCache[state] = cities.sorted()
+        return citiesByStateCache[state] ?? []
+    }
     func getCityOptions() async throws -> [CityOption] {
         // Load the city report page to parse the dropdown of cities
         guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
@@ -115,11 +261,23 @@ class NetworkManager: NSObject {
         request.setValue("text/html", forHTTPHeaderField: "Accept")
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw NetworkError.serverError("Failed to fetch city options")
+            let snippet = String(data: data, encoding: .utf8) ?? ""
+            throw NetworkError.serverError("Failed to fetch city options: HTTP \( (response as? HTTPURLResponse)?.statusCode ?? -1) \n\(snippet.prefix(200))")
         }
         guard let html = String(data: data, encoding: .utf8) else { throw NetworkError.noData }
         if html.contains("<title>Login</title>") { throw NetworkError.unauthorized }
-        return parseCityOptions(from: html)
+        var opts = parseCityOptions(from: html)
+        if opts.isEmpty {
+            // Fallback: parse from any dropdown labeled City (case-insensitive)
+            let fallbackPattern = #"<select[^>]*>([\s\S]*?City[\s\S]*?)</select>"#
+            if let r = try? NSRegularExpression(pattern: fallbackPattern, options: [.dotMatchesLineSeparators, .caseInsensitive]),
+               let m = r.firstMatch(in: html, options: [], range: NSRange(location: 0, length: (html as NSString).length)),
+               m.numberOfRanges >= 2, let rr = Range(m.range(at: 1), in: html) {
+                let block = String(html[rr])
+                opts = parseCityOptions(from: "<select>\n\(block)\n</select>")
+            }
+        }
+        return opts
     }
 
     func getCityReport(city: String) async throws -> (summary: CitySummary?, purchases: [CityPurchaseRow]) {
@@ -141,22 +299,59 @@ class NetworkManager: NSObject {
         return parseCityReport(from: html)
     }
 
+    // Overload that supports state parameter if backend expects it
+    func getCityReport(city: String, state: String?) async throws -> (summary: CitySummary?, purchases: [CityPurchaseRow]) {
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        let url = URL(string: "\(baseURL)/reports/city")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        let encodedCity = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city
+        if let state = state, !state.isEmpty {
+            let encodedState = state.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? state
+            let body = "state=\(encodedState)&city=\(encodedCity)"
+            request.httpBody = body.data(using: .utf8)
+        } else {
+            request.httpBody = "city=\(encodedCity)".data(using: .utf8)
+        }
+        request.setValue("text/html", forHTTPHeaderField: "Accept")
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NetworkError.serverError("Failed to fetch city report")
+        }
+        guard let html = String(data: data, encoding: .utf8) else { throw NetworkError.noData }
+        if html.contains("<title>Login</title>") { throw NetworkError.unauthorized }
+        return parseCityReport(from: html)
+    }
+
     private func parseCityOptions(from html: String) -> [CityOption] {
         var options: [CityOption] = []
-        // Expect a <select name="city"> with <option value="CityName">Label</option>
-        if let selectRange = html.range(of: #"<select[^>]*name=[\"']city[\"'][^>]*>([\s\S]*?)</select>"#, options: .regularExpression) {
-            let selectHTML = String(html[selectRange])
-            let optionRegex = try? NSRegularExpression(pattern: #"<option[^>]*value=\"([^\"]*)\"[^>]*>([^<]+)</option>"#, options: [])
-            if let optionRegex = optionRegex {
-                let ns = selectHTML as NSString
-                let matches = optionRegex.matches(in: selectHTML, options: [], range: NSRange(location: 0, length: ns.length))
-                for m in matches {
-                    if m.numberOfRanges >= 3,
-                       let r1 = Range(m.range(at: 1), in: selectHTML),
-                       let r2 = Range(m.range(at: 2), in: selectHTML) {
-                        let value = String(selectHTML[r1]).trimmingCharacters(in: .whitespacesAndNewlines)
-                        let label = String(selectHTML[r2]).trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !value.isEmpty { options.append(CityOption(name: value, label: label)) }
+        // Find the city <select> block by name or id, case-insensitive
+        let selectPattern = #"<select[^>]*?(?:name|id)\s*=\s*[\"']city[\"'][^>]*>([\s\S]*?)</select>"#
+        guard let selectRegex = try? NSRegularExpression(pattern: selectPattern, options: [.dotMatchesLineSeparators, .caseInsensitive]) else {
+            return options
+        }
+        let nsHTML = html as NSString
+        let matches = selectRegex.matches(in: html, options: [], range: NSRange(location: 0, length: nsHTML.length))
+        guard let m = matches.first, m.numberOfRanges >= 2, let r = Range(m.range(at: 1), in: html) else {
+            return options
+        }
+        let selectHTML = String(html[r])
+        if let optionRegex = try? NSRegularExpression(pattern: #"<option[^>]*value=\"([^\"]*)\"[^>]*>([\s\S]*?)</option>"#, options: [.dotMatchesLineSeparators]) {
+            let nsSel = selectHTML as NSString
+            let optMatches = optionRegex.matches(in: selectHTML, options: [], range: NSRange(location: 0, length: nsSel.length))
+            for om in optMatches {
+                if om.numberOfRanges >= 3,
+                   let r1 = Range(om.range(at: 1), in: selectHTML),
+                   let r2 = Range(om.range(at: 2), in: selectHTML) {
+                    let value = String(selectHTML[r1]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    var label = String(selectHTML[r2])
+                    // Strip any HTML tags from label
+                    label = label.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !value.isEmpty {
+                        options.append(CityOption(name: value, label: label))
                     }
                 }
             }
@@ -739,58 +934,33 @@ class NetworkManager: NSObject {
     
     // MARK: - Groups
     func getGroups() async throws -> [Group] {
-        let url = URL(string: "\(baseURL)/groups/list")!
+        guard let cookie = UserManager.shared.cookie else { throw NetworkError.unauthorized }
+        guard let url = URL(string: "\(baseURL)/api/groups") else { throw NetworkError.serverError("Invalid URL") }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        
-        // Set up session cookies for authentication
-        if let cookie = UserManager.shared.cookie {
-            let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
-            request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
-        } else {
-            throw NetworkError.unauthorized
-        }
-        
-        
+        request.setValue(cookie.hasPrefix("session=") ? cookie : "session=\(cookie)", forHTTPHeaderField: "Cookie")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await session.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.serverError("Invalid response")
+        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.serverError("Invalid response") }
+        if httpResponse.statusCode == 401 { throw NetworkError.unauthorized }
+        guard httpResponse.statusCode == 200 else { throw NetworkError.serverError("HTTP \(httpResponse.statusCode)") }
+        let decoder = JSONDecoder()
+        do {
+            let resp = try decoder.decode(GroupsResponse.self, from: data)
+            if resp.success { return resp.groups }
+            throw NetworkError.serverError("Server reported failure loading groups")
+        } catch {
+            if let html = String(data: data, encoding: .utf8),
+               html.contains("<title>Login</title>") || html.contains("class=\"login\"") {
+                throw NetworkError.unauthorized
+            }
+            // Last resort: attempt HTML parse if server returned HTML
+            if let html = String(data: data, encoding: .utf8) {
+                return parseGroupsFromHTML(html)
+            }
+            throw NetworkError.serverError("Failed to decode groups")
         }
-        
-        
-        if httpResponse.statusCode == 401 {
-            throw NetworkError.unauthorized
-        }
-        
-        guard httpResponse.statusCode == 200 else {
-            let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
-        }
-        
-        // Parse HTML response to extract group data
-        let responseString = String(data: data, encoding: .utf8) ?? ""
-        
-        // Quick test to see if we're getting any response
-        if responseString.isEmpty {
-            return []
-        }
-        
-        
-        // Debug: Check if this looks like a login page
-        if responseString.contains("login") || responseString.contains("Login") {
-            throw NetworkError.unauthorized
-        }
-        
-        // Debug: Show a sample of the HTML to understand the structure
-        if let sampleStart = responseString.range(of: "<tbody>")?.lowerBound {
-            let sampleEnd = responseString.index(sampleStart, offsetBy: min(1000, responseString.count - responseString.distance(from: responseString.startIndex, to: sampleStart)))
-            let sample = String(responseString[sampleStart..<sampleEnd])
-        }
-        
-        
-        // Use the shared parsing method
-        return parseGroupsFromHTML(responseString)
     }
 
     // MARK: - Groups by Date
@@ -1017,48 +1187,54 @@ class NetworkManager: NSObject {
             throw NetworkError.unauthorized
         }
         
-        guard let url = URL(string: "\(baseURL)/groups/list") else {
+        // Build JSON API URL with optional year filter
+        let encodedYear = year.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? year
+        let urlString = "\(baseURL)/api/groups" + (year.isEmpty ? "" : "?year=\(encodedYear)")
+        guard let url = URL(string: urlString) else {
             throw NetworkError.serverError("Invalid URL")
         }
         
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        
-        // Handle cookie format properly
-        let cookieHeader = cookie.contains("session=") ? cookie : "session=\(cookie)"
+        request.httpMethod = "GET"
+        let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
         request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("GSaleApp/1.0", forHTTPHeaderField: "User-Agent")
-        request.setValue("*/*", forHTTPHeaderField: "Accept")
         
-        // Create form data with year filter
-        let formData = "listYear=\(year.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
-        request.httpBody = formData.data(using: .utf8)
-        
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.serverError("Invalid response")
         }
-        
-        
+        if httpResponse.statusCode == 401 {
+            throw NetworkError.unauthorized
+        }
         guard httpResponse.statusCode == 200 else {
+            let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode)")
         }
         
-        guard let htmlString = String(data: data, encoding: .utf8) else {
-            throw NetworkError.serverError("Unable to parse response")
+        // Decode JSON response
+        let decoder = JSONDecoder()
+        do {
+            let resp = try decoder.decode(GroupsResponse.self, from: data)
+            if resp.success {
+                return resp.groups
+            } else {
+                throw NetworkError.serverError("Server reported failure loading groups")
+            }
+        } catch {
+            // Fallback: check if we received an HTML login page (session expired)
+            if let html = String(data: data, encoding: .utf8) {
+                if html.contains("<title>Login</title>") || html.contains("class=\"login\"") {
+                    throw NetworkError.unauthorized
+                }
+                // As a resilience measure, attempt to parse HTML groups if server returned HTML
+                let parsed = parseGroupsFromHTML(html)
+                return parsed
+            }
+            throw NetworkError.serverError("Failed to decode groups")
         }
-        
-        // Check if we got a login page instead
-        if htmlString.contains("<title>Login</title>") || htmlString.contains("class=\"login\"") {
-            throw NetworkError.unauthorized
-        }
-        
-        
-        // Parse groups from the response (should be groups list format)
-        return parseGroupsFromHTML(htmlString)
     }
     
     func searchGroups(searchTerm: String) async throws -> [Group] {
@@ -1859,44 +2035,66 @@ class NetworkManager: NSObject {
         return matches
     }
     
-    func modifyGroup(groupId: String, name: String, price: Double, date: String) async throws {
+    func modifyGroup(groupId: String, name: String, price: Double, date: String, image: UIImage? = nil) async throws {
         // Backend expects `group_id` as a query param for modify (used to load existing image)
         let url = URL(string: "\(baseURL)/groups/modify?group_id=\(groupId)")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
         // Set up session cookies for authentication
         if let cookie = UserManager.shared.cookie {
-            request.setValue(cookie, forHTTPHeaderField: "Cookie")
+            let cookieHeader = cookie.hasPrefix("session=") ? cookie : "session=\(cookie)"
+            request.setValue(cookieHeader, forHTTPHeaderField: "Cookie")
         } else {
             throw NetworkError.unauthorized
         }
-        
-        // Create form data - backend expects 'id', 'name', 'price', 'date'
+
         let nameEncoded = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name
         let dateEncoded = date.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? date
         let priceEncoded = String(format: "%.2f", price)
-        let formData = "id=\(groupId)&name=\(nameEncoded)&price=\(priceEncoded)&date=\(dateEncoded)"
-        request.httpBody = formData.data(using: .utf8)
-        
-        
+
+        if let image = image, let imageData = image.jpegData(compressionQuality: 0.85) {
+            // Multipart with optional image
+            let boundary = "Boundary-\(UUID().uuidString)"
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            var body = Data()
+
+            func appendField(name: String, value: String) {
+                body.append("--\(boundary)\r\n".data(using: .utf8)!)
+                body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+                body.append("\(value)\r\n".data(using: .utf8)!)
+            }
+
+            appendField(name: "id", value: groupId)
+            appendField(name: "name", value: nameEncoded)
+            appendField(name: "price", value: priceEncoded)
+            appendField(name: "date", value: dateEncoded)
+
+            // Image part
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"image\"; filename=\"group.jpg\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+            body.append(imageData)
+            body.append("\r\n".data(using: .utf8)!)
+
+            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+            request.httpBody = body
+        } else {
+            // URL-encoded form (no image change, keep existing image)
+            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+            let formData = "id=\(groupId)&name=\(nameEncoded)&price=\(priceEncoded)&date=\(dateEncoded)"
+            request.httpBody = formData.data(using: .utf8)
+        }
+
         let (data, response) = try await session.data(for: request)
-        
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.serverError("Invalid response")
         }
-        
-        
-        if httpResponse.statusCode == 401 {
-            throw NetworkError.unauthorized
-        }
-        
+        if httpResponse.statusCode == 401 { throw NetworkError.unauthorized }
         guard httpResponse.statusCode == 200 || httpResponse.statusCode == 302 else {
             let responseString = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw NetworkError.serverError("HTTP \(httpResponse.statusCode) - \(responseString.prefix(200))")
         }
-        
     }
     
     func removeGroup(groupId: String) async throws {

@@ -53,6 +53,13 @@ class GroupDetailViewController: UIViewController {
             name: .itemAdded,
             object: nil
         )
+        // Refresh on group updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(groupWasUpdated(_:)),
+            name: .groupUpdated,
+            object: nil
+        )
     }
     
     deinit {
@@ -405,6 +412,18 @@ class GroupDetailViewController: UIViewController {
     
     @objc private func itemWasAdded() {
         loadActualItemsSimple()
+    }
+    
+    @objc private func groupWasUpdated(_ notification: Notification) {
+        // If we receive an updated GroupDetail, update UI immediately
+        if let updated = notification.object as? GroupDetail, updated.id == self.groupDetail.id {
+            self.groupDetail = updated
+            setupData()
+            itemsTableView.reloadData()
+        } else {
+            // Fallback: re-fetch from server
+            loadActualItemsSimple()
+        }
     }
     
     private func loadActualItemsSimple() {
@@ -996,4 +1015,8 @@ extension GroupDetailViewController: UITableViewDelegate {
             }
         }
     }
+} 
+
+extension Notification.Name {
+    static let groupUpdated = Notification.Name("groupUpdated")
 } 

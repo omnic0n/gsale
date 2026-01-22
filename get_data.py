@@ -129,6 +129,28 @@ def get_all_from_group_and_items(date):
     """, (date, get_current_group_id()))
     return list(cur.fetchall())
 
+def get_all_from_group_and_items_by_year(year):
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            c.id, 
+            c.name, 
+            c.price, 
+            c.date,
+            c.location_address,
+            c.neighborhood_id,
+            COALESCE(SUM(s.price - s.shipping_fee - COALESCE(s.returned_fee, 0)), 0) AS net,
+            COUNT(i.group_id) AS total_items,
+            SUM(CASE WHEN i.sold = 1 THEN 1 ELSE 0 END) AS sold_items
+        FROM collection c
+        LEFT JOIN items i ON c.id = i.group_id
+        LEFT JOIN sale s ON i.id = s.id
+        WHERE YEAR(c.date) = %s AND c.group_id = %s
+        GROUP BY c.id, c.name, c.price, c.date, c.location_address, c.neighborhood_id
+        ORDER BY c.date
+    """, (year, get_current_group_id()))
+    return list(cur.fetchall())
+
 def get_all_from_group_and_items_by_name(name):
     # Use validation function
     validated_name = validate_string_input(name, max_length=100)
