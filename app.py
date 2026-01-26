@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm, EbaySoldItemsSearchForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -2311,6 +2311,176 @@ def get_ebay_browse_oauth(access_token, api_base_url):
             'error': 'OAuth Browse API error: {}'.format(str(e))
         }
 
+def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=None):
+    """
+    Search eBay for sold/completed items using the Finding API
+    """
+    try:
+        # Get eBay app ID from config (use CLIENT_ID which is the App ID)
+        app_id = app.config.get('EBAY_CLIENT_ID') or app.config.get('EBAY_APP_ID') or app.config.get('EBAY_DEV_NAME', '')
+        
+        if not app_id or app_id in ['your_dev_name', 'YOUR_EBAY_USER_TOKEN_HERE']:
+            return {
+                'success': False,
+                'error': 'eBay App ID not configured. Please configure EBAY_CLIENT_ID in config.'
+            }
+        
+        # eBay Finding API endpoint for completed items
+        url = "https://svcs.ebay.com/services/search/FindingService/v1"
+        
+        # Build request parameters
+        params = {
+            'OPERATION-NAME': 'findCompletedItems',
+            'SERVICE-VERSION': '1.0.0',
+            'SECURITY-APPNAME': app_id,
+            'RESPONSE-DATA-FORMAT': 'JSON',
+            'REST-PAYLOAD': '',
+            'keywords': search_term,
+            'paginationInput.entriesPerPage': min(int(num_items), 100),  # Max 100 per page
+            'itemFilter(0).name': 'SoldItemsOnly',
+            'itemFilter(0).value': 'true',
+            'sortOrder': 'EndTimeSoonest'  # Most recently sold first
+        }
+        
+        # Add price filters if provided
+        filter_index = 1
+        if min_price is not None and float(min_price) > 0:
+            params[f'itemFilter({filter_index}).name'] = 'MinPrice'
+            params[f'itemFilter({filter_index}).value'] = str(min_price)
+            params[f'itemFilter({filter_index}).paramName'] = 'Currency'
+            params[f'itemFilter({filter_index}).paramValue'] = 'USD'
+            filter_index += 1
+        
+        if max_price is not None and float(max_price) > 0:
+            params[f'itemFilter({filter_index}).name'] = 'MaxPrice'
+            params[f'itemFilter({filter_index}).value'] = str(max_price)
+            params[f'itemFilter({filter_index}).paramName'] = 'Currency'
+            params[f'itemFilter({filter_index}).paramValue'] = 'USD'
+        
+        response = requests.get(url, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Parse the response - eBay Finding API returns nested structure
+            try:
+                find_completed_items_response = data.get('findCompletedItemsResponse', [{}])
+                if isinstance(find_completed_items_response, list) and len(find_completed_items_response) > 0:
+                    response_data = find_completed_items_response[0]
+                else:
+                    response_data = find_completed_items_response
+                
+                # Check for errors
+                if 'errorMessage' in response_data:
+                    error_msg = response_data.get('errorMessage', [{}])[0].get('error', [{}])[0].get('message', ['Unknown error'])[0]
+                    return {
+                        'success': False,
+                        'error': f'eBay API error: {error_msg}'
+                    }
+                
+                search_result = response_data.get('searchResult', [{}])
+                if isinstance(search_result, list) and len(search_result) > 0:
+                    search_result = search_result[0]
+                
+                items = search_result.get('item', [])
+                if not isinstance(items, list):
+                    items = [items] if items else []
+                
+                total_results = int(search_result.get('@count', 0)) if '@count' in search_result else len(items)
+                
+                # Process items
+                listings = []
+                for item in items:
+                    # Handle nested structures
+                    item_id = item.get('itemId', ['N/A'])
+                    if isinstance(item_id, list):
+                        item_id = item_id[0] if item_id else 'N/A'
+                    
+                    title = item.get('title', ['N/A'])
+                    if isinstance(title, list):
+                        title = title[0] if title else 'N/A'
+                    
+                    # Get price information
+                    selling_status = item.get('sellingStatus', [{}])
+                    if isinstance(selling_status, list) and len(selling_status) > 0:
+                        selling_status = selling_status[0]
+                    
+                    current_price = selling_status.get('currentPrice', [{}])
+                    if isinstance(current_price, list) and len(current_price) > 0:
+                        current_price = current_price[0]
+                    
+                    price = float(current_price.get('__value__', 0)) if current_price and '__value__' in current_price else 0
+                    currency = current_price.get('@currencyId', 'USD') if current_price else 'USD'
+                    
+                    # Get condition
+                    condition = item.get('condition', [{}])
+                    if isinstance(condition, list) and len(condition) > 0:
+                        condition = condition[0]
+                    
+                    condition_display = condition.get('conditionDisplayName', ['N/A'])
+                    if isinstance(condition_display, list):
+                        condition_display = condition_display[0] if condition_display else 'N/A'
+                    
+                    # Get end time
+                    listing_info = item.get('listingInfo', [{}])
+                    if isinstance(listing_info, list) and len(listing_info) > 0:
+                        listing_info = listing_info[0]
+                    
+                    end_time = listing_info.get('endTime', ['N/A'])
+                    if isinstance(end_time, list):
+                        end_time = end_time[0] if end_time else 'N/A'
+                    
+                    # Get image
+                    gallery_url = item.get('galleryURL', [''])
+                    if isinstance(gallery_url, list):
+                        gallery_url = gallery_url[0] if gallery_url else ''
+                    
+                    # Get category
+                    primary_category = item.get('primaryCategory', [{}])
+                    if isinstance(primary_category, list) and len(primary_category) > 0:
+                        primary_category = primary_category[0]
+                    
+                    category_name = primary_category.get('categoryName', ['N/A'])
+                    if isinstance(category_name, list):
+                        category_name = category_name[0] if category_name else 'N/A'
+                    
+                    listings.append({
+                        'itemId': item_id,
+                        'title': title,
+                        'price': price,
+                        'currency': currency,
+                        'condition': condition_display,
+                        'end_time': end_time,
+                        'image_url': gallery_url,
+                        'category': category_name,
+                        'ebay_url': f'https://www.ebay.com/itm/{item_id}',
+                        'status': 'Sold'
+                    })
+                
+                return {
+                    'success': True,
+                    'listings': listings,
+                    'total': total_results,
+                    'returned': len(listings)
+                }
+            except Exception as parse_error:
+                return {
+                    'success': False,
+                    'error': f'Error parsing eBay response: {str(parse_error)}. Response: {str(data)[:500]}'
+                }
+        else:
+            return {
+                'success': False,
+                'error': f'eBay API error: {response.status_code} - {response.text[:500]}'
+            }
+            
+    except Exception as e:
+        import traceback
+        return {
+            'success': False,
+            'error': f'Error searching eBay: {str(e)}. Traceback: {traceback.format_exc()[:500]}'
+        }
+
 def get_ebay_listing_details(listing_id):
     """
     Get detailed information for a specific eBay listing
@@ -4532,6 +4702,36 @@ def api_add_group():
             'success': False,
             'message': str(e)
         }), 500
+
+@app.route('/tools/ebay-sold-search', methods=['GET', 'POST'])
+@login_required
+def ebay_sold_search():
+    """Search eBay for sold items"""
+    form = EbaySoldItemsSearchForm()
+    results = None
+    error = None
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        search_term = form.search_term.data
+        num_items = form.num_items.data
+        min_price = form.min_price.data if form.min_price.data else None
+        max_price = form.max_price.data if form.max_price.data else None
+        
+        # Search eBay for sold items
+        search_results = search_ebay_sold_items(
+            search_term=search_term,
+            num_items=num_items,
+            min_price=min_price,
+            max_price=max_price
+        )
+        
+        if search_results['success']:
+            results = search_results
+        else:
+            error = search_results.get('error', 'Unknown error occurred')
+            flash(f'Search error: {error}', 'error')
+    
+    return render_template('tools_ebay_sold_search.html', form=form, results=results, error=error)
 
 @app.route('/reports/neighborhood/detail/<neighborhood_id>')
 @login_required
