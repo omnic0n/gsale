@@ -3,28 +3,35 @@
 <div class="content-section">
     <fieldset class="form-group">
         <legend class="border-bottom mb-4">
-            <i class="fas fa-search me-2"></i>eBay Sold Items Search
+            <i class="fas fa-search me-2"></i>My eBay Sold Items Search
         </legend>
+        
+        <div class="mb-3">
+            <p class="text-muted">
+                Search through your own sold items on eBay. Leave search term empty to see all your sold items.
+            </p>
+        </div>
         
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             
-            <div class="form-group mb-3">
-                {{ form.search_term.label(class="form-control-label") }}
-                {% if form.search_term.errors %}
-                    {{ form.search_term(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.search_term.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {{ form.search_term(class="form-control form-control-lg") }}
-                {% endif %}
-            </div>
-            
             <div class="form-row">
-                <div class="form-group col-md-4 mb-3">
+                <div class="form-group col-md-6 mb-3">
+                    {{ form.search_term.label(class="form-control-label") }}
+                    {% if form.search_term.errors %}
+                        {{ form.search_term(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.search_term.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.search_term(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <small class="form-text text-muted">Optional: Filter by item title or eBay item ID</small>
+                </div>
+                
+                <div class="form-group col-md-6 mb-3">
                     {{ form.num_items.label(class="form-control-label") }}
                     {% if form.num_items.errors %}
                         {{ form.num_items(class="form-control form-control-lg is-invalid") }}
@@ -35,34 +42,6 @@
                         </div>
                     {% else %}
                         {{ form.num_items(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                
-                <div class="form-group col-md-4 mb-3">
-                    {{ form.min_price.label(class="form-control-label") }}
-                    {% if form.min_price.errors %}
-                        {{ form.min_price(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.min_price.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.min_price(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                
-                <div class="form-group col-md-4 mb-3">
-                    {{ form.max_price.label(class="form-control-label") }}
-                    {% if form.max_price.errors %}
-                        {{ form.max_price(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.max_price.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.max_price(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
             </div>
@@ -77,9 +56,14 @@
 {% if results %}
 <div class="content-section mt-4">
     <h4 class="mb-3">
-        <i class="fas fa-list me-2"></i>Search Results
-        <small class="text-muted">(Showing {{ results.returned }} of {{ results.total }} items)</small>
+        <i class="fas fa-list me-2"></i>My Sold Items
+        <small class="text-muted">(Showing {{ results.returned }} of {{ results.total }} item{{ 's' if results.total != 1 else '' }})</small>
     </h4>
+    {% if results.note %}
+    <div class="alert alert-info mb-3">
+        <i class="fas fa-info-circle me-2"></i>{{ results.note }}
+    </div>
+    {% endif %}
     
     {% if results.listings %}
     <div class="table-responsive">

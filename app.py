@@ -697,12 +697,19 @@ def get_ebay_completed_listings_legacy(user_token):
 def get_sold_items_basic(user_token):
     """
     Get basic sold items list using GetMyeBaySelling
+    Works with both OAuth tokens and legacy tokens
     """
     try:
         import xml.etree.ElementTree as ET
         
         url = "https://api.ebay.com/ws/api.dll"
         
+        # Check if this is an OAuth token (starts with v1.1# or similar)
+        # OAuth tokens might not work with Trading API, so we may need to use a different approach
+        is_oauth = user_token.startswith('v1.1#') or user_token.startswith('v^1.1#') or not user_token.startswith('v^')
+        
+        # For OAuth tokens, we might need to use a different API
+        # But let's try Trading API first - some OAuth tokens might work
         xml_request = """<?xml version="1.0" encoding="utf-8"?>
         <GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
             <RequesterCredentials>
@@ -711,7 +718,7 @@ def get_sold_items_basic(user_token):
             <SoldList>
                 <Include>true</Include>
                 <Pagination>
-                    <EntriesPerPage>100</EntriesPerPage>
+                    <EntriesPerPage>200</EntriesPerPage>
                     <PageNumber>1</PageNumber>
                 </Pagination>
             </SoldList>
@@ -756,6 +763,30 @@ def get_sold_items_basic(user_token):
                     quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
                     end_time = item.find('.//{urn:ebay:apis:eBLBaseComponents}EndTime')
                     
+                    # Get price from SellingStatus
+                    selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
+                    price = 0
+                    currency = 'USD'
+                    if selling_status is not None:
+                        current_price = selling_status.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
+                        if current_price is not None:
+                            price = float(current_price.text) if current_price.text else 0
+                            currency_attr = current_price.get('{http://www.w3.org/XML/1998/namespace}currencyID')
+                            if currency_attr:
+                                currency = currency_attr
+                    
+                    # Get image from PictureDetails
+                    image_url = None
+                    picture_details = item.find('.//{urn:ebay:apis:eBLBaseComponents}PictureDetails')
+                    if picture_details is not None:
+                        gallery_url = picture_details.find('.//{urn:ebay:apis:eBLBaseComponents}GalleryURL')
+                        if gallery_url is not None:
+                            image_url = gallery_url.text
+                    
+                    # Get category
+                    primary_category = item.find('.//{urn:ebay:apis:eBLBaseComponents}PrimaryCategoryName')
+                    category_name = primary_category.text if primary_category is not None else 'N/A'
+                    
                     items.append({
                         'itemId': item_id.text if item_id is not None else 'N/A',
                         'title': title.text if title is not None else 'N/A',
@@ -764,6 +795,10 @@ def get_sold_items_basic(user_token):
                         'quantity': int(quantity.text) if quantity is not None and quantity.text else 0,
                         'sku': item_id.text if item_id is not None else 'N/A',
                         'end_time': end_time.text if end_time is not None else 'N/A',
+                        'price': price,
+                        'currency': currency,
+                        'image_url': image_url,
+                        'category': category_name,
                         'status': 'Sold',
                         'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#'
                     })
@@ -2311,15 +2346,85 @@ def get_ebay_browse_oauth(access_token, api_base_url):
             'error': 'OAuth Browse API error: {}'.format(str(e))
         }
 
-def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=None):
+def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_price=None):
     """
-    Search eBay for sold/completed items
-    Uses Finding API (designed for sold items) as primary method
-    Finding API uses App ID auth but is specifically designed for completed/sold items
+    Search user's own sold items from eBay using GetMyeBaySelling
+    Filters by search term if provided
     """
-    # Use Finding API directly since it's designed for sold/completed items
-    # Browse API is primarily for active listings
-    return search_ebay_sold_items_finding_api(search_term, num_items, min_price, max_price)
+    try:
+        # Get OAuth token or legacy token
+        token_result = get_valid_ebay_token()
+        
+        if not token_result['success']:
+            # Try legacy token as fallback
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+                return {
+                    'success': False,
+                    'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.'
+                }
+        else:
+            # For OAuth tokens, GetMyeBaySelling might not work directly
+            # Try to use the OAuth token, but if it fails, we'll need legacy token
+            user_token = token_result['access_token']
+            
+            # Check if OAuth token format - if so, we might need to use Sell API instead
+            # But let's try Trading API first
+        
+        # Get user's sold items
+        sold_items_result = get_sold_items_basic(user_token)
+        
+        if not sold_items_result['success']:
+            return sold_items_result
+        
+        items = sold_items_result.get('items', [])
+        
+        # Filter by search term if provided
+        if search_term and search_term.strip():
+            search_term_lower = search_term.strip().lower()
+            filtered_items = []
+            for item in items:
+                title = item.get('title', '').lower()
+                item_id = item.get('itemId', '').lower()
+                # Check if search term matches title or item ID
+                if search_term_lower in title or search_term_lower in item_id:
+                    filtered_items.append(item)
+            items = filtered_items
+        
+        # Limit to requested number of items
+        items = items[:int(num_items)]
+        
+        # Process items to match expected format
+        # Items from get_sold_items_basic already have price, currency, image_url, category
+        listings = []
+        for item in items:
+            listings.append({
+                'itemId': item.get('itemId', 'N/A'),
+                'title': item.get('title', 'N/A'),
+                'price': item.get('price', 0),
+                'currency': item.get('currency', 'USD'),
+                'condition': item.get('condition', 'N/A'),
+                'end_time': item.get('end_time', 'N/A'),
+                'image_url': item.get('image_url'),
+                'category': item.get('category', 'N/A'),
+                'ebay_url': item.get('ebay_url', f'https://www.ebay.com/itm/{item.get("itemId", "N/A")}'),
+                'status': 'Sold'
+            })
+        
+        return {
+            'success': True,
+            'listings': listings,
+            'total': len(items),
+            'returned': len(listings),
+            'note': f'Showing your sold items{" matching \"" + search_term + "\"" if search_term and search_term.strip() else ""}'
+        }
+        
+    except Exception as e:
+        import traceback
+        return {
+            'success': False,
+            'error': f'Error searching your sold items: {str(e)}. Traceback: {traceback.format_exc()[:500]}'
+        }
 
 def search_ebay_sold_items_finding_api(search_term, num_items=25, min_price=None, max_price=None):
     """
@@ -4873,24 +4978,20 @@ def api_add_group():
 @app.route('/tools/ebay-sold-search', methods=['GET', 'POST'])
 @login_required
 def ebay_sold_search():
-    """Search eBay for sold items"""
+    """Search user's own sold items on eBay"""
     form = EbaySoldItemsSearchForm()
     results = None
     error = None
     rate_limited = False
     
     if request.method == 'POST' and form.validate_on_submit():
-        search_term = form.search_term.data
+        search_term = form.search_term.data if form.search_term.data else None
         num_items = form.num_items.data
-        min_price = form.min_price.data if form.min_price.data else None
-        max_price = form.max_price.data if form.max_price.data else None
         
-        # Search eBay for sold items
+        # Search user's sold items
         search_results = search_ebay_sold_items(
             search_term=search_term,
-            num_items=num_items,
-            min_price=min_price,
-            max_price=max_price
+            num_items=num_items
         )
         
         if search_results['success']:

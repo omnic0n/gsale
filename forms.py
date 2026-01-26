@@ -147,14 +147,10 @@ class NeighborhoodReportForm(FlaskForm):
     submit = SubmitField('Generate Report')
 
 class EbaySoldItemsSearchForm(FlaskForm):
-    search_term = StringField('Search Term', validators=[DataRequired(), Length(max=200)], 
-                             render_kw={"placeholder": "e.g., pokemon cards"})
+    search_term = StringField('Search Term', validators=[Length(max=200)], 
+                             render_kw={"placeholder": "e.g., pokemon cards (optional)"})
     num_items = SelectField('Number of Items', choices=[
         (10, "10"), (25, "25"), (50, "50"), (100, "100"), (200, "200")
     ], default=25, validators=[DataRequired()])
-    min_price = DecimalField('Minimum Price (USD)', validators=[NumberRange(min=0, message='Price must be positive')], 
-                            render_kw={"placeholder": "0.00", "step": "0.01"})
-    max_price = DecimalField('Maximum Price (USD)', validators=[NumberRange(min=0, message='Price must be positive')], 
-                            render_kw={"placeholder": "0.00", "step": "0.01"})
-    submit = SubmitField('Search Sold Items')
+    submit = SubmitField('Search My Sold Items')
 
