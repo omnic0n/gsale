@@ -4985,6 +4985,9 @@ def api_add_group():
 @login_required
 def ebay_sold_search():
     """Search user's own sold items on eBay"""
+    # Refresh eBay token if needed before processing
+    refresh_token_if_needed()
+    
     form = EbaySoldItemsSearchForm()
     results = None
     error = None
