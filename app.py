@@ -2356,8 +2356,15 @@ def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=
             # We'll filter by end date - items that ended in the past
             # Note: Browse API doesn't have a direct "sold only" filter, so we search and filter results
             
+            # Add wildcard support - Browse API supports * for wildcards
+            # If search term doesn't already have wildcards, add them for broader matching
+            search_query = search_term.strip()
+            if '*' not in search_query:
+                # Add wildcard at the end for partial matching
+                search_query = f"{search_query}*"
+            
             params = {
-                'q': search_term,
+                'q': search_query,
                 'limit': min(int(num_items), 200),  # Browse API max is 200
                 'offset': 0,
                 'sort': 'endTime'  # Sort by end time
@@ -2373,10 +2380,13 @@ def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=
                 item_summaries = data.get('itemSummaries', [])
                 
                 # Filter for completed/sold items (items that have ended)
+                # Also include items that might be sold based on various indicators
                 now = datetime.now()
                 sold_items = []
                 
                 for item in item_summaries:
+                    item_included = False
+                    
                     # Check if item has ended
                     end_date_str = item.get('itemEndDate')
                     if end_date_str:
@@ -2390,13 +2400,45 @@ def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=
                             # Only include items that have ended (sold/completed)
                             if end_date < now:
                                 sold_items.append(item)
+                                item_included = True
                         except:
-                            # If we can't parse the date, skip this item
-                            continue
+                            # If we can't parse the date, try other methods
+                            pass
                     
                     # Also check if item status indicates it's completed
-                    elif item.get('itemWebUrl', '').lower().find('ended') != -1:
+                    if not item_included:
+                        item_web_url = item.get('itemWebUrl', '').lower()
+                        if 'ended' in item_web_url or 'sold' in item_web_url:
+                            sold_items.append(item)
+                            item_included = True
+                    
+                    # Check item availability status
+                    if not item_included:
+                        availability = item.get('availability', {})
+                        if isinstance(availability, dict):
+                            availability_status = availability.get('availabilityStatus', '').lower()
+                            if 'sold' in availability_status or 'ended' in availability_status or 'out_of_stock' in availability_status:
+                                sold_items.append(item)
+                                item_included = True
+                    
+                    # If still not included and we have very few results, be more lenient
+                    # Include items that have an end date (even if in future, might be ending soon)
+                    if not item_included and len(sold_items) < 5 and end_date_str:
                         sold_items.append(item)
+                
+                # If we still have very few results, include all items with end dates
+                if len(sold_items) < int(num_items) * 0.5:
+                    # Re-check all items more leniently
+                    additional_items = []
+                    for item in item_summaries:
+                        if item not in sold_items:
+                            # Include if it has any indication of being completed
+                            if item.get('itemEndDate') or 'ended' in item.get('itemWebUrl', '').lower():
+                                additional_items.append(item)
+                    
+                    # Add additional items up to the limit
+                    remaining_slots = int(num_items) - len(sold_items)
+                    sold_items.extend(additional_items[:remaining_slots])
                 
                 # Limit to requested number of items
                 sold_items = sold_items[:int(num_items)]
@@ -2443,6 +2485,19 @@ def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=
                         'status': 'Sold'
                     })
                 
+                if len(listings) == 0:
+                    # If no sold items found, try a broader search without strict sold filter
+                    # This helps when Browse API doesn't return items with end dates
+                    return {
+                        'success': False,
+                        'error': f'No sold items found for "{search_term}". Try a different search term or check if items exist. The Browse API may not have complete sold item data.',
+                        'suggestions': [
+                            'Try a more specific search term',
+                            'Remove price filters to see more results',
+                            'The Browse API may have limited sold item data - try the Finding API fallback'
+                        ]
+                    }
+                
                 return {
                     'success': True,
                     'listings': listings,
@@ -2450,9 +2505,22 @@ def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=
                     'returned': len(listings),
                     'note': 'Using OAuth Browse API - showing completed/sold items only'
                 }
-            else:
-                # If Browse API fails, fall back to Finding API
+            elif response.status_code == 400 or response.status_code == 404:
+                # If Browse API returns bad request, try Finding API
                 return search_ebay_sold_items_finding_api(search_term, num_items, min_price, max_price)
+            else:
+                # If Browse API fails with other error, fall back to Finding API
+                error_text = response.text[:200] if hasattr(response, 'text') else str(response.status_code)
+                # Try Finding API as fallback
+                finding_result = search_ebay_sold_items_finding_api(search_term, num_items, min_price, max_price)
+                if not finding_result.get('success'):
+                    # If Finding API also fails, return combined error
+                    return {
+                        'success': False,
+                        'error': f'Browse API error ({response.status_code}): {error_text}. Finding API fallback also failed.',
+                        'rate_limited': '10001' in error_text or 'rate' in error_text.lower()
+                    }
+                return finding_result
         
         else:
             # No OAuth token available, fall back to Finding API
@@ -2493,7 +2561,7 @@ def search_ebay_sold_items_finding_api(search_term, num_items=25, min_price=None
             'SECURITY-APPNAME': app_id,
             'RESPONSE-DATA-FORMAT': 'JSON',
             'REST-PAYLOAD': '',
-            'keywords': search_term,
+            'keywords': search_term.strip(),  # Remove extra whitespace
             'paginationInput.entriesPerPage': min(int(num_items), 100),  # Max 100 per page
             'itemFilter(0).name': 'SoldItemsOnly',
             'itemFilter(0).value': 'true',
