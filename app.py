@@ -2313,7 +2313,165 @@ def get_ebay_browse_oauth(access_token, api_base_url):
 
 def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=None):
     """
-    Search eBay for sold/completed items using the Finding API
+    Search eBay for sold/completed items using OAuth-based Browse API
+    Falls back to Finding API if OAuth is not available
+    """
+    try:
+        from datetime import datetime, timedelta
+        
+        # First, try to get OAuth token
+        token_result = get_valid_ebay_token()
+        
+        if token_result['success']:
+            # Use OAuth 2.0 Browse API
+            access_token = token_result['access_token']
+            api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+            
+            # Browse API endpoint
+            url = f"{api_base_url}/buy/browse/v1/item_summary/search"
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+            }
+            
+            # Build filter string for Browse API
+            filter_parts = []
+            
+            # Price filters
+            if min_price is not None and float(min_price) > 0:
+                filter_parts.append(f'price:[{min_price}..]')
+            
+            if max_price is not None and float(max_price) > 0:
+                if min_price and float(min_price) > 0:
+                    # Replace previous price filter with range
+                    filter_parts = [f for f in filter_parts if not f.startswith('price:')]
+                    filter_parts.append(f'price:[{min_price}..{max_price}]')
+                else:
+                    filter_parts.append(f'price:[..{max_price}]')
+            
+            # Filter for items that have ended (sold/completed)
+            # We'll filter by end date - items that ended in the past
+            # Note: Browse API doesn't have a direct "sold only" filter, so we search and filter results
+            
+            params = {
+                'q': search_term,
+                'limit': min(int(num_items), 200),  # Browse API max is 200
+                'offset': 0,
+                'sort': 'endTime'  # Sort by end time
+            }
+            
+            if filter_parts:
+                params['filter'] = ','.join(filter_parts)
+            
+            response = requests.get(url, headers=headers, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                item_summaries = data.get('itemSummaries', [])
+                
+                # Filter for completed/sold items (items that have ended)
+                now = datetime.now()
+                sold_items = []
+                
+                for item in item_summaries:
+                    # Check if item has ended
+                    end_date_str = item.get('itemEndDate')
+                    if end_date_str:
+                        try:
+                            # Parse the end date (format: 2024-01-15T10:30:00.000Z)
+                            end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+                            # Convert to local timezone for comparison
+                            if end_date.tzinfo:
+                                end_date = end_date.replace(tzinfo=None)
+                            
+                            # Only include items that have ended (sold/completed)
+                            if end_date < now:
+                                sold_items.append(item)
+                        except:
+                            # If we can't parse the date, skip this item
+                            continue
+                    
+                    # Also check if item status indicates it's completed
+                    elif item.get('itemWebUrl', '').lower().find('ended') != -1:
+                        sold_items.append(item)
+                
+                # Limit to requested number of items
+                sold_items = sold_items[:int(num_items)]
+                
+                # Process the results
+                listings = []
+                for item in sold_items:
+                    item_id = item.get('itemId', 'N/A')
+                    title = item.get('title', 'N/A')
+                    
+                    # Get price information
+                    price_info = item.get('price', {})
+                    price = float(price_info.get('value', 0)) if price_info else 0
+                    currency = price_info.get('currency', 'USD') if price_info else 'USD'
+                    
+                    # Get condition
+                    condition_obj = item.get('condition', 'N/A')
+                    if isinstance(condition_obj, str):
+                        condition_display = condition_obj
+                    else:
+                        condition_display = condition_obj.get('condition', 'N/A') if condition_obj else 'N/A'
+                    
+                    # Get end time
+                    end_time = item.get('itemEndDate', 'N/A')
+                    
+                    # Get image
+                    image_obj = item.get('image', {})
+                    gallery_url = image_obj.get('imageUrl') if image_obj else None
+                    
+                    # Get category
+                    categories = item.get('categories', [])
+                    category_name = categories[0].get('categoryName', 'N/A') if categories else 'N/A'
+                    
+                    listings.append({
+                        'itemId': item_id,
+                        'title': title,
+                        'price': price,
+                        'currency': currency,
+                        'condition': condition_display,
+                        'end_time': end_time,
+                        'image_url': gallery_url,
+                        'category': category_name,
+                        'ebay_url': f'https://www.ebay.com/itm/{item_id}',
+                        'status': 'Sold'
+                    })
+                
+                return {
+                    'success': True,
+                    'listings': listings,
+                    'total': len(listings),
+                    'returned': len(listings),
+                    'note': 'Using OAuth Browse API - showing completed/sold items only'
+                }
+            else:
+                # If Browse API fails, fall back to Finding API
+                return search_ebay_sold_items_finding_api(search_term, num_items, min_price, max_price)
+        
+        else:
+            # No OAuth token available, fall back to Finding API
+            return search_ebay_sold_items_finding_api(search_term, num_items, min_price, max_price)
+            
+    except Exception as e:
+        import traceback
+        # If OAuth method fails, try Finding API as fallback
+        try:
+            return search_ebay_sold_items_finding_api(search_term, num_items, min_price, max_price)
+        except:
+            return {
+                'success': False,
+                'error': f'Error searching eBay: {str(e)}. Traceback: {traceback.format_exc()[:500]}'
+            }
+
+def search_ebay_sold_items_finding_api(search_term, num_items=25, min_price=None, max_price=None):
+    """
+    Fallback: Search eBay for sold/completed items using the Finding API (App ID auth)
     """
     try:
         # Get eBay app ID from config (use CLIENT_ID which is the App ID)
@@ -2322,7 +2480,7 @@ def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=
         if not app_id or app_id in ['your_dev_name', 'YOUR_EBAY_USER_TOKEN_HERE']:
             return {
                 'success': False,
-                'error': 'eBay App ID not configured. Please configure EBAY_CLIENT_ID in config.'
+                'error': 'eBay authentication not available. Please configure OAuth or App ID.'
             }
         
         # eBay Finding API endpoint for completed items
