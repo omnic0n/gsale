@@ -27,13 +27,43 @@
 {% elif success and rate_limits %}
 <div class="content-section mt-4">
     {% set finding_api = None %}
+    {% set finding_resource = None %}
+    
+    {# Try to find Finding API in the results #}
     {% for rate_limit in rate_limits %}
-        {% if 'finding' in rate_limit.get('apiName', '').lower() or 'finding' in rate_limit.get('apiContext', '').lower() %}
+        {% set api_name = rate_limit.get('apiName', '')|lower %}
+        {% set api_context = rate_limit.get('apiContext', '')|lower %}
+        {% if 'finding' in api_name or 'finding' in api_context or 'findcompleteditems' in api_name %}
             {% set finding_api = rate_limit %}
+            {% if finding_api.get('resources') %}
+                {% for resource in finding_api.get('resources', []) %}
+                    {% if 'findcompleteditems' in resource.get('resource', '')|lower or finding_api.get('resources')|length == 1 %}
+                        {% set finding_resource = resource %}
+                    {% endif %}
+                {% endfor %}
+                {% if not finding_resource and finding_api.get('resources') %}
+                    {% set finding_resource = finding_api.get('resources')[0] %}
+                {% endif %}
+            {% endif %}
         {% endif %}
     {% endfor %}
     
-    {% if finding_api and finding_api.get('resources') %}
+    {# If not found, check all APIs for any resource that might be related #}
+    {% if not finding_api %}
+        {% for rate_limit in rate_limits %}
+            {% if rate_limit.get('resources') %}
+                {% for resource in rate_limit.get('resources', []) %}
+                    {% set resource_name = resource.get('resource', '')|lower %}
+                    {% if 'find' in resource_name or 'search' in resource_name or 'completed' in resource_name %}
+                        {% set finding_api = rate_limit %}
+                        {% set finding_resource = resource %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    
+    {% if finding_api and finding_resource %}
         {% set finding_resource = None %}
         {% for resource in finding_api.get('resources', []) %}
             {% if 'findCompletedItems' in resource.get('resource', '') or finding_api.get('resources')|length == 1 %}
@@ -129,25 +159,83 @@
                 {% endif %}
             </div>
         {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>Finding API data not found in rate limits response.
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Finding API Not Found in Analytics Data</strong>
+                <div class="mt-2">
+                    <p>The Finding API uses <strong>App ID authentication</strong> (not OAuth), so it may not be tracked by the Analytics API which requires OAuth tokens.</p>
+                    <p><strong>Finding API Rate Limits:</strong></p>
+                    <ul>
+                        <li><strong>Daily Limit:</strong> 5,000 calls per day</li>
+                        <li><strong>Reset:</strong> Rolling 24-hour window</li>
+                        <li><strong>If you hit the limit:</strong> Wait 15-60 minutes before trying again</li>
+                    </ul>
+                    <p class="mb-0"><strong>Note:</strong> The Analytics API only tracks APIs that use OAuth authentication. Since Finding API uses App ID, its rate limits are not visible here.</p>
+                </div>
             </div>
         {% endif %}
     {% else %}
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>Finding API rate limit data not available. The Analytics API may not track Finding API limits, or your account may not have access to this data.
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Finding API Rate Limits Not Available</strong>
             <div class="mt-2">
-                <p><strong>Note:</strong> The Finding API typically has a daily limit of 5,000 calls. If you're experiencing rate limit errors, wait 15-60 minutes before trying again.</p>
+                <p>The Finding API uses <strong>App ID authentication</strong> instead of OAuth, so the Analytics API cannot track its rate limits.</p>
+                
+                <div class="rate-limit-info-card mt-3">
+                    <h5><i class="fas fa-info-circle me-2"></i>Finding API Rate Limit Information</h5>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Daily Limit</div>
+                            <div class="info-value">5,000 calls</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Reset Period</div>
+                            <div class="info-value">Rolling 24 hours</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">If Limit Exceeded</div>
+                            <div class="info-value">Wait 15-60 min</div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <p class="mb-1"><strong>Why can't I see my usage?</strong></p>
+                        <p class="mb-0">The Analytics API only tracks APIs that use OAuth 2.0 authentication. The Finding API uses App ID authentication, so its rate limits cannot be monitored through the Analytics API.</p>
+                    </div>
+                </div>
             </div>
         </div>
     {% endif %}
 </div>
 {% elif success and not rate_limits %}
 <div class="content-section mt-4">
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No rate limit data found. The Analytics API may not be available for your account type.
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>No Rate Limit Data Available</strong>
         <div class="mt-2">
-            <p><strong>Note:</strong> The Finding API typically has a daily limit of 5,000 calls. If you're experiencing rate limit errors, wait 15-60 minutes before trying again.</p>
+            <p>The Analytics API returned no data. This could mean:</p>
+            <ul>
+                <li>The Analytics API is not available for your account type</li>
+                <li>Your OAuth token doesn't have permission to access Analytics API</li>
+                <li>The Finding API is not tracked (it uses App ID, not OAuth)</li>
+            </ul>
+            
+            <div class="rate-limit-info-card mt-3">
+                <h5><i class="fas fa-info-circle me-2"></i>Finding API Rate Limit Information</h5>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Daily Limit</div>
+                        <div class="info-value">5,000 calls</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Reset Period</div>
+                        <div class="info-value">Rolling 24 hours</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">If Limit Exceeded</div>
+                        <div class="info-value">Wait 15-60 min</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -398,6 +486,54 @@
     color: #856404;
 }
 
+.rate-limit-info-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.rate-limit-info-card h5 {
+    color: #000;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.info-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #000;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #856404;
+}
+
 @media (max-width: 768px) {
     .summary-cards {
         flex-direction: column;
@@ -405,6 +541,10 @@
     
     .summary-card {
         min-width: 100%;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>
