@@ -2372,10 +2372,34 @@ def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=
                 
                 # Check for errors
                 if 'errorMessage' in response_data:
-                    error_msg = response_data.get('errorMessage', [{}])[0].get('error', [{}])[0].get('message', ['Unknown error'])[0]
+                    error_data = response_data.get('errorMessage', [{}])
+                    if isinstance(error_data, list) and len(error_data) > 0:
+                        error_obj = error_data[0].get('error', [{}])
+                        if isinstance(error_obj, list) and len(error_obj) > 0:
+                            error_info = error_obj[0]
+                            error_msg = error_info.get('message', ['Unknown error'])
+                            if isinstance(error_msg, list):
+                                error_msg = error_msg[0] if error_msg else 'Unknown error'
+                            
+                            # Check for rate limiting error
+                            error_id = error_info.get('errorId', [''])
+                            if isinstance(error_id, list):
+                                error_id = error_id[0] if error_id else ''
+                            
+                            if error_id == '10001' or 'RateLimiter' in str(error_info.get('subdomain', [])):
+                                return {
+                                    'success': False,
+                                    'error': 'eBay API rate limit exceeded. Please wait a few minutes before trying again. The Finding API has daily/hourly call limits.',
+                                    'rate_limited': True
+                                }
+                            
+                            return {
+                                'success': False,
+                                'error': f'eBay API error: {error_msg}'
+                            }
                     return {
                         'success': False,
-                        'error': f'eBay API error: {error_msg}'
+                        'error': 'eBay API returned an error. Please try again later.'
                     }
                 
                 search_result = response_data.get('searchResult', [{}])
@@ -2479,6 +2503,85 @@ def search_ebay_sold_items(search_term, num_items=25, min_price=None, max_price=
         return {
             'success': False,
             'error': f'Error searching eBay: {str(e)}. Traceback: {traceback.format_exc()[:500]}'
+        }
+
+def get_ebay_rate_limits(api_name=None, api_context=None):
+    """
+    Get eBay API rate limits using the Analytics API
+    """
+    try:
+        # Get OAuth token
+        token_result = get_valid_ebay_token()
+        
+        if not token_result['success']:
+            # Try legacy token as fallback
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+                return {
+                    'success': False,
+                    'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.'
+                }
+            access_token = user_token
+        else:
+            access_token = token_result['access_token']
+        
+        # eBay Analytics API endpoint for rate limits
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        url = f"{api_base_url}/developer/analytics/v1_beta/rate_limit/"
+        
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+        
+        # Build query parameters
+        params = {}
+        if api_name:
+            params['api_name'] = api_name
+        if api_context:
+            params['api_context'] = api_context
+        
+        response = requests.get(url, headers=headers, params=params if params else None)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Parse rate limits
+            rate_limits = data.get('rateLimits', [])
+            
+            return {
+                'success': True,
+                'rate_limits': rate_limits,
+                'total': len(rate_limits)
+            }
+        elif response.status_code == 401:
+            return {
+                'success': False,
+                'error': 'Authentication failed. Please re-authenticate with eBay OAuth.'
+            }
+        elif response.status_code == 403:
+            return {
+                'success': False,
+                'error': 'Access denied. Your token may not have permission to access the Analytics API, or the Analytics API may not be available for your account type.'
+            }
+        else:
+            try:
+                error_data = response.json()
+                error_msg = error_data.get('errors', [{}])[0].get('message', 'Unknown error') if error_data.get('errors') else response.text[:500]
+            except:
+                error_msg = response.text[:500]
+            
+            return {
+                'success': False,
+                'error': f'eBay Analytics API error: {response.status_code} - {error_msg}'
+            }
+            
+    except Exception as e:
+        import traceback
+        return {
+            'success': False,
+            'error': f'Error getting rate limits: {str(e)}. Traceback: {traceback.format_exc()[:500]}'
         }
 
 def get_ebay_listing_details(listing_id):
@@ -4730,6 +4833,7 @@ def ebay_sold_search():
     form = EbaySoldItemsSearchForm()
     results = None
     error = None
+    rate_limited = False
     
     if request.method == 'POST' and form.validate_on_submit():
         search_term = form.search_term.data
@@ -4749,9 +4853,35 @@ def ebay_sold_search():
             results = search_results
         else:
             error = search_results.get('error', 'Unknown error occurred')
-            flash(f'Search error: {error}', 'error')
+            rate_limited = search_results.get('rate_limited', False)
+            if rate_limited:
+                flash('eBay API rate limit exceeded. Please wait a few minutes before trying again.', 'warning')
+            else:
+                flash(f'Search error: {error}', 'error')
     
-    return render_template('tools_ebay_sold_search.html', form=form, results=results, error=error)
+    return render_template('tools_ebay_sold_search.html', form=form, results=results, error=error, rate_limited=rate_limited)
+
+@app.route('/tools/ebay-rate-limits', methods=['GET'])
+@login_required
+def ebay_rate_limits():
+    """Get eBay API rate limits"""
+    # Get optional filters from query parameters
+    api_name = request.args.get('api_name', None)
+    api_context = request.args.get('api_context', None)
+    
+    # Get rate limits
+    rate_limit_result = get_ebay_rate_limits(api_name=api_name, api_context=api_context)
+    
+    if not rate_limit_result['success']:
+        flash(f'Error: {rate_limit_result.get("error", "Unknown error")}', 'error')
+    
+    return render_template('tools_ebay_rate_limits.html', 
+                          rate_limits=rate_limit_result.get('rate_limits', []),
+                          total=rate_limit_result.get('total', 0),
+                          error=rate_limit_result.get('error'),
+                          success=rate_limit_result['success'],
+                          api_name=api_name,
+                          api_context=api_context)
 
 @app.route('/reports/neighborhood/detail/<neighborhood_id>')
 @login_required

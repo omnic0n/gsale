@@ -134,8 +134,20 @@
 </div>
 {% elif error %}
 <div class="content-section mt-4">
-    <div class="alert alert-danger">
-        <i class="fas fa-exclamation-triangle me-2"></i><strong>Error:</strong> {{ error }}
+    <div class="alert {% if rate_limited %}alert-warning{% else %}alert-danger{% endif %}">
+        <i class="fas fa-{% if rate_limited %}clock{% else %}exclamation-triangle{% endif %} me-2"></i>
+        <strong>{% if rate_limited %}Rate Limit Exceeded{% else %}Error{% endif %}:</strong> {{ error }}
+        {% if rate_limited %}
+        <div class="mt-2">
+            <p><strong>What this means:</strong></p>
+            <ul>
+                <li>The eBay Finding API has daily/hourly call limits</li>
+                <li>You've exceeded the allowed number of requests</li>
+                <li>Please wait 15-60 minutes before trying again</li>
+            </ul>
+            <p class="mb-0"><strong>Alternative:</strong> You can try using the eBay website directly to search for sold items, or wait for the rate limit to reset.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endif %}
@@ -207,6 +219,22 @@
     background-color: #f8d7da;
     border-color: #f5c6cb;
     color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #856404;
+}
+
+.alert ul {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+}
+
+.alert p {
+    margin-bottom: 0.5rem;
 }
 </style>
 {% endblock %}
