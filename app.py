@@ -3911,18 +3911,25 @@ def get_ebay_item_data(item_id):
 def groups_list():
     if request.method == "GET":
         form = GroupForm(formdata=None)
-        form.process(data={'listYear': datetime.now().year})
-    else:
-        form = GroupForm()
-
-    if request.method == "POST":
-        details = request.form
-        if details['listYear'] == 'All':
+        # Support filtering via query param as well: ?year=YYYY or ?listYear=YYYY
+        year_param = request.args.get('year', type=str) or request.args.get('listYear', type=str)
+        if not year_param:
+            year_param = str(datetime.now().year)
+        # Reflect selection in the form
+        form.process(data={'listYear': year_param})
+        # Compute date pattern
+        if year_param == 'All':
             date = "%-%-%"
         else:
-            date = details['listYear'] + "-%-%"
+            date = f"{year_param}-%-%"
     else:
-        date = request.args.get('date', type = str)
+        form = GroupForm()
+        # Read from submitted form
+        selected_year = request.form.get('listYear', type=str)
+        if selected_year == 'All':
+            date = "%-%-%"
+        else:
+            date = f"{selected_year}-%-%"
 
     groups = get_data.get_all_from_group_and_items(date)
     neighborhoods = get_data.get_user_neighborhoods()
@@ -4625,10 +4632,17 @@ def api_groups_search():
 @app.route('/api/groups', methods=['GET'])
 @login_required
 def api_get_groups():
-    """Get all groups as JSON for iOS app"""
+    """Get groups as JSON for iOS app, optionally filtered by year."""
     try:
-        # Get all groups using the existing function
-        groups_data = get_data.get_all_from_group_and_items("%-%-%")
+        # Optional year filter: year=All | 2024 | 2025 | ...
+        year = request.args.get('year', type=str)
+        if year and year != 'All':
+            # Use LIKE-based pattern to match web UI behavior
+            date_pattern = f"{year}-%-%"
+            groups_data = get_data.get_all_from_group_and_items(date_pattern)
+        else:
+            # All years
+            groups_data = get_data.get_all_from_group_and_items("%-%-%")
         
         # Convert to JSON format
         groups = []
@@ -4637,13 +4651,19 @@ def api_get_groups():
                 'id': group['id'],
                 'name': group['name'],
                 'description': group.get('description', ''),
-                'created_at': group.get('created_at', ''),
-                'updated_at': group.get('updated_at', '')
+                # Fallback to 'date' field if created/updated are not present
+                'created_at': group.get('created_at', group.get('date', '')),
+                'updated_at': group.get('updated_at', group.get('date', ''))
             })
         
+        # Optional debug info about applied filter (ignored by iOS decoder)
+        applied_filter = 'all'
+        if year and year != 'All':
+            applied_filter = f'year={year}'
         return jsonify({
             'success': True,
-            'groups': groups
+            'groups': groups,
+            'applied_filter': applied_filter
         })
     except Exception as e:
         return jsonify({

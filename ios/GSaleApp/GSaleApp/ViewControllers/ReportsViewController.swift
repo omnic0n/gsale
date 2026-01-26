@@ -4,7 +4,7 @@ private enum ReportTab: Int { case profit = 0, sales = 1, purchases = 2, city = 
 
 class ReportsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    private let segmentedControl = UISegmentedControl(items: ["Profit", "Sales", "Purchases", "City"])
+    private let segmentedControl = UISegmentedControl(items: ["Profit", "Sales", "Purchases", "Location"])
     private let yearButton = UIButton(type: .system)
     private let cityButton = UIButton(type: .system)
     private let tableView = UITableView(frame: .zero, style: .plain)
@@ -20,6 +20,8 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
     private var cityPurchases: [CityPurchaseRow] = []
     private var citySummary: CitySummary?
     private var selectedCityName: String?
+    private var stateOptions: [String] = []
+    private var selectedState: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,7 +41,7 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
         yearButton.addTarget(self, action: #selector(selectYear), for: .touchUpInside)
         yearButton.translatesAutoresizingMaskIntoConstraints = false
 
-        cityButton.setTitle("Select City ▾", for: .normal)
+        cityButton.setTitle("Select Location ▾", for: .normal)
         cityButton.addTarget(self, action: #selector(openCityReport), for: .touchUpInside)
         cityButton.translatesAutoresizingMaskIntoConstraints = false
         cityButton.isHidden = true
@@ -101,25 +103,57 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
     }
 
     @objc private func openCityReport() {
-        if cityOptions.isEmpty {
-            loadingIndicator.startAnimating()
-            Task { [weak self] in
-                guard let self = self else { return }
-                do {
+        loadingIndicator.startAnimating()
+        Task { [weak self] in
+            guard let self = self else { return }
+            do {
+                // Try new API first
+                self.stateOptions = try await NetworkManager.shared.getStatesFromAPI()
+                if !self.stateOptions.isEmpty {
+                    self.presentStatePicker()
+                } else {
+                    // Fallback to legacy HTML city-only
                     self.cityOptions = try await NetworkManager.shared.getCityOptions()
-                    self.presentCityPicker()
-                } catch {
-                    self.showError(error)
+                    if self.cityOptions.isEmpty {
+                        self.showError(NSError(domain: "City", code: -1, userInfo: [NSLocalizedDescriptionKey: "No cities found."]))
+                    } else {
+                        self.presentCityPicker()
+                    }
                 }
-                self.loadingIndicator.stopAnimating()
+            } catch {
+                self.showError(error)
             }
-        } else {
-            presentCityPicker()
+            self.loadingIndicator.stopAnimating()
         }
     }
 
+    private func presentStatePicker() {
+        let alert = UIAlertController(title: "Select State", message: nil, preferredStyle: .actionSheet)
+        for st in stateOptions {
+            alert.addAction(UIAlertAction(title: st, style: .default) { _ in
+                self.selectedState = st
+                Task { [weak self] in
+                    guard let self = self else { return }
+                    do {
+                        let cities = try await NetworkManager.shared.getCitiesForStateFromAPI(state: st)
+                        if cities.isEmpty {
+                            self.showError(NSError(domain: "City", code: -2, userInfo: [NSLocalizedDescriptionKey: "No cities returned for \(st)."]))
+                        } else {
+                            self.cityOptions = cities.map { CityOption(name: $0, label: $0) }
+                            self.presentCityPicker()
+                        }
+                    } catch {
+                        self.showError(error)
+                    }
+                }
+            })
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
     private func presentCityPicker() {
-        let alert = UIAlertController(title: "Select City", message: nil, preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "Select Location", message: selectedState != nil ? "State: \(selectedState!)" : nil, preferredStyle: .actionSheet)
         for opt in cityOptions {
             alert.addAction(UIAlertAction(title: opt.label, style: .default) { _ in
                 Task { [weak self] in
@@ -166,7 +200,14 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
     private func loadCityIfNeeded() async throws -> Void {
         if selectedCityName == nil {
             if cityOptions.isEmpty {
-                self.cityOptions = try await NetworkManager.shared.getCityOptions()
+                // If we have state options, load first state's cities; else fallback to legacy cities list
+                if !stateOptions.isEmpty {
+                    selectedState = stateOptions.first
+                    let cities = try await NetworkManager.shared.getCitiesForStateFromAPI(state: selectedState!)
+                    self.cityOptions = cities.map { CityOption(name: $0, label: $0) }
+                } else {
+                    self.cityOptions = try await NetworkManager.shared.getCityOptions()
+                }
             }
             selectedCityName = cityOptions.first?.name
             if let name = selectedCityName {
@@ -174,14 +215,14 @@ class ReportsViewController: UIViewController, UITableViewDataSource, UITableVie
             }
         }
         if let name = selectedCityName {
-            let result = try await NetworkManager.shared.getCityReport(city: name)
+            let result = try await NetworkManager.shared.getCityReport(city: name, state: selectedState)
             self.citySummary = result.summary
             self.cityPurchases = result.purchases
         }
     }
 
     private func showError(_ error: Error) {
-        let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+        let alert = UIAlertController(title: "Error", message: (error as NSError).localizedDescription, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }

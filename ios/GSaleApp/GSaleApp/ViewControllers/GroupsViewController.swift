@@ -218,6 +218,8 @@ class GroupsViewController: UIViewController {
             let action = UIAlertAction(title: year, style: .default) { _ in
                 self.selectedYear = year
                 self.activeDateFilter = nil
+                self.isSearching = false
+                self.currentSearchTerm = ""
                 self.yearButton.setTitle(year, for: .normal)
                 self.loadGroupsForYear(year)
             }
