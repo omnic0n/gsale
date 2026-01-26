@@ -2411,12 +2411,18 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
                 'status': 'Sold'
             })
         
+        # Build note message
+        if search_term and search_term.strip():
+            note = f'Showing your sold items matching "{search_term}"'
+        else:
+            note = 'Showing your sold items'
+        
         return {
             'success': True,
             'listings': listings,
             'total': len(items),
             'returned': len(listings),
-            'note': f'Showing your sold items{" matching \"" + search_term + "\"" if search_term and search_term.strip() else ""}'
+            'note': note
         }
         
     except Exception as e:
