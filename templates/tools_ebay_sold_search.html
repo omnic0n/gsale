@@ -70,11 +70,8 @@
         <table class="blueTable">
             <thead>
                 <tr>
-                    <th>Image</th>
                     <th>Title</th>
                     <th>Price</th>
-                    <th>Condition</th>
-                    <th>Category</th>
                     <th>End Time</th>
                     <th>Link</th>
                 </tr>
@@ -82,25 +79,16 @@
             <tbody>
                 {% for item in results.listings %}
                 <tr>
-                    <td>
-                        {% if item.image_url %}
-                            <img src="{{ item.image_url }}" alt="{{ item.title }}" style="max-width: 80px; max-height: 80px; object-fit: contain;">
-                        {% else %}
-                            <span class="text-muted">No image</span>
-                        {% endif %}
-                    </td>
                     <td style="max-width: 300px; word-wrap: break-word;">
                         {% if item.matching_item_id %}
                             <a href="/items/describe?item={{ item.matching_item_id }}" class="item-link">
                                 {{ item.title }}
                             </a>
                         {% else %}
-                            {{ item.title }}
+                            <span class="no-match-title">{{ item.title }}</span>
                         {% endif %}
                     </td>
                     <td>${{ "%.2f"|format(item.price) }} {{ item.currency }}</td>
-                    <td>{{ item.condition }}</td>
-                    <td>{{ item.category }}</td>
                     <td>
                         {% if item.end_time and item.end_time != 'N/A' %}
                             {{ item.end_time[:10] }}
@@ -239,6 +227,11 @@
 .item-link:hover {
     color: #357ABD;
     text-decoration: underline;
+}
+
+.no-match-title {
+    color: #dc3545;
+    font-weight: 500;
 }
 </style>
 {% endblock %}
