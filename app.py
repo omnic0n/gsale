@@ -1104,9 +1104,10 @@ def get_orders_for_item(user_token, item_id):
         
         url = "https://api.ebay.com/ws/api.dll"
         
-        # Calculate date range - last 365 days to catch older cancelled orders
+        # Calculate date range - last 2 years to catch older cancelled orders
+        # eBay GetOrders typically supports up to 2 years
         end_date = datetime.now()
-        start_date = end_date - timedelta(days=365)
+        start_date = end_date - timedelta(days=730)
         
         # Format dates for eBay API
         start_date_str = start_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
@@ -1137,6 +1138,8 @@ def get_orders_for_item(user_token, item_id):
         
         response = requests.post(url, data=xml_request, headers=headers)
         
+        print(f"DEBUG get_orders_for_item: GetOrders API call for item {item_id}, date range: {start_date_str} to {end_date_str}")
+        print(f"DEBUG get_orders_for_item: Response status: {response.status_code}")
         
         if response.status_code == 200:
             root = ET.fromstring(response.text)
@@ -1155,27 +1158,40 @@ def get_orders_for_item(user_token, item_id):
             matching_orders = []
             orders = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Order')
             
-            print(f"DEBUG: Found {len(orders)} orders in date range")
+            print(f"DEBUG get_orders_for_item: Found {len(orders)} total orders in date range (looking for item {item_id})")
+            
+            # If no orders found at all, log it
+            if len(orders) == 0:
+                print(f"DEBUG get_orders_for_item: No orders found in date range for any item (item {item_id} may be outside date range or cancelled)")
             
             for order in orders:
                 order_id = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderID')
                 transactions = order.findall('.//{urn:ebay:apis:eBLBaseComponents}Transaction')
                 
-                print(f"DEBUG: Order {order_id.text if order_id is not None else 'Unknown'} has {len(transactions)} transactions")
+                print(f"DEBUG get_orders_for_item: Order {order_id.text if order_id is not None else 'Unknown'} has {len(transactions)} transactions")
                 
                 # Iterate through transactions in this order
                 for transaction in transactions:
                     item_elem = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Item')
                     if item_elem is not None:
                         item_id_elem = item_elem.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
-                        if item_id_elem is not None and item_id_elem.text == item_id:
-                            print(f"DEBUG: Found matching item {item_id} in order {order_id.text}")
-                            matching_orders.append({
-                                'orderId': order_id.text if order_id is not None else 'Unknown',
-                                'transaction': transaction,
-                                'order': order
-                            })
-                            break
+                        if item_id_elem is not None:
+                            print(f"DEBUG get_orders_for_item: Checking transaction with ItemID: {item_id_elem.text} (looking for {item_id})")
+                            if item_id_elem.text == item_id:
+                                print(f"DEBUG get_orders_for_item: Found matching item {item_id} in order {order_id.text if order_id is not None else 'Unknown'}")
+                                
+                                # Print order status info for debugging
+                                order_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
+                                payment_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}PaymentStatus')
+                                checkout_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}CheckoutStatus')
+                                print(f"DEBUG get_orders_for_item: Order {order_id.text if order_id is not None else 'Unknown'} - OrderStatus: {order_status.text if order_status is not None else 'None'}, PaymentStatus: {payment_status.text if payment_status is not None else 'None'}, CheckoutStatus: {checkout_status.text if checkout_status is not None else 'None'}")
+                                
+                                matching_orders.append({
+                                    'orderId': order_id.text if order_id is not None else 'Unknown',
+                                    'transaction': transaction,
+                                    'order': order
+                                })
+                                break
             
             print(f"DEBUG: Found {len(matching_orders)} matching orders")
             return {
@@ -2618,10 +2634,10 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
                     else:
                         # No orders found - item is in SoldList but has no orders
                         print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} has NO orders from GetOrders")
-                        # This could indicate cancellation, but we need to be careful
-                        # Check if the item has a transaction array in GetMyeBaySelling
-                        # If it has transactions but GetOrders returns none, it might be cancelled
-                        pass
+                        # Note: GetOrders only returns orders from the last 365 days
+                        # If an item is older than that, GetOrders won't find it even if it was sold
+                        # So we can't reliably mark it as cancelled just because GetOrders returns nothing
+                        # We'll leave it as sold unless we have other indicators
                 else:
                     print(f"DEBUG search_ebay_sold_items: GetOrders failed for item {ebay_item_id}: {orders_result.get('error', 'Unknown error')}")
             
