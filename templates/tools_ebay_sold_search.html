@@ -71,6 +71,7 @@
             <thead>
                 <tr>
                     <th>Title</th>
+                    <th>Item ID</th>
                     <th>Price</th>
                     <th>End Time</th>
                     <th>Links</th>
@@ -86,6 +87,7 @@
                             <span class="no-match-title">{{ item.title }}</span>
                         {% endif %}
                     </td>
+                    <td>{{ item.itemId }}</td>
                     <td>${{ "%.2f"|format(item.price) }} {{ item.currency }}</td>
                     <td>
                         {% if item.end_time and item.end_time != 'N/A' %}
