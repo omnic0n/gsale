@@ -371,26 +371,37 @@ def get_list_of_items_with_name(name, sold):
 
 def get_data_from_item_groups(group_id):
     cur = mysql.connection.cursor()
+    # Use subquery for most recent sale per item to avoid duplicates from multiple sale records
     cur.execute(""" SELECT 
+                    items.id,
                     items.name, 
                     items.sold, 
-                    items.id,
-                    COALESCE(categories.uuid_id, items.category_id) AS category_id,
+                    COALESCE(MAX(categories.uuid_id), items.category_id) AS category_id,
                     items.storage,
                     items.returned,
                     items.ebay_item_id,
-                    sale.price AS gross,
-                    sale.shipping_fee AS shipping_fee,
-                    sale.returned_fee AS returned_fee,
-                    (sale.price - sale.shipping_fee - COALESCE(sale.returned_fee, 0)) AS net,
-                    sale.date AS sale_date,
-					DATEDIFF(sale.date,collection.date) AS days_to_sell 
+                    MAX(sale.price) AS gross,
+                    MAX(sale.shipping_fee) AS shipping_fee,
+                    MAX(sale.returned_fee) AS returned_fee,
+                    (MAX(sale.price) - MAX(sale.shipping_fee) - COALESCE(MAX(sale.returned_fee), 0)) AS net,
+                    MAX(sale.date) AS sale_date,
+                    DATEDIFF(MAX(sale.date), collection.date) AS days_to_sell 
                     FROM items items
                     INNER JOIN collection collection ON items.group_id = collection.id
-                    LEFT JOIN sale sale ON sale.id = items.id
+                    LEFT JOIN (
+                        SELECT s1.id, s1.price, s1.shipping_fee, s1.returned_fee, s1.date
+                        FROM sale s1
+                        INNER JOIN (
+                            SELECT id, MAX(date) as max_date
+                            FROM sale
+                            GROUP BY id
+                        ) s2 ON s1.id = s2.id AND s1.date = s2.max_date
+                    ) sale ON items.id = sale.id
                     LEFT JOIN categories ON items.category_id = categories.id
                     WHERE items.group_id = %s AND collection.group_id = %s
-                    ORDER BY sale.date""", (group_id, get_current_group_id()))
+                    GROUP BY items.id, items.name, items.sold, items.category_id, items.storage,
+                             items.returned, items.ebay_item_id, collection.date
+                    ORDER BY sale_date""", (group_id, get_current_group_id()))
     return list(cur.fetchall())
 
 def get_total_items_in_group(group_id):
