@@ -789,25 +789,80 @@ def get_sold_items_basic(user_token):
                     
                     # Check for cancelled transactions/orders
                     is_cancelled = False
+                    has_valid_transaction = False
+                    
+                    # Method 1: Check TransactionArray for cancelled transactions
                     transaction_array = item.find('.//{urn:ebay:apis:eBLBaseComponents}TransactionArray')
                     if transaction_array is not None:
                         transactions = transaction_array.findall('.//{urn:ebay:apis:eBLBaseComponents}Transaction')
-                        for transaction in transactions:
-                            # Check OrderStatus for cancellation
-                            order_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
-                            if order_status is not None:
-                                status_text = order_status.text
-                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
-                                    is_cancelled = True
+                        if len(transactions) > 0:
+                            # Check each transaction
+                            all_cancelled = True
+                            for transaction in transactions:
+                                # Check OrderStatus for cancellation
+                                order_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
+                                if order_status is not None:
+                                    status_text = order_status.text
+                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                        # This transaction is cancelled
+                                        continue
+                                    else:
+                                        # Found a non-cancelled transaction
+                                        all_cancelled = False
+                                        has_valid_transaction = True
+                                        break
+                                
+                                # Check TransactionStatus for cancellation
+                                transaction_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Status')
+                                if transaction_status is not None:
+                                    status_text = transaction_status.text
+                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                        # This transaction is cancelled
+                                        continue
+                                    else:
+                                        # Found a non-cancelled transaction
+                                        all_cancelled = False
+                                        has_valid_transaction = True
+                                        break
+                                else:
+                                    # No status found, assume it's valid
+                                    all_cancelled = False
+                                    has_valid_transaction = True
                                     break
                             
-                            # Check TransactionStatus for cancellation
-                            transaction_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Status')
-                            if transaction_status is not None:
-                                status_text = transaction_status.text
-                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
-                                    is_cancelled = True
-                                    break
+                            # If all transactions are cancelled, mark as cancelled
+                            if all_cancelled and len(transactions) > 0:
+                                is_cancelled = True
+                        else:
+                            # No transactions found - item in sold list but no transactions might indicate cancellation
+                            # But we'll be conservative and not mark it as cancelled without more info
+                            pass
+                    else:
+                        # No TransactionArray at all - item in sold list but no transactions
+                        # This could indicate cancellation, but we need to check other indicators
+                        pass
+                    
+                    # Method 2: Check SellingStatus for listing status
+                    if not is_cancelled and selling_status is not None:
+                        listing_status = selling_status.find('.//{urn:ebay:apis:eBLBaseComponents}ListingStatus')
+                        if listing_status is not None:
+                            status_text = listing_status.text
+                            if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                is_cancelled = True
+                    
+                    # Method 3: Check for specific cancellation indicators in the item itself
+                    if not is_cancelled:
+                        # Check if there's a cancellation reason or note anywhere in the item
+                        cancel_reason = item.find('.//{urn:ebay:apis:eBLBaseComponents}CancelReason')
+                        if cancel_reason is not None:
+                            is_cancelled = True
+                        
+                        # Check all text content for cancellation keywords
+                        item_text = ET.tostring(item, encoding='unicode', method='text')
+                        if item_text and ('cancel' in item_text.lower() or 'cancelled' in item_text.lower()):
+                            # Only mark as cancelled if we also don't have a valid transaction
+                            if not has_valid_transaction:
+                                is_cancelled = True
                     
                     items.append({
                         'itemId': item_id.text if item_id is not None else 'N/A',
