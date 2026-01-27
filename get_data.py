@@ -314,20 +314,20 @@ def get_list_of_items_with_name(name, sold):
     search_pattern = '%{}%'.format(validated_name)
     cur = mysql.connection.cursor()
     
-    # Use a subquery to get the most recent sale per item to avoid duplicates
-    cur.execute("""SELECT DISTINCT
+    # Use GROUP BY to ensure one row per item, avoiding duplicates from joins
+    cur.execute("""SELECT 
+                items.id,
                 items.name, 
                 items.sold,
-                items.id,
                 items.storage,
                 items.ebay_item_id,
                 items.returned,
                 items.list_date,
-                COALESCE(categories.uuid_id, items.category_id) AS category_id,
-                sale.price AS gross_price,
-                sale.shipping_fee AS shipping_fee,
-                sale.date AS sale_date,
-                (sale.price - sale.shipping_fee) AS net,
+                COALESCE(MAX(categories.uuid_id), items.category_id) AS category_id,
+                MAX(sale.price) AS gross_price,
+                MAX(sale.shipping_fee) AS shipping_fee,
+                MAX(sale.date) AS sale_date,
+                (MAX(sale.price) - MAX(sale.shipping_fee)) AS net,
                 collection.id as group_id,
                 collection.name as group_name
                 FROM items items 
@@ -342,21 +342,32 @@ def get_list_of_items_with_name(name, sold):
                     ) s2 ON s1.id = s2.id AND s1.date = s2.max_date
                 ) sale ON items.id = sale.id
                 LEFT JOIN categories ON items.category_id = categories.id
-                WHERE items.name LIKE %s AND collection.group_id = %s""", 
+                WHERE items.name LIKE %s AND collection.group_id = %s
+                GROUP BY items.id, items.name, items.sold, items.storage, items.ebay_item_id, 
+                         items.returned, items.list_date, items.category_id, collection.id, collection.name""", 
                 (search_pattern, get_current_group_id()))
     
     all_items = list(cur.fetchall())
+    
+    # Deduplicate by items.id to ensure each item appears only once
+    seen_ids = {}
+    deduplicated_items = []
+    for item in all_items:
+        item_id = item['id']
+        if item_id not in seen_ids:
+            seen_ids[item_id] = True
+            deduplicated_items.append(item)
     
     # Now filter by sold status if needed
     if validated_sold != '%':
         # Handle empty string case - treat as "not sold" (0)
         if validated_sold == '':
-            filtered_items = [item for item in all_items if str(item['sold']) == '0']
+            filtered_items = [item for item in deduplicated_items if str(item['sold']) == '0']
         else:
-            filtered_items = [item for item in all_items if str(item['sold']) == str(validated_sold)]
+            filtered_items = [item for item in deduplicated_items if str(item['sold']) == str(validated_sold)]
         return filtered_items
     else:
-        return all_items
+        return deduplicated_items
 
 def get_data_from_item_groups(group_id):
     cur = mysql.connection.cursor()
