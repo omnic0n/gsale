@@ -2534,6 +2534,69 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
         # Limit to requested number of items
         items = items[:int(num_items)]
         
+        # Optimize: Get all orders once instead of calling GetOrders for each item
+        # Only get orders if we have items that might need cancellation checking
+        orders_by_item_id = {}
+        if items:
+            print(f"DEBUG search_ebay_sold_items: Fetching all orders once for {len(items)} items")
+            # Call GetOrders once to get all orders in the date range
+            from datetime import datetime, timedelta
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=90)
+            start_date_str = start_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+            end_date_str = end_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+            
+            url = "https://api.ebay.com/ws/api.dll"
+            xml_request = f"""<?xml version="1.0" encoding="utf-8"?>
+            <GetOrdersRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+                <RequesterCredentials>
+                    <eBayAuthToken>{user_token}</eBayAuthToken>
+                </RequesterCredentials>
+                <CreateTimeFrom>{start_date_str}</CreateTimeFrom>
+                <CreateTimeTo>{end_date_str}</CreateTimeTo>
+                <DetailLevel>ReturnAll</DetailLevel>
+                <IncludeFinalValueFee>true</IncludeFinalValueFee>
+                <Version>1193</Version>
+            </GetOrdersRequest>"""
+            
+            headers = {
+                'X-EBAY-API-COMPATIBILITY-LEVEL': '1193',
+                'X-EBAY-API-DEV-NAME': app.config.get('EBAY_DEV_NAME', 'your_dev_name'),
+                'X-EBAY-API-APP-NAME': app.config.get('EBAY_APP_NAME', 'your_app_name'),
+                'X-EBAY-API-CERT-NAME': app.config.get('EBAY_CERT_NAME', 'your_cert_name'),
+                'X-EBAY-API-CALL-NAME': 'GetOrders',
+                'X-EBAY-API-SITEID': '0',
+                'Content-Type': 'text/xml'
+            }
+            
+            try:
+                response = requests.post(url, data=xml_request, headers=headers)
+                if response.status_code == 200:
+                    root = ET.fromstring(response.text)
+                    errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
+                    if not errors:
+                        orders = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Order')
+                        print(f"DEBUG search_ebay_sold_items: Found {len(orders)} total orders")
+                        
+                        # Build a map of item_id -> order data
+                        for order in orders:
+                            transactions = order.findall('.//{urn:ebay:apis:eBLBaseComponents}Transaction')
+                            for transaction in transactions:
+                                item_elem = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Item')
+                                if item_elem is not None:
+                                    item_id_elem = item_elem.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
+                                    if item_id_elem is not None:
+                                        item_id = item_id_elem.text
+                                        if item_id not in orders_by_item_id:
+                                            orders_by_item_id[item_id] = []
+                                        orders_by_item_id[item_id].append({
+                                            'order': order,
+                                            'transaction': transaction
+                                        })
+                        print(f"DEBUG search_ebay_sold_items: Mapped orders to {len(orders_by_item_id)} unique items")
+            except Exception as e:
+                print(f"DEBUG search_ebay_sold_items: Error fetching orders: {str(e)}")
+        
         # Process items to match expected format
         # Items from get_sold_items_basic already have price, currency, image_url, category
         listings = []
@@ -2545,103 +2608,47 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
             if ebay_item_id and ebay_item_id != 'N/A':
                 matching_item_id = get_data.get_item_id_by_ebay_item_id(ebay_item_id)
             
-            # Double-check cancellation status using GetOrders API if not already marked as cancelled
+            # Check cancellation status using pre-fetched orders
             is_cancelled = item.get('is_cancelled', False)
-            print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} initial is_cancelled: {is_cancelled}")
             
             if not is_cancelled and ebay_item_id and ebay_item_id != 'N/A':
-                # Check orders for this item to verify cancellation status
-                print(f"DEBUG search_ebay_sold_items: Checking GetOrders for item {ebay_item_id}")
-                orders_result = get_orders_for_item(user_token, ebay_item_id)
-                print(f"DEBUG search_ebay_sold_items: GetOrders result for {ebay_item_id}: success={orders_result.get('success')}, orders_count={len(orders_result.get('orders', []))}")
-                
-                if orders_result['success']:
-                    orders_list = orders_result.get('orders', [])
-                    if orders_list:
-                        # Check each order to see if it's cancelled
-                        for idx, order_data in enumerate(orders_list):
-                            print(f"DEBUG search_ebay_sold_items: Checking order {idx+1} for item {ebay_item_id}")
-                            order = order_data.get('order')
-                            transaction = order_data.get('transaction')
-                            
-                            if order is not None:
-                                # Check OrderStatus
-                                order_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
-                                if order_status is not None:
-                                    status_text = order_status.text
-                                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} order {idx+1} OrderStatus: {status_text}")
-                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 'Cancel' in status_text):
-                                        is_cancelled = True
-                                        print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} is CANCELLED (OrderStatus: {status_text})")
-                                        break
-                                
-                                # Check CheckoutStatus
-                                checkout_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}CheckoutStatus')
-                                if checkout_status is not None:
-                                    status_text = checkout_status.text
-                                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} order {idx+1} CheckoutStatus: {status_text}")
-                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 'Incomplete' in status_text):
-                                        is_cancelled = True
-                                        print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} is CANCELLED (CheckoutStatus: {status_text})")
-                                        break
-                                
-                                # Check PaymentStatus - payment cancelled is a key indicator
-                                # This is critical - "payment cancelled" means the order is cancelled
-                                payment_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}PaymentStatus')
-                                if payment_status is not None:
-                                    status_text = payment_status.text
-                                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} order {idx+1} PaymentStatus: {status_text}")
-                                    # Check for various payment cancellation indicators
-                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 
-                                                       'Failed' in status_text or 'NoPaymentFailure' in status_text or
-                                                       'NoPayment' in status_text or 'Pending' in status_text):
-                                        is_cancelled = True
-                                        print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} is CANCELLED (PaymentStatus: {status_text})")
-                                        break
-                                
-                                # Check all text in order for cancellation keywords
-                                order_text = ET.tostring(order, encoding='unicode', method='text')
-                                print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} order {idx+1} text (first 300 chars): {order_text[:300] if order_text else 'None'}")
-                                if order_text and ('payment' in order_text.lower() and 'cancel' in order_text.lower()):
+                # Check if we have orders for this item
+                item_orders = orders_by_item_id.get(ebay_item_id, [])
+                if item_orders:
+                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} has {len(item_orders)} order(s) from batch fetch")
+                    # Check each order to see if it's cancelled
+                    for order_data in item_orders:
+                        order = order_data.get('order')
+                        transaction = order_data.get('transaction')
+                        
+                        if order is not None:
+                            # Check PaymentStatus - most reliable indicator
+                            payment_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}PaymentStatus')
+                            if payment_status is not None:
+                                status_text = payment_status.text
+                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 
+                                                   'Failed' in status_text or 'NoPaymentFailure' in status_text):
                                     is_cancelled = True
-                                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} is CANCELLED (found payment+cancel in order text)")
+                                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} is CANCELLED (PaymentStatus: {status_text})")
                                     break
-                                
-                                # Print all order element tags for debugging
-                                print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} order {idx+1} all elements:")
-                                for elem in order.iter():
-                                    tag_name = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                                    if elem.text and elem.text.strip():
-                                        print(f"  {tag_name}: {elem.text[:100]}")
                             
-                            if transaction is not None:
-                                # Check TransactionStatus
-                                transaction_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Status')
-                                if transaction_status is not None:
-                                    status_text = transaction_status.text
-                                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} transaction {idx+1} Status: {status_text}")
-                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 'Cancel' in status_text):
-                                        is_cancelled = True
-                                        print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} is CANCELLED (Transaction Status: {status_text})")
-                                        break
-                                
-                                # Print all transaction element tags for debugging
-                                print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} transaction {idx+1} all elements:")
-                                for elem in transaction.iter():
-                                    tag_name = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                                    if elem.text and elem.text.strip():
-                                        print(f"  {tag_name}: {elem.text[:100]}")
-                    else:
-                        # No orders found - item is in SoldList but has no orders
-                        print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} has NO orders from GetOrders")
-                        # Note: GetOrders only returns orders from the last 365 days
-                        # If an item is older than that, GetOrders won't find it even if it was sold
-                        # So we can't reliably mark it as cancelled just because GetOrders returns nothing
-                        # We'll leave it as sold unless we have other indicators
-                else:
-                    print(f"DEBUG search_ebay_sold_items: GetOrders failed for item {ebay_item_id}: {orders_result.get('error', 'Unknown error')}")
-            
-            print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} final is_cancelled: {is_cancelled}")
+                            # Check OrderStatus
+                            order_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
+                            if order_status is not None:
+                                status_text = order_status.text
+                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                    is_cancelled = True
+                                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} is CANCELLED (OrderStatus: {status_text})")
+                                    break
+                            
+                            # Check CheckoutStatus
+                            checkout_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}CheckoutStatus')
+                            if checkout_status is not None:
+                                status_text = checkout_status.text
+                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                    is_cancelled = True
+                                    print(f"DEBUG search_ebay_sold_items: Item {ebay_item_id} is CANCELLED (CheckoutStatus: {status_text})")
+                                    break
             
             listings.append({
                 'itemId': ebay_item_id,
