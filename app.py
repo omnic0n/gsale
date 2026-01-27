@@ -1104,10 +1104,10 @@ def get_orders_for_item(user_token, item_id):
         
         url = "https://api.ebay.com/ws/api.dll"
         
-        # Calculate date range - last 2 years to catch older cancelled orders
-        # eBay GetOrders typically supports up to 2 years
+        # Calculate date range - last 90 days (eBay API limit)
+        # eBay GetOrders only allows retrieving orders from the last 90 days
         end_date = datetime.now()
-        start_date = end_date - timedelta(days=730)
+        start_date = end_date - timedelta(days=90)
         
         # Format dates for eBay API
         start_date_str = start_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
