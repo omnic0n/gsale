@@ -25,7 +25,7 @@
                                     <div class="col-md-5">
                                         <div class="form-group">
                                             <label class="form-control-label">Item Name</label>
-                                            <input class="form-control" name="items-0-name" type="text" required>
+                                            <input class="form-control" name="items-0-name" type="text" required value="{{ initial_item_name|default('', true) }}">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -43,7 +43,7 @@
                                         <div class="form-group">
                                             <label class="form-control-label">eBay Item ID</label>
                                             <small class="text-muted d-block">(Optional)</small>
-                                            <input class="form-control" name="items-0-ebay_item_id" type="text" placeholder="eBay Item ID">
+                                            <input class="form-control" name="items-0-ebay_item_id" type="text" placeholder="eBay Item ID" value="{{ initial_ebay_item_id|default('', true) }}">
                                         </div>
                                     </div>
                                     <div class="col-md-1">

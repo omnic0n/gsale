@@ -112,6 +112,10 @@
                             <a href="/items/describe?item={{ item.matching_item_id }}" class="btn btn-sm btn-outline-success ms-2">
                                 <i class="fas fa-link"></i> View Item
                             </a>
+                        {% else %}
+                            <a href="{{ url_for('bought_items') }}?ebay_item_id={{ item.itemId }}&name={{ item.title|urlencode }}" class="btn btn-sm btn-outline-secondary ms-2">
+                                <i class="fas fa-plus"></i> Add Item
+                            </a>
                         {% endif %}
                     </td>
                 </tr>

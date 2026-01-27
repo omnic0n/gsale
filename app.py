@@ -4229,7 +4229,9 @@ def mark_sold():
 @app.route('/items/bought',methods=["POST","GET"])
 @login_required
 def bought_items():
-    group_id = request.args.get('group', type = str)
+    group_id = request.args.get('group', type=str)
+    ebay_item_id = request.args.get('ebay_item_id', type=str)
+    name = request.args.get('name', type=str)
     
     groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
@@ -4260,7 +4262,12 @@ def bought_items():
         set_data.set_bought_items_improved(details)
         return redirect(url_for('group_detail',group_id=group_data['id']))
     
-    return render_template('items_purchased.html', form=form, categories=categories)
+    # Pre-fill from eBay sold search when adding an item not in the system
+    initial_item_name = name or ''
+    initial_ebay_item_id = ebay_item_id or ''
+    
+    return render_template('items_purchased.html', form=form, categories=categories,
+                          initial_item_name=initial_item_name, initial_ebay_item_id=initial_ebay_item_id)
 
 @app.route('/items/modify',methods=["POST","GET"])
 @login_required
