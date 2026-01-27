@@ -1059,9 +1059,9 @@ def get_orders_for_item(user_token, item_id):
         
         url = "https://api.ebay.com/ws/api.dll"
         
-        # Calculate date range - last 30 days (eBay recommendation)
+        # Calculate date range - last 365 days to catch older cancelled orders
         end_date = datetime.now()
-        start_date = end_date - timedelta(days=30)
+        start_date = end_date - timedelta(days=365)
         
         # Format dates for eBay API
         start_date_str = start_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
@@ -2483,6 +2483,33 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
             if ebay_item_id and ebay_item_id != 'N/A':
                 matching_item_id = get_data.get_item_id_by_ebay_item_id(ebay_item_id)
             
+            # Double-check cancellation status using GetOrders API if not already marked as cancelled
+            is_cancelled = item.get('is_cancelled', False)
+            if not is_cancelled and ebay_item_id and ebay_item_id != 'N/A':
+                # Check orders for this item to verify cancellation status
+                orders_result = get_orders_for_item(user_token, ebay_item_id)
+                if orders_result['success'] and orders_result.get('orders'):
+                    # Check each order to see if it's cancelled
+                    for order_data in orders_result['orders']:
+                        order = order_data.get('order')
+                        transaction = order_data.get('transaction')
+                        if order is not None:
+                            # Check OrderStatus
+                            order_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
+                            if order_status is not None:
+                                status_text = order_status.text
+                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                    is_cancelled = True
+                                    break
+                        if transaction is not None:
+                            # Check TransactionStatus
+                            transaction_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Status')
+                            if transaction_status is not None:
+                                status_text = transaction_status.text
+                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                    is_cancelled = True
+                                    break
+            
             listings.append({
                 'itemId': ebay_item_id,
                 'title': item.get('title', 'N/A'),
@@ -2494,7 +2521,7 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
                 'category': item.get('category', 'N/A'),
                 'ebay_url': item.get('ebay_url', f'https://www.ebay.com/itm/{ebay_item_id}'),
                 'status': 'Sold',
-                'is_cancelled': item.get('is_cancelled', False),
+                'is_cancelled': is_cancelled,
                 'matching_item_id': matching_item_id  # Item ID in our database if match found
             })
         
