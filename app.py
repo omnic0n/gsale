@@ -886,10 +886,6 @@ def get_sold_items_basic(user_token):
                             print(f"DEBUG get_sold_items_basic: Item {item_id_text} has NO transactions in TransactionArray")
                     else:
                         print(f"DEBUG get_sold_items_basic: Item {item_id_text} has NO TransactionArray")
-                    else:
-                        # No TransactionArray at all - item in sold list but no transactions
-                        # This could indicate cancellation, but we need to check other indicators
-                        pass
                     
                     # Method 2: Check SellingStatus for listing status
                     if not is_cancelled and selling_status is not None:
