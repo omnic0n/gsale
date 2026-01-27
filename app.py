@@ -5141,40 +5141,6 @@ def ebay_sold_search():
     
     return render_template('tools_ebay_sold_search.html', form=form, results=results, error=error, rate_limited=rate_limited)
 
-@app.route('/tools/ebay-rate-limits', methods=['GET'])
-@login_required
-def ebay_rate_limits():
-    """Get eBay API rate limits - focused on Finding API"""
-    # Try to get Finding API specifically, but also get all if that fails
-    rate_limit_result = get_ebay_rate_limits()
-    
-    # If we got results, try to find Finding API data
-    if rate_limit_result['success'] and rate_limit_result.get('rate_limits'):
-        # Look for Finding API in the results
-        finding_api_found = False
-        for rate_limit in rate_limit_result.get('rate_limits', []):
-            api_name = rate_limit.get('apiName', '').lower()
-            api_context = rate_limit.get('apiContext', '').lower()
-            if 'finding' in api_name or 'finding' in api_context:
-                finding_api_found = True
-                break
-        
-        # If Finding API not found, try searching with different filters
-        if not finding_api_found:
-            # Try with developer context (Finding API might be under developer context)
-            finding_result = get_ebay_rate_limits(api_context='developer')
-            if finding_result['success'] and finding_result.get('rate_limits'):
-                rate_limit_result = finding_result
-    
-    if not rate_limit_result['success']:
-        flash(f'Error: {rate_limit_result.get("error", "Unknown error")}', 'error')
-    
-    return render_template('tools_ebay_rate_limits.html', 
-                          rate_limits=rate_limit_result.get('rate_limits', []),
-                          total=rate_limit_result.get('total', 0),
-                          error=rate_limit_result.get('error'),
-                          success=rate_limit_result['success'])
-
 @app.route('/reports/neighborhood/detail/<neighborhood_id>')
 @login_required
 def neighborhood_detail(neighborhood_id):
