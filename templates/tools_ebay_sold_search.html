@@ -73,6 +73,7 @@
                     <th>Title</th>
                     <th>Item ID</th>
                     <th>Price</th>
+                    <th>Status</th>
                     <th>End Time</th>
                     <th>Links</th>
                 </tr>
@@ -89,6 +90,13 @@
                     </td>
                     <td>{{ item.itemId }}</td>
                     <td>${{ "%.2f"|format(item.price) }} {{ item.currency }}</td>
+                    <td>
+                        {% if item.is_cancelled %}
+                            <span class="badge bg-danger">Cancelled</span>
+                        {% else %}
+                            <span class="badge bg-success">Sold</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if item.end_time and item.end_time != 'N/A' %}
                             {{ item.end_time[:10] }}

@@ -787,6 +787,28 @@ def get_sold_items_basic(user_token):
                     primary_category = item.find('.//{urn:ebay:apis:eBLBaseComponents}PrimaryCategoryName')
                     category_name = primary_category.text if primary_category is not None else 'N/A'
                     
+                    # Check for cancelled transactions/orders
+                    is_cancelled = False
+                    transaction_array = item.find('.//{urn:ebay:apis:eBLBaseComponents}TransactionArray')
+                    if transaction_array is not None:
+                        transactions = transaction_array.findall('.//{urn:ebay:apis:eBLBaseComponents}Transaction')
+                        for transaction in transactions:
+                            # Check OrderStatus for cancellation
+                            order_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
+                            if order_status is not None:
+                                status_text = order_status.text
+                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                    is_cancelled = True
+                                    break
+                            
+                            # Check TransactionStatus for cancellation
+                            transaction_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Status')
+                            if transaction_status is not None:
+                                status_text = transaction_status.text
+                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                                    is_cancelled = True
+                                    break
+                    
                     items.append({
                         'itemId': item_id.text if item_id is not None else 'N/A',
                         'title': title.text if title is not None else 'N/A',
@@ -800,6 +822,7 @@ def get_sold_items_basic(user_token):
                         'image_url': image_url,
                         'category': category_name,
                         'status': 'Sold',
+                        'is_cancelled': is_cancelled,
                         'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#'
                     })
             
@@ -2416,6 +2439,7 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
                 'category': item.get('category', 'N/A'),
                 'ebay_url': item.get('ebay_url', f'https://www.ebay.com/itm/{ebay_item_id}'),
                 'status': 'Sold',
+                'is_cancelled': item.get('is_cancelled', False),
                 'matching_item_id': matching_item_id  # Item ID in our database if match found
             })
         
