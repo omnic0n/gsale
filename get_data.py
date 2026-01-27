@@ -314,7 +314,8 @@ def get_list_of_items_with_name(name, sold):
     search_pattern = '%{}%'.format(validated_name)
     cur = mysql.connection.cursor()
     
-    cur.execute("""SELECT 
+    # Use a subquery to get the most recent sale per item to avoid duplicates
+    cur.execute("""SELECT DISTINCT
                 items.name, 
                 items.sold,
                 items.id,
@@ -331,7 +332,15 @@ def get_list_of_items_with_name(name, sold):
                 collection.name as group_name
                 FROM items items 
                 INNER JOIN collection collection ON items.group_id = collection.id
-                LEFT JOIN sale sale ON items.id = sale.id
+                LEFT JOIN (
+                    SELECT s1.id, s1.price, s1.shipping_fee, s1.date
+                    FROM sale s1
+                    INNER JOIN (
+                        SELECT id, MAX(date) as max_date
+                        FROM sale
+                        GROUP BY id
+                    ) s2 ON s1.id = s2.id AND s1.date = s2.max_date
+                ) sale ON items.id = sale.id
                 LEFT JOIN categories ON items.category_id = categories.id
                 WHERE items.name LIKE %s AND collection.group_id = %s""", 
                 (search_pattern, get_current_group_id()))
