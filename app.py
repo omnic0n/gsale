@@ -2670,10 +2670,128 @@ def search_ebay_sold_items_finding_api(search_term, num_items=25, min_price=None
 
 def get_ebay_rate_limits(api_name=None, api_context=None):
     """
-    Get eBay API rate limits using the Analytics API
+    Get eBay API rate limits - try App ID first for Finding API, then fall back to Analytics API with OAuth
     """
     try:
-        # Get OAuth token
+        # First, try to get Finding API rate limits using App ID
+        app_id = app.config.get('EBAY_CLIENT_ID') or app.config.get('EBAY_APP_ID') or app.config.get('EBAY_DEV_NAME', '')
+        
+        if app_id and app_id not in ['your_dev_name', 'YOUR_EBAY_USER_TOKEN_HERE']:
+            # Try to get rate limit info from Finding API response headers
+            # Make a minimal test call to check rate limit headers
+            url = "https://svcs.ebay.com/services/search/FindingService/v1"
+            
+            params = {
+                'OPERATION-NAME': 'findCompletedItems',
+                'SERVICE-VERSION': '1.0.0',
+                'SECURITY-APPNAME': app_id,
+                'RESPONSE-DATA-FORMAT': 'JSON',
+                'REST-PAYLOAD': '',
+                'keywords': 'test',  # Minimal search to check rate limits
+                'paginationInput.entriesPerPage': 1,  # Just 1 item to minimize API usage
+                'itemFilter(0).name': 'SoldItemsOnly',
+                'itemFilter(0).value': 'true'
+            }
+            
+            response = requests.get(url, params=params)
+            
+            # Check response headers for rate limit information
+            rate_limit_headers = {}
+            for header_name in ['X-EBAY-SOA-RESPONSE-DATA-FORMAT', 'X-EBAY-SOA-SERVICE-VERSION', 
+                              'X-EBAY-API-REQUEST-ID', 'X-EBAY-API-CALL-NAME']:
+                if header_name in response.headers:
+                    rate_limit_headers[header_name] = response.headers[header_name]
+            
+            # Check for rate limit errors in response
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    # Check if there's rate limit info in the response
+                    find_completed_items_response = data.get('findCompletedItemsResponse', [{}])
+                    if isinstance(find_completed_items_response, list) and len(find_completed_items_response) > 0:
+                        response_data = find_completed_items_response[0]
+                    else:
+                        response_data = find_completed_items_response
+                    
+                    # Check for rate limit errors
+                    if 'errorMessage' in response_data:
+                        error_data = response_data.get('errorMessage', [{}])
+                        if isinstance(error_data, list) and len(error_data) > 0:
+                            error_obj = error_data[0].get('error', [{}])
+                            if isinstance(error_obj, list) and len(error_obj) > 0:
+                                error_info = error_obj[0]
+                                error_id = error_info.get('errorId', [''])[0] if isinstance(error_info.get('errorId'), list) else error_info.get('errorId', '')
+                                if error_id == '10001' or 'RateLimiter' in str(error_info):
+                                    # Rate limit exceeded
+                                    return {
+                                        'success': True,
+                                        'rate_limits': [{
+                                            'apiName': 'Finding API',
+                                            'apiContext': 'FindingService',
+                                            'resources': [{
+                                                'resource': 'findCompletedItems',
+                                                'quota': 5000,
+                                                'used': 5000,
+                                                'remaining': 0,
+                                                'resetTime': 'Rolling 24-hour window'
+                                            }]
+                                        }],
+                                        'total': 1,
+                                        'note': 'Rate limit exceeded - 5000/5000 calls used'
+                                    }
+                    
+                    # If successful, we can't determine exact usage from Finding API
+                    # But we know the limit is 5000
+                    return {
+                        'success': True,
+                        'rate_limits': [{
+                            'apiName': 'Finding API',
+                            'apiContext': 'FindingService',
+                            'resources': [{
+                                'resource': 'findCompletedItems',
+                                'quota': 5000,
+                                'used': 'Unknown (Finding API does not provide usage data)',
+                                'remaining': 'Unknown',
+                                'resetTime': 'Rolling 24-hour window'
+                            }]
+                        }],
+                        'total': 1,
+                        'note': 'Finding API limit is 5000 calls/day, but exact usage is not available via API'
+                    }
+                except:
+                    pass
+            
+            # If Finding API call failed, check if it's a rate limit error
+            if response.status_code == 500:
+                try:
+                    data = response.json()
+                    error_data = data.get('errorMessage', [{}])
+                    if isinstance(error_data, list) and len(error_data) > 0:
+                        error_obj = error_data[0].get('error', [{}])
+                        if isinstance(error_obj, list) and len(error_obj) > 0:
+                            error_info = error_obj[0]
+                            error_id = error_info.get('errorId', [''])[0] if isinstance(error_info.get('errorId'), list) else error_info.get('errorId', '')
+                            if error_id == '10001' or 'RateLimiter' in str(error_info):
+                                return {
+                                    'success': True,
+                                    'rate_limits': [{
+                                        'apiName': 'Finding API',
+                                        'apiContext': 'FindingService',
+                                        'resources': [{
+                                            'resource': 'findCompletedItems',
+                                            'quota': 5000,
+                                            'used': 5000,
+                                            'remaining': 0,
+                                            'resetTime': 'Rolling 24-hour window'
+                                        }]
+                                    }],
+                                    'total': 1,
+                                    'note': 'Rate limit exceeded - 5000/5000 calls used'
+                                }
+                except:
+                    pass
+        
+        # Fall back to Analytics API with OAuth if App ID method didn't work
         token_result = get_valid_ebay_token()
         
         if not token_result['success']:
@@ -2682,7 +2800,7 @@ def get_ebay_rate_limits(api_name=None, api_context=None):
             if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
                 return {
                     'success': False,
-                    'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.'
+                    'error': 'eBay authentication required. Please configure EBAY_CLIENT_ID (App ID) or authenticate with eBay OAuth.'
                 }
             access_token = user_token
         else:
