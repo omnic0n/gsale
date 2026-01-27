@@ -2398,8 +2398,15 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
         # Items from get_sold_items_basic already have price, currency, image_url, category
         listings = []
         for item in items:
+            ebay_item_id = item.get('itemId', 'N/A')
+            
+            # Check if this eBay item ID matches an item in the database
+            matching_item_id = None
+            if ebay_item_id and ebay_item_id != 'N/A':
+                matching_item_id = get_data.get_item_id_by_ebay_item_id(ebay_item_id)
+            
             listings.append({
-                'itemId': item.get('itemId', 'N/A'),
+                'itemId': ebay_item_id,
                 'title': item.get('title', 'N/A'),
                 'price': item.get('price', 0),
                 'currency': item.get('currency', 'USD'),
@@ -2407,8 +2414,9 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
                 'end_time': item.get('end_time', 'N/A'),
                 'image_url': item.get('image_url'),
                 'category': item.get('category', 'N/A'),
-                'ebay_url': item.get('ebay_url', f'https://www.ebay.com/itm/{item.get("itemId", "N/A")}'),
-                'status': 'Sold'
+                'ebay_url': item.get('ebay_url', f'https://www.ebay.com/itm/{ebay_item_id}'),
+                'status': 'Sold',
+                'matching_item_id': matching_item_id  # Item ID in our database if match found
             })
         
         # Build note message

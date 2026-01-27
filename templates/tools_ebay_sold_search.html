@@ -89,7 +89,15 @@
                             <span class="text-muted">No image</span>
                         {% endif %}
                     </td>
-                    <td style="max-width: 300px; word-wrap: break-word;">{{ item.title }}</td>
+                    <td style="max-width: 300px; word-wrap: break-word;">
+                        {% if item.matching_item_id %}
+                            <a href="/items/describe?item={{ item.matching_item_id }}" class="item-link">
+                                {{ item.title }}
+                            </a>
+                        {% else %}
+                            {{ item.title }}
+                        {% endif %}
+                    </td>
                     <td>${{ "%.2f"|format(item.price) }} {{ item.currency }}</td>
                     <td>{{ item.condition }}</td>
                     <td>{{ item.category }}</td>
@@ -219,6 +227,18 @@
 
 .alert p {
     margin-bottom: 0.5rem;
+}
+
+.item-link {
+    color: #4A90E2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.item-link:hover {
+    color: #357ABD;
+    text-decoration: underline;
 }
 </style>
 {% endblock %}

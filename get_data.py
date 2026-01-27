@@ -437,6 +437,21 @@ def get_sold_from_day(day):
     """, (day, get_current_group_id()))
     return list(cur.fetchall())
 
+def get_item_id_by_ebay_item_id(ebay_item_id):
+    """Get item ID by eBay item ID for the current user"""
+    if not ebay_item_id or ebay_item_id == 'N/A':
+        return None
+    cur = mysql.connection.cursor()
+    cur.execute(""" 
+        SELECT items.id 
+        FROM items items
+        INNER JOIN collection collection ON items.group_id = collection.id
+        WHERE items.ebay_item_id = %s AND collection.account = %s
+        LIMIT 1
+    """, (ebay_item_id, get_current_user_id()))
+    result = cur.fetchone()
+    return result['id'] if result else None
+
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 
