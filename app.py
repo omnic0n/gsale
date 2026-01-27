@@ -824,11 +824,36 @@ def get_sold_items_basic(user_token):
                                         all_cancelled = False
                                         has_valid_transaction = True
                                         break
+                                
+                                # Check for payment status in transaction
+                                payment_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}PaymentStatus')
+                                if payment_status is not None:
+                                    status_text = payment_status.text
+                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 
+                                                       'Failed' in status_text or 'NoPayment' in status_text):
+                                        # Payment was cancelled/failed
+                                        continue
+                                    else:
+                                        # Payment is valid
+                                        all_cancelled = False
+                                        has_valid_transaction = True
+                                        break
+                                
+                                # Check all text in transaction for payment cancellation
+                                transaction_text = ET.tostring(transaction, encoding='unicode', method='text')
+                                if transaction_text and ('payment' in transaction_text.lower() and 'cancel' in transaction_text.lower()):
+                                    # Payment cancelled mentioned in transaction
+                                    continue
                                 else:
-                                    # No status found, assume it's valid
+                                    # No payment cancellation found
                                     all_cancelled = False
                                     has_valid_transaction = True
                                     break
+                                
+                                # If we get here, no cancellation indicators found
+                                all_cancelled = False
+                                has_valid_transaction = True
+                                break
                             
                             # If all transactions are cancelled, mark as cancelled
                             if all_cancelled and len(transactions) > 0:
@@ -2430,6 +2455,7 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
     Filters by search term if provided
     """
     try:
+        import xml.etree.ElementTree as ET
         # Get OAuth token or legacy token
         token_result = get_valid_ebay_token()
         
@@ -2488,27 +2514,63 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
             if not is_cancelled and ebay_item_id and ebay_item_id != 'N/A':
                 # Check orders for this item to verify cancellation status
                 orders_result = get_orders_for_item(user_token, ebay_item_id)
-                if orders_result['success'] and orders_result.get('orders'):
-                    # Check each order to see if it's cancelled
-                    for order_data in orders_result['orders']:
-                        order = order_data.get('order')
-                        transaction = order_data.get('transaction')
-                        if order is not None:
-                            # Check OrderStatus
-                            order_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
-                            if order_status is not None:
-                                status_text = order_status.text
-                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
+                if orders_result['success']:
+                    orders_list = orders_result.get('orders', [])
+                    if orders_list:
+                        # Check each order to see if it's cancelled
+                        for order_data in orders_list:
+                            order = order_data.get('order')
+                            transaction = order_data.get('transaction')
+                            
+                            if order is not None:
+                                # Check OrderStatus
+                                order_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}OrderStatus')
+                                if order_status is not None:
+                                    status_text = order_status.text
+                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 'Cancel' in status_text):
+                                        is_cancelled = True
+                                        break
+                                
+                                # Check CheckoutStatus
+                                checkout_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}CheckoutStatus')
+                                if checkout_status is not None:
+                                    status_text = checkout_status.text
+                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 'Incomplete' in status_text):
+                                        is_cancelled = True
+                                        break
+                                
+                                # Check PaymentStatus - payment cancelled is a key indicator
+                                # This is critical - "payment cancelled" means the order is cancelled
+                                payment_status = order.find('.//{urn:ebay:apis:eBLBaseComponents}PaymentStatus')
+                                if payment_status is not None:
+                                    status_text = payment_status.text
+                                    # Check for various payment cancellation indicators
+                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 
+                                                       'Failed' in status_text or 'NoPaymentFailure' in status_text or
+                                                       'NoPayment' in status_text or 'Pending' in status_text):
+                                        is_cancelled = True
+                                        break
+                                
+                                # Check all text in order for cancellation keywords
+                                order_text = ET.tostring(order, encoding='unicode', method='text')
+                                if order_text and ('payment' in order_text.lower() and 'cancel' in order_text.lower()):
                                     is_cancelled = True
                                     break
-                        if transaction is not None:
-                            # Check TransactionStatus
-                            transaction_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Status')
-                            if transaction_status is not None:
-                                status_text = transaction_status.text
-                                if status_text and ('Cancelled' in status_text or 'Canceled' in status_text):
-                                    is_cancelled = True
-                                    break
+                            
+                            if transaction is not None:
+                                # Check TransactionStatus
+                                transaction_status = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}Status')
+                                if transaction_status is not None:
+                                    status_text = transaction_status.text
+                                    if status_text and ('Cancelled' in status_text or 'Canceled' in status_text or 'Cancel' in status_text):
+                                        is_cancelled = True
+                                        break
+                    else:
+                        # No orders found - item is in SoldList but has no orders
+                        # This could indicate cancellation, but we need to be careful
+                        # Check if the item has a transaction array in GetMyeBaySelling
+                        # If it has transactions but GetOrders returns none, it might be cancelled
+                        pass
             
             listings.append({
                 'itemId': ebay_item_id,
