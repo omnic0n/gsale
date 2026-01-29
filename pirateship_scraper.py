@@ -63,19 +63,19 @@ async def login(
         p, browser = await _get_browser(headless=headless)
         context = await browser.new_context()
         page = await context.new_page()
-        page.set_default_timeout(15000)  # 15s for login
+        page.set_default_timeout(1000)  # 1s
 
         _log(verbose, f"Navigating to {PIRATESHIP_BASE}/ ...")
         await page.goto(PIRATESHIP_BASE + "/", wait_until="domcontentloaded")
-        _log(verbose, "Waiting for JS/SPA (0.5s)...")
-        await asyncio.sleep(0.5)
+        _log(verbose, "Waiting for JS/SPA (0.1s)...")
+        await asyncio.sleep(0.1)
         try:
-            await page.wait_for_load_state("networkidle", timeout=5000)
+            await page.wait_for_load_state("networkidle", timeout=1000)
         except Exception as e:
             _log(verbose, f"networkidle skipped: {e}")
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.1)
 
-        find_timeout_ms = 10000  # 10s to find email/password
+        find_timeout_ms = 1000  # 1s to find email/password
         _log(verbose, f"Looking for email field (timeout {find_timeout_ms}ms)...")
 
         email_filled = False
@@ -170,7 +170,7 @@ async def login(
             'a[href*="login"] + button',
         ]:
             try:
-                await page.locator(selector).first.click(timeout=5000)
+                await page.locator(selector).first.click(timeout=1000)
                 _log(verbose, f"Clicked submit: {selector}")
                 break
             except Exception:
@@ -178,10 +178,10 @@ async def login(
 
         _log(verbose, "Waiting for post-login load...")
         try:
-            await page.wait_for_load_state("networkidle", timeout=5000)
+            await page.wait_for_load_state("networkidle", timeout=1000)
         except Exception:
             await page.wait_for_load_state("domcontentloaded")
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.1)
 
         url = page.url
         _log(verbose, f"Current URL: {url}")
@@ -238,7 +238,7 @@ async def get_rates(
     try:
         _log(verbose, "Navigating to /ship ...")
         await page.goto(f"{PIRATESHIP_BASE}/ship", wait_until="domcontentloaded")
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
         _log(verbose, "Filling origin/destination/weight...")
         zip_selectors = [
@@ -291,9 +291,9 @@ async def get_rates(
         _log(verbose, "Clicking Get rates...")
         await page.click('button:has-text("Get rates"), button:has-text("Rates"), [data-testid="get-rates"]')
         try:
-            await page.wait_for_load_state("networkidle", timeout=8000)
+            await page.wait_for_load_state("networkidle", timeout=1000)
         except Exception:
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
 
         _log(verbose, "Scraping rate rows...")
         rate_cards = await page.query_selector_all('[data-testid="rate"], .rate-card, .carrier-rate, table.rates tbody tr')
@@ -328,6 +328,11 @@ _TRACKING_PATTERN = re.compile(
 )
 # Dollar amount: $4.88 or $ 4.88, or "4.88" in price context (capture numeric part)
 _COST_PATTERN = re.compile(r"\$\s*(\d+\.\d{2})\b|(?:cost|total|price|amount)[\s:]*\$?\s*(\d+\.\d{2})\b", re.I)
+# Batch/shipment link on report page: https://ship.pirateship.com/batch/546611907/shipment/694491791
+_BATCH_SHIPMENT_URL_PATTERN = re.compile(
+    r"https?://ship\.pirateship\.com/batch/\d+/shipment/\d+",
+    re.I,
+)
 
 
 async def get_last_shipments(
@@ -360,13 +365,13 @@ async def get_last_shipments(
         for path in paths_to_try:
             _log(verbose, f"Navigating to {PIRATESHIP_BASE}{path} ...")
             try:
-                await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=20000)
-                await asyncio.sleep(1)
+                await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=1000)
+                await asyncio.sleep(0.1)
                 try:
-                    await page.wait_for_load_state("networkidle", timeout=8000)
+                    await page.wait_for_load_state("networkidle", timeout=1000)
                 except Exception:
                     pass
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.1)
                 html = await page.content()
                 url_used = page.url
                 _log(verbose, f"Loaded {url_used}")
@@ -474,15 +479,15 @@ async def get_shipment_report(
 ) -> Dict[str, Any]:
     """
     Log in, open reports/shipment with tracking=SEARCH_TERM_<ebay_order_id>,
-    and return the report page content, parsed shipment info, and order cost.
-    Returns { "success": bool, "html": str, "url": str, "shipments": [...], "cost": float|None, "frame_htmls": [str], "error": str }.
-    html = main page HTML; frame_htmls = HTML of each iframe (report content is often there).
+    and return the report page content, parsed shipment info, order cost, and shipment URL.
+    Returns { "success": bool, "html": str, "url": str, "shipments": [...], "cost": float|None, "shipment_url": str|None, "frame_htmls": [str], "error": str }.
+    shipment_url = first link found matching https://ship.pirateship.com/batch/<id>/shipment/<id> (main page + frames).
     Example URL: reports/shipment?tracking=SEARCH_TERM_17-14149-65322
     """
     verbose = verbose if verbose is not None else _verbose_default()
     result = await login(email=email, password=password, headless=headless, verbose=verbose)
     if not result.get("success"):
-        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "frame_htmls": [], "error": result.get("error", "Login failed")}
+        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "shipment_url": None, "frame_htmls": [], "error": result.get("error", "Login failed")}
 
     page = result["page"]
     browser = result["browser"]
@@ -493,18 +498,18 @@ async def get_shipment_report(
 
     try:
         _log(verbose, f"Navigating to {PIRATESHIP_BASE}{path} ...")
-        await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=20000)
-        await asyncio.sleep(1)
+        await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=1000)
+        await asyncio.sleep(0.1)
         try:
-            await page.wait_for_load_state("networkidle", timeout=8000)
+            await page.wait_for_load_state("networkidle", timeout=1000)
         except Exception:
             pass
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
         html = await page.content()
         url = page.url
         _log(verbose, f"Loaded {url}")
 
-        # Collect HTML from all frames (report content is often in an iframe) for debugging
+        # Collect HTML from all frames (report content is often in an iframe)
         frame_htmls: List[str] = []
         for frame in page.frames:
             if frame == page.main_frame:
@@ -514,6 +519,15 @@ async def get_shipment_report(
             except Exception as e:
                 _log(verbose, f"Frame content skip: {e}")
                 frame_htmls.append("")
+
+        # Search for batch/shipment link (e.g. https://ship.pirateship.com/batch/546611907/shipment/694491791)
+        shipment_url: Optional[str] = None
+        for content in [html] + frame_htmls:
+            m = _BATCH_SHIPMENT_URL_PATTERN.search(content)
+            if m:
+                shipment_url = m.group(0)
+                _log(verbose, f"Found shipment URL: {shipment_url}")
+                break
 
         # Optionally parse page for tracking numbers / shipment rows (main page + frames)
         shipments: List[Dict[str, Any]] = []
@@ -557,7 +571,7 @@ async def get_shipment_report(
                         loc = frame.locator('div[class*="e1d69dh90"], div[class*="css-1iy19zw"]')
                         n = await loc.count()
                         for idx in range(n):
-                            text = await loc.nth(idx).inner_text(timeout=2000)
+                            text = await loc.nth(idx).inner_text(timeout=1000)
                             m = re.search(r"\$?\s*(\d+\.\d{2})", text)
                             if m:
                                 cost = float(m.group(1))
@@ -577,7 +591,7 @@ async def get_shipment_report(
                 loc = page.locator('div[class*="e1d69dh90"], div[class*="css-1iy19zw"]')
                 n = await loc.count()
                 for idx in range(n):
-                    text = await loc.nth(idx).inner_text(timeout=2000)
+                    text = await loc.nth(idx).inner_text(timeout=1000)
                     m = re.search(r"\$?\s*(\d+\.\d{2})", text)
                     if m:
                         cost = float(m.group(1))
@@ -586,10 +600,10 @@ async def get_shipment_report(
             except Exception as e:
                 _log(verbose, f"Main div cost skip: {e}")
 
-        _log(verbose, f"Done. Found {len(shipments)} tracking number(s), cost={cost}.")
+        _log(verbose, f"Done. Found {len(shipments)} tracking number(s), cost={cost}, shipment_url={shipment_url}.")
         await browser.close()
         await p.stop()
-        return {"success": True, "html": html, "url": url, "shipments": shipments, "cost": cost, "frame_htmls": frame_htmls}
+        return {"success": True, "html": html, "url": url, "shipments": shipments, "cost": cost, "shipment_url": shipment_url, "frame_htmls": frame_htmls}
     except Exception as e:
         _log(verbose, f"ERROR: {e}")
         try:
@@ -597,7 +611,7 @@ async def get_shipment_report(
             await p.stop()
         except Exception:
             pass
-        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "frame_htmls": [], "error": str(e)}
+        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "shipment_url": None, "frame_htmls": [], "error": str(e)}
 
 
 async def get_page_after_login(
@@ -621,7 +635,7 @@ async def get_page_after_login(
     p = result["playwright"]
     try:
         await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded")
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
         html = await page.content()
         url = page.url
         await browser.close()
@@ -656,23 +670,14 @@ if __name__ == "__main__":
         print("--- result ---")
         if result.get("success"):
             print("URL:", result.get("url"))
+            surl = result.get("shipment_url")
+            if surl:
+                print("Shipment URL:", surl)
             c = result.get("cost")
             if c is not None:
                 print("Cost:", f"${c:.2f}")
             for s in result.get("shipments", []):
                 print("  ", s.get("tracking_number"), s.get("carrier", ""))
-            # Save report HTML for debugging (main page + each frame)
-            try:
-                with open("report_main.html", "w", encoding="utf-8") as f:
-                    f.write(result.get("html", ""))
-                print("Main page HTML saved to report_main.html")
-                for i, frame_html in enumerate(result.get("frame_htmls", [])):
-                    path = f"report_frame_{i}.html"
-                    with open(path, "w", encoding="utf-8") as f:
-                        f.write(frame_html)
-                    print(f"Frame {i} HTML saved to {path}")
-            except Exception as e:
-                print("Could not save HTML files:", e)
         else:
             print("Error:", result.get("error"))
         sys.exit(0 if result.get("success") else 1)
