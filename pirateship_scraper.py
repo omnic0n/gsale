@@ -505,6 +505,16 @@ async def get_shipment_report(
         except Exception:
             pass
         await asyncio.sleep(0.3)
+
+        # Page content is rendered by JS: renderShipmentsPage(document.getElementById('shipmentsPage'))
+        # Wait for that to run and populate #shipmentsPage before parsing
+        _log(verbose, "Waiting for renderShipmentsPage ( #shipmentsPage content )...")
+        try:
+            await page.wait_for_selector("#shipmentsPage div", timeout=15000)
+            await asyncio.sleep(0.5)
+        except Exception as e:
+            _log(verbose, f"Wait for #shipmentsPage skip: {e}")
+
         html = await page.content()
         url = page.url
         _log(verbose, f"Loaded {url}")
@@ -586,16 +596,23 @@ async def get_shipment_report(
                     continue
 
         if cost is None:
-            # Try cost div in main frame (in case it's not in iframe but DOM is dynamic)
+            # Try cost div in main frame (renderShipmentsPage injects into #shipmentsPage)
             try:
-                loc = page.locator('div[class*="e1d69dh90"], div[class*="css-1iy19zw"]')
-                n = await loc.count()
-                for idx in range(n):
-                    text = await loc.nth(idx).inner_text(timeout=3000)
-                    m = re.search(r"\$?\s*(\d+\.\d{2})", text)
-                    if m:
-                        cost = float(m.group(1))
-                        _log(verbose, f"Parsed cost (main div): ${cost:.2f}")
+                # Prefer inside #shipmentsPage (JS-rendered content)
+                for scope in ["#shipmentsPage div[class*='e1d69dh90'], #shipmentsPage div[class*='css-1iy19zw']", 'div[class*="e1d69dh90"], div[class*="css-1iy19zw"]']:
+                    loc = page.locator(scope)
+                    n = await loc.count()
+                    for idx in range(n):
+                        try:
+                            text = await loc.nth(idx).inner_text(timeout=3000)
+                            m = re.search(r"\$?\s*(\d+\.\d{2})", text)
+                            if m:
+                                cost = float(m.group(1))
+                                _log(verbose, f"Parsed cost (main div): ${cost:.2f}")
+                                break
+                        except Exception:
+                            continue
+                    if cost is not None:
                         break
             except Exception as e:
                 _log(verbose, f"Main div cost skip: {e}")
