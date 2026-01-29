@@ -10,8 +10,29 @@ This module uses [Playwright](https://playwright.dev/python/) to automate the br
    ```
 
 2. **Install browser (required once)**
+
+   **On Ubuntu/Debian (apt):**
    ```bash
    playwright install chromium
+   ```
+   If system deps are missing, run: `playwright install-deps chromium`
+
+   **On CentOS/RHEL/Amazon Linux (yum):**  
+   Playwright’s installer uses apt-get by default. On yum-based systems, install dependencies with yum first, then install the browser:
+
+   ```bash
+   # Install Chromium dependencies (yum)
+   sudo yum install -y atk at-spi2-atk cups-libs libdrm libxcb libxkbcommon at-spi2-core \
+     libX11 libXcomposite libXdamage libXext libXfixes libXrandr mesa-libgbm pango cairo alsa-lib
+
+   # Then install the browser binary only (no apt)
+   playwright install chromium
+   ```
+
+   Or run the provided script (from repo root):
+   ```bash
+   chmod +x scripts/playwright-install-yum.sh
+   ./scripts/playwright-install-yum.sh
    ```
 
 3. **Credentials** (use env vars; do not commit real credentials)
