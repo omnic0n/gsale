@@ -69,9 +69,9 @@ async def login(
         await page.goto(PIRATESHIP_BASE + "/", wait_until="domcontentloaded")
         _log(verbose, "Waiting for JS/SPA (1s)...")
         await asyncio.sleep(1)
-        _log(verbose, "Waiting for networkidle (up to 8s)...")
+        _log(verbose, "Waiting for networkidle (up to 1s)...")
         try:
-            await page.wait_for_load_state("networkidle", timeout=8000)
+            await page.wait_for_load_state("networkidle", timeout=1000)
         except Exception as e:
             _log(verbose, f"networkidle skipped: {e}")
         await asyncio.sleep(0.5)
@@ -504,7 +504,7 @@ async def get_shipment_report(
         url = page.url
         _log(verbose, f"Loaded {url}")
 
-        # Optionally parse page for tracking numbers / shipment rows
+        # Optionally parse page for tracking numbers / shipment rows (main page + frames)
         shipments: List[Dict[str, Any]] = []
         seen: set = set()
         for match in _TRACKING_PATTERN.finditer(html):
@@ -515,7 +515,7 @@ async def get_shipment_report(
             carrier = "USPS" if tn.startswith("94") else ("UPS" if tn.startswith("1Z") else "Unknown")
             shipments.append({"tracking_number": tn, "carrier": carrier})
 
-        # Parse cost: first $X.XX or cost/total/price: X.XX on the report (e.g. $4.88)
+        # Parse cost: report content is often inside an iframe; cost is in div like <div class="css-1iy19zw e1d69dh90">$4.88</div>
         cost = None
         cost_match = _COST_PATTERN.search(html)
         if cost_match:
@@ -523,9 +523,57 @@ async def get_shipment_report(
             if amount:
                 try:
                     cost = float(amount)
-                    _log(verbose, f"Parsed cost: ${cost:.2f}")
+                    _log(verbose, f"Parsed cost (main): ${cost:.2f}")
                 except ValueError:
                     pass
+
+        if cost is None:
+            # Try inside iframes (report may be in a frame)
+            for i, frame in enumerate(page.frames):
+                if frame == page.main_frame:
+                    continue
+                try:
+                    frame_html = await frame.content()
+                    cost_match = _COST_PATTERN.search(frame_html)
+                    if cost_match:
+                        amount = cost_match.group(1) or cost_match.group(2)
+                        if amount:
+                            cost = float(amount)
+                            _log(verbose, f"Parsed cost (frame {i}): ${cost:.2f}")
+                            break
+                    # Also try the specific cost div selector (Pirate Ship report: <div class="css-1iy19zw e1d69dh90">$4.88</div>)
+                    try:
+                        loc = frame.locator('div[class*="e1d69dh90"], div[class*="css-1iy19zw"]')
+                        n = await loc.count()
+                        for idx in range(n):
+                            text = await loc.nth(idx).inner_text(timeout=2000)
+                            m = re.search(r"\$?\s*(\d+\.\d{2})", text)
+                            if m:
+                                cost = float(m.group(1))
+                                _log(verbose, f"Parsed cost (frame div): ${cost:.2f}")
+                                break
+                        if cost is not None:
+                            break
+                    except Exception:
+                        pass
+                except Exception as e:
+                    _log(verbose, f"Frame {i} skip: {e}")
+                    continue
+
+        if cost is None:
+            # Try cost div in main frame (in case it's not in iframe but DOM is dynamic)
+            try:
+                loc = page.locator('div[class*="e1d69dh90"], div[class*="css-1iy19zw"]')
+                n = await loc.count()
+                for idx in range(n):
+                    text = await loc.nth(idx).inner_text(timeout=2000)
+                    m = re.search(r"\$?\s*(\d+\.\d{2})", text)
+                    if m:
+                        cost = float(m.group(1))
+                        _log(verbose, f"Parsed cost (main div): ${cost:.2f}")
+                        break
+            except Exception as e:
+                _log(verbose, f"Main div cost skip: {e}")
 
         _log(verbose, f"Done. Found {len(shipments)} tracking number(s), cost={cost}.")
         await browser.close()
