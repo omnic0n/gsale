@@ -28,4 +28,4 @@ sudo yum install -y \
 echo "Installing Playwright Chromium browser binary (no apt)..."
 python3 -m playwright install chromium
 
-echo "Done. Run your scraper with: python3 -c \"from pirateship_scraper import get_rates, run_async; print(run_async(get_rates('90210','10001',16)))\""
+echo "Done. Use Playwright in Python with: pip install playwright && python3 -m playwright install chromium"
