@@ -379,17 +379,45 @@ async def _get_shipment_report_async(
             pass
         await asyncio.sleep(0.3)
 
-        _log(verbose, "Waiting for #shipmentsPage shell...")
+        # 1) Wait for wrapper + #shipmentsPage shell (initial HTML before renderShipmentsPage runs)
+        _log(verbose, "Waiting for div.wrapper and #shipmentsPage shell...")
         try:
-            await page.wait_for_selector("#shipmentsPage div", timeout=15000)
+            await page.wait_for_selector("div.wrapper #shipmentsPage", timeout=15000)
             await asyncio.sleep(0.5)
         except Exception as e:
-            _log(verbose, f"Wait for #shipmentsPage skip: {e}")
-        _log(verbose, "Waiting for shipment grid to render...")
-        for selector in ["#shipmentsPage table tbody tr", "#shipmentsPage div.e1d69dh90", '#shipmentsPage a[href*="/batch/"]', "#shipmentsPage table"]:
+            _log(verbose, f"Fallback: wait for #shipmentsPage only: {e}")
+            try:
+                await page.wait_for_selector("#shipmentsPage", timeout=15000)
+                await asyncio.sleep(0.5)
+            except Exception:
+                pass
+        # 2) Wait for renderShipmentsPage to populate #shipmentsPage (h1 "Shipments" or search bar)
+        _log(verbose, "Waiting for shipments page content (renderShipmentsPage)...")
+        for selector in [
+            "#shipmentsPage h1",
+            '#shipmentsPage input[data-testid="search-bar"]',
+            "#shipmentsPage #flash-messages",
+        ]:
+            try:
+                await page.wait_for_selector(selector, timeout=15000)
+                _log(verbose, f"  Content present: {selector}")
+                await asyncio.sleep(0.5)
+                break
+            except Exception:
+                continue
+        # 3) Wait for the shipment grid: table id shipment-grid-* or wrapper div.e1li4fo413
+        _log(verbose, "Waiting for shipment grid (table[id^=shipment-grid] or div.e1li4fo413)...")
+        for selector in [
+            '#shipmentsPage table[id^="shipment-grid"]',
+            "#shipmentsPage div.e1li4fo413",
+            "#shipmentsPage table tbody tr",
+            "#shipmentsPage div.e1d69dh90",
+            '#shipmentsPage a[href*="/batch/"]',
+            "#shipmentsPage table",
+        ]:
             try:
                 await page.wait_for_selector(selector, timeout=20000)
-                _log(verbose, f"  Found: {selector}")
+                _log(verbose, f"  Found grid: {selector}")
                 await asyncio.sleep(1)
                 break
             except Exception:
