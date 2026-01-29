@@ -19,6 +19,11 @@ from typing import Optional, Dict, Any, List
 PIRATESHIP_BASE = "https://www.pirateship.com"
 
 
+def _log(verbose: bool, msg: str) -> None:
+    if verbose:
+        print(f"[pirateship] {msg}")
+
+
 async def _get_browser(headless: bool = True):
     """Launch Playwright browser. Install with: playwright install chromium"""
     try:
@@ -30,15 +35,22 @@ async def _get_browser(headless: bool = True):
     return p, browser
 
 
+def _verbose_default() -> bool:
+    return os.environ.get("PIRATESHIP_VERBOSE", "").lower() in ("1", "true", "yes")
+
+
 async def login(
     email: Optional[str] = None,
     password: Optional[str] = None,
     headless: bool = True,
+    verbose: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
     Log in to Pirate Ship and return context (page, browser) for further actions.
     Email/password default to env PIRATESHIP_EMAIL, PIRATESHIP_PASSWORD.
+    Set verbose=True or PIRATESHIP_VERBOSE=1 for progress messages.
     """
+    verbose = verbose if verbose is not None else _verbose_default()
     email = email or os.environ.get("PIRATESHIP_EMAIL")
     password = password or os.environ.get("PIRATESHIP_PASSWORD")
     if not email or not password:
@@ -47,24 +59,26 @@ async def login(
     p = None
     browser = None
     try:
+        _log(verbose, "Launching browser...")
         p, browser = await _get_browser(headless=headless)
         context = await browser.new_context()
         page = await context.new_page()
         page.set_default_timeout(60000)  # 60s for slow loads
 
+        _log(verbose, f"Navigating to {PIRATESHIP_BASE}/login ...")
         await page.goto(f"{PIRATESHIP_BASE}/login", wait_until="domcontentloaded")
+        _log(verbose, "Waiting for JS/SPA (3s)...")
         await asyncio.sleep(3)  # Let JS render (React/SPA)
-        # Wait for network to settle so login form is fully rendered
+        _log(verbose, "Waiting for networkidle (up to 15s)...")
         try:
             await page.wait_for_load_state("networkidle", timeout=15000)
-        except Exception:
-            pass
+        except Exception as e:
+            _log(verbose, f"networkidle skipped: {e}")
         await asyncio.sleep(1)
 
-        # Long timeout for finding email field (page can be slow or redirect)
         find_timeout_ms = 60000
+        _log(verbose, f"Looking for email field (timeout {find_timeout_ms}ms)...")
 
-        # Try multiple strategies for email field (Pirate Ship may use different markup)
         email_filled = False
         for selector in [
             'input[type="email"]',
@@ -77,35 +91,42 @@ async def login(
             'form input[type="text"]',  # some sites use type=text for email
         ]:
             try:
+                _log(verbose, f"  Trying selector: {selector}")
                 el = page.locator(selector).first
                 await el.wait_for(state="visible", timeout=find_timeout_ms)
                 await el.fill(email)
+                _log(verbose, f"  Filled email with selector: {selector}")
                 email_filled = True
                 break
-            except Exception:
+            except Exception as e:
+                _log(verbose, f"  Skip ({selector}): {e}")
                 continue
         if not email_filled:
-            # Fallback: get by label, placeholder, or role (Playwright 1.20+)
-            for try_fn in [
-                lambda: page.get_by_label("Email", exact=False).fill(email),
-                lambda: page.get_by_label("email", exact=False).fill(email),
-                lambda: page.get_by_placeholder("Email").fill(email),
-                lambda: page.get_by_placeholder("Email address").fill(email),
-                lambda: page.get_by_placeholder("email").fill(email),
-                lambda: page.get_by_role("textbox", name=re.compile(r"email", re.I)).first.fill(email),
-            ]:
+            _log(verbose, "Trying fallbacks (label/placeholder/role)...")
+            fallbacks = [
+                ("get_by_label(Email)", lambda: page.get_by_label("Email", exact=False).fill(email)),
+                ("get_by_label(email)", lambda: page.get_by_label("email", exact=False).fill(email)),
+                ("get_by_placeholder(Email)", lambda: page.get_by_placeholder("Email").fill(email)),
+                ("get_by_placeholder(Email address)", lambda: page.get_by_placeholder("Email address").fill(email)),
+                ("get_by_placeholder(email)", lambda: page.get_by_placeholder("email").fill(email)),
+                ("get_by_role(textbox, name=email)", lambda: page.get_by_role("textbox", name=re.compile(r"email", re.I)).first.fill(email)),
+            ]
+            for name, fn in fallbacks:
                 try:
-                    await try_fn()
+                    _log(verbose, f"  Trying {name}")
+                    await fn()
+                    _log(verbose, f"  Filled email with: {name}")
                     email_filled = True
                     break
-                except Exception:
-                    continue
+                except Exception as e:
+                    _log(verbose, f"  Skip ({name}): {e}")
         if not email_filled:
+            _log(verbose, "ERROR: No email field found.")
             await browser.close()
             await p.stop()
             return {"success": False, "error": "Could not find email input on login page. Site structure may have changed."}
 
-        # Password field (same long timeout as login page may be slow)
+        _log(verbose, "Looking for password field...")
         password_filled = False
         for selector in [
             'input[type="password"]',
@@ -115,25 +136,30 @@ async def login(
             'input[placeholder*="assword"]',
         ]:
             try:
+                _log(verbose, f"  Trying selector: {selector}")
                 el = page.locator(selector).first
                 await el.wait_for(state="visible", timeout=find_timeout_ms)
                 await el.fill(password)
+                _log(verbose, f"  Filled password with selector: {selector}")
                 password_filled = True
                 break
-            except Exception:
+            except Exception as e:
+                _log(verbose, f"  Skip ({selector}): {e}")
                 continue
         if not password_filled:
             try:
+                _log(verbose, "  Trying get_by_label(Password)")
                 await page.get_by_label("Password", exact=False).fill(password)
                 password_filled = True
-            except Exception:
-                pass
+            except Exception as e:
+                _log(verbose, f"  Skip (Password label): {e}")
         if not password_filled:
+            _log(verbose, "ERROR: No password field found.")
             await browser.close()
             await p.stop()
             return {"success": False, "error": "Could not find password input on login page."}
 
-        # Submit
+        _log(verbose, "Submitting login form...")
         for selector in [
             'button[type="submit"]',
             'input[type="submit"]',
@@ -146,19 +172,23 @@ async def login(
         ]:
             try:
                 await page.locator(selector).first.click(timeout=5000)
+                _log(verbose, f"Clicked submit: {selector}")
                 break
             except Exception:
                 continue
 
+        _log(verbose, "Waiting for post-login load...")
         await page.wait_for_load_state("networkidle")
         await asyncio.sleep(2)
 
-        # Check if we're on dashboard (logged in)
         url = page.url
+        _log(verbose, f"Current URL: {url}")
         if "login" in url:
+            _log(verbose, "ERROR: Still on login page.")
             await browser.close()
             await p.stop()
             return {"success": False, "error": "Login failed (still on login page)"}
+        _log(verbose, "Login succeeded.")
         return {
             "success": True,
             "page": page,
@@ -167,6 +197,7 @@ async def login(
             "playwright": p,
         }
     except Exception as e:
+        _log(verbose, f"ERROR: {e}")
         if browser:
             await browser.close()
         if p:
@@ -184,13 +215,16 @@ async def get_rates(
     email: Optional[str] = None,
     password: Optional[str] = None,
     headless: bool = True,
+    verbose: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
     Log in, open the rate-check flow, fill origin/dest/weight (and dimensions if provided),
     then scrape the displayed rates.
     Returns { "success": bool, "rates": [...], "error": str }.
+    Set verbose=True or PIRATESHIP_VERBOSE=1 for progress messages.
     """
-    result = await login(email=email, password=password, headless=headless)
+    verbose = verbose if verbose is not None else _verbose_default()
+    result = await login(email=email, password=password, headless=headless, verbose=verbose)
     if not result.get("success"):
         return {"success": False, "rates": [], "error": result.get("error", "Login failed")}
 
@@ -200,11 +234,11 @@ async def get_rates(
     rates: List[Dict[str, Any]] = []
 
     try:
-        # Navigate to create shipment / get rates (common paths)
+        _log(verbose, "Navigating to /ship ...")
         await page.goto(f"{PIRATESHIP_BASE}/ship", wait_until="networkidle")
         await asyncio.sleep(1.5)
 
-        # Try to find and fill origin/destination/weight (selectors may need tuning for current site)
+        _log(verbose, "Filling origin/destination/weight...")
         zip_selectors = [
             'input[name*="origin"]', 'input[name*="from"]', 'input[placeholder*="origin"]',
             'input[placeholder*="zip"]', '[data-testid="origin-zip"]',
@@ -252,12 +286,12 @@ async def get_rates(
                 except Exception:
                     pass
 
-        # Trigger get rates (button or auto-submit)
+        _log(verbose, "Clicking Get rates...")
         await page.click('button:has-text("Get rates"), button:has-text("Rates"), [data-testid="get-rates"]')
         await page.wait_for_load_state("networkidle")
         await asyncio.sleep(2)
 
-        # Scrape rate rows (adjust selectors to match current Pirate Ship markup)
+        _log(verbose, "Scraping rate rows...")
         rate_cards = await page.query_selector_all('[data-testid="rate"], .rate-card, .carrier-rate, table.rates tbody tr')
         for card in rate_cards:
             text = await card.inner_text()
@@ -270,10 +304,12 @@ async def get_rates(
             body = await page.inner_text("body")
             rates.append({"raw_lines": [body[:2000]], "text": body[:2000]})
 
+        _log(verbose, f"Done. Found {len(rates)} rate(s).")
         await browser.close()
         await p.stop()
         return {"success": True, "rates": rates}
     except Exception as e:
+        _log(verbose, f"ERROR: {e}")
         try:
             await browser.close()
             await p.stop()
@@ -287,11 +323,14 @@ async def get_page_after_login(
     email: Optional[str] = None,
     password: Optional[str] = None,
     headless: bool = True,
+    verbose: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
     Log in and navigate to a path (e.g. /ship). Return page HTML and URL for custom scraping.
+    Set verbose=True or PIRATESHIP_VERBOSE=1 for progress messages.
     """
-    result = await login(email=email, password=password, headless=headless)
+    verbose = verbose if verbose is not None else _verbose_default()
+    result = await login(email=email, password=password, headless=headless, verbose=verbose)
     if not result.get("success"):
         return {"success": False, "html": "", "url": "", "error": result.get("error")}
 
@@ -320,6 +359,19 @@ def run_async(coro):
     return asyncio.run(coro)
 
 
-# Example usage from sync code:
-# from pirateship_scraper import get_rates, run_async
-# result = run_async(get_rates("90210", "10001", 16.0))
+if __name__ == "__main__":
+    # Run with verbose output. Example:
+    #   set PIRATESHIP_EMAIL=you@example.com && set PIRATESHIP_PASSWORD=secret && set PIRATESHIP_VERBOSE=1 && python pirateship_scraper.py
+    # Or: PIRATESHIP_VERBOSE=1 python pirateship_scraper.py  (after exporting credentials)
+    import sys
+    from_zip = sys.argv[1] if len(sys.argv) > 1 else "90210"
+    to_zip = sys.argv[2] if len(sys.argv) > 2 else "10001"
+    weight = float(sys.argv[3]) if len(sys.argv) > 3 else 16.0
+    result = run_async(get_rates(from_zip, to_zip, weight, verbose=True))
+    print("--- result ---")
+    if result.get("success"):
+        for r in result.get("rates", []):
+            print(r.get("text", r)[:200])
+    else:
+        print("Error:", result.get("error"))
+    sys.exit(0 if result.get("success") else 1)

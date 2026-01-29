@@ -85,6 +85,39 @@ Environment="PIRATESHIP_PASSWORD=your-password"
 ```
 Or use `EnvironmentFile=/path/to/.env` to point at a file that contains those two lines.
 
+## Run (with verbosity)
+
+From the project root, set credentials and run with verbose output to see where it gets stuck.
+
+**Linux / macOS:**
+```bash
+export PIRATESHIP_EMAIL="your-email@example.com"
+export PIRATESHIP_PASSWORD="your-password"
+export PIRATESHIP_VERBOSE=1
+python3 pirateship_scraper.py
+```
+If you use a `.env` file: `set -a && source .env && set +a && export PIRATESHIP_VERBOSE=1 && python3 pirateship_scraper.py`
+
+**Windows (PowerShell):**
+```powershell
+$env:PIRATESHIP_EMAIL = "your-email@example.com"
+$env:PIRATESHIP_PASSWORD = "your-password"
+$env:PIRATESHIP_VERBOSE = "1"
+python pirateship_scraper.py
+```
+
+**Windows (cmd):**
+```cmd
+set PIRATESHIP_EMAIL=your-email@example.com
+set PIRATESHIP_PASSWORD=your-password
+set PIRATESHIP_VERBOSE=1
+python pirateship_scraper.py
+```
+
+Optional args: `python3 pirateship_scraper.py <from_zip> <to_zip> <weight_oz>` (default: 90210 10001 16.0).
+
+Verbose output shows each step (navigate, wait, which selector is tried, etc.) so you can see exactly where a timeout occurs.
+
 ## Usage
 
 ### From async code
@@ -110,6 +143,8 @@ print(result["html"][:500])
 from pirateship_scraper import get_rates, run_async
 
 result = run_async(get_rates("90210", "10001", 16.0, headless=True))
+# With progress messages (or set env PIRATESHIP_VERBOSE=1):
+result = run_async(get_rates("90210", "10001", 16.0, verbose=True))
 ```
 
 ### Optional: dimensions
