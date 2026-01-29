@@ -1,6 +1,6 @@
 # Pirate Ship Scraper (Playwright)
 
-This module uses [Playwright](https://playwright.dev/python/) to automate the browser and scrape or interact with [Pirate Ship](https://www.pirateship.com).
+This module uses [Playwright](https://playwright.dev/python/) to automate the browser and scrape or interact with [Pirate Ship](https://ship.pirateship.com).
 
 ## Setup
 
@@ -159,7 +159,7 @@ result = run_async(get_rates(
 
 Pirate Ship’s HTML can change. The scraper uses generic selectors (`input[name*="..."]`, etc.). If login or rate scraping fails, inspect the live site and update selectors in `pirateship_scraper.py` (e.g. in `login()` and `get_rates()`).
 
-**If you see “Timeout … waiting for … email”:** The login page may load slowly or use a different structure (e.g. redirect to SSO). The scraper now waits up to 60 seconds and tries many strategies (placeholder, label, role). Run with `headless=False` to watch the browser and confirm the login form appears; if the URL or form is different, adjust the login URL or selectors in `login()`.
+**If you see “Timeout … waiting for … email”:** The scraper uses the login page at [https://ship.pirateship.com/](https://ship.pirateship.com/). If the page loads slowly or the form structure changes, run with `headless=False` to watch the browser and confirm the form appears; adjust selectors in `login()` if needed.
 
 ## Disclaimer
 

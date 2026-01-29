@@ -15,8 +15,8 @@ import asyncio
 from typing import Optional, Dict, Any, List
 
 
-# Base URL for Pirate Ship
-PIRATESHIP_BASE = "https://www.pirateship.com"
+# Base URL for Pirate Ship (login and app are at ship.pirateship.com)
+PIRATESHIP_BASE = "https://ship.pirateship.com"
 
 
 def _log(verbose: bool, msg: str) -> None:
@@ -65,8 +65,8 @@ async def login(
         page = await context.new_page()
         page.set_default_timeout(60000)  # 60s for slow loads
 
-        _log(verbose, f"Navigating to {PIRATESHIP_BASE}/login ...")
-        await page.goto(f"{PIRATESHIP_BASE}/login", wait_until="domcontentloaded")
+        _log(verbose, f"Navigating to {PIRATESHIP_BASE}/ ...")
+        await page.goto(PIRATESHIP_BASE + "/", wait_until="domcontentloaded")
         _log(verbose, "Waiting for JS/SPA (3s)...")
         await asyncio.sleep(3)  # Let JS render (React/SPA)
         _log(verbose, "Waiting for networkidle (up to 15s)...")
