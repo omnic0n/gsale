@@ -116,21 +116,14 @@ python pirateship_scraper.py
 
 Optional args: `python3 pirateship_scraper.py <from_zip> <to_zip> <weight_oz>` (default: 90210 10001 16.0).
 
-**Shipment report by eBay order ID** (uses Reports → shipment with `tracking=SEARCH_TERM_<order_id>`):
+**Shipment report by eBay order ID** (requests only; no Playwright):
 ```bash
 export PIRATESHIP_VERBOSE=1
 python3 pirateship_scraper.py report 17-14149-65322
 ```
-Returns the report page HTML and parsed cost/shipment URL for that order.
+Uses a session: GET login page → POST login (tries common endpoints) → GET report URL. Returns parsed cost, shipment_url, has_shipment_span (and `html` in the result dict).
 
-**Report without Playwright/Chromium** (Python `requests` only; no browser):
-```bash
-export PIRATESHIP_VERBOSE=1
-python3 pirateship_scraper.py report-requests 17-14149-65322
-```
-Uses a session: GET login page → POST login (tries common endpoints) → GET report URL. Raw HTML is saved to `report_page_requests.html`. If the report grid is loaded only by JavaScript, cost/shipment_url may be missing; use `report` (Playwright) in that case.
-
-Verbose output shows each step (navigate, wait, which selector is tried, etc.) so you can see exactly where a timeout occurs.
+Verbose output shows each step (login attempts, report GET, parsed fields).
 
 ## Usage
 

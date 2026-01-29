@@ -335,17 +335,17 @@ _BATCH_SHIPMENT_URL_PATTERN = re.compile(
 )
 
 
-def get_shipment_report_requests(
+def get_shipment_report(
     ebay_order_id: str,
     email: Optional[str] = None,
     password: Optional[str] = None,
     verbose: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
-    Fetch the reports/shipment page using Python requests + session (no Playwright/Chromium).
-    Tries to log in via POST then GET the report URL. Returns same shape as get_shipment_report.
-    Note: If the report content is loaded only by JavaScript after page load, the HTML may not
-    contain the grid/cost; use get_shipment_report (Playwright) in that case.
+    Fetch the reports/shipment page using Python requests (no Playwright).
+    Session: GET login page → POST login (tries common endpoints) → GET report URL.
+    Returns { "success", "html", "url", "cost", "shipment_url", "has_shipment_span", "shipment_span_text", "shipments", "frame_htmls", "status_code", "error" }.
+    Example URL: reports/shipment?tracking=SEARCH_TERM_<ebay_order_id>
     """
     try:
         import requests
@@ -442,14 +442,6 @@ def get_shipment_report_requests(
         if m:
             shipment_span_text = m.group(1).strip()
 
-    # Optional: write raw HTML for review
-    try:
-        with open("report_page_requests.html", "w", encoding="utf-8") as f:
-            f.write(html)
-        _log(verbose, "  Wrote report_page_requests.html")
-    except Exception:
-        pass
-
     result = {
         "success": True,
         "html": html,
@@ -462,15 +454,14 @@ def get_shipment_report_requests(
         "frame_htmls": [],
         "status_code": r.status_code,
     }
-    if verbose:
-        print("[pirateship] --- report output (requests) ---")
-        print(f"  url: {final_url}")
-        print(f"  shipment_url: {shipment_url}")
-        print(f"  has_shipment_span: {has_shipment_span}")
-        if shipment_span_text:
-            print(f"  shipment_span_text: {shipment_span_text[:300]}")
-        print(f"  cost: {cost}")
-        print("[pirateship] --- end report ---")
+    print("[pirateship] --- report output ---")
+    print(f"  url: {final_url}")
+    print(f"  shipment_url: {shipment_url}")
+    print(f"  has_shipment_span: {has_shipment_span}")
+    if shipment_span_text:
+        print(f"  shipment_span_text: {shipment_span_text[:300]}{'...' if len(shipment_span_text) > 300 else ''}")
+    print(f"  cost: {cost}")
+    print("[pirateship] --- end report ---")
     return result
 
 
@@ -609,234 +600,6 @@ async def get_last_shipments(
         return {"success": False, "shipments": [], "error": str(e)}
 
 
-async def get_shipment_report(
-    ebay_order_id: str,
-    email: Optional[str] = None,
-    password: Optional[str] = None,
-    headless: bool = True,
-    verbose: Optional[bool] = None,
-) -> Dict[str, Any]:
-    """
-    Log in, open reports/shipment with tracking=SEARCH_TERM_<ebay_order_id>,
-    and return the report page content, order cost, shipment URL, and whether the page has the shipment span.
-    Returns { "success": bool, "html": str, "url": str, "shipments": [], "cost": float|None, "shipment_url": str|None, "has_shipment_span": bool, "shipment_span_text": str|None, "frame_htmls": [str], "error": str }.
-    has_shipment_span = True if <span class="css-0 ef06jtw0"> is present (main page or frames).
-    Example URL: reports/shipment?tracking=SEARCH_TERM_17-14149-65322
-    """
-    verbose = verbose if verbose is not None else _verbose_default()
-    result = await login(email=email, password=password, headless=headless, verbose=verbose)
-    if not result.get("success"):
-        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None, "frame_htmls": [], "error": result.get("error", "Login failed")}
-
-    page = result["page"]
-    browser = result["browser"]
-    p = result["playwright"]
-    # Match Pirate Ship report search: tracking=SEARCH_TERM_<order_id>
-    search_term = f"SEARCH_TERM_{ebay_order_id}"
-    path = f"/reports/shipment?tracking={search_term}"
-
-    try:
-        _log(verbose, f"Navigating to {PIRATESHIP_BASE}{path} ...")
-        await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=30000)
-        await asyncio.sleep(0.5)
-        try:
-            await page.wait_for_load_state("networkidle", timeout=10000)
-        except Exception:
-            pass
-        await asyncio.sleep(0.3)
-
-        # Page content is rendered by JS: renderShipmentsPage(document.getElementById('shipmentsPage'))
-        # Wait for shell first, then for the grid/data to actually render (table row, cost cell, or View Shipment link)
-        _log(verbose, "Waiting for #shipmentsPage shell...")
-        try:
-            await page.wait_for_selector("#shipmentsPage div", timeout=15000)
-            await asyncio.sleep(0.5)
-        except Exception as e:
-            _log(verbose, f"Wait for #shipmentsPage skip: {e}")
-        _log(verbose, "Waiting for shipment grid to render (table row / cost / View Shipment link)...")
-        for selector in [
-            "#shipmentsPage table tbody tr",
-            "#shipmentsPage div.e1d69dh90",
-            '#shipmentsPage a[href*="/batch/"]',
-            "#shipmentsPage table",
-        ]:
-            try:
-                await page.wait_for_selector(selector, timeout=20000)
-                _log(verbose, f"  Found: {selector}")
-                await asyncio.sleep(1)
-                break
-            except Exception as e:
-                _log(verbose, f"  Timeout waiting for {selector}: {e}")
-                continue
-
-        html = await page.content()
-        url = page.url
-        _log(verbose, f"Loaded {url}")
-
-        # Collect HTML from all frames (report content is often in an iframe)
-        frame_htmls: List[str] = []
-        for frame in page.frames:
-            if frame == page.main_frame:
-                continue
-            try:
-                frame_htmls.append(await frame.content())
-            except Exception as e:
-                _log(verbose, f"Frame content skip: {e}")
-                frame_htmls.append("")
-
-        # Search for batch/shipment link (e.g. https://ship.pirateship.com/batch/546611907/shipment/694491791)
-        shipment_url: Optional[str] = None
-        for content in [html] + frame_htmls:
-            m = _BATCH_SHIPMENT_URL_PATTERN.search(content)
-            if m:
-                shipment_url = m.group(0)
-                _log(verbose, f"Found shipment URL: {shipment_url}")
-                break
-
-        # Check for span that indicates shipment content: <span class="css-0 ef06jtw0">
-        has_shipment_span = False
-        shipment_span_text: Optional[str] = None
-        try:
-            # Main page (including #shipmentsPage after JS render)
-            loc = page.locator('span[class*="ef06jtw0"], span.css-0.ef06jtw0')
-            n = await loc.count()
-            if n > 0:
-                has_shipment_span = True
-                try:
-                    shipment_span_text = await loc.first.inner_text(timeout=2000)
-                except Exception:
-                    pass
-                _log(verbose, f"Found shipment span (main), count={n}")
-        except Exception as e:
-            _log(verbose, f"Shipment span (main) skip: {e}")
-        if not has_shipment_span:
-            for i, frame in enumerate(page.frames):
-                if frame == page.main_frame:
-                    continue
-                try:
-                    floc = frame.locator('span[class*="ef06jtw0"], span.css-0.ef06jtw0')
-                    if await floc.count() > 0:
-                        has_shipment_span = True
-                        _log(verbose, f"Found shipment span in frame {i}")
-                        break
-                except Exception:
-                    pass
-        if not has_shipment_span and 'ef06jtw0' in html:
-            has_shipment_span = True
-            _log(verbose, "Found shipment span (html contains ef06jtw0)")
-        shipments: List[Dict[str, Any]] = []  # kept for API compatibility; no longer populated from tracking
-
-        # Parse cost: report content is often inside an iframe; cost is in div like <div class="css-1iy19zw e1d69dh90">$4.88</div>
-        cost = None
-        cost_match = _COST_PATTERN.search(html)
-        if cost_match:
-            amount = cost_match.group(1) or cost_match.group(2)
-            if amount:
-                try:
-                    cost = float(amount)
-                    _log(verbose, f"Parsed cost (main): ${cost:.2f}")
-                except ValueError:
-                    pass
-
-        if cost is None:
-            # Try inside iframes (report may be in a frame)
-            for i, frame in enumerate(page.frames):
-                if frame == page.main_frame:
-                    continue
-                try:
-                    frame_html = await frame.content()
-                    cost_match = _COST_PATTERN.search(frame_html)
-                    if cost_match:
-                        amount = cost_match.group(1) or cost_match.group(2)
-                        if amount:
-                            cost = float(amount)
-                            _log(verbose, f"Parsed cost (frame {i}): ${cost:.2f}")
-                            break
-                    # Also try the specific cost div selector (Pirate Ship report: <div class="css-1iy19zw e1d69dh90">$4.88</div>)
-                    try:
-                        loc = frame.locator('div[class*="e1d69dh90"], div[class*="css-1iy19zw"]')
-                        n = await loc.count()
-                        for idx in range(n):
-                            text = await loc.nth(idx).inner_text(timeout=3000)
-                            m = re.search(r"\$?\s*(\d+\.\d{2})", text)
-                            if m:
-                                cost = float(m.group(1))
-                                _log(verbose, f"Parsed cost (frame div): ${cost:.2f}")
-                                break
-                        if cost is not None:
-                            break
-                    except Exception:
-                        pass
-                except Exception as e:
-                    _log(verbose, f"Frame {i} skip: {e}")
-                    continue
-
-        if cost is None:
-            # Try cost div in main frame (renderShipmentsPage injects into #shipmentsPage)
-            try:
-                # Prefer inside #shipmentsPage (JS-rendered content)
-                for scope in ["#shipmentsPage div[class*='e1d69dh90'], #shipmentsPage div[class*='css-1iy19zw']", 'div[class*="e1d69dh90"], div[class*="css-1iy19zw"]']:
-                    loc = page.locator(scope)
-                    n = await loc.count()
-                    for idx in range(n):
-                        try:
-                            text = await loc.nth(idx).inner_text(timeout=3000)
-                            m = re.search(r"\$?\s*(\d+\.\d{2})", text)
-                            if m:
-                                cost = float(m.group(1))
-                                _log(verbose, f"Parsed cost (main div): ${cost:.2f}")
-                                break
-                        except Exception:
-                            continue
-                    if cost is not None:
-                        break
-            except Exception as e:
-                _log(verbose, f"Main div cost skip: {e}")
-
-        _log(verbose, f"Done. has_shipment_span={has_shipment_span}, cost={cost}, shipment_url={shipment_url}.")
-        # Write raw HTML to files so caller can review
-        html_paths: List[str] = []
-        try:
-            main_path = "report_page.html"
-            with open(main_path, "w", encoding="utf-8") as f:
-                f.write(html)
-            html_paths.append(main_path)
-            for i, frame_html in enumerate(frame_htmls):
-                path = f"report_frame_{i}.html"
-                with open(path, "w", encoding="utf-8") as f:
-                    f.write(frame_html)
-                html_paths.append(path)
-        except Exception as e:
-            _log(verbose, f"Could not write HTML files: {e}")
-        # Always output report result so caller can review
-        print("[pirateship] --- report output ---")
-        print(f"  url: {url}")
-        print(f"  shipment_url: {shipment_url}")
-        print(f"  has_shipment_span: {has_shipment_span}")
-        if shipment_span_text:
-            print(f"  shipment_span_text: {shipment_span_text[:300]}{'...' if len(shipment_span_text) > 300 else ''}")
-        print(f"  cost: {cost}")
-        print(f"  shipments: {shipments}")
-        if html_paths:
-            print(f"  raw_html: {html_paths[0]}")
-            for p in html_paths[1:]:
-                print(f"  raw_html_frame: {p}")
-        else:
-            print("  raw_html: (not saved)")
-        print("[pirateship] --- end report ---")
-        await browser.close()
-        await p.stop()
-        return {"success": True, "html": html, "url": url, "shipments": shipments, "cost": cost, "shipment_url": shipment_url, "has_shipment_span": has_shipment_span, "shipment_span_text": shipment_span_text, "frame_htmls": frame_htmls}
-    except Exception as e:
-        _log(verbose, f"ERROR: {e}")
-        try:
-            await browser.close()
-            await p.stop()
-        except Exception:
-            pass
-        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None, "frame_htmls": [], "error": str(e)}
-
-
 async def get_page_after_login(
     path: str = "/ship",
     email: Optional[str] = None,
@@ -880,9 +643,8 @@ def run_async(coro):
 
 if __name__ == "__main__":
     # Examples:
-    #   Report (Playwright):      python pirateship_scraper.py report 17-14149-65322
-    #   Report (requests only):   python pirateship_scraper.py report-requests 17-14149-65322
-    #   Rates:                    python pirateship_scraper.py rates 90210 10001 16
+    #   Report (requests):  python pirateship_scraper.py report 17-14149-65322
+    #   Rates (Playwright): python pirateship_scraper.py rates 90210 10001 16
     import sys
     mode = (sys.argv[1] or "rates").lower() if len(sys.argv) > 1 else "rates"
     if mode == "report":
@@ -890,7 +652,7 @@ if __name__ == "__main__":
         if not ebay_order_id:
             print("Usage: python pirateship_scraper.py report <ebay_order_id>")
             sys.exit(2)
-        result = run_async(get_shipment_report(ebay_order_id, verbose=True))
+        result = get_shipment_report(ebay_order_id, verbose=True)
         print("--- result ---")
         if result.get("success"):
             print("URL:", result.get("url"))
@@ -903,24 +665,6 @@ if __name__ == "__main__":
             c = result.get("cost")
             if c is not None:
                 print("Cost:", f"${c:.2f}")
-        else:
-            print("Error:", result.get("error"))
-        sys.exit(0 if result.get("success") else 1)
-    if mode == "report-requests" or mode == "report_requests":
-        ebay_order_id = sys.argv[2] if len(sys.argv) > 2 else None
-        if not ebay_order_id:
-            print("Usage: python pirateship_scraper.py report-requests <ebay_order_id>")
-            sys.exit(2)
-        result = get_shipment_report_requests(ebay_order_id, verbose=True)
-        print("--- result (requests) ---")
-        if result.get("success"):
-            print("URL:", result.get("url"))
-            print("Shipment URL:", result.get("shipment_url"))
-            print("Has shipment span:", result.get("has_shipment_span", False))
-            if result.get("shipment_span_text"):
-                print("Shipment span text:", result.get("shipment_span_text")[:200])
-            print("Cost:", result.get("cost"))
-            print("Raw HTML saved to report_page_requests.html")
         else:
             print("Error:", result.get("error"))
         sys.exit(0 if result.get("success") else 1)
