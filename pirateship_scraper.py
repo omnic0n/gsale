@@ -479,15 +479,15 @@ async def get_shipment_report(
 ) -> Dict[str, Any]:
     """
     Log in, open reports/shipment with tracking=SEARCH_TERM_<ebay_order_id>,
-    and return the report page content, parsed shipment info, order cost, and shipment URL.
-    Returns { "success": bool, "html": str, "url": str, "shipments": [...], "cost": float|None, "shipment_url": str|None, "frame_htmls": [str], "error": str }.
-    shipment_url = first link found matching https://ship.pirateship.com/batch/<id>/shipment/<id> (main page + frames).
+    and return the report page content, order cost, shipment URL, and whether the page has the shipment span.
+    Returns { "success": bool, "html": str, "url": str, "shipments": [], "cost": float|None, "shipment_url": str|None, "has_shipment_span": bool, "shipment_span_text": str|None, "frame_htmls": [str], "error": str }.
+    has_shipment_span = True if <span class="css-0 ef06jtw0"> is present (main page or frames).
     Example URL: reports/shipment?tracking=SEARCH_TERM_17-14149-65322
     """
     verbose = verbose if verbose is not None else _verbose_default()
     result = await login(email=email, password=password, headless=headless, verbose=verbose)
     if not result.get("success"):
-        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "shipment_url": None, "frame_htmls": [], "error": result.get("error", "Login failed")}
+        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None, "frame_htmls": [], "error": result.get("error", "Login failed")}
 
     page = result["page"]
     browser = result["browser"]
@@ -539,16 +539,38 @@ async def get_shipment_report(
                 _log(verbose, f"Found shipment URL: {shipment_url}")
                 break
 
-        # Optionally parse page for tracking numbers / shipment rows (main page + frames)
-        shipments: List[Dict[str, Any]] = []
-        seen: set = set()
-        for match in _TRACKING_PATTERN.finditer(html):
-            tn = match.group(1)
-            if tn in seen or len(tn) < 12:
-                continue
-            seen.add(tn)
-            carrier = "USPS" if tn.startswith("94") else ("UPS" if tn.startswith("1Z") else "Unknown")
-            shipments.append({"tracking_number": tn, "carrier": carrier})
+        # Check for span that indicates shipment content: <span class="css-0 ef06jtw0">
+        has_shipment_span = False
+        shipment_span_text: Optional[str] = None
+        try:
+            # Main page (including #shipmentsPage after JS render)
+            loc = page.locator('span[class*="ef06jtw0"], span.css-0.ef06jtw0')
+            n = await loc.count()
+            if n > 0:
+                has_shipment_span = True
+                try:
+                    shipment_span_text = await loc.first.inner_text(timeout=2000)
+                except Exception:
+                    pass
+                _log(verbose, f"Found shipment span (main), count={n}")
+        except Exception as e:
+            _log(verbose, f"Shipment span (main) skip: {e}")
+        if not has_shipment_span:
+            for i, frame in enumerate(page.frames):
+                if frame == page.main_frame:
+                    continue
+                try:
+                    floc = frame.locator('span[class*="ef06jtw0"], span.css-0.ef06jtw0')
+                    if await floc.count() > 0:
+                        has_shipment_span = True
+                        _log(verbose, f"Found shipment span in frame {i}")
+                        break
+                except Exception:
+                    pass
+        if not has_shipment_span and 'ef06jtw0' in html:
+            has_shipment_span = True
+            _log(verbose, "Found shipment span (html contains ef06jtw0)")
+        shipments: List[Dict[str, Any]] = []  # kept for API compatibility; no longer populated from tracking
 
         # Parse cost: report content is often inside an iframe; cost is in div like <div class="css-1iy19zw e1d69dh90">$4.88</div>
         cost = None
@@ -617,10 +639,10 @@ async def get_shipment_report(
             except Exception as e:
                 _log(verbose, f"Main div cost skip: {e}")
 
-        _log(verbose, f"Done. Found {len(shipments)} tracking number(s), cost={cost}, shipment_url={shipment_url}.")
+        _log(verbose, f"Done. has_shipment_span={has_shipment_span}, cost={cost}, shipment_url={shipment_url}.")
         await browser.close()
         await p.stop()
-        return {"success": True, "html": html, "url": url, "shipments": shipments, "cost": cost, "shipment_url": shipment_url, "frame_htmls": frame_htmls}
+        return {"success": True, "html": html, "url": url, "shipments": shipments, "cost": cost, "shipment_url": shipment_url, "has_shipment_span": has_shipment_span, "shipment_span_text": shipment_span_text, "frame_htmls": frame_htmls}
     except Exception as e:
         _log(verbose, f"ERROR: {e}")
         try:
@@ -628,7 +650,7 @@ async def get_shipment_report(
             await p.stop()
         except Exception:
             pass
-        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "shipment_url": None, "frame_htmls": [], "error": str(e)}
+        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None, "frame_htmls": [], "error": str(e)}
 
 
 async def get_page_after_login(
@@ -690,11 +712,12 @@ if __name__ == "__main__":
             surl = result.get("shipment_url")
             if surl:
                 print("Shipment URL:", surl)
+            print("Has shipment span:", result.get("has_shipment_span", False))
+            if result.get("shipment_span_text"):
+                print("Shipment span text:", result.get("shipment_span_text")[:200])
             c = result.get("cost")
             if c is not None:
                 print("Cost:", f"${c:.2f}")
-            for s in result.get("shipments", []):
-                print("  ", s.get("tracking_number"), s.get("carrier", ""))
         else:
             print("Error:", result.get("error"))
         sys.exit(0 if result.get("success") else 1)
