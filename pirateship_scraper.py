@@ -181,15 +181,32 @@ async def login(
             await page.wait_for_load_state("networkidle", timeout=10000)
         except Exception:
             await page.wait_for_load_state("domcontentloaded")
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.5)
 
         url = page.url
         _log(verbose, f"Current URL: {url}")
-        if "login" in url:
-            _log(verbose, "ERROR: Still on login page.")
+        # Pirate Ship uses Google OAuth: we may be on accounts.google.com after submit. Wait for redirect back to ship.pirateship.com.
+        if "accounts.google.com" in url:
+            _log(verbose, "On Google OAuth; waiting for redirect back to ship.pirateship.com (up to 60s)...")
+            try:
+                await page.wait_for_url("**ship.pirateship.com**", timeout=60000)
+                url = page.url
+                _log(verbose, f"Redirected to: {url}")
+            except Exception as e:
+                _log(verbose, f"Did not redirect back to Pirate Ship: {e}")
+                await browser.close()
+                await p.stop()
+                return {"success": False, "error": "OAuth did not complete: still on Google. Complete login in browser or check 2FA/consent."}
+        if "login" in url and "ship.pirateship.com" in url:
+            _log(verbose, "ERROR: Still on Pirate Ship login page.")
             await browser.close()
             await p.stop()
             return {"success": False, "error": "Login failed (still on login page)"}
+        if "ship.pirateship.com" not in url:
+            _log(verbose, f"ERROR: Not on Pirate Ship (url={url}).")
+            await browser.close()
+            await p.stop()
+            return {"success": False, "error": f"Login failed: expected ship.pirateship.com, got {url[:80]}..."}
         _log(verbose, "Login succeeded.")
         return {
             "success": True,
