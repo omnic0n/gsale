@@ -640,6 +640,36 @@ async def get_shipment_report(
                 _log(verbose, f"Main div cost skip: {e}")
 
         _log(verbose, f"Done. has_shipment_span={has_shipment_span}, cost={cost}, shipment_url={shipment_url}.")
+        # Write raw HTML to files so caller can review
+        html_paths: List[str] = []
+        try:
+            main_path = "report_page.html"
+            with open(main_path, "w", encoding="utf-8") as f:
+                f.write(html)
+            html_paths.append(main_path)
+            for i, frame_html in enumerate(frame_htmls):
+                path = f"report_frame_{i}.html"
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(frame_html)
+                html_paths.append(path)
+        except Exception as e:
+            _log(verbose, f"Could not write HTML files: {e}")
+        # Always output report result so caller can review
+        print("[pirateship] --- report output ---")
+        print(f"  url: {url}")
+        print(f"  shipment_url: {shipment_url}")
+        print(f"  has_shipment_span: {has_shipment_span}")
+        if shipment_span_text:
+            print(f"  shipment_span_text: {shipment_span_text[:300]}{'...' if len(shipment_span_text) > 300 else ''}")
+        print(f"  cost: {cost}")
+        print(f"  shipments: {shipments}")
+        if html_paths:
+            print(f"  raw_html: {html_paths[0]}")
+            for p in html_paths[1:]:
+                print(f"  raw_html_frame: {p}")
+        else:
+            print("  raw_html: (not saved)")
+        print("[pirateship] --- end report ---")
         await browser.close()
         await p.stop()
         return {"success": True, "html": html, "url": url, "shipments": shipments, "cost": cost, "shipment_url": shipment_url, "has_shipment_span": has_shipment_span, "shipment_span_text": shipment_span_text, "frame_htmls": frame_htmls}
