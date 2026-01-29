@@ -370,24 +370,36 @@ def get_shipment_report(
     _log(verbose, f"GET login page {PIRATESHIP_BASE}/ ...")
     login_page = session.get(f"{PIRATESHIP_BASE}/", timeout=30)
     login_page.raise_for_status()
+    login_html = login_page.text
     _log(verbose, f"  cookies: {list(session.cookies.keys())}")
 
-    # 2) Try to log in (common patterns: POST /login or /api/auth/login with JSON or form)
+    # 2) Find login form action from page (if present)
+    form_action = None
+    m = re.search(r'<form[^>]*\s+action=["\']([^"\']+)["\']', login_html, re.I)
+    if m:
+        form_action = m.group(1).strip()
+        if form_action.startswith("/"):
+            form_action = f"{PIRATESHIP_BASE}{form_action}"
+        elif not form_action.startswith("http"):
+            form_action = f"{PIRATESHIP_BASE}/{form_action}"
+        _log(verbose, f"  Found form action: {form_action}")
+
+    # 3) Try to log in: POST to form action or root, form-encoded (HTML forms use application/x-www-form-urlencoded)
     logged_in = False
-    for method, url_suffix, payload in [
-        ("POST", "/login", {"email": email, "password": password}),
-        ("POST", "/api/auth/login", {"email": email, "password": password}),
-        ("POST", "/api/login", {"email": email, "password": password}),
-        ("POST", "/login", {"username": email, "password": password}),
-    ]:
-        url = f"{PIRATESHIP_BASE}{url_suffix}"
-        _log(verbose, f"  Try login {method} {url_suffix}...")
+    # Build list: (url, data_dict, description)
+    login_tries = []
+    if form_action:
+        login_tries.append((form_action, {"email": email, "password": password}, f"form action"))
+    login_tries.append((f"{PIRATESHIP_BASE}/", {"email": email, "password": password}, "POST /"))
+    for url_suffix in ["/login", "/api/auth/login", "/api/login", "/auth/login", "/session"]:
+        login_tries.append((f"{PIRATESHIP_BASE}{url_suffix}", {"email": email, "password": password}, url_suffix))
+    login_tries.append((f"{PIRATESHIP_BASE}/", {"username": email, "password": password}, "POST / (username)"))
+
+    for url, data, desc in login_tries:
+        _log(verbose, f"  Try login POST {desc}...")
         try:
-            if payload.get("username") is not None:
-                r = session.post(url, data=payload, timeout=15)
-            else:
-                r = session.post(url, json=payload, timeout=15, headers={"Content-Type": "application/json"})
-            _log(verbose, f"    status={r.status_code}")
+            r = session.post(url, data=data, timeout=15)
+            _log(verbose, f"    status={r.status_code}, url={r.url}")
             if r.status_code in (200, 302, 303):
                 logged_in = True
                 break
