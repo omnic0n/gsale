@@ -12,6 +12,7 @@ venv.bak/
 
 # Configuration files
 config.py
+.env
 
 # Cookie files
 cookies.txt

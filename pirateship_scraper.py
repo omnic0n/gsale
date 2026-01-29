@@ -10,6 +10,7 @@ API if available. Use responsibly and at your own risk.
 """
 
 import os
+import re
 import asyncio
 from typing import Optional, Dict, Any, List
 
@@ -49,17 +50,114 @@ async def login(
         p, browser = await _get_browser(headless=headless)
         context = await browser.new_context()
         page = await context.new_page()
+        page.set_default_timeout(60000)  # 60s for slow loads
 
-        await page.goto(f"{PIRATESHIP_BASE}/login", wait_until="networkidle")
-        await page.fill('input[name="email"], input[type="email"]', email)
-        await page.fill('input[name="password"], input[type="password"]', password)
-        await page.click('button[type="submit"], input[type="submit"], [data-testid="login-submit"]')
-        await page.wait_for_load_state("networkidle")
+        await page.goto(f"{PIRATESHIP_BASE}/login", wait_until="domcontentloaded")
+        await asyncio.sleep(3)  # Let JS render (React/SPA)
+        # Wait for network to settle so login form is fully rendered
+        try:
+            await page.wait_for_load_state("networkidle", timeout=15000)
+        except Exception:
+            pass
         await asyncio.sleep(1)
+
+        # Long timeout for finding email field (page can be slow or redirect)
+        find_timeout_ms = 60000
+
+        # Try multiple strategies for email field (Pirate Ship may use different markup)
+        email_filled = False
+        for selector in [
+            'input[type="email"]',
+            'input[name="email"]',
+            'input[autocomplete="email"]',
+            'input[id*="email"]',
+            'input[placeholder*="mail" i]',
+            'input[placeholder*="Email"]',
+            'input[placeholder*="address" i]',
+            'form input[type="text"]',  # some sites use type=text for email
+        ]:
+            try:
+                el = page.locator(selector).first
+                await el.wait_for(state="visible", timeout=find_timeout_ms)
+                await el.fill(email)
+                email_filled = True
+                break
+            except Exception:
+                continue
+        if not email_filled:
+            # Fallback: get by label, placeholder, or role (Playwright 1.20+)
+            for try_fn in [
+                lambda: page.get_by_label("Email", exact=False).fill(email),
+                lambda: page.get_by_label("email", exact=False).fill(email),
+                lambda: page.get_by_placeholder("Email").fill(email),
+                lambda: page.get_by_placeholder("Email address").fill(email),
+                lambda: page.get_by_placeholder("email").fill(email),
+                lambda: page.get_by_role("textbox", name=re.compile(r"email", re.I)).first.fill(email),
+            ]:
+                try:
+                    await try_fn()
+                    email_filled = True
+                    break
+                except Exception:
+                    continue
+        if not email_filled:
+            await browser.close()
+            await p.stop()
+            return {"success": False, "error": "Could not find email input on login page. Site structure may have changed."}
+
+        # Password field (same long timeout as login page may be slow)
+        password_filled = False
+        for selector in [
+            'input[type="password"]',
+            'input[name="password"]',
+            'input[autocomplete="current-password"]',
+            'input[id*="password"]',
+            'input[placeholder*="assword"]',
+        ]:
+            try:
+                el = page.locator(selector).first
+                await el.wait_for(state="visible", timeout=find_timeout_ms)
+                await el.fill(password)
+                password_filled = True
+                break
+            except Exception:
+                continue
+        if not password_filled:
+            try:
+                await page.get_by_label("Password", exact=False).fill(password)
+                password_filled = True
+            except Exception:
+                pass
+        if not password_filled:
+            await browser.close()
+            await p.stop()
+            return {"success": False, "error": "Could not find password input on login page."}
+
+        # Submit
+        for selector in [
+            'button[type="submit"]',
+            'input[type="submit"]',
+            'button:has-text("Log in")',
+            'button:has-text("Sign in")',
+            'button:has-text("Login")',
+            '[data-testid="login-submit"]',
+            'form button[type="submit"]',
+            'a[href*="login"] + button',
+        ]:
+            try:
+                await page.locator(selector).first.click(timeout=5000)
+                break
+            except Exception:
+                continue
+
+        await page.wait_for_load_state("networkidle")
+        await asyncio.sleep(2)
 
         # Check if we're on dashboard (logged in)
         url = page.url
         if "login" in url:
+            await browser.close()
+            await p.stop()
             return {"success": False, "error": "Login failed (still on login page)"}
         return {
             "success": True,

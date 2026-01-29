@@ -41,6 +41,50 @@ This module uses [Playwright](https://playwright.dev/python/) to automate the br
 
    Or pass `email` and `password` into the functions.
 
+### How to set the variables
+
+**Option A – Current terminal only (temporary)**
+```bash
+export PIRATESHIP_EMAIL="your-email@example.com"
+export PIRATESHIP_PASSWORD="your-password"
+```
+Then run your script in the same terminal. They disappear when you close the terminal.
+
+**Option B – `.env` file (load before running)**
+Create a file named `.env` in the project root (same folder as `app.py`):
+```
+PIRATESHIP_EMAIL=your-email@example.com
+PIRATESHIP_PASSWORD=your-password
+```
+No quotes needed. Then load it before running:
+```bash
+set -a
+source .env
+set +a
+python3 your_script.py
+```
+Or in one line: `export $(grep -v '^#' .env | xargs)` then run your app.  
+**Important:** Add `.env` to `.gitignore` so you never commit it:
+```bash
+echo ".env" >> .gitignore
+```
+
+**Option C – Shell profile (persistent for your user)**
+Add to `~/.bashrc` or `~/.profile`:
+```bash
+export PIRATESHIP_EMAIL="your-email@example.com"
+export PIRATESHIP_PASSWORD="your-password"
+```
+Then run `source ~/.bashrc` (or open a new terminal). Every new shell will have these set.
+
+**Option D – Systemd service (if the app runs as a service)**
+In your `.service` file, under `[Service]`:
+```ini
+Environment="PIRATESHIP_EMAIL=your-email@example.com"
+Environment="PIRATESHIP_PASSWORD=your-password"
+```
+Or use `EnvironmentFile=/path/to/.env` to point at a file that contains those two lines.
+
 ## Usage
 
 ### From async code
@@ -79,6 +123,8 @@ result = run_async(get_rates(
 ## Selectors
 
 Pirate Ship’s HTML can change. The scraper uses generic selectors (`input[name*="..."]`, etc.). If login or rate scraping fails, inspect the live site and update selectors in `pirateship_scraper.py` (e.g. in `login()` and `get_rates()`).
+
+**If you see “Timeout … waiting for … email”:** The login page may load slowly or use a different structure (e.g. redirect to SSO). The scraper now waits up to 60 seconds and tries many strategies (placeholder, label, role). Run with `headless=False` to watch the browser and confirm the login form appears; if the URL or form is different, adjust the login URL or selectors in `login()`.
 
 ## Disclaimer
 
