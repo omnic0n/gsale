@@ -63,20 +63,20 @@ async def login(
         p, browser = await _get_browser(headless=headless)
         context = await browser.new_context()
         page = await context.new_page()
-        page.set_default_timeout(60000)  # 60s for slow loads
+        page.set_default_timeout(30000)  # 30s
 
         _log(verbose, f"Navigating to {PIRATESHIP_BASE}/ ...")
         await page.goto(PIRATESHIP_BASE + "/", wait_until="domcontentloaded")
-        _log(verbose, "Waiting for JS/SPA (3s)...")
-        await asyncio.sleep(3)  # Let JS render (React/SPA)
-        _log(verbose, "Waiting for networkidle (up to 15s)...")
+        _log(verbose, "Waiting for JS/SPA (1s)...")
+        await asyncio.sleep(1)
+        _log(verbose, "Waiting for networkidle (up to 8s)...")
         try:
-            await page.wait_for_load_state("networkidle", timeout=15000)
+            await page.wait_for_load_state("networkidle", timeout=8000)
         except Exception as e:
             _log(verbose, f"networkidle skipped: {e}")
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
 
-        find_timeout_ms = 60000
+        find_timeout_ms = 20000  # 20s to find email/password
         _log(verbose, f"Looking for email field (timeout {find_timeout_ms}ms)...")
 
         email_filled = False
@@ -178,8 +178,11 @@ async def login(
                 continue
 
         _log(verbose, "Waiting for post-login load...")
-        await page.wait_for_load_state("networkidle")
-        await asyncio.sleep(2)
+        try:
+            await page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            await page.wait_for_load_state("domcontentloaded")
+        await asyncio.sleep(0.5)
 
         url = page.url
         _log(verbose, f"Current URL: {url}")
@@ -235,8 +238,8 @@ async def get_rates(
 
     try:
         _log(verbose, "Navigating to /ship ...")
-        await page.goto(f"{PIRATESHIP_BASE}/ship", wait_until="networkidle")
-        await asyncio.sleep(1.5)
+        await page.goto(f"{PIRATESHIP_BASE}/ship", wait_until="domcontentloaded")
+        await asyncio.sleep(0.5)
 
         _log(verbose, "Filling origin/destination/weight...")
         zip_selectors = [
@@ -288,8 +291,10 @@ async def get_rates(
 
         _log(verbose, "Clicking Get rates...")
         await page.click('button:has-text("Get rates"), button:has-text("Rates"), [data-testid="get-rates"]')
-        await page.wait_for_load_state("networkidle")
-        await asyncio.sleep(2)
+        try:
+            await page.wait_for_load_state("networkidle", timeout=8000)
+        except Exception:
+            await asyncio.sleep(1)
 
         _log(verbose, "Scraping rate rows...")
         rate_cards = await page.query_selector_all('[data-testid="rate"], .rate-card, .carrier-rate, table.rates tbody tr')
@@ -356,13 +361,13 @@ async def get_last_shipments(
         for path in paths_to_try:
             _log(verbose, f"Navigating to {PIRATESHIP_BASE}{path} ...")
             try:
-                await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=30000)
-                await asyncio.sleep(3)
+                await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=20000)
+                await asyncio.sleep(1)
                 try:
-                    await page.wait_for_load_state("networkidle", timeout=15000)
+                    await page.wait_for_load_state("networkidle", timeout=8000)
                 except Exception:
                     pass
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.5)
                 html = await page.content()
                 url_used = page.url
                 _log(verbose, f"Loaded {url_used}")
@@ -488,13 +493,13 @@ async def get_shipment_report(
 
     try:
         _log(verbose, f"Navigating to {PIRATESHIP_BASE}{path} ...")
-        await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=30000)
-        await asyncio.sleep(3)
+        await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=20000)
+        await asyncio.sleep(1)
         try:
-            await page.wait_for_load_state("networkidle", timeout=15000)
+            await page.wait_for_load_state("networkidle", timeout=8000)
         except Exception:
             pass
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
         html = await page.content()
         url = page.url
         _log(verbose, f"Loaded {url}")
@@ -556,8 +561,8 @@ async def get_page_after_login(
     browser = result["browser"]
     p = result["playwright"]
     try:
-        await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="networkidle")
-        await asyncio.sleep(1)
+        await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded")
+        await asyncio.sleep(0.5)
         html = await page.content()
         url = page.url
         await browser.close()
