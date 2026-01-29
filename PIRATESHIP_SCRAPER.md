@@ -116,6 +116,13 @@ python pirateship_scraper.py
 
 Optional args: `python3 pirateship_scraper.py <from_zip> <to_zip> <weight_oz>` (default: 90210 10001 16.0).
 
+**Shipment report by eBay order ID** (uses Reports → shipment with `tracking=SEARCH_TERM_<order_id>`):
+```bash
+export PIRATESHIP_VERBOSE=1
+python3 pirateship_scraper.py report 17-14149-65322
+```
+Returns the report page HTML and parsed tracking numbers for that order.
+
 Verbose output shows each step (navigate, wait, which selector is tried, etc.) so you can see exactly where a timeout occurs.
 
 ## Usage
