@@ -352,32 +352,118 @@ _BATCH_SHIPMENT_URL_PATTERN = re.compile(
 )
 
 
-async def _login_and_get_cookies(
+async def _get_shipment_report_async(
+    ebay_order_id: str,
     email: str,
     password: str,
     verbose: bool,
-) -> Optional[List[Dict[str, Any]]]:
-    """Log in with Playwright and return context cookies (then close browser). Returns None on failure."""
+) -> Dict[str, Any]:
+    """Log in with Playwright, navigate to report URL, wait for grid, return page content and parsed fields."""
     result = await login(email=email, password=password, headless=True, verbose=verbose)
     if not result.get("success"):
-        return None
-    context = result.get("context")
-    browser = result.get("browser")
-    p = result.get("playwright")
-    if not context:
-        if browser:
-            await browser.close()
-        if p:
-            await p.stop()
-        return None
+        return {"success": False, "html": "", "url": "", "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None, "shipments": [], "frame_htmls": [], "error": result.get("error", "Login failed")}
+
+    page = result["page"]
+    browser = result["browser"]
+    p = result["playwright"]
+    search_term = f"SEARCH_TERM_{ebay_order_id}"
+    path = f"/reports/shipment?tracking={search_term}"
+
     try:
-        cookies = await context.cookies()
-        return cookies
-    finally:
-        if browser:
+        _log(verbose, f"Navigating to {PIRATESHIP_BASE}{path} ...")
+        await page.goto(f"{PIRATESHIP_BASE}{path}", wait_until="domcontentloaded", timeout=30000)
+        await asyncio.sleep(0.5)
+        try:
+            await page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            pass
+        await asyncio.sleep(0.3)
+
+        _log(verbose, "Waiting for #shipmentsPage shell...")
+        try:
+            await page.wait_for_selector("#shipmentsPage div", timeout=15000)
+            await asyncio.sleep(0.5)
+        except Exception as e:
+            _log(verbose, f"Wait for #shipmentsPage skip: {e}")
+        _log(verbose, "Waiting for shipment grid to render...")
+        for selector in ["#shipmentsPage table tbody tr", "#shipmentsPage div.e1d69dh90", '#shipmentsPage a[href*="/batch/"]', "#shipmentsPage table"]:
+            try:
+                await page.wait_for_selector(selector, timeout=20000)
+                _log(verbose, f"  Found: {selector}")
+                await asyncio.sleep(1)
+                break
+            except Exception:
+                continue
+
+        html = await page.content()
+        url = page.url
+        _log(verbose, f"Loaded {url}")
+
+        frame_htmls = []
+        for frame in page.frames:
+            if frame == page.main_frame:
+                continue
+            try:
+                frame_htmls.append(await frame.content())
+            except Exception:
+                frame_htmls.append("")
+
+        shipment_url = None
+        for content in [html] + frame_htmls:
+            m = _BATCH_SHIPMENT_URL_PATTERN.search(content)
+            if m:
+                shipment_url = m.group(0)
+                break
+        if not shipment_url and "href=\"/batch/" in html:
+            m = re.search(r'href="(/batch/\d+/shipment/\d+)"', html)
+            if m:
+                shipment_url = f"{PIRATESHIP_BASE}{m.group(1)}"
+
+        has_shipment_span = "ef06jtw0" in html
+        shipment_span_text = None
+        if has_shipment_span:
+            m = re.search(r'<span[^>]*class="[^"]*ef06jtw0[^"]*"[^>]*>([^<]*)', html)
+            if m:
+                shipment_span_text = m.group(1).strip()
+
+        cost = None
+        cost_match = _COST_PATTERN.search(html)
+        if cost_match:
+            amount = cost_match.group(1) or cost_match.group(2)
+            if amount:
+                try:
+                    cost = float(amount)
+                except ValueError:
+                    pass
+        if cost is None and "e1d69dh90" in html:
+            m = re.search(r'class="[^"]*e1d69dh90[^"]*">\s*\$?\s*(\d+\.\d{2})', html)
+            if m:
+                try:
+                    cost = float(m.group(1))
+                except ValueError:
+                    pass
+
+        _log(verbose, f"Done. cost={cost}, shipment_url={shipment_url}, has_shipment_span={has_shipment_span}")
+        await browser.close()
+        await p.stop()
+        result = {"success": True, "html": html, "url": url, "cost": cost, "shipment_url": shipment_url, "has_shipment_span": has_shipment_span, "shipment_span_text": shipment_span_text, "shipments": [], "frame_htmls": frame_htmls}
+        print("[pirateship] --- report output ---")
+        print(f"  url: {url}")
+        print(f"  shipment_url: {shipment_url}")
+        print(f"  has_shipment_span: {has_shipment_span}")
+        if shipment_span_text:
+            print(f"  shipment_span_text: {shipment_span_text[:300]}{'...' if len(shipment_span_text) > 300 else ''}")
+        print(f"  cost: {cost}")
+        print("[pirateship] --- end report ---")
+        return result
+    except Exception as e:
+        _log(verbose, f"ERROR: {e}")
+        try:
             await browser.close()
-        if p:
             await p.stop()
+        except Exception:
+            pass
+        return {"success": False, "html": "", "url": "", "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None, "shipments": [], "frame_htmls": [], "error": str(e)}
 
 
 def get_shipment_report(
@@ -385,191 +471,18 @@ def get_shipment_report(
     email: Optional[str] = None,
     password: Optional[str] = None,
     verbose: Optional[bool] = None,
-    use_playwright_login: bool = True,
 ) -> Dict[str, Any]:
     """
-    Fetch the reports/shipment page. By default uses Playwright to log in (browser),
-    then requests with the session cookies to GET the report. Set use_playwright_login=False
-    to try requests-only login (often fails because Pirate Ship uses JS login).
-    Returns { "success", "html", "url", "cost", "shipment_url", "has_shipment_span", "shipment_span_text", "shipments", "frame_htmls", "status_code", "error" }.
+    Fetch the reports/shipment page using Playwright only: log in, navigate to report URL,
+    wait for grid to render, return page HTML and parsed cost, shipment_url, has_shipment_span.
+    Returns { "success", "html", "url", "cost", "shipment_url", "has_shipment_span", "shipment_span_text", "shipments", "frame_htmls", "error" }.
     """
-    try:
-        import requests
-    except ImportError:
-        return {"success": False, "error": "requests library required", "html": "", "url": "", "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None}
     verbose = verbose if verbose is not None else _verbose_default()
     email = email or os.environ.get("PIRATESHIP_EMAIL")
     password = password or os.environ.get("PIRATESHIP_PASSWORD")
     if not email or not password:
-        return {"success": False, "error": "PIRATESHIP_EMAIL and PIRATESHIP_PASSWORD required", "html": "", "url": "", "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None}
-
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Origin": PIRATESHIP_BASE,
-        "Referer": f"{PIRATESHIP_BASE}/",
-    })
-
-    # Option A: Log in with Playwright and use its cookies for the report GET
-    if use_playwright_login:
-        _log(verbose, "Logging in with Playwright to get session cookies...")
-        try:
-            cookies = run_async(_login_and_get_cookies(email, password, verbose))
-            if cookies:
-                for c in cookies:
-                    dom = c.get("domain") or ".ship.pirateship.com"
-                    session.cookies.set(
-                        c.get("name", ""),
-                        c.get("value", ""),
-                        domain=dom,
-                        path=c.get("path", "/"),
-                    )
-                _log(verbose, f"  Using {len(cookies)} cookies from Playwright login.")
-            else:
-                _log(verbose, "  Playwright login failed or returned no cookies; trying requests-only login.")
-                use_playwright_login = False
-        except Exception as e:
-            _log(verbose, f"  Playwright login error: {e}; trying requests-only login.")
-            use_playwright_login = False
-
-    if not use_playwright_login:
-        # Option B: Requests-only login (GET login page, POST login attempts)
-        _log(verbose, f"GET login page {PIRATESHIP_BASE}/ ...")
-        login_page = session.get(f"{PIRATESHIP_BASE}/", timeout=30)
-        login_page.raise_for_status()
-        login_html = login_page.text
-        _log(verbose, f"  cookies: {list(session.cookies.keys())}")
-
-        form_action = None
-        m = re.search(r'<form[^>]*\s+action=["\']([^"\']+)["\']', login_html, re.I)
-        if m:
-            form_action = m.group(1).strip()
-            if form_action.startswith("/"):
-                form_action = f"{PIRATESHIP_BASE}{form_action}"
-            elif not form_action.startswith("http"):
-                form_action = f"{PIRATESHIP_BASE}/{form_action}"
-            _log(verbose, f"  Found form action: {form_action}")
-
-        form_data_from_page = {}
-        for inp in re.finditer(r'<input[^>]*\s+name=["\']([^"\']+)["\'][^>]*(?:value=["\']([^"\']*)["\'])?', login_html, re.I):
-            name, value = inp.group(1), (inp.group(2) or "").strip()
-            if "password" in name.lower():
-                form_data_from_page[name] = password
-            elif "email" in name.lower() or "user" in name.lower() or "login" in name.lower():
-                form_data_from_page[name] = email
-            else:
-                form_data_from_page[name] = value
-        if form_data_from_page:
-            _log(verbose, f"  Found form fields: {list(form_data_from_page.keys())}")
-
-        logged_in = False
-        login_tries = []
-        if form_action and form_data_from_page:
-            login_tries.append((form_action, form_data_from_page.copy(), "form action + parsed fields"))
-        if form_data_from_page:
-            login_tries.append((f"{PIRATESHIP_BASE}/", form_data_from_page.copy(), "POST / parsed fields"))
-        if form_action:
-            login_tries.append((form_action, {"email": email, "password": password}, "form action"))
-        login_tries.append((f"{PIRATESHIP_BASE}/", {"email": email, "password": password}, "POST /"))
-        for url_suffix in ["/login", "/api/auth/login", "/api/login", "/auth/login", "/session"]:
-            login_tries.append((f"{PIRATESHIP_BASE}{url_suffix}", {"email": email, "password": password}, url_suffix))
-        login_tries.append((f"{PIRATESHIP_BASE}/", {"username": email, "password": password}, "POST / (username)"))
-
-        for url, data, desc in login_tries:
-            _log(verbose, f"  Try login POST {desc}...")
-            try:
-                r = session.post(url, data=data, timeout=15)
-                _log(verbose, f"    status={r.status_code}, url={r.url}")
-                if r.status_code in (200, 302, 303):
-                    logged_in = True
-                    break
-            except Exception as e:
-                _log(verbose, f"    error: {e}")
-        if not logged_in:
-            _log(verbose, "  No successful login response; continuing to try report URL with current cookies.")
-
-    # GET reports/shipment URL
-    search_term = f"SEARCH_TERM_{ebay_order_id}"
-    report_url = f"{PIRATESHIP_BASE}/reports/shipment?tracking={search_term}"
-    _log(verbose, f"GET report: {report_url}")
-    try:
-        r = session.get(report_url, timeout=30, allow_redirects=True)
-        r.raise_for_status()
-    except requests.RequestException as e:
-        return {"success": False, "error": str(e), "html": "", "url": report_url, "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None}
-    html = r.text
-    final_url = r.url
-
-    # If we were redirected back to login (URL is not the report page), login didn't work
-    if "reports" not in final_url and "shipment" not in final_url:
-        return {
-            "success": False,
-            "error": "Login failed: got redirected to login page. Pirate Ship likely uses JavaScript/browser-only login. Use Playwright login or capture the real login request from browser DevTools (Network tab) and add that endpoint to the scraper.",
-            "html": html,
-            "url": final_url,
-            "cost": None,
-            "shipment_url": None,
-            "has_shipment_span": False,
-            "shipment_span_text": None,
-        }
-
-    # 4) Parse same as Playwright path
-    cost = None
-    cost_match = _COST_PATTERN.search(html)
-    if cost_match:
-        amount = cost_match.group(1) or cost_match.group(2)
-        if amount:
-            try:
-                cost = float(amount)
-            except ValueError:
-                pass
-    if cost is None and 'e1d69dh90' in html:
-        m = re.search(r'class="[^"]*e1d69dh90[^"]*">\s*\$?\s*(\d+\.\d{2})', html)
-        if m:
-            try:
-                cost = float(m.group(1))
-            except ValueError:
-                pass
-
-    shipment_url = None
-    m = _BATCH_SHIPMENT_URL_PATTERN.search(html)
-    if m:
-        shipment_url = m.group(0)
-    if not shipment_url and 'href="/batch/' in html:
-        m = re.search(r'href="(/batch/\d+/shipment/\d+)"', html)
-        if m:
-            shipment_url = f"{PIRATESHIP_BASE}{m.group(1)}"
-
-    has_shipment_span = "ef06jtw0" in html
-    shipment_span_text = None
-    if has_shipment_span:
-        m = re.search(r'<span[^>]*class="[^"]*ef06jtw0[^"]*"[^>]*>([^<]*)', html)
-        if m:
-            shipment_span_text = m.group(1).strip()
-
-    result = {
-        "success": True,
-        "html": html,
-        "url": final_url,
-        "cost": cost,
-        "shipment_url": shipment_url,
-        "has_shipment_span": has_shipment_span,
-        "shipment_span_text": shipment_span_text,
-        "shipments": [],
-        "frame_htmls": [],
-        "status_code": r.status_code,
-    }
-    print("[pirateship] --- report output ---")
-    print(f"  url: {final_url}")
-    print(f"  shipment_url: {shipment_url}")
-    print(f"  has_shipment_span: {has_shipment_span}")
-    if shipment_span_text:
-        print(f"  shipment_span_text: {shipment_span_text[:300]}{'...' if len(shipment_span_text) > 300 else ''}")
-    print(f"  cost: {cost}")
-    print("[pirateship] --- end report ---")
-    return result
+        return {"success": False, "error": "PIRATESHIP_EMAIL and PIRATESHIP_PASSWORD required", "html": "", "url": "", "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None, "shipments": [], "frame_htmls": []}
+    return run_async(_get_shipment_report_async(ebay_order_id, email, password, verbose))
 
 
 async def get_last_shipments(

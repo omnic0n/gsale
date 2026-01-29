@@ -116,14 +116,14 @@ python pirateship_scraper.py
 
 Optional args: `python3 pirateship_scraper.py <from_zip> <to_zip> <weight_oz>` (default: 90210 10001 16.0).
 
-**Shipment report by eBay order ID** (default: Playwright login, then requests for report):
+**Shipment report by eBay order ID** (Playwright only):
 ```bash
 export PIRATESHIP_VERBOSE=1
 python3 pirateship_scraper.py report 17-14149-65322
 ```
-By default the scraper logs in with Playwright (browser), copies the session cookies, then uses `requests` to GET the report URL. This works because Pirate Ship uses JavaScript-only login. Returns parsed cost, shipment_url, has_shipment_span (and `html` in the result dict). To try requests-only login (no browser), pass `use_playwright_login=False` in code; it usually fails with a redirect back to the login page.
+The scraper logs in with Playwright (browser), navigates to the report URL, waits for the shipment grid to render, then returns the page HTML and parsed cost, shipment_url, has_shipment_span (and `html`, `frame_htmls` in the result dict).
 
-Verbose output shows each step (Playwright login, cookie count, report GET, parsed fields).
+Verbose output shows each step (login, navigate, wait for grid, parsed fields).
 
 ## Usage
 
