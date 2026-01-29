@@ -335,6 +335,145 @@ _BATCH_SHIPMENT_URL_PATTERN = re.compile(
 )
 
 
+def get_shipment_report_requests(
+    ebay_order_id: str,
+    email: Optional[str] = None,
+    password: Optional[str] = None,
+    verbose: Optional[bool] = None,
+) -> Dict[str, Any]:
+    """
+    Fetch the reports/shipment page using Python requests + session (no Playwright/Chromium).
+    Tries to log in via POST then GET the report URL. Returns same shape as get_shipment_report.
+    Note: If the report content is loaded only by JavaScript after page load, the HTML may not
+    contain the grid/cost; use get_shipment_report (Playwright) in that case.
+    """
+    try:
+        import requests
+    except ImportError:
+        return {"success": False, "error": "requests library required", "html": "", "url": "", "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None}
+    verbose = verbose if verbose is not None else _verbose_default()
+    email = email or os.environ.get("PIRATESHIP_EMAIL")
+    password = password or os.environ.get("PIRATESHIP_PASSWORD")
+    if not email or not password:
+        return {"success": False, "error": "PIRATESHIP_EMAIL and PIRATESHIP_PASSWORD required", "html": "", "url": "", "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None}
+
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Origin": PIRATESHIP_BASE,
+        "Referer": f"{PIRATESHIP_BASE}/",
+    })
+
+    # 1) GET login page to obtain cookies (and possibly CSRF token)
+    _log(verbose, "GET login page...")
+    login_page = session.get(f"{PIRATESHIP_BASE}/", timeout=30)
+    login_page.raise_for_status()
+    _log(verbose, f"  cookies: {list(session.cookies.keys())}")
+
+    # 2) Try to log in (common patterns: POST /login or /api/auth/login with JSON or form)
+    logged_in = False
+    for method, url_suffix, payload in [
+        ("POST", "/login", {"email": email, "password": password}),
+        ("POST", "/api/auth/login", {"email": email, "password": password}),
+        ("POST", "/api/login", {"email": email, "password": password}),
+        ("POST", "/login", {"username": email, "password": password}),
+    ]:
+        url = f"{PIRATESHIP_BASE}{url_suffix}"
+        _log(verbose, f"  Try login {method} {url_suffix}...")
+        try:
+            if payload.get("username") is not None:
+                r = session.post(url, data=payload, timeout=15)
+            else:
+                r = session.post(url, json=payload, timeout=15, headers={"Content-Type": "application/json"})
+            _log(verbose, f"    status={r.status_code}")
+            if r.status_code in (200, 302, 303):
+                logged_in = True
+                break
+        except Exception as e:
+            _log(verbose, f"    error: {e}")
+    if not logged_in:
+        _log(verbose, "  No successful login response; continuing to try report URL with current cookies.")
+
+    # 3) GET reports/shipment URL
+    search_term = f"SEARCH_TERM_{ebay_order_id}"
+    report_url = f"{PIRATESHIP_BASE}/reports/shipment?tracking={search_term}"
+    _log(verbose, f"GET report: {report_url}")
+    try:
+        r = session.get(report_url, timeout=30)
+        r.raise_for_status()
+    except requests.RequestException as e:
+        return {"success": False, "error": str(e), "html": "", "url": report_url, "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None}
+    html = r.text
+    final_url = r.url
+
+    # 4) Parse same as Playwright path
+    cost = None
+    cost_match = _COST_PATTERN.search(html)
+    if cost_match:
+        amount = cost_match.group(1) or cost_match.group(2)
+        if amount:
+            try:
+                cost = float(amount)
+            except ValueError:
+                pass
+    if cost is None and 'e1d69dh90' in html:
+        m = re.search(r'class="[^"]*e1d69dh90[^"]*">\s*\$?\s*(\d+\.\d{2})', html)
+        if m:
+            try:
+                cost = float(m.group(1))
+            except ValueError:
+                pass
+
+    shipment_url = None
+    m = _BATCH_SHIPMENT_URL_PATTERN.search(html)
+    if m:
+        shipment_url = m.group(0)
+    if not shipment_url and 'href="/batch/' in html:
+        m = re.search(r'href="(/batch/\d+/shipment/\d+)"', html)
+        if m:
+            shipment_url = f"{PIRATESHIP_BASE}{m.group(1)}"
+
+    has_shipment_span = "ef06jtw0" in html
+    shipment_span_text = None
+    if has_shipment_span:
+        m = re.search(r'<span[^>]*class="[^"]*ef06jtw0[^"]*"[^>]*>([^<]*)', html)
+        if m:
+            shipment_span_text = m.group(1).strip()
+
+    # Optional: write raw HTML for review
+    try:
+        with open("report_page_requests.html", "w", encoding="utf-8") as f:
+            f.write(html)
+        _log(verbose, "  Wrote report_page_requests.html")
+    except Exception:
+        pass
+
+    result = {
+        "success": True,
+        "html": html,
+        "url": final_url,
+        "cost": cost,
+        "shipment_url": shipment_url,
+        "has_shipment_span": has_shipment_span,
+        "shipment_span_text": shipment_span_text,
+        "shipments": [],
+        "frame_htmls": [],
+        "status_code": r.status_code,
+    }
+    if verbose:
+        print("[pirateship] --- report output (requests) ---")
+        print(f"  url: {final_url}")
+        print(f"  shipment_url: {shipment_url}")
+        print(f"  has_shipment_span: {has_shipment_span}")
+        if shipment_span_text:
+            print(f"  shipment_span_text: {shipment_span_text[:300]}")
+        print(f"  cost: {cost}")
+        print("[pirateship] --- end report ---")
+    return result
+
+
 async def get_last_shipments(
     count: int = 5,
     email: Optional[str] = None,
@@ -741,7 +880,8 @@ def run_async(coro):
 
 if __name__ == "__main__":
     # Examples:
-    #   Report by eBay order ID:  python pirateship_scraper.py report 17-14149-65322
+    #   Report (Playwright):      python pirateship_scraper.py report 17-14149-65322
+    #   Report (requests only):   python pirateship_scraper.py report-requests 17-14149-65322
     #   Rates:                    python pirateship_scraper.py rates 90210 10001 16
     import sys
     mode = (sys.argv[1] or "rates").lower() if len(sys.argv) > 1 else "rates"
@@ -763,6 +903,24 @@ if __name__ == "__main__":
             c = result.get("cost")
             if c is not None:
                 print("Cost:", f"${c:.2f}")
+        else:
+            print("Error:", result.get("error"))
+        sys.exit(0 if result.get("success") else 1)
+    if mode == "report-requests" or mode == "report_requests":
+        ebay_order_id = sys.argv[2] if len(sys.argv) > 2 else None
+        if not ebay_order_id:
+            print("Usage: python pirateship_scraper.py report-requests <ebay_order_id>")
+            sys.exit(2)
+        result = get_shipment_report_requests(ebay_order_id, verbose=True)
+        print("--- result (requests) ---")
+        if result.get("success"):
+            print("URL:", result.get("url"))
+            print("Shipment URL:", result.get("shipment_url"))
+            print("Has shipment span:", result.get("has_shipment_span", False))
+            if result.get("shipment_span_text"):
+                print("Shipment span text:", result.get("shipment_span_text")[:200])
+            print("Cost:", result.get("cost"))
+            print("Raw HTML saved to report_page_requests.html")
         else:
             print("Error:", result.get("error"))
         sys.exit(0 if result.get("success") else 1)

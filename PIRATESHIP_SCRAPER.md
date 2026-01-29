@@ -121,7 +121,14 @@ Optional args: `python3 pirateship_scraper.py <from_zip> <to_zip> <weight_oz>` (
 export PIRATESHIP_VERBOSE=1
 python3 pirateship_scraper.py report 17-14149-65322
 ```
-Returns the report page HTML and parsed tracking numbers for that order.
+Returns the report page HTML and parsed cost/shipment URL for that order.
+
+**Report without Playwright/Chromium** (Python `requests` only; no browser):
+```bash
+export PIRATESHIP_VERBOSE=1
+python3 pirateship_scraper.py report-requests 17-14149-65322
+```
+Uses a session: GET login page → POST login (tries common endpoints) → GET report URL. Raw HTML is saved to `report_page_requests.html`. If the report grid is loaded only by JavaScript, cost/shipment_url may be missing; use `report` (Playwright) in that case.
 
 Verbose output shows each step (navigate, wait, which selector is tried, etc.) so you can see exactly where a timeout occurs.
 
