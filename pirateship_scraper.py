@@ -507,13 +507,28 @@ async def get_shipment_report(
         await asyncio.sleep(0.3)
 
         # Page content is rendered by JS: renderShipmentsPage(document.getElementById('shipmentsPage'))
-        # Wait for that to run and populate #shipmentsPage before parsing
-        _log(verbose, "Waiting for renderShipmentsPage ( #shipmentsPage content )...")
+        # Wait for shell first, then for the grid/data to actually render (table row, cost cell, or View Shipment link)
+        _log(verbose, "Waiting for #shipmentsPage shell...")
         try:
             await page.wait_for_selector("#shipmentsPage div", timeout=15000)
             await asyncio.sleep(0.5)
         except Exception as e:
             _log(verbose, f"Wait for #shipmentsPage skip: {e}")
+        _log(verbose, "Waiting for shipment grid to render (table row / cost / View Shipment link)...")
+        for selector in [
+            "#shipmentsPage table tbody tr",
+            "#shipmentsPage div.e1d69dh90",
+            '#shipmentsPage a[href*="/batch/"]',
+            "#shipmentsPage table",
+        ]:
+            try:
+                await page.wait_for_selector(selector, timeout=20000)
+                _log(verbose, f"  Found: {selector}")
+                await asyncio.sleep(1)
+                break
+            except Exception as e:
+                _log(verbose, f"  Timeout waiting for {selector}: {e}")
+                continue
 
         html = await page.content()
         url = page.url
