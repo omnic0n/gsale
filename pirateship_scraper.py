@@ -335,17 +335,46 @@ _BATCH_SHIPMENT_URL_PATTERN = re.compile(
 )
 
 
+async def _login_and_get_cookies(
+    email: str,
+    password: str,
+    verbose: bool,
+) -> Optional[List[Dict[str, Any]]]:
+    """Log in with Playwright and return context cookies (then close browser). Returns None on failure."""
+    result = await login(email=email, password=password, headless=True, verbose=verbose)
+    if not result.get("success"):
+        return None
+    context = result.get("context")
+    browser = result.get("browser")
+    p = result.get("playwright")
+    if not context:
+        if browser:
+            await browser.close()
+        if p:
+            await p.stop()
+        return None
+    try:
+        cookies = await context.cookies()
+        return cookies
+    finally:
+        if browser:
+            await browser.close()
+        if p:
+            await p.stop()
+
+
 def get_shipment_report(
     ebay_order_id: str,
     email: Optional[str] = None,
     password: Optional[str] = None,
     verbose: Optional[bool] = None,
+    use_playwright_login: bool = True,
 ) -> Dict[str, Any]:
     """
-    Fetch the reports/shipment page using Python requests (no Playwright).
-    Session: GET login page → POST login (tries common endpoints) → GET report URL.
+    Fetch the reports/shipment page. By default uses Playwright to log in (browser),
+    then requests with the session cookies to GET the report. Set use_playwright_login=False
+    to try requests-only login (often fails because Pirate Ship uses JS login).
     Returns { "success", "html", "url", "cost", "shipment_url", "has_shipment_span", "shipment_span_text", "shipments", "frame_htmls", "status_code", "error" }.
-    Example URL: reports/shipment?tracking=SEARCH_TERM_<ebay_order_id>
     """
     try:
         import requests
@@ -366,65 +395,85 @@ def get_shipment_report(
         "Referer": f"{PIRATESHIP_BASE}/",
     })
 
-    # 1) GET login page (https://ship.pirateship.com/) to obtain cookies
-    _log(verbose, f"GET login page {PIRATESHIP_BASE}/ ...")
-    login_page = session.get(f"{PIRATESHIP_BASE}/", timeout=30)
-    login_page.raise_for_status()
-    login_html = login_page.text
-    _log(verbose, f"  cookies: {list(session.cookies.keys())}")
-
-    # 2) Find login form action and input names from page (if present; SPA may not have these in initial HTML)
-    form_action = None
-    m = re.search(r'<form[^>]*\s+action=["\']([^"\']+)["\']', login_html, re.I)
-    if m:
-        form_action = m.group(1).strip()
-        if form_action.startswith("/"):
-            form_action = f"{PIRATESHIP_BASE}{form_action}"
-        elif not form_action.startswith("http"):
-            form_action = f"{PIRATESHIP_BASE}/{form_action}"
-        _log(verbose, f"  Found form action: {form_action}")
-
-    # Collect input names from login page (for email/password field names)
-    form_data_from_page = {}
-    for inp in re.finditer(r'<input[^>]*\s+name=["\']([^"\']+)["\'][^>]*(?:value=["\']([^"\']*)["\'])?', login_html, re.I):
-        name, value = inp.group(1), (inp.group(2) or "").strip()
-        if "password" in name.lower():
-            form_data_from_page[name] = password
-        elif "email" in name.lower() or "user" in name.lower() or "login" in name.lower():
-            form_data_from_page[name] = email
-        else:
-            form_data_from_page[name] = value
-    if form_data_from_page:
-        _log(verbose, f"  Found form fields: {list(form_data_from_page.keys())}")
-
-    # 3) Try to log in: POST to form action or root, form-encoded
-    logged_in = False
-    login_tries = []
-    if form_action and form_data_from_page:
-        login_tries.append((form_action, form_data_from_page.copy(), "form action + parsed fields"))
-    if form_data_from_page:
-        login_tries.append((f"{PIRATESHIP_BASE}/", form_data_from_page.copy(), "POST / parsed fields"))
-    if form_action:
-        login_tries.append((form_action, {"email": email, "password": password}, "form action"))
-    login_tries.append((f"{PIRATESHIP_BASE}/", {"email": email, "password": password}, "POST /"))
-    for url_suffix in ["/login", "/api/auth/login", "/api/login", "/auth/login", "/session"]:
-        login_tries.append((f"{PIRATESHIP_BASE}{url_suffix}", {"email": email, "password": password}, url_suffix))
-    login_tries.append((f"{PIRATESHIP_BASE}/", {"username": email, "password": password}, "POST / (username)"))
-
-    for url, data, desc in login_tries:
-        _log(verbose, f"  Try login POST {desc}...")
+    # Option A: Log in with Playwright and use its cookies for the report GET
+    if use_playwright_login:
+        _log(verbose, "Logging in with Playwright to get session cookies...")
         try:
-            r = session.post(url, data=data, timeout=15)
-            _log(verbose, f"    status={r.status_code}, url={r.url}")
-            if r.status_code in (200, 302, 303):
-                logged_in = True
-                break
+            cookies = run_async(_login_and_get_cookies(email, password, verbose))
+            if cookies:
+                for c in cookies:
+                    dom = c.get("domain") or ".ship.pirateship.com"
+                    session.cookies.set(
+                        c.get("name", ""),
+                        c.get("value", ""),
+                        domain=dom,
+                        path=c.get("path", "/"),
+                    )
+                _log(verbose, f"  Using {len(cookies)} cookies from Playwright login.")
+            else:
+                _log(verbose, "  Playwright login failed or returned no cookies; trying requests-only login.")
+                use_playwright_login = False
         except Exception as e:
-            _log(verbose, f"    error: {e}")
-    if not logged_in:
-        _log(verbose, "  No successful login response; continuing to try report URL with current cookies.")
+            _log(verbose, f"  Playwright login error: {e}; trying requests-only login.")
+            use_playwright_login = False
 
-    # 3) GET reports/shipment URL
+    if not use_playwright_login:
+        # Option B: Requests-only login (GET login page, POST login attempts)
+        _log(verbose, f"GET login page {PIRATESHIP_BASE}/ ...")
+        login_page = session.get(f"{PIRATESHIP_BASE}/", timeout=30)
+        login_page.raise_for_status()
+        login_html = login_page.text
+        _log(verbose, f"  cookies: {list(session.cookies.keys())}")
+
+        form_action = None
+        m = re.search(r'<form[^>]*\s+action=["\']([^"\']+)["\']', login_html, re.I)
+        if m:
+            form_action = m.group(1).strip()
+            if form_action.startswith("/"):
+                form_action = f"{PIRATESHIP_BASE}{form_action}"
+            elif not form_action.startswith("http"):
+                form_action = f"{PIRATESHIP_BASE}/{form_action}"
+            _log(verbose, f"  Found form action: {form_action}")
+
+        form_data_from_page = {}
+        for inp in re.finditer(r'<input[^>]*\s+name=["\']([^"\']+)["\'][^>]*(?:value=["\']([^"\']*)["\'])?', login_html, re.I):
+            name, value = inp.group(1), (inp.group(2) or "").strip()
+            if "password" in name.lower():
+                form_data_from_page[name] = password
+            elif "email" in name.lower() or "user" in name.lower() or "login" in name.lower():
+                form_data_from_page[name] = email
+            else:
+                form_data_from_page[name] = value
+        if form_data_from_page:
+            _log(verbose, f"  Found form fields: {list(form_data_from_page.keys())}")
+
+        logged_in = False
+        login_tries = []
+        if form_action and form_data_from_page:
+            login_tries.append((form_action, form_data_from_page.copy(), "form action + parsed fields"))
+        if form_data_from_page:
+            login_tries.append((f"{PIRATESHIP_BASE}/", form_data_from_page.copy(), "POST / parsed fields"))
+        if form_action:
+            login_tries.append((form_action, {"email": email, "password": password}, "form action"))
+        login_tries.append((f"{PIRATESHIP_BASE}/", {"email": email, "password": password}, "POST /"))
+        for url_suffix in ["/login", "/api/auth/login", "/api/login", "/auth/login", "/session"]:
+            login_tries.append((f"{PIRATESHIP_BASE}{url_suffix}", {"email": email, "password": password}, url_suffix))
+        login_tries.append((f"{PIRATESHIP_BASE}/", {"username": email, "password": password}, "POST / (username)"))
+
+        for url, data, desc in login_tries:
+            _log(verbose, f"  Try login POST {desc}...")
+            try:
+                r = session.post(url, data=data, timeout=15)
+                _log(verbose, f"    status={r.status_code}, url={r.url}")
+                if r.status_code in (200, 302, 303):
+                    logged_in = True
+                    break
+            except Exception as e:
+                _log(verbose, f"    error: {e}")
+        if not logged_in:
+            _log(verbose, "  No successful login response; continuing to try report URL with current cookies.")
+
+    # GET reports/shipment URL
     search_term = f"SEARCH_TERM_{ebay_order_id}"
     report_url = f"{PIRATESHIP_BASE}/reports/shipment?tracking={search_term}"
     _log(verbose, f"GET report: {report_url}")
