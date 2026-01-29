@@ -379,18 +379,23 @@ async def _get_shipment_report_async(
             pass
         await asyncio.sleep(0.3)
 
-        # 1) Wait for wrapper + #shipmentsPage shell (initial HTML before renderShipmentsPage runs)
-        _log(verbose, "Waiting for div.wrapper and #shipmentsPage shell...")
+        # 1) Wait for div.main (page shell: upload-wrapper + wrapper containing #shipmentsPage)
+        _log(verbose, "Waiting for div.main and #shipmentsPage shell...")
         try:
-            await page.wait_for_selector("div.wrapper #shipmentsPage", timeout=15000)
+            await page.wait_for_selector("div.main #shipmentsPage", timeout=15000)
             await asyncio.sleep(0.5)
         except Exception as e:
-            _log(verbose, f"Fallback: wait for #shipmentsPage only: {e}")
+            _log(verbose, f"Fallback: wait for div.wrapper #shipmentsPage: {e}")
             try:
-                await page.wait_for_selector("#shipmentsPage", timeout=15000)
+                await page.wait_for_selector("div.wrapper #shipmentsPage", timeout=15000)
                 await asyncio.sleep(0.5)
-            except Exception:
-                pass
+            except Exception as e2:
+                _log(verbose, f"Fallback: wait for #shipmentsPage only: {e2}")
+                try:
+                    await page.wait_for_selector("#shipmentsPage", timeout=15000)
+                    await asyncio.sleep(0.5)
+                except Exception:
+                    pass
         # 2) Wait for renderShipmentsPage to populate #shipmentsPage (h1 "Shipments" or search bar)
         _log(verbose, "Waiting for shipments page content (renderShipmentsPage)...")
         for selector in [
