@@ -15,7 +15,7 @@ import asyncio
 from typing import Optional, Dict, Any, List
 
 
-# Base URL for Pirate Ship (login and app are at ship.pirateship.com)
+# Base URL for Pirate Ship; login page is the root: https://ship.pirateship.com/
 PIRATESHIP_BASE = "https://ship.pirateship.com"
 
 
@@ -366,8 +366,8 @@ def get_shipment_report(
         "Referer": f"{PIRATESHIP_BASE}/",
     })
 
-    # 1) GET login page to obtain cookies (and possibly CSRF token)
-    _log(verbose, "GET login page...")
+    # 1) GET login page (https://ship.pirateship.com/) to obtain cookies
+    _log(verbose, f"GET login page {PIRATESHIP_BASE}/ ...")
     login_page = session.get(f"{PIRATESHIP_BASE}/", timeout=30)
     login_page.raise_for_status()
     _log(verbose, f"  cookies: {list(session.cookies.keys())}")
