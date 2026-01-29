@@ -322,6 +322,8 @@ async def get_rates(
 _TRACKING_PATTERN = re.compile(
     r"\b(94\d{20,22}|1Z[A-Z0-9]{16}|(?:\d{12,22}))\b"
 )
+# Dollar amount: $4.88 or $ 4.88, or "4.88" in price context (capture numeric part)
+_COST_PATTERN = re.compile(r"\$\s*(\d+\.\d{2})\b|(?:cost|total|price|amount)[\s:]*\$?\s*(\d+\.\d{2})\b", re.I)
 
 
 async def get_last_shipments(
@@ -468,14 +470,14 @@ async def get_shipment_report(
 ) -> Dict[str, Any]:
     """
     Log in, open reports/shipment with tracking=SEARCH_TERM_<ebay_order_id>,
-    and return the report page content and any parsed shipment info.
-    Returns { "success": bool, "html": str, "url": str, "shipments": [...], "error": str }.
+    and return the report page content, parsed shipment info, and order cost.
+    Returns { "success": bool, "html": str, "url": str, "shipments": [...], "cost": float|None, "error": str }.
     Example URL: reports/shipment?tracking=SEARCH_TERM_17-14149-65322
     """
     verbose = verbose if verbose is not None else _verbose_default()
     result = await login(email=email, password=password, headless=headless, verbose=verbose)
     if not result.get("success"):
-        return {"success": False, "html": "", "url": "", "shipments": [], "error": result.get("error", "Login failed")}
+        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "error": result.get("error", "Login failed")}
 
     page = result["page"]
     browser = result["browser"]
@@ -508,10 +510,22 @@ async def get_shipment_report(
             carrier = "USPS" if tn.startswith("94") else ("UPS" if tn.startswith("1Z") else "Unknown")
             shipments.append({"tracking_number": tn, "carrier": carrier})
 
-        _log(verbose, f"Done. Found {len(shipments)} tracking number(s) on report.")
+        # Parse cost: first $X.XX or cost/total/price: X.XX on the report (e.g. $4.88)
+        cost = None
+        cost_match = _COST_PATTERN.search(html)
+        if cost_match:
+            amount = cost_match.group(1) or cost_match.group(2)
+            if amount:
+                try:
+                    cost = float(amount)
+                    _log(verbose, f"Parsed cost: ${cost:.2f}")
+                except ValueError:
+                    pass
+
+        _log(verbose, f"Done. Found {len(shipments)} tracking number(s), cost={cost}.")
         await browser.close()
         await p.stop()
-        return {"success": True, "html": html, "url": url, "shipments": shipments}
+        return {"success": True, "html": html, "url": url, "shipments": shipments, "cost": cost}
     except Exception as e:
         _log(verbose, f"ERROR: {e}")
         try:
@@ -519,7 +533,7 @@ async def get_shipment_report(
             await p.stop()
         except Exception:
             pass
-        return {"success": False, "html": "", "url": "", "shipments": [], "error": str(e)}
+        return {"success": False, "html": "", "url": "", "shipments": [], "cost": None, "error": str(e)}
 
 
 async def get_page_after_login(
@@ -578,6 +592,9 @@ if __name__ == "__main__":
         print("--- result ---")
         if result.get("success"):
             print("URL:", result.get("url"))
+            c = result.get("cost")
+            if c is not None:
+                print("Cost:", f"${c:.2f}")
             for s in result.get("shipments", []):
                 print("  ", s.get("tracking_number"), s.get("carrier", ""))
         else:
