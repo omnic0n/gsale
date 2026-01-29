@@ -373,7 +373,7 @@ def get_shipment_report(
     login_html = login_page.text
     _log(verbose, f"  cookies: {list(session.cookies.keys())}")
 
-    # 2) Find login form action from page (if present)
+    # 2) Find login form action and input names from page (if present; SPA may not have these in initial HTML)
     form_action = None
     m = re.search(r'<form[^>]*\s+action=["\']([^"\']+)["\']', login_html, re.I)
     if m:
@@ -384,12 +384,28 @@ def get_shipment_report(
             form_action = f"{PIRATESHIP_BASE}/{form_action}"
         _log(verbose, f"  Found form action: {form_action}")
 
-    # 3) Try to log in: POST to form action or root, form-encoded (HTML forms use application/x-www-form-urlencoded)
+    # Collect input names from login page (for email/password field names)
+    form_data_from_page = {}
+    for inp in re.finditer(r'<input[^>]*\s+name=["\']([^"\']+)["\'][^>]*(?:value=["\']([^"\']*)["\'])?', login_html, re.I):
+        name, value = inp.group(1), (inp.group(2) or "").strip()
+        if "password" in name.lower():
+            form_data_from_page[name] = password
+        elif "email" in name.lower() or "user" in name.lower() or "login" in name.lower():
+            form_data_from_page[name] = email
+        else:
+            form_data_from_page[name] = value
+    if form_data_from_page:
+        _log(verbose, f"  Found form fields: {list(form_data_from_page.keys())}")
+
+    # 3) Try to log in: POST to form action or root, form-encoded
     logged_in = False
-    # Build list: (url, data_dict, description)
     login_tries = []
+    if form_action and form_data_from_page:
+        login_tries.append((form_action, form_data_from_page.copy(), "form action + parsed fields"))
+    if form_data_from_page:
+        login_tries.append((f"{PIRATESHIP_BASE}/", form_data_from_page.copy(), "POST / parsed fields"))
     if form_action:
-        login_tries.append((form_action, {"email": email, "password": password}, f"form action"))
+        login_tries.append((form_action, {"email": email, "password": password}, "form action"))
     login_tries.append((f"{PIRATESHIP_BASE}/", {"email": email, "password": password}, "POST /"))
     for url_suffix in ["/login", "/api/auth/login", "/api/login", "/auth/login", "/session"]:
         login_tries.append((f"{PIRATESHIP_BASE}{url_suffix}", {"email": email, "password": password}, url_suffix))
@@ -413,12 +429,25 @@ def get_shipment_report(
     report_url = f"{PIRATESHIP_BASE}/reports/shipment?tracking={search_term}"
     _log(verbose, f"GET report: {report_url}")
     try:
-        r = session.get(report_url, timeout=30)
+        r = session.get(report_url, timeout=30, allow_redirects=True)
         r.raise_for_status()
     except requests.RequestException as e:
         return {"success": False, "error": str(e), "html": "", "url": report_url, "cost": None, "shipment_url": None, "has_shipment_span": False, "shipment_span_text": None}
     html = r.text
     final_url = r.url
+
+    # If we were redirected back to login (URL is not the report page), login didn't work
+    if "reports" not in final_url and "shipment" not in final_url:
+        return {
+            "success": False,
+            "error": "Login failed: got redirected to login page. Pirate Ship likely uses JavaScript/browser-only login. Use Playwright login or capture the real login request from browser DevTools (Network tab) and add that endpoint to the scraper.",
+            "html": html,
+            "url": final_url,
+            "cost": None,
+            "shipment_url": None,
+            "has_shipment_span": False,
+            "shipment_span_text": None,
+        }
 
     # 4) Parse same as Playwright path
     cost = None
