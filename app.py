@@ -3156,7 +3156,11 @@ def google_login():
     # Generate state parameter for security
     state = hashlib.sha256(os.urandom(32)).hexdigest()
     session['oauth_state'] = state
-    
+    # Preserve next URL so callback can redirect after login
+    next_url = request.args.get('next', '').strip()
+    if next_url:
+        session['oauth_next'] = next_url
+
     # Check if this is a mobile request
     user_agent = request.headers.get('User-Agent', '').lower()
     is_mobile_request = 'gsaleapp' in user_agent or 'mobile' in request.args
@@ -3348,9 +3352,11 @@ def google_callback():
                                  username=session['username'],
                                  session_token=session_token)
         else:
-            # For web, redirect to home or next page
+            # For web, redirect to home or next page (next was stored in session before OAuth)
             flash('Login successful!', 'success')
-            next_page = request.args.get('next') or url_for('index')
+            next_page = session.pop('oauth_next', None) or request.args.get('next') or url_for('index')
+            if next_page and not next_page.startswith('/') and not next_page.startswith('http'):
+                next_page = '/' + next_page
             return redirect(next_page)
             
     except Exception as e:
@@ -4494,17 +4500,27 @@ def get_ebay_item_data(item_id):
 def groups_list():
     if request.method == "GET":
         form = GroupForm(formdata=None)
-        # Support filtering via query param as well: ?year=YYYY or ?listYear=YYYY
-        year_param = request.args.get('year', type=str) or request.args.get('listYear', type=str)
-        if not year_param:
-            year_param = str(datetime.now().year)
-        # Reflect selection in the form
-        form.process(data={'listYear': year_param})
-        # Compute date pattern
-        if year_param == 'All':
-            date = "%-%-%"
+        # Support ?date=YYYY-MM-DD for direct links / iOS app (e.g. /groups/list?date=2025-05-03)
+        date_param = request.args.get('date', type=str)
+        if date_param:
+            # Use exact date pattern for get_all_from_group_and_items (LIKE match)
+            date = date_param.strip()
+            if not date:
+                date = f"{datetime.now().year}-%-%"
+            # Derive year for form display
+            try:
+                year_param = date[:4] if len(date) >= 4 else str(datetime.now().year)
+            except Exception:
+                year_param = str(datetime.now().year)
         else:
-            date = f"{year_param}-%-%"
+            year_param = request.args.get('year', type=str) or request.args.get('listYear', type=str)
+            if not year_param:
+                year_param = str(datetime.now().year)
+            if year_param == 'All':
+                date = "%-%-%"
+            else:
+                date = f"{year_param}-%-%"
+        form.process(data={'listYear': year_param})
     else:
         form = GroupForm()
         # Read from submitted form
