@@ -4419,6 +4419,7 @@ def get_ebay_item_data(item_id):
         
         if transaction_data['success']:
             trans_data = transaction_data['transaction_data']
+            order_id = trans_data.get('order_id') or trans_data.get('orderId') or ''
             subtotal = round(float(trans_data.get('subtotal', 0)), 2)
             shipping = round(float(trans_data.get('shipping', 0)), 2)
             sales_tax = round(float(trans_data.get('sales_tax', 0)), 2)
@@ -4429,18 +4430,21 @@ def get_ebay_item_data(item_id):
             # Debug: print to terminal (sell item page)
             print("")
             print("========== eBay order breakdown (sell item page) ==========")
-            print("  item_id:", item_id, "| ebay_item_id:", ebay_item_id)
-            print("  Subtotal:          ${:.2f}".format(subtotal))
-            print("  Shipping:          ${:.2f}".format(shipping))
-            print("  Sales tax:         ${:.2f}".format(sales_tax))
-            print("  Order total:       ${:.2f}".format(order_total))
-            print("  Total fees:        ${:.2f}".format(total_fees))
-            print("  Order earnings:    ${:.2f}".format(final_price if final_price else net_earnings))
+            print("  item_id:      ", item_id)
+            print("  ebay_item_id: ", ebay_item_id)
+            print("  order_id:     ", order_id)
+            print("  Subtotal:     ${:.2f}".format(subtotal))
+            print("  Shipping:     ${:.2f}".format(shipping))
+            print("  Sales tax:    ${:.2f}".format(sales_tax))
+            print("  Order total:  ${:.2f}".format(order_total))
+            print("  Total fees:   ${:.2f}".format(total_fees))
+            print("  Order earnings: ${:.2f}".format(final_price if final_price else net_earnings))
             print("==========================================================")
             print("")
             return jsonify({
                 'success': True,
                 'ebay_data': {
+                    'order_id': order_id,
                     'net_earnings': net_earnings,
                     'final_price': final_price,
                     'total_fees': total_fees,

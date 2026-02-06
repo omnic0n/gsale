@@ -66,6 +66,7 @@
                 <div id="ebay-debug" class="form-group border rounded p-3 bg-light" style="display: none;">
                     <strong class="text-secondary">eBay order breakdown (debug)</strong>
                     <table class="table table-sm table-borderless mb-0 mt-2">
+                        <tr><td>Order ID</td><td id="debug-order-id" class="text-end font-monospace small">—</td></tr>
                         <tr><td>Subtotal</td><td id="debug-subtotal" class="text-end">—</td></tr>
                         <tr><td>Shipping</td><td id="debug-shipping" class="text-end">—</td></tr>
                         <tr><td>Sales tax</td><td id="debug-sales-tax" class="text-end">—</td></tr>
@@ -99,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             priceInput.value = '';
             shippingInput.value = '0';
             ebayDebug.style.display = 'block';
+            document.getElementById('debug-order-id').textContent = '…';
             document.getElementById('debug-subtotal').textContent = '…';
             document.getElementById('debug-shipping').textContent = '…';
             document.getElementById('debug-sales-tax').textContent = '…';
@@ -129,6 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ebayStatus.style.display = 'none';
                     } else {
                         priceInput.value = '';
+                        document.getElementById('debug-order-id').textContent = '—';
                         document.getElementById('debug-subtotal').textContent = '—';
                         document.getElementById('debug-shipping').textContent = '—';
                         document.getElementById('debug-sales-tax').textContent = '—';
