@@ -1475,17 +1475,15 @@ def get_ebay_fees_from_order_api(order_id):
             'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
         }
         
-        # Request fee breakdown specifically
-        params = {
-            'fieldGroups': 'TAX_BREAKDOWN,FEE_BREAKDOWN'
-        }
-        
+        # Only TAX_BREAKDOWN is supported for fieldGroups (FEE_BREAKDOWN is not valid)
+        params = {'fieldGroups': 'TAX_BREAKDOWN'}
         response = requests.get(url, headers=headers, params=params)
-        
+
         if response.status_code == 200:
             data = response.json()
             return extract_fee_data(data)
         else:
+            print("[getOrder] failed order_id={} status={} body={}".format(order_id, response.status_code, response.text[:200]))
             return {'success': False, 'error': f'Order API failed: {response.status_code}'}
             
     except Exception as e:
@@ -1555,6 +1553,8 @@ def extract_fee_data(order_data):
             total_fvf += _amount_value(item.get('finalValueFee'))
             total_insertion += _amount_value(item.get('insertionFee'))
         total_fees = total_fvf + total_insertion
+        if total_fees <= 0:
+            total_fees = _amount_value(order_data.get('totalMarketplaceFee'))
         fee_data['final_value_fee'] = total_fvf
         fee_data['insertion_fee'] = total_insertion
         fee_data['total_fees'] = total_fees
