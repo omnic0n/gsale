@@ -930,31 +930,42 @@ def get_item_transaction_details(user_token, item_id):
         # Only try modern Order API if we have an OAuth 2.0 token
         if is_oauth_token:
             orders_result = get_orders_for_item(user_token, item_id)
-            if orders_result['success'] and orders_result['orders']:
-                # Use the first order found
+            if not orders_result.get('orders'):
+                orders_result = get_orders_for_item_fulfillment_api(item_id)
+            if orders_result.get('success') and orders_result.get('orders'):
                 order_data = orders_result['orders'][0]
-                order_details = get_order_with_tax_breakdown(user_token, order_data)
-                if order_details['success']:
-                    
-                    # Get transaction data
-                    transaction_data = order_details['transaction_data']
-                    
-                    # Try to get additional fee information
-                    fee_details = get_ebay_fees_from_order_api(order_data['orderId'])
-                    if fee_details['success']:
-                        # Merge fee data with transaction data
-                        transaction_data.update(fee_details['fee_data'])
-                    else:
-                        pass  # Fee details failed, continue with basic transaction data
-                    
-                    return {
-                        'success': True,
-                        'transaction_data': transaction_data
-                    }
-                else:
-                    pass  # Order details failed
-            else:
-                pass  # No orders found
+                order_id = order_data.get('orderId')
+                has_xml = order_data.get('order') and order_data.get('transaction')
+                transaction_data = None
+                if has_xml:
+                    order_details = get_order_with_tax_breakdown(user_token, order_data)
+                    if order_details.get('success'):
+                        transaction_data = order_details['transaction_data']
+                fee_details = get_ebay_fees_from_order_api(order_id)
+                if fee_details.get('success'):
+                    fee_data = fee_details['fee_data']
+                    if transaction_data is None:
+                        transaction_data = {
+                            'final_price': 0, 'subtotal': 0, 'shipping': 0, 'listing_fees': 0,
+                            'final_value_fee': fee_data.get('final_value_fee', 0),
+                            'paypal_fee': 0, 'sales_tax': fee_data.get('sales_tax', 0),
+                            'net_earnings': 0, 'total_fees': fee_data.get('total_fees', 0),
+                            'has_actual_fees': True, 'order_id': order_id
+                        }
+                    transaction_data.update(fee_data)
+                    net = fee_data.get('net_amount')
+                    if net is not None and float(net) > 0:
+                        transaction_data['final_price'] = float(net)
+                        transaction_data['net_earnings'] = float(net)
+                    if fee_data.get('subtotal') is not None:
+                        transaction_data['subtotal'] = fee_data['subtotal']
+                    if fee_data.get('shipping') is not None:
+                        transaction_data['shipping'] = fee_data['shipping']
+                    if fee_data.get('order_total') is not None:
+                        transaction_data['order_total'] = fee_data['order_total']
+                    return {'success': True, 'transaction_data': transaction_data}
+                if transaction_data is not None:
+                    return {'success': True, 'transaction_data': transaction_data}
         else:
             pass  # Skipping modern Order API
         
@@ -1069,6 +1080,18 @@ def get_item_transaction_details(user_token, item_id):
             'success': False,
             'error': 'Order API error: {}'.format(str(e))
         }
+
+def _amount_value(amount):
+    """Get numeric value from eBay Amount (dict with 'value') or scalar."""
+    if amount is None:
+        return 0.0
+    if isinstance(amount, (int, float)):
+        return float(amount)
+    if isinstance(amount, dict):
+        v = amount.get('value', 0)
+        return float(v) if v not in (None, '') else 0.0
+    return 0.0
+
 
 def get_orders_for_item(user_token, item_id):
     """
@@ -1471,41 +1494,79 @@ def get_ebay_fees_from_order_api(order_id):
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
+
+def get_orders_for_item_fulfillment_api(item_id):
+    """Find order(s) containing this item via Fulfillment API getOrders (OAuth)."""
+    try:
+        from datetime import datetime, timedelta
+        token_result = get_valid_ebay_token()
+        if not token_result['success']:
+            return token_result
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+        url = f"{api_base_url}/sell/fulfillment/v1/order"
+        headers = {
+            'Authorization': f"Bearer {token_result['access_token']}",
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%dT00:00:00.000Z')
+        offset = 0
+        limit = 200
+        while True:
+            params = {'limit': limit, 'offset': offset, 'filter': f'creationdate:[{start_date}..]'}
+            response = requests.get(url, headers=headers, params=params)
+            if response.status_code != 200:
+                return {'success': False, 'error': f'Fulfillment getOrders failed: {response.status_code}', 'orders': []}
+            data = response.json()
+            for order in data.get('orders', []):
+                for li in order.get('lineItems', []):
+                    if str(li.get('legacyItemId') or '') == str(item_id):
+                        return {'success': True, 'orders': [{'orderId': order.get('orderId')}]}
+            if len(data.get('orders', [])) < limit:
+                break
+            offset += limit
+        return {'success': True, 'orders': []}
+    except Exception as e:
+        return {'success': False, 'error': str(e), 'orders': []}
+
+
 def extract_fee_data(order_data):
     """
-    Extract fee information from Order API response
+    Extract fee and order breakdown from Fulfillment API order response.
+    Order earnings = order total (buyer paid) - sales tax - selling costs.
     """
     try:
         fee_data = {}
-        
-        # Extract from lineItems
         line_items = order_data.get('lineItems', [])
-        total_fees = 0
-        
+        total_fvf = 0.0
+        total_insertion = 0.0
         for item in line_items:
-            # Final Value Fee
-            fvf = item.get('finalValueFee', {})
-            if fvf:
-                fee_data['final_value_fee'] = float(fvf.get('value', 0))
-                total_fees += fee_data['final_value_fee']
-            
-            # Insertion Fee
-            insertion_fee = item.get('insertionFee', {})
-            if insertion_fee:
-                fee_data['insertion_fee'] = float(insertion_fee.get('value', 0))
-                total_fees += fee_data['insertion_fee']
-        
-        # Extract from pricingSummary
-        pricing = order_data.get('pricingSummary', {})
-        if pricing:
-            fee_data['total_fees'] = total_fees
-            fee_data['net_amount'] = float(pricing.get('total', 0)) - total_fees
-        
+            total_fvf += _amount_value(item.get('finalValueFee'))
+            total_insertion += _amount_value(item.get('insertionFee'))
+        total_fees = total_fvf + total_insertion
+        fee_data['final_value_fee'] = total_fvf
+        fee_data['insertion_fee'] = total_insertion
+        fee_data['total_fees'] = total_fees
+
+        pricing = order_data.get('pricingSummary', {}) or {}
+        order_tax = _amount_value(pricing.get('tax'))
+        api_total = _amount_value(pricing.get('total'))
+        price_subtotal = _amount_value(pricing.get('priceSubtotal'))
+        delivery_cost = _amount_value(pricing.get('deliveryCost'))
+        built_total = price_subtotal + delivery_cost + order_tax
+        order_total = built_total if built_total > 0 and (api_total <= 0 or abs(api_total - built_total) > 0.02) else (api_total if api_total > 0 else built_total)
+
+        fee_data['net_amount'] = round(order_total - order_tax - total_fees, 2)
+        fee_data['order_total'] = order_total
+        fee_data['sales_tax'] = order_tax
+        fee_data['subtotal'] = price_subtotal
+        fee_data['shipping'] = delivery_cost
+
         return {
             'success': True,
             'fee_data': fee_data
         }
-        
     except Exception as e:
         return {'success': False, 'error': f'Fee extraction error: {str(e)}'}
 
