@@ -963,6 +963,9 @@ def get_item_transaction_details(user_token, item_id):
                         transaction_data['shipping'] = fee_data['shipping']
                     if fee_data.get('order_total') is not None:
                         transaction_data['order_total'] = fee_data['order_total']
+                    if fee_data.get('order_id') is not None and fee_data.get('order_id') != '':
+                        transaction_data['order_id'] = fee_data['order_id']
+                    transaction_data['order_id'] = transaction_data.get('order_id') or order_id
                     return {'success': True, 'transaction_data': transaction_data}
                 if transaction_data is not None:
                     return {'success': True, 'transaction_data': transaction_data}
@@ -1538,6 +1541,7 @@ def extract_fee_data(order_data):
     """
     try:
         fee_data = {}
+        fee_data['order_id'] = order_data.get('orderId') or order_data.get('order_id') or ''
         line_items = order_data.get('lineItems', [])
         total_fvf = 0.0
         total_insertion = 0.0
