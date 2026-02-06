@@ -924,54 +924,48 @@ def get_item_transaction_details(user_token, item_id):
     """
     try:
         
-        # Check if token is OAuth 2.0 (starts with 'v1.1#' or 'v^1.1#') or legacy
-        is_oauth_token = user_token.startswith('v1.1#') or user_token.startswith('v^1.1#')
-        
-        # Only try modern Order API if we have an OAuth 2.0 token
-        if is_oauth_token:
-            orders_result = get_orders_for_item(user_token, item_id)
-            if not orders_result.get('orders'):
-                orders_result = get_orders_for_item_fulfillment_api(item_id)
-            if orders_result.get('success') and orders_result.get('orders'):
-                order_data = orders_result['orders'][0]
-                order_id = order_data.get('orderId')
-                has_xml = order_data.get('order') and order_data.get('transaction')
-                transaction_data = None
-                if has_xml:
-                    order_details = get_order_with_tax_breakdown(user_token, order_data)
-                    if order_details.get('success'):
-                        transaction_data = order_details['transaction_data']
-                fee_details = get_ebay_fees_from_order_api(order_id)
-                if fee_details.get('success'):
-                    fee_data = fee_details['fee_data']
-                    if transaction_data is None:
-                        transaction_data = {
-                            'final_price': 0, 'subtotal': 0, 'shipping': 0, 'listing_fees': 0,
-                            'final_value_fee': fee_data.get('final_value_fee', 0),
-                            'paypal_fee': 0, 'sales_tax': fee_data.get('sales_tax', 0),
-                            'net_earnings': 0, 'total_fees': fee_data.get('total_fees', 0),
-                            'has_actual_fees': True, 'order_id': order_id
-                        }
-                    transaction_data.update(fee_data)
-                    net = fee_data.get('net_amount')
-                    if net is not None and float(net) > 0:
-                        transaction_data['final_price'] = float(net)
-                        transaction_data['net_earnings'] = float(net)
-                    if fee_data.get('subtotal') is not None:
-                        transaction_data['subtotal'] = fee_data['subtotal']
-                    if fee_data.get('shipping') is not None:
-                        transaction_data['shipping'] = fee_data['shipping']
-                    if fee_data.get('order_total') is not None:
-                        transaction_data['order_total'] = fee_data['order_total']
-                    if fee_data.get('order_id') is not None and fee_data.get('order_id') != '':
-                        transaction_data['order_id'] = fee_data['order_id']
-                    transaction_data['order_id'] = transaction_data.get('order_id') or order_id
-                    return {'success': True, 'transaction_data': transaction_data}
-                if transaction_data is not None:
-                    return {'success': True, 'transaction_data': transaction_data}
-        else:
-            pass  # Skipping modern Order API
-        
+        # Try modern Order API: Trading GetOrders first, then Fulfillment getOrders if no orders
+        orders_result = get_orders_for_item(user_token, item_id)
+        if not orders_result.get('orders'):
+            orders_result = get_orders_for_item_fulfillment_api(item_id)
+        if orders_result.get('success') and orders_result.get('orders'):
+            order_data = orders_result['orders'][0]
+            order_id = order_data.get('orderId')
+            has_xml = order_data.get('order') and order_data.get('transaction')
+            transaction_data = None
+            if has_xml:
+                order_details = get_order_with_tax_breakdown(user_token, order_data)
+                if order_details.get('success'):
+                    transaction_data = order_details['transaction_data']
+            fee_details = get_ebay_fees_from_order_api(order_id)
+            if fee_details.get('success'):
+                fee_data = fee_details['fee_data']
+                if transaction_data is None:
+                    transaction_data = {
+                        'final_price': 0, 'subtotal': 0, 'shipping': 0, 'listing_fees': 0,
+                        'final_value_fee': fee_data.get('final_value_fee', 0),
+                        'paypal_fee': 0, 'sales_tax': fee_data.get('sales_tax', 0),
+                        'net_earnings': 0, 'total_fees': fee_data.get('total_fees', 0),
+                        'has_actual_fees': True, 'order_id': order_id
+                    }
+                transaction_data.update(fee_data)
+                net = fee_data.get('net_amount')
+                if net is not None and float(net) > 0:
+                    transaction_data['final_price'] = float(net)
+                    transaction_data['net_earnings'] = float(net)
+                if fee_data.get('subtotal') is not None:
+                    transaction_data['subtotal'] = fee_data['subtotal']
+                if fee_data.get('shipping') is not None:
+                    transaction_data['shipping'] = fee_data['shipping']
+                if fee_data.get('order_total') is not None:
+                    transaction_data['order_total'] = fee_data['order_total']
+                if fee_data.get('order_id') is not None and fee_data.get('order_id') != '':
+                    transaction_data['order_id'] = fee_data['order_id']
+                transaction_data['order_id'] = transaction_data.get('order_id') or order_id
+                return {'success': True, 'transaction_data': transaction_data}
+            if transaction_data is not None:
+                return {'success': True, 'transaction_data': transaction_data}
+
         # Fallback: try legacy approach
         
         # First try to get basic item info and price
@@ -1516,21 +1510,33 @@ def get_orders_for_item_fulfillment_api(item_id):
         start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%dT00:00:00.000Z')
         offset = 0
         limit = 200
+        item_id_str = str(item_id)
         while True:
             params = {'limit': limit, 'offset': offset, 'filter': f'creationdate:[{start_date}..]'}
             response = requests.get(url, headers=headers, params=params)
             if response.status_code != 200:
+                print("[Fulfillment getOrders] failed status={} body={}".format(response.status_code, response.text[:200]))
                 return {'success': False, 'error': f'Fulfillment getOrders failed: {response.status_code}', 'orders': []}
             data = response.json()
-            for order in data.get('orders', []):
+            orders_batch = data.get('orders', [])
+            total = data.get('total', len(orders_batch))
+            if offset == 0 and orders_batch:
+                print("[Fulfillment getOrders] total orders in range: {} (checking for item_id={})".format(total, item_id_str))
+            for order in orders_batch:
+                oid = order.get('orderId')
                 for li in order.get('lineItems', []):
-                    if str(li.get('legacyItemId') or '') == str(item_id):
-                        return {'success': True, 'orders': [{'orderId': order.get('orderId')}]}
-            if len(data.get('orders', [])) < limit:
+                    legacy = li.get('legacyItemId')
+                    # Match legacyItemId (listing item id) or lineItemId if API only returns that
+                    if legacy is not None and str(legacy) == item_id_str:
+                        print("[Fulfillment getOrders] found order_id={} for item_id={}".format(oid, item_id_str))
+                        return {'success': True, 'orders': [{'orderId': oid}]}
+            if len(orders_batch) < limit:
                 break
             offset += limit
+        print("[Fulfillment getOrders] no order found for item_id={} (checked {} orders)".format(item_id_str, total))
         return {'success': True, 'orders': []}
     except Exception as e:
+        print("[Fulfillment getOrders] exception: {}".format(e))
         return {'success': False, 'error': str(e), 'orders': []}
 
 
