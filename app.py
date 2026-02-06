@@ -4358,19 +4358,39 @@ def get_ebay_item_data(item_id):
         
         if transaction_data['success']:
             trans_data = transaction_data['transaction_data']
+            subtotal = round(float(trans_data.get('subtotal', 0)), 2)
+            shipping = round(float(trans_data.get('shipping', 0)), 2)
+            sales_tax = round(float(trans_data.get('sales_tax', 0)), 2)
+            order_total = round(float(trans_data.get('order_total', 0)) or (subtotal + shipping + sales_tax), 2)
+            final_price = round(float(trans_data.get('final_price', 0)), 2)
+            total_fees = round(float(trans_data.get('total_fees', 0)), 2)
+            net_earnings = round(float(trans_data.get('net_earnings', 0)), 2)
+            # Debug: print to terminal (sell item page)
+            print("")
+            print("========== eBay order breakdown (sell item page) ==========")
+            print("  item_id:", item_id, "| ebay_item_id:", ebay_item_id)
+            print("  Subtotal:          ${:.2f}".format(subtotal))
+            print("  Shipping:          ${:.2f}".format(shipping))
+            print("  Sales tax:         ${:.2f}".format(sales_tax))
+            print("  Order total:       ${:.2f}".format(order_total))
+            print("  Total fees:        ${:.2f}".format(total_fees))
+            print("  Order earnings:    ${:.2f}".format(final_price if final_price else net_earnings))
+            print("==========================================================")
+            print("")
             return jsonify({
                 'success': True,
                 'ebay_data': {
-                    'net_earnings': round(float(trans_data.get('net_earnings', 0)), 2),
-                    'final_price': round(float(trans_data.get('final_price', 0)), 2),
-                    'total_fees': round(float(trans_data.get('total_fees', 0)), 2),
-                    'subtotal': round(float(trans_data.get('subtotal', 0)), 2),
-                    'shipping': round(float(trans_data.get('shipping', 0)), 2),
-                    'sales_tax': round(float(trans_data.get('sales_tax', 0)), 2),
-                    'order_total': round(float(trans_data.get('order_total', 0)) or (float(trans_data.get('subtotal', 0)) + float(trans_data.get('shipping', 0)) + float(trans_data.get('sales_tax', 0))), 2)
+                    'net_earnings': net_earnings,
+                    'final_price': final_price,
+                    'total_fees': total_fees,
+                    'subtotal': subtotal,
+                    'shipping': shipping,
+                    'sales_tax': sales_tax,
+                    'order_total': order_total
                 }
             })
         else:
+            print("[ebay-item-data] No data for item_id={} ebay_item_id={}: {}".format(item_id, ebay_item_id, transaction_data.get('error', 'Unknown error')))
             return jsonify({
                 'success': False,
                 'message': f"Could not fetch eBay data: {transaction_data.get('error', 'Unknown error')}"

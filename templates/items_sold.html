@@ -98,6 +98,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear existing values first
             priceInput.value = '';
             shippingInput.value = '0';
+            ebayDebug.style.display = 'block';
+            document.getElementById('debug-subtotal').textContent = '…';
+            document.getElementById('debug-shipping').textContent = '…';
+            document.getElementById('debug-sales-tax').textContent = '…';
+            document.getElementById('debug-order-total').textContent = '…';
+            document.getElementById('debug-order-earnings').textContent = '…';
             
             // Show loading status
             ebayStatus.style.display = 'block';
@@ -108,24 +114,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.ebay_data) {
-                        // Prepopulate with eBay earnings only (shipping entered manually)
-                        const netEarnings = data.ebay_data.net_earnings || '';
+                        const d = data.ebay_data;
+                        const netEarnings = d.net_earnings ?? d.final_price ?? '';
+                        priceInput.value = netEarnings !== '' ? Number(netEarnings).toFixed(2) : '';
                         
-                        priceInput.value = netEarnings;
-                        // Leave shipping field empty for manual entry
+                        // Populate debug breakdown
+                        document.getElementById('debug-subtotal').textContent = fmt(d.subtotal);
+                        document.getElementById('debug-shipping').textContent = fmt(d.shipping);
+                        document.getElementById('debug-sales-tax').textContent = fmt(d.sales_tax);
+                        document.getElementById('debug-order-total').textContent = fmt(d.order_total);
+                        document.getElementById('debug-order-earnings').textContent = fmt(d.final_price ?? d.net_earnings);
                         
-                        // Trigger change event to ensure form validation
                         priceInput.dispatchEvent(new Event('change', { bubbles: true }));
-                        
-                        // Hide status after successful load
                         ebayStatus.style.display = 'none';
                     } else {
-                        // No eBay data available - clear the price field
                         priceInput.value = '';
-                        // Leave shipping field empty for manual entry
-                        
-                        // Hide status when no data found
-                        ebayStatus.style.display = 'none';
+                        document.getElementById('debug-subtotal').textContent = '—';
+                        document.getElementById('debug-shipping').textContent = '—';
+                        document.getElementById('debug-sales-tax').textContent = '—';
+                        document.getElementById('debug-order-total').textContent = '—';
+                        document.getElementById('debug-order-earnings').textContent = '—';
+                        ebayStatusText.innerHTML = data.message || 'No eBay data for this item';
+                        ebayStatus.style.display = 'block';
                     }
                 })
                 .catch(error => {
