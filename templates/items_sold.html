@@ -62,6 +62,17 @@
                 <div id="ebay-status" class="form-group" style="display: none;">
                     <small class="text-muted" id="ebay-status-text">Loading eBay data...</small>
                 </div>
+                <!-- Debug: eBay order breakdown -->
+                <div id="ebay-debug" class="form-group border rounded p-3 bg-light" style="display: none;">
+                    <strong class="text-secondary">eBay order breakdown (debug)</strong>
+                    <table class="table table-sm table-borderless mb-0 mt-2">
+                        <tr><td>Subtotal</td><td id="debug-subtotal" class="text-end">—</td></tr>
+                        <tr><td>Shipping</td><td id="debug-shipping" class="text-end">—</td></tr>
+                        <tr><td>Sales tax</td><td id="debug-sales-tax" class="text-end">—</td></tr>
+                        <tr><td>Order total (buyer paid)</td><td id="debug-order-total" class="text-end">—</td></tr>
+                        <tr class="border-top"><td><strong>Order earnings</strong></td><td id="debug-order-earnings" class="text-end fw-bold">—</td></tr>
+                    </table>
+                </div>
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}
@@ -76,6 +87,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const shippingInput = document.getElementById('shipping_fee');
     const ebayStatus = document.getElementById('ebay-status');
     const ebayStatusText = document.getElementById('ebay-status-text');
+    const ebayDebug = document.getElementById('ebay-debug');
+    const fmt = (v) => (v != null && v !== '' && !isNaN(Number(v))) ? '$' + Number(v).toFixed(2) : '—';
     
     // Add event listener for item selection change
     itemSelect.addEventListener('change', function() {
@@ -117,16 +130,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Error fetching eBay data:', error);
-                    
-                    // Clear price field on error, leave shipping for manual entry
                     priceInput.value = '';
-                    
-                    // Hide status on error
+                    ebayDebug.style.display = 'none';
                     ebayStatus.style.display = 'none';
                 });
         } else {
-            // Clear price field when no item is selected, leave shipping for manual entry
             priceInput.value = '';
+            ebayDebug.style.display = 'none';
             ebayStatus.style.display = 'none';
         }
     });

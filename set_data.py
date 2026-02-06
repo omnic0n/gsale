@@ -91,12 +91,10 @@ def set_bought_items_improved(details):
                         (item_id, date.today().strftime("%Y-%m-%d")))
             
             item_count += 1
-            print(f"DEBUG: Added item '{item_name}' with category '{category_id}' and eBay ID '{ebay_item_id}'")
     
     mysql.connection.commit()
     cur.close()
     
-    print(f"DEBUG: Successfully added {item_count} items")
     return item_count
 
 def set_quick_sale(details):

@@ -1152,14 +1152,12 @@ def get_orders_for_item(user_token, item_id):
                 'orders': matching_orders
             }
         else:
-            print("DEBUG: GetOrders failed with status {}".format(response.status_code))
             return {
                 'success': False,
                 'error': f'GetOrders failed: {response.status_code} - {response.text}'
             }
             
     except Exception as e:
-        print("DEBUG: GetOrders exception: {}".format(str(e)))
         return {
             'success': False,
             'error': f'GetOrders error: {str(e)}'
@@ -1174,19 +1172,6 @@ def get_order_with_tax_breakdown(user_token, order_data):
         
         order = order_data['order']
         transaction = order_data['transaction']
-        
-        print(f"DEBUG: Processing order {order_data['orderId']}")
-        
-        # Debug: Print all XML elements to see what's available
-        print("DEBUG: Available order elements:")
-        for elem in order.iter():
-            if elem.text and elem.text.strip():
-                print(f"  {elem.tag.split('}')[-1]}: {elem.text}")
-        
-        print("DEBUG: Available transaction elements:")
-        for elem in transaction.iter():
-            if elem.text and elem.text.strip():
-                print(f"  {elem.tag.split('}')[-1]}: {elem.text}")
         
         transaction_data = {
             'final_price': 0,
@@ -1216,33 +1201,27 @@ def get_order_with_tax_breakdown(user_token, order_data):
         shipping_cost = order.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingCost')
         if shipping_cost is not None:
             transaction_data['shipping'] = float(shipping_cost.text) if shipping_cost.text else 0
-            print(f"DEBUG: Found shipping cost from ShippingCost: {transaction_data['shipping']}")
         else:
             # Try alternative shipping element names
             shipping_service_cost = order.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingServiceCost')
             if shipping_service_cost is not None:
                 transaction_data['shipping'] = float(shipping_service_cost.text) if shipping_service_cost.text else 0
-                print(f"DEBUG: Found shipping cost from ShippingServiceCost: {transaction_data['shipping']}")
             else:
                 # Try in transaction element
                 transaction_shipping = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingCost')
                 if transaction_shipping is not None:
                     transaction_data['shipping'] = float(transaction_shipping.text) if transaction_shipping.text else 0
-                    print(f"DEBUG: Found shipping cost from transaction ShippingCost: {transaction_data['shipping']}")
                 else:
                     transaction_shipping_service = transaction.find('.//{urn:ebay:apis:eBLBaseComponents}ShippingServiceCost')
                     if transaction_shipping_service is not None:
                         transaction_data['shipping'] = float(transaction_shipping_service.text) if transaction_shipping_service.text else 0
-                        print(f"DEBUG: Found shipping cost from transaction ShippingServiceCost: {transaction_data['shipping']}")
                     else:
                         # Try ActualShippingCost element
                         actual_shipping_cost = order.find('.//{urn:ebay:apis:eBLBaseComponents}ActualShippingCost')
                         if actual_shipping_cost is not None:
                             transaction_data['shipping'] = float(actual_shipping_cost.text) if actual_shipping_cost.text else 0
-                            print(f"DEBUG: Found shipping cost from ActualShippingCost: {transaction_data['shipping']}")
                         else:
                             transaction_data['shipping'] = 0
-                            print(f"DEBUG: No shipping cost found in order/transaction XML")
         
         # Extract order total (might be different from transaction price)
         order_total = order.find('.//{urn:ebay:apis:eBLBaseComponents}Total')
@@ -1288,24 +1267,12 @@ def get_order_with_tax_breakdown(user_token, order_data):
         # Calculate net earnings
         transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['total_fees']
         
-        print(f"DEBUG: Extracted order data:")
-        print(f"  Final Price: ${transaction_data['final_price']:.2f}")
-        print(f"  Subtotal: ${transaction_data['subtotal']:.2f}")
-        print(f"  Shipping: ${transaction_data['shipping']:.2f}")
-        print(f"  Final Value Fee: ${transaction_data['final_value_fee']:.2f}")
-        print(f"  PayPal Fee: ${transaction_data['paypal_fee']:.2f}")
-        print(f"  Listing Fees: ${transaction_data['listing_fees']:.2f}")
-        print(f"  Sales Tax: ${transaction_data['sales_tax']:.2f}")
-        print(f"  Total Fees: ${transaction_data['total_fees']:.2f}")
-        print(f"  Net Earnings: ${transaction_data['net_earnings']:.2f}")
-        
         return {
             'success': True,
             'transaction_data': transaction_data
         }
         
     except Exception as e:
-        print(f"DEBUG: Error processing order data: {str(e)}")
         return {
             'success': False,
             'error': f'Order processing error: {str(e)}'
@@ -1313,8 +1280,6 @@ def get_order_with_tax_breakdown(user_token, order_data):
         
         if response.status_code == 200:
             data = response.json()
-            
-            print("DEBUG: Order data keys: {}".format(list(data.keys())))
             
             # Extract financial details from modern Order API response
             transaction_data = {
@@ -1334,11 +1299,9 @@ def get_order_with_tax_breakdown(user_token, order_data):
             pricing_summary = data.get('pricingSummary', {})
             if pricing_summary:
                 transaction_data['final_price'] = float(pricing_summary.get('total', 0))
-                print("DEBUG: Pricing summary: {}".format(pricing_summary))
             
             # Get tax breakdown
             tax_details = data.get('taxDetails', [])
-            print("DEBUG: Tax details: {}".format(tax_details))
             for tax in tax_details:
                 tax_type = tax.get('taxType', '').lower()
                 tax_amount = float(tax.get('amount', {}).get('value', 0))
@@ -1351,7 +1314,6 @@ def get_order_with_tax_breakdown(user_token, order_data):
             
             # Get fee breakdown
             fee_details = data.get('feeDetails', [])
-            print("DEBUG: Fee details: {}".format(fee_details))
             for fee in fee_details:
                 fee_type = fee.get('feeType', '').lower()
                 fee_amount = float(fee.get('amount', {}).get('value', 0))
@@ -1367,21 +1329,17 @@ def get_order_with_tax_breakdown(user_token, order_data):
             transaction_data['total_fees'] = transaction_data['listing_fees'] + transaction_data['final_value_fee'] + transaction_data['paypal_fee']
             transaction_data['net_earnings'] = transaction_data['final_price'] - transaction_data['sales_tax'] - transaction_data['final_value_fee']
             
-            print("DEBUG: Calculated transaction data: {}".format(transaction_data))
-            
             return {
                 'success': True,
                 'transaction_data': transaction_data
             }
         else:
-            print("DEBUG: Order details API failed with status {}".format(response.status_code))
             return {
                 'success': False,
                 'error': 'Order API error: {} - {}'.format(response.status_code, response.text)
             }
             
     except Exception as e:
-        print("DEBUG: Order details API exception: {}".format(str(e)))
         return {
             'success': False,
             'error': 'Order API error: {}'.format(str(e))
@@ -1518,48 +1476,37 @@ def extract_fee_data(order_data):
     Extract fee information from Order API response
     """
     try:
-        print("DEBUG: Extracting fee data from order response")
-        print(f"DEBUG: Order data keys: {list(order_data.keys())}")
-        
         fee_data = {}
         
         # Extract from lineItems
         line_items = order_data.get('lineItems', [])
-        print(f"DEBUG: Found {len(line_items)} line items")
         total_fees = 0
         
-        for i, item in enumerate(line_items):
-            print(f"DEBUG: Line item {i}: {list(item.keys())}")
-            
+        for item in line_items:
             # Final Value Fee
             fvf = item.get('finalValueFee', {})
             if fvf:
                 fee_data['final_value_fee'] = float(fvf.get('value', 0))
                 total_fees += fee_data['final_value_fee']
-                print(f"DEBUG: Final Value Fee: {fee_data['final_value_fee']}")
             
             # Insertion Fee
             insertion_fee = item.get('insertionFee', {})
             if insertion_fee:
                 fee_data['insertion_fee'] = float(insertion_fee.get('value', 0))
                 total_fees += fee_data['insertion_fee']
-                print(f"DEBUG: Insertion Fee: {fee_data['insertion_fee']}")
         
         # Extract from pricingSummary
         pricing = order_data.get('pricingSummary', {})
         if pricing:
             fee_data['total_fees'] = total_fees
             fee_data['net_amount'] = float(pricing.get('total', 0)) - total_fees
-            print(f"DEBUG: Total fees: {total_fees}, Net amount: {fee_data['net_amount']}")
         
-        print(f"DEBUG: Final fee data: {fee_data}")
         return {
             'success': True,
             'fee_data': fee_data
         }
         
     except Exception as e:
-        print(f"DEBUG: Fee extraction error: {str(e)}")
         return {'success': False, 'error': f'Fee extraction error: {str(e)}'}
 
 def get_ebay_final_value_fees_trading_api(order_ids):
@@ -1909,11 +1856,7 @@ def get_basic_item_price(user_token, item_id):
             'Content-Type': 'text/xml'
         }
         
-        print("DEBUG: Calling GetMyeBaySelling for item: {}".format(item_id))
-        
         response = requests.post(url, data=xml_request, headers=headers)
-        
-        print("DEBUG: GetMyeBaySelling response status: {}".format(response.status_code))
         
         if response.status_code == 200:
             root = ET.fromstring(response.text)
@@ -1923,39 +1866,28 @@ def get_basic_item_price(user_token, item_id):
             if errors:
                 error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
                 if error_msg is not None:
-                    print("DEBUG: GetMyeBaySelling error: {}".format(error_msg.text))
                     return 0
             
             # Find the specific item and get its price
             sold_list = root.find('.//{urn:ebay:apis:eBLBaseComponents}SoldList')
             if sold_list is not None:
                 items = sold_list.findall('.//{urn:ebay:apis:eBLBaseComponents}Item')
-                print("DEBUG: Found {} sold items in GetMyeBaySelling".format(len(items)))
-                
                 for item in items:
                     item_id_elem = item.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
                     if item_id_elem is not None and item_id_elem.text == item_id:
-                        print("DEBUG: Found matching item in sold list")
                         selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
                         if selling_status is not None:
                             current_price = selling_status.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
                             if current_price is not None:
                                 price = float(current_price.text) if current_price.text else 0
-                                print("DEBUG: Found item price: {}".format(price))
                                 return price
                         break
-                else:
-                    print("DEBUG: Item not found in sold list")
-            else:
-                print("DEBUG: No sold list found in response")
             
             return 0
         else:
-            print("DEBUG: GetMyeBaySelling failed with status: {}".format(response.status_code))
             return 0
             
     except Exception as e:
-        print("DEBUG: GetMyeBaySelling exception: {}".format(str(e)))
         return 0
 
 
@@ -3398,45 +3330,25 @@ def ebay_callback():
         request_state = request.args.get('state')
         session_state = session.get('ebay_oauth_state')
         
-        # Debug: Print state parameters for troubleshooting
-        print(f"DEBUG: eBay OAuth Callback")
-        print(f"  Request State: {request_state}")
-        print(f"  Session State: {session_state}")
-        print(f"  States Match: {request_state == session_state}")
-        
         # Verify state parameter (eBay sometimes doesn't return it)
         if not request_state or not session_state or request_state != session_state:
-            print(f"DEBUG: State validation failed")
-            print(f"  Request State: {request_state}")
-            print(f"  Session State: {session_state}")
-            print(f"  Request State Length: {len(request_state) if request_state else 0}")
-            print(f"  Session State Length: {len(session_state) if session_state else 0}")
-            
             # eBay sometimes doesn't return the state parameter, so we'll proceed anyway
             if not request_state:
-                print(f"DEBUG: No state parameter returned by eBay - proceeding anyway")
                 # Continue with OAuth flow
+                pass
             elif request_state and len(request_state) == 64:  # Valid state format
-                print(f"DEBUG: Allowing OAuth to proceed despite state mismatch (debug mode)")
                 # Continue with OAuth flow
+                pass
             else:
                 flash('Invalid state parameter. Please try again.', 'error')
                 return redirect(url_for('settings_ebay_listings'))
-        
-        # Debug: Print all request parameters
-        print(f"DEBUG: All request parameters:")
-        for key, value in request.args.items():
-            print(f"  {key}: {value}")
         
         # Get authorization code
         code = request.args.get('code')
         if not code:
             error_msg = request.args.get('error', 'Authorization code not received.')
-            print(f"DEBUG: No authorization code received. Error: {error_msg}")
             flash(f'eBay OAuth error: {error_msg}', 'error')
             return redirect(url_for('settings_ebay_listings'))
-        
-        print(f"DEBUG: Authorization code received: {code[:20]}...")
         
         # Exchange code for tokens
         token_result = exchange_ebay_code_for_token(code)
@@ -3449,7 +3361,6 @@ def ebay_callback():
             return redirect(url_for('settings_ebay_listings'))
             
     except Exception as e:
-        print(f"DEBUG: eBay OAuth callback exception: {str(e)}")
         flash(f'eBay OAuth error: {str(e)}', 'error')
         return redirect(url_for('settings_ebay_listings'))
 
@@ -3512,11 +3423,6 @@ def debug_ebay_oauth_url():
 def api_ebay_oauth_status():
     """API endpoint to check eBay OAuth status"""
     try:
-        # Debug: Print session info
-        print(f"DEBUG: OAuth status check:")
-        print(f"  Session ID: {session.get('_id', 'No session ID')}")
-        print(f"  Session keys: {list(session.keys())}")
-        
         token_result = get_valid_ebay_token()
         
         if token_result['success']:
@@ -3661,14 +3567,9 @@ def api_ebay_refresh_status():
 def api_ebay_debug_refresh():
     """Debug endpoint to test token refresh with detailed logging"""
     try:
-        print("DEBUG: Starting debug refresh process...")
-        
-        # First check if the table exists and has any data
         cur = mysql.connection.cursor()
         cur.execute("SHOW TABLES LIKE 'ebay_tokens'")
         table_exists = cur.fetchone()
-        
-        print(f"DEBUG: Table exists check result: {table_exists}")
         
         if not table_exists:
             return jsonify({
@@ -3684,7 +3585,6 @@ def api_ebay_debug_refresh():
         try:
             cur.execute("SELECT COUNT(*) FROM ebay_tokens")
             count_result = cur.fetchone()
-            print(f"DEBUG: Count result type: {type(count_result)}, value: {count_result}")
             
             # Handle different MySQL result formats
             if count_result is None:
@@ -3696,9 +3596,7 @@ def api_ebay_debug_refresh():
             else:
                 total_count = int(count_result) if count_result else 0
                 
-            print(f"DEBUG: Total tokens in database: {total_count}")
         except Exception as count_error:
-            print(f"DEBUG: Error getting count: {count_error}")
             total_count = "unknown"
         
         # Check if we have tokens in database
@@ -3710,11 +3608,6 @@ def api_ebay_debug_refresh():
         """)
         
         tokens_in_db = cur.fetchall()
-        print(f"DEBUG: Found {len(tokens_in_db)} tokens with refresh tokens in database")
-        
-        # Debug: Print the actual data returned
-        for i, token_data in enumerate(tokens_in_db):
-            print(f"DEBUG: Token {i}: {token_data}")
         
         if not tokens_in_db:
             return jsonify({
@@ -3734,8 +3627,6 @@ def api_ebay_debug_refresh():
         debug_results = []
         
         for token_data in tokens_in_db:
-            print(f"DEBUG: Token data type: {type(token_data)}, value: {token_data}")
-            
             # Handle both dict and tuple formats
             if isinstance(token_data, dict):
                 user_id = token_data.get('user_id')
@@ -3746,10 +3637,6 @@ def api_ebay_debug_refresh():
             else:
                 # Assume tuple format
                 user_id, access_token, refresh_token, expires_at, updated_at = token_data
-            
-            print(f"DEBUG: Testing refresh for user {user_id}")
-            print(f"DEBUG: Current token expires at: {expires_at}")
-            print(f"DEBUG: Last updated at: {updated_at}")
             
             # Test the refresh
             refresh_result = refresh_ebay_token(refresh_token)
@@ -3780,8 +3667,6 @@ def api_ebay_debug_refresh():
                 
                 updated_token = cur.fetchone()
                 if updated_token:
-                    print(f"DEBUG: Updated token type: {type(updated_token)}, value: {updated_token}")
-                    
                     # Handle both dict and tuple formats
                     if isinstance(updated_token, dict):
                         new_expires_at = updated_token.get('expires_at')
@@ -4478,7 +4363,11 @@ def get_ebay_item_data(item_id):
                 'ebay_data': {
                     'net_earnings': round(float(trans_data.get('net_earnings', 0)), 2),
                     'final_price': round(float(trans_data.get('final_price', 0)), 2),
-                    'total_fees': round(float(trans_data.get('total_fees', 0)), 2)
+                    'total_fees': round(float(trans_data.get('total_fees', 0)), 2),
+                    'subtotal': round(float(trans_data.get('subtotal', 0)), 2),
+                    'shipping': round(float(trans_data.get('shipping', 0)), 2),
+                    'sales_tax': round(float(trans_data.get('sales_tax', 0)), 2),
+                    'order_total': round(float(trans_data.get('order_total', 0)) or (float(trans_data.get('subtotal', 0)) + float(trans_data.get('shipping', 0)) + float(trans_data.get('sales_tax', 0))), 2)
                 }
             })
         else:
