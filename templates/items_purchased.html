@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
     <style>
-        .group-combobox-wrapper #groupSelect { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         .group-combobox-wrapper { position: relative; }
         .group-dropdown {
             display: none;
@@ -95,8 +94,10 @@
                     <div class="col-md-6">
                         <div class="form-group group-combobox-wrapper">
                             {{ form.group.label(class="form-control-label") }}
-                            <input type="text" id="groupSearch" class="form-control form-control-lg" placeholder="Search groups..." autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" role="combobox">
+                            <input type="text" id="groupSearch" class="form-control form-control-lg mb-2" placeholder="Search groups by name..." autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" role="combobox">
                             <div id="groupDropdown" class="group-dropdown" role="listbox" aria-hidden="true"></div>
+                            <small class="form-text text-muted mb-2" id="groupMatchCount"></small>
+                            <label class="form-control-label small text-muted">Or select from full list</label>
                             {% if form.group.errors %}
                                 {{ form.group(class="form-control form-control-lg is-invalid", id="groupSelect") }}
                                 <div class="invalid-feedback">
@@ -107,7 +108,6 @@
                             {% else %}
                                 {{ form.group(class="form-control form-control-lg", id="groupSelect") }}
                             {% endif %}
-                            <small class="form-text text-muted" id="groupMatchCount"></small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -314,6 +314,11 @@
                 if (!groupSearch.contains(e.target) && !groupDropdown.contains(e.target)) {
                     hideDropdown();
                 }
+            });
+            // When user picks from the full-list dropdown, show the name in the search box
+            groupSelect.addEventListener('change', function() {
+                var opt = groupSelect.options[groupSelect.selectedIndex];
+                groupSearch.value = (opt && opt.value) ? opt.text : '';
             });
             // Pre-fill display when page has a selected group (e.g. ?group=xxx)
             var selectedOpt = groupSelect.options[groupSelect.selectedIndex];
