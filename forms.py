@@ -154,3 +154,11 @@ class EbaySoldItemsSearchForm(FlaskForm):
     ], default=25, validators=[DataRequired()])
     submit = SubmitField('Search My Sold Items')
 
+class EbayRecentlyListedSearchForm(FlaskForm):
+    search_term = StringField('Search Term', validators=[Length(max=200)],
+                             render_kw={"placeholder": "e.g., pokemon cards (optional)"})
+    num_items = SelectField('Number of Items', choices=[
+        (10, "10"), (25, "25"), (50, "50"), (100, "100"), (200, "200")
+    ], default=25, validators=[DataRequired()])
+    submit = SubmitField('Search Recently Listed')
+

@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm, EbaySoldItemsSearchForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm, EbaySoldItemsSearchForm, EbayRecentlyListedSearchForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -916,6 +916,164 @@ def get_sold_items_basic(user_token):
         return {
             'success': False,
             'error': 'API error: {}'.format(str(e))
+        }
+
+def get_active_listings_basic(user_token):
+    """
+    Get active (currently listed) items using GetMyeBaySelling ActiveList.
+    Returns items with start_time (listing date) for sorting by recently listed.
+    """
+    try:
+        import xml.etree.ElementTree as ET
+        url = "https://api.ebay.com/ws/api.dll"
+        xml_request = """<?xml version="1.0" encoding="utf-8"?>
+        <GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+            <RequesterCredentials>
+                <eBayAuthToken>{}</eBayAuthToken>
+            </RequesterCredentials>
+            <ActiveList>
+                <Include>true</Include>
+                <Pagination>
+                    <EntriesPerPage>200</EntriesPerPage>
+                    <PageNumber>1</PageNumber>
+                </Pagination>
+            </ActiveList>
+            <DetailLevel>ReturnAll</DetailLevel>
+            <Version>1199</Version>
+        </GetMyeBaySellingRequest>""".format(user_token)
+        headers = {
+            'X-EBAY-API-COMPATIBILITY-LEVEL': '1199',
+            'X-EBAY-API-DEV-NAME': app.config.get('EBAY_DEV_NAME', 'your_dev_name'),
+            'X-EBAY-API-APP-NAME': app.config.get('EBAY_APP_NAME', 'your_app_name'),
+            'X-EBAY-API-CERT-NAME': app.config.get('EBAY_CERT_NAME', 'your_cert_name'),
+            'X-EBAY-API-CALL-NAME': 'GetMyeBaySelling',
+            'X-EBAY-API-SITEID': '0',
+            'Content-Type': 'text/xml'
+        }
+        response = requests.post(url, data=xml_request, headers=headers)
+        if response.status_code != 200:
+            return {'success': False, 'error': 'API error: {} - {}'.format(response.status_code, response.text)}
+        root = ET.fromstring(response.text)
+        errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
+        if errors:
+            error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
+            if error_msg is not None:
+                return {'success': False, 'error': 'eBay API error: {}'.format(error_msg.text)}
+        items = []
+        active_list = root.find('.//{urn:ebay:apis:eBLBaseComponents}ActiveList')
+        if active_list is not None:
+            item_elements = active_list.findall('.//{urn:ebay:apis:eBLBaseComponents}Item')
+            for item in item_elements:
+                item_id = item.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
+                title = item.find('.//{urn:ebay:apis:eBLBaseComponents}Title')
+                condition = item.find('.//{urn:ebay:apis:eBLBaseComponents}ConditionDisplayName')
+                quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
+                # StartTime = when the listing was listed
+                listing_details = item.find('.//{urn:ebay:apis:eBLBaseComponents}ListingDetails')
+                start_time = 'N/A'
+                if listing_details is not None:
+                    start_elem = listing_details.find('.//{urn:ebay:apis:eBLBaseComponents}StartTime')
+                    if start_elem is not None and start_elem.text:
+                        start_time = start_elem.text
+                selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
+                price = 0
+                currency = 'USD'
+                if selling_status is not None:
+                    current_price = selling_status.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
+                    if current_price is not None:
+                        price = float(current_price.text) if current_price.text else 0
+                        currency_attr = current_price.get('{http://www.w3.org/XML/1998/namespace}currencyID')
+                        if currency_attr:
+                            currency = currency_attr
+                picture_details = item.find('.//{urn:ebay:apis:eBLBaseComponents}PictureDetails')
+                image_url = None
+                if picture_details is not None:
+                    gallery_url = picture_details.find('.//{urn:ebay:apis:eBLBaseComponents}GalleryURL')
+                    if gallery_url is not None:
+                        image_url = gallery_url.text
+                primary_category = item.find('.//{urn:ebay:apis:eBLBaseComponents}PrimaryCategoryName')
+                category_name = primary_category.text if primary_category is not None else 'N/A'
+                items.append({
+                    'itemId': item_id.text if item_id is not None else 'N/A',
+                    'title': title.text if title is not None else 'N/A',
+                    'condition': condition.text if condition is not None else 'N/A',
+                    'quantity': int(quantity.text) if quantity is not None and quantity.text else 0,
+                    'start_time': start_time,
+                    'price': price,
+                    'currency': currency,
+                    'image_url': image_url,
+                    'category': category_name,
+                    'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#'
+                })
+        return {'success': True, 'items': items}
+    except Exception as e:
+        import traceback
+        return {'success': False, 'error': 'API error: {}'.format(str(e)), 'detail': traceback.format_exc()[:300]}
+
+def search_ebay_recently_listed(search_term=None, num_items=25):
+    """
+    Search user's own recently listed (active) items from eBay using GetMyeBaySelling ActiveList.
+    Sorted by listing date (newest first). Optional filter by search term.
+    """
+    try:
+        token_result = get_valid_ebay_token()
+        if not token_result['success']:
+            user_token = app.config.get('EBAY_USER_TOKEN')
+            if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+                return {
+                    'success': False,
+                    'error': 'eBay authentication required. Please authenticate with eBay OAuth or configure a legacy token.'
+                }
+        else:
+            user_token = token_result['access_token']
+        result = get_active_listings_basic(user_token)
+        if not result['success']:
+            return result
+        items = result.get('items', [])
+        if search_term and search_term.strip():
+            search_term_lower = search_term.strip().lower()
+            items = [i for i in items if search_term_lower in (i.get('title') or '').lower() or search_term_lower in (i.get('itemId') or '').lower()]
+        # Sort by start_time descending (newest first); N/A at end
+        def sort_key(i):
+            t = i.get('start_time') or 'N/A'
+            if t == 'N/A':
+                return (1, '')
+            return (0, t)
+        items.sort(key=sort_key, reverse=True)
+        items = items[:int(num_items)]
+        listings = []
+        for item in items:
+            ebay_item_id = item.get('itemId', 'N/A')
+            matching_item_id = None
+            if ebay_item_id and ebay_item_id != 'N/A':
+                matching_item_id = get_data.get_item_id_by_ebay_item_id(ebay_item_id)
+            listings.append({
+                'itemId': ebay_item_id,
+                'title': item.get('title', 'N/A'),
+                'price': item.get('price', 0),
+                'currency': item.get('currency', 'USD'),
+                'condition': item.get('condition', 'N/A'),
+                'listed_time': item.get('start_time', 'N/A'),
+                'quantity': item.get('quantity', 0),
+                'image_url': item.get('image_url'),
+                'category': item.get('category', 'N/A'),
+                'ebay_url': item.get('ebay_url', 'https://www.ebay.com/itm/{}'.format(ebay_item_id)),
+                'matching_item_id': matching_item_id
+            })
+        note = 'Showing your recently listed (active) items' + (' matching "{}"'.format(search_term.strip()) if search_term and search_term.strip() else '')
+        return {
+            'success': True,
+            'listings': listings,
+            'total': len(items),
+            'returned': len(listings),
+            'note': note
+        }
+    except Exception as e:
+        import traceback
+        return {
+            'success': False,
+            'error': 'Error fetching recently listed items: {}'.format(str(e)),
+            'detail': traceback.format_exc()[:500]
         }
 
 def get_item_transaction_details(user_token, item_id):
@@ -5339,6 +5497,25 @@ def ebay_sold_search():
                 flash(f'Search error: {error}', 'error')
     
     return render_template('tools_ebay_sold_search.html', form=form, results=results, error=error, rate_limited=rate_limited)
+
+@app.route('/tools/ebay-recently-listed', methods=['GET', 'POST'])
+@login_required
+def ebay_recently_listed():
+    """Search user's own recently listed (active) items on eBay"""
+    refresh_token_if_needed()
+    form = EbayRecentlyListedSearchForm()
+    results = None
+    error = None
+    if request.method == 'POST' and form.validate_on_submit():
+        search_term = form.search_term.data if form.search_term.data else None
+        num_items = form.num_items.data
+        search_results = search_ebay_recently_listed(search_term=search_term, num_items=num_items)
+        if search_results['success']:
+            results = search_results
+        else:
+            error = search_results.get('error', 'Unknown error occurred')
+            flash('Error: {}'.format(error), 'error')
+    return render_template('tools_ebay_recently_listed.html', form=form, results=results, error=error)
 
 @app.route('/reports/neighborhood/detail/<neighborhood_id>')
 @login_required

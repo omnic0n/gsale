@@ -1,0 +1,209 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <fieldset class="form-group">
+        <legend class="border-bottom mb-4">
+            <i class="fas fa-clock me-2"></i>My eBay Recently Listed Items
+        </legend>
+        
+        <div class="mb-3">
+            <p class="text-muted">
+                View your currently active listings, sorted by when you listed them (newest first). Leave search term empty to see all active items.
+            </p>
+        </div>
+        
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-row">
+                <div class="form-group col-md-6 mb-3">
+                    {{ form.search_term.label(class="form-control-label") }}
+                    {% if form.search_term.errors %}
+                        {{ form.search_term(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.search_term.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.search_term(class="form-control form-control-lg") }}
+                    {% endif %}
+                    <small class="form-text text-muted">Optional: Filter by item title or eBay item ID</small>
+                </div>
+                
+                <div class="form-group col-md-6 mb-3">
+                    {{ form.num_items.label(class="form-control-label") }}
+                    {% if form.num_items.errors %}
+                        {{ form.num_items(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.num_items.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.num_items(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </fieldset>
+</div>
+
+{% if results %}
+<div class="content-section mt-4">
+    <h4 class="mb-3">
+        <i class="fas fa-list me-2"></i>Recently Listed (Active)
+        <small class="text-muted">(Showing {{ results.returned }} of {{ results.total }} item{{ 's' if results.total != 1 else '' }})</small>
+    </h4>
+    {% if results.note %}
+    <div class="alert alert-info mb-3">
+        <i class="fas fa-info-circle me-2"></i>{{ results.note }}
+    </div>
+    {% endif %}
+    
+    {% if results.listings %}
+    <div class="table-responsive">
+        <table class="blueTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Item ID</th>
+                    <th>Price</th>
+                    <th>Listed</th>
+                    <th>Qty</th>
+                    <th>Links</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in results.listings %}
+                <tr>
+                    <td style="max-width: 300px; word-wrap: break-word;">
+                        {% if item.matching_item_id %}
+                            {{ item.title }}
+                        {% else %}
+                            <span class="no-match-title">{{ item.title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.itemId }}</td>
+                    <td>${{ "%.2f"|format(item.price) }} {{ item.currency }}</td>
+                    <td>
+                        {% if item.listed_time and item.listed_time != 'N/A' %}
+                            {{ item.listed_time[:10] }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>
+                        <a href="{{ item.ebay_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> View on eBay
+                        </a>
+                        {% if item.matching_item_id %}
+                            <a href="/items/describe?item={{ item.matching_item_id }}" class="btn btn-sm btn-outline-success ms-2">
+                                <i class="fas fa-link"></i> View Item
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('bought_items') }}?ebay_item_id={{ item.itemId }}&name={{ item.title|urlencode }}" class="btn btn-sm btn-outline-secondary ms-2">
+                                <i class="fas fa-plus"></i> Add Item
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No active listings found matching your search criteria.
+    </div>
+    {% endif %}
+</div>
+{% elif error %}
+<div class="content-section mt-4">
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Error:</strong> {{ error }}
+    </div>
+</div>
+{% endif %}
+
+<style>
+.content-section {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-control-label {
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 0.5rem;
+}
+
+.blueTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.blueTable thead {
+    background-color: #4A90E2;
+    color: white;
+}
+
+.blueTable th,
+.blueTable td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.blueTable tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.blueTable tbody tr:hover {
+    background-color: #e8f4f8;
+}
+
+.btn-outline-info {
+    color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-outline-info:hover {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.no-match-title {
+    color: #555;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
