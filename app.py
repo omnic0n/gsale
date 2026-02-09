@@ -921,26 +921,12 @@ def get_sold_items_basic(user_token):
 def get_active_listings_basic(user_token):
     """
     Get active (currently listed) items using GetMyeBaySelling ActiveList.
+    Fetches ALL pages so recently listed items are included regardless of eBay's page order.
     Returns items with start_time (listing date) for sorting by recently listed.
     """
     try:
         import xml.etree.ElementTree as ET
         url = "https://api.ebay.com/ws/api.dll"
-        xml_request = """<?xml version="1.0" encoding="utf-8"?>
-        <GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
-            <RequesterCredentials>
-                <eBayAuthToken>{}</eBayAuthToken>
-            </RequesterCredentials>
-            <ActiveList>
-                <Include>true</Include>
-                <Pagination>
-                    <EntriesPerPage>200</EntriesPerPage>
-                    <PageNumber>1</PageNumber>
-                </Pagination>
-            </ActiveList>
-            <DetailLevel>ReturnAll</DetailLevel>
-            <Version>1199</Version>
-        </GetMyeBaySellingRequest>""".format(user_token)
         headers = {
             'X-EBAY-API-COMPATIBILITY-LEVEL': '1199',
             'X-EBAY-API-DEV-NAME': app.config.get('EBAY_DEV_NAME', 'your_dev_name'),
@@ -950,48 +936,70 @@ def get_active_listings_basic(user_token):
             'X-EBAY-API-SITEID': '0',
             'Content-Type': 'text/xml'
         }
-        response = requests.post(url, data=xml_request, headers=headers)
-        if response.status_code != 200:
-            return {'success': False, 'error': 'API error: {} - {}'.format(response.status_code, response.text)}
-        root = ET.fromstring(response.text)
-        errors = root.findall('.//{urn:ebay:apis:eBLBaseComponents}Errors')
-        if errors:
-            error_msg = errors[0].find('.//{urn:ebay:apis:eBLBaseComponents}LongMessage')
-            if error_msg is not None:
-                return {'success': False, 'error': 'eBay API error: {}'.format(error_msg.text)}
         items = []
-        active_list = root.find('.//{urn:ebay:apis:eBLBaseComponents}ActiveList')
-        if active_list is not None:
-            item_elements = active_list.findall('.//{urn:ebay:apis:eBLBaseComponents}Item')
+        page = 1
+        entries_per_page = 200
+        ns = '{urn:ebay:apis:eBLBaseComponents}'
+
+        while True:
+            xml_request = """<?xml version="1.0" encoding="utf-8"?>
+        <GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+            <RequesterCredentials>
+                <eBayAuthToken>{}</eBayAuthToken>
+            </RequesterCredentials>
+            <ActiveList>
+                <Include>true</Include>
+                <Pagination>
+                    <EntriesPerPage>{}</EntriesPerPage>
+                    <PageNumber>{}</PageNumber>
+                </Pagination>
+            </ActiveList>
+            <DetailLevel>ReturnAll</DetailLevel>
+            <Version>1199</Version>
+        </GetMyeBaySellingRequest>""".format(user_token, entries_per_page, page)
+            response = requests.post(url, data=xml_request, headers=headers)
+            if response.status_code != 200:
+                return {'success': False, 'error': 'API error: {} - {}'.format(response.status_code, response.text)}
+            root = ET.fromstring(response.text)
+            errors = root.findall('.//{}Errors'.format(ns))
+            if errors:
+                error_msg = errors[0].find('.//{}LongMessage'.format(ns))
+                if error_msg is not None:
+                    return {'success': False, 'error': 'eBay API error: {}'.format(error_msg.text)}
+            active_list = root.find('.//{}ActiveList'.format(ns))
+            if active_list is None:
+                break
+            item_elements = active_list.findall('.//{}Item'.format(ns))
+            if not item_elements:
+                break
             for item in item_elements:
-                item_id = item.find('.//{urn:ebay:apis:eBLBaseComponents}ItemID')
-                title = item.find('.//{urn:ebay:apis:eBLBaseComponents}Title')
-                condition = item.find('.//{urn:ebay:apis:eBLBaseComponents}ConditionDisplayName')
-                quantity = item.find('.//{urn:ebay:apis:eBLBaseComponents}Quantity')
-                # StartTime = when the listing was listed
-                listing_details = item.find('.//{urn:ebay:apis:eBLBaseComponents}ListingDetails')
+                item_id = item.find('.//{}ItemID'.format(ns))
+                title = item.find('.//{}Title'.format(ns))
+                condition = item.find('.//{}ConditionDisplayName'.format(ns))
+                quantity = item.find('.//{}Quantity'.format(ns))
+                listing_details = item.find('.//{}ListingDetails'.format(ns))
                 start_time = 'N/A'
                 if listing_details is not None:
-                    start_elem = listing_details.find('.//{urn:ebay:apis:eBLBaseComponents}StartTime')
+                    start_elem = listing_details.find('.//{}StartTime'.format(ns))
                     if start_elem is not None and start_elem.text:
                         start_time = start_elem.text
-                selling_status = item.find('.//{urn:ebay:apis:eBLBaseComponents}SellingStatus')
+                selling_status = item.find('.//{}SellingStatus'.format(ns))
                 price = 0
                 currency = 'USD'
                 if selling_status is not None:
-                    current_price = selling_status.find('.//{urn:ebay:apis:eBLBaseComponents}CurrentPrice')
+                    current_price = selling_status.find('.//{}CurrentPrice'.format(ns))
                     if current_price is not None:
                         price = float(current_price.text) if current_price.text else 0
                         currency_attr = current_price.get('{http://www.w3.org/XML/1998/namespace}currencyID')
                         if currency_attr:
                             currency = currency_attr
-                picture_details = item.find('.//{urn:ebay:apis:eBLBaseComponents}PictureDetails')
+                picture_details = item.find('.//{}PictureDetails'.format(ns))
                 image_url = None
                 if picture_details is not None:
-                    gallery_url = picture_details.find('.//{urn:ebay:apis:eBLBaseComponents}GalleryURL')
+                    gallery_url = picture_details.find('.//{}GalleryURL'.format(ns))
                     if gallery_url is not None:
                         image_url = gallery_url.text
-                primary_category = item.find('.//{urn:ebay:apis:eBLBaseComponents}PrimaryCategoryName')
+                primary_category = item.find('.//{}PrimaryCategoryName'.format(ns))
                 category_name = primary_category.text if primary_category is not None else 'N/A'
                 items.append({
                     'itemId': item_id.text if item_id is not None else 'N/A',
@@ -1005,6 +1013,11 @@ def get_active_listings_basic(user_token):
                     'category': category_name,
                     'ebay_url': 'https://www.ebay.com/itm/{}'.format(item_id.text) if item_id is not None else '#'
                 })
+            if len(item_elements) < entries_per_page:
+                break
+            page += 1
+            if page > 50:
+                break
         return {'success': True, 'items': items}
     except Exception as e:
         import traceback
@@ -1040,6 +1053,7 @@ def search_ebay_recently_listed(search_term=None, num_items=25):
                 return (1, '')
             return (0, t)
         items.sort(key=sort_key, reverse=True)
+        total_available = len(items)
         items = items[:int(num_items)]
         listings = []
         for item in items:
@@ -1064,7 +1078,7 @@ def search_ebay_recently_listed(search_term=None, num_items=25):
         return {
             'success': True,
             'listings': listings,
-            'total': len(items),
+            'total': total_available,
             'returned': len(listings),
             'note': note
         }
