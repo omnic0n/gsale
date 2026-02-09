@@ -62,16 +62,18 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             {{ form.group.label(class="form-control-label") }}
+                            <input type="text" id="groupSearch" class="form-control form-control-sm mb-2" placeholder="Search groups..." autocomplete="off">
                             {% if form.group.errors %}
-                                {{ form.group(class="form-control form-control-lg is-invalid") }}
+                                {{ form.group(class="form-control form-control-lg is-invalid", id="groupSelect") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.group.errors %}
                                         <span>{{ error }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.group(class="form-control form-control-lg") }}
+                                {{ form.group(class="form-control form-control-lg", id="groupSelect") }}
                             {% endif %}
+                            <small class="form-text text-muted" id="groupMatchCount"></small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -209,5 +211,36 @@
         
         // Initialize
         updateItemCount();
+
+        // Group search filter
+        const groupSelect = document.getElementById('groupSelect');
+        const groupSearch = document.getElementById('groupSearch');
+        const groupMatchCount = document.getElementById('groupMatchCount');
+        if (groupSelect && groupSearch) {
+            function filterGroups() {
+                const q = (groupSearch.value || '').trim().toLowerCase();
+                const options = Array.from(groupSelect.options);
+                let visible = 0;
+                options.forEach(function(opt) {
+                    const match = !q || (opt.text && opt.text.toLowerCase().indexOf(q) >= 0);
+                    opt.hidden = !match;
+                    if (match) visible++;
+                });
+                const total = options.length;
+                if (q && total > 0) {
+                    groupMatchCount.textContent = visible + ' of ' + total + ' groups';
+                } else {
+                    groupMatchCount.textContent = '';
+                }
+            }
+            groupSearch.addEventListener('input', filterGroups);
+            groupSearch.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    groupSearch.value = '';
+                    filterGroups();
+                    groupSearch.blur();
+                }
+            });
+        }
     </script>
 {% endblock content %}
