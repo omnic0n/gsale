@@ -1,5 +1,38 @@
 {% extends "layout.html" %}
 {% block content %}
+    <style>
+        .group-combobox-wrapper #groupSelect { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        .group-combobox-wrapper { position: relative; }
+        .group-dropdown {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 100%;
+            margin-top: 2px;
+            max-height: 280px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            list-style: none;
+            padding: 0;
+            margin-bottom: 0;
+        }
+        .group-dropdown.show { display: block; }
+        .group-dropdown-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .group-dropdown-option:hover, .group-dropdown-option.highlight { background: #e7f3ff; }
+        .group-dropdown-option:last-child { border-bottom: none; }
+    </style>
     <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
@@ -60,9 +93,10 @@
                 <!-- Common Fields -->
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="form-group">
+                        <div class="form-group group-combobox-wrapper">
                             {{ form.group.label(class="form-control-label") }}
-                            <input type="text" id="groupSearch" class="form-control form-control-sm mb-2" placeholder="Search groups..." autocomplete="off">
+                            <input type="text" id="groupSearch" class="form-control form-control-lg" placeholder="Search groups..." autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" role="combobox">
+                            <div id="groupDropdown" class="group-dropdown" role="listbox" aria-hidden="true"></div>
                             {% if form.group.errors %}
                                 {{ form.group(class="form-control form-control-lg is-invalid", id="groupSelect") }}
                                 <div class="invalid-feedback">
@@ -212,35 +246,80 @@
         // Initialize
         updateItemCount();
 
-        // Group search filter
+        // Group combobox: search input + dropdown list (no need to open native select)
         const groupSelect = document.getElementById('groupSelect');
         const groupSearch = document.getElementById('groupSearch');
+        const groupDropdown = document.getElementById('groupDropdown');
         const groupMatchCount = document.getElementById('groupMatchCount');
-        if (groupSelect && groupSearch) {
-            function filterGroups() {
-                const q = (groupSearch.value || '').trim().toLowerCase();
-                const options = Array.from(groupSelect.options);
-                let visible = 0;
-                options.forEach(function(opt) {
-                    const match = !q || (opt.text && opt.text.toLowerCase().indexOf(q) >= 0);
-                    opt.hidden = !match;
-                    if (match) visible++;
-                });
-                const total = options.length;
-                if (q && total > 0) {
-                    groupMatchCount.textContent = visible + ' of ' + total + ' groups';
+        if (groupSelect && groupSearch && groupDropdown) {
+            function getOptions() {
+                return Array.from(groupSelect.options).filter(function(opt) { return opt.value; });
+            }
+            function showDropdown(matches) {
+                groupDropdown.innerHTML = '';
+                groupDropdown.setAttribute('aria-hidden', 'false');
+                groupSearch.setAttribute('aria-expanded', 'true');
+                if (matches.length === 0) {
+                    groupDropdown.innerHTML = '<div class="group-dropdown-option" style="cursor:default;color:#6c757d;">No groups match</div>';
+                } else {
+                    matches.forEach(function(opt) {
+                        var div = document.createElement('div');
+                        div.className = 'group-dropdown-option';
+                        div.setAttribute('role', 'option');
+                        div.textContent = opt.text;
+                        div.dataset.value = opt.value;
+                        div.addEventListener('click', function() {
+                            groupSelect.value = opt.value;
+                            groupSearch.value = opt.text;
+                            hideDropdown();
+                            groupMatchCount.textContent = '';
+                        });
+                        groupDropdown.appendChild(div);
+                    });
+                }
+                groupDropdown.classList.add('show');
+            }
+            function hideDropdown() {
+                groupDropdown.classList.remove('show');
+                groupDropdown.setAttribute('aria-hidden', 'true');
+                groupSearch.setAttribute('aria-expanded', 'false');
+            }
+            function filterAndShow() {
+                var q = (groupSearch.value || '').trim().toLowerCase();
+                var options = getOptions();
+                var matches = q ? options.filter(function(opt) {
+                    return opt.text && opt.text.toLowerCase().indexOf(q) >= 0;
+                }) : options;
+                if (matches.length > 500) matches = matches.slice(0, 500);
+                showDropdown(matches);
+                if (q && options.length > 0) {
+                    groupMatchCount.textContent = (matches.length > 500 ? '500+' : matches.length) + ' of ' + options.length + ' groups';
                 } else {
                     groupMatchCount.textContent = '';
                 }
             }
-            groupSearch.addEventListener('input', filterGroups);
+            groupSearch.addEventListener('focus', function() {
+                filterAndShow();
+            });
+            groupSearch.addEventListener('input', function() {
+                filterAndShow();
+            });
             groupSearch.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    groupSearch.value = '';
-                    filterGroups();
+                    hideDropdown();
                     groupSearch.blur();
                 }
             });
+            document.addEventListener('click', function(e) {
+                if (!groupSearch.contains(e.target) && !groupDropdown.contains(e.target)) {
+                    hideDropdown();
+                }
+            });
+            // Pre-fill display when page has a selected group (e.g. ?group=xxx)
+            var selectedOpt = groupSelect.options[groupSelect.selectedIndex];
+            if (selectedOpt && selectedOpt.value) {
+                groupSearch.value = selectedOpt.text;
+            }
         }
     </script>
 {% endblock content %}
