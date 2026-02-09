@@ -320,11 +320,7 @@
                 var opt = groupSelect.options[groupSelect.selectedIndex];
                 groupSearch.value = (opt && opt.value) ? opt.text : '';
             });
-            // Pre-fill display when page has a selected group (e.g. ?group=xxx)
-            var selectedOpt = groupSelect.options[groupSelect.selectedIndex];
-            if (selectedOpt && selectedOpt.value) {
-                groupSearch.value = selectedOpt.text;
-            }
+            // Keep search box blank at first (dropdown still shows pre-selected group if ?group= was used)
         }
     </script>
 {% endblock content %}
