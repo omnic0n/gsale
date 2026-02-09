@@ -961,11 +961,21 @@ def get_active_listings_basic(user_token):
             if response.status_code != 200:
                 return {'success': False, 'error': 'API error: {} - {}'.format(response.status_code, response.text)}
             root = ET.fromstring(response.text)
+            # Check Ack (e.g. Failure when OAuth token is invalid for Trading API)
+            ack = root.find('.//{}Ack'.format(ns))
+            if ack is not None and ack.text and ack.text.strip().upper() == 'FAILURE':
+                errors = root.findall('.//{}Errors'.format(ns))
+                if errors:
+                    err_short = errors[0].find('.//{}ShortMessage'.format(ns))
+                    err_long = errors[0].find('.//{}LongMessage'.format(ns))
+                    msg = (err_long.text if err_long is not None and err_long.text else err_short.text) or 'Unknown error'
+                    return {'success': False, 'error': 'eBay API: {}'.format(msg), 'trading_failed': True}
             errors = root.findall('.//{}Errors'.format(ns))
             if errors:
                 error_msg = errors[0].find('.//{}LongMessage'.format(ns))
                 if error_msg is not None:
-                    return {'success': False, 'error': 'eBay API error: {}'.format(error_msg.text)}
+                    err_text = error_msg.text or ''
+                    return {'success': False, 'error': 'eBay API error: {}'.format(err_text), 'trading_failed': '931' in err_text or 'token' in err_text.lower()}
             active_list = root.find('.//{}ActiveList'.format(ns))
             if active_list is None:
                 break
@@ -1023,9 +1033,90 @@ def get_active_listings_basic(user_token):
         import traceback
         return {'success': False, 'error': 'API error: {}'.format(str(e)), 'detail': traceback.format_exc()[:300]}
 
+def get_active_listings_sell_api(api_base_url, user_token, max_skus=150):
+    """
+    Get active listings using Sell Inventory API (works with OAuth).
+    Fetches inventory items then offers per SKU; only includes items listed via Inventory API.
+    """
+    try:
+        headers = {
+            'Authorization': 'Bearer {}'.format(user_token),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+        }
+        # Get inventory item SKUs (paginated)
+        skus = []
+        offset = 0
+        limit = 200
+        while offset < max_skus:
+            url = '{}/sell/inventory/v1/inventory_item?limit={}&offset={}'.format(api_base_url, limit, offset)
+            r = requests.get(url, headers=headers)
+            if r.status_code != 200:
+                if offset == 0:
+                    return {'success': False, 'error': 'Inventory API error: {} - {}'.format(r.status_code, r.text[:200])}
+                break
+            data = r.json()
+            inv_items = data.get('inventoryItems', [])
+            if not inv_items:
+                break
+            for inv in inv_items:
+                sku = inv.get('sku')
+                if sku:
+                    skus.append({'sku': sku, 'title': (inv.get('product') or {}).get('title') or 'N/A'})
+            if len(inv_items) < limit:
+                break
+            offset += len(inv_items)
+            if len(skus) >= max_skus:
+                skus = skus[:max_skus]
+                break
+        if not skus:
+            return {'success': True, 'items': [], 'note_sell': 'No inventory items (listings created outside Inventory API are not included).'}
+        items = []
+        for entry in skus[:max_skus]:
+            sku = entry['sku']
+            title_fallback = entry.get('title') or 'N/A'
+            offer_url = '{}/sell/inventory/v1/offer?sku={}&marketplace_id=EBAY_US&limit=10'.format(api_base_url, requests.utils.quote(sku, safe=''))
+            ro = requests.get(offer_url, headers=headers)
+            if ro.status_code != 200:
+                continue
+            od = ro.json()
+            for offer in od.get('offers', []):
+                listing = offer.get('listing') or {}
+                listing_id = listing.get('listingId')
+                status = listing.get('listingStatus', '')
+                if not listing_id or status != 'ACTIVE':
+                    continue
+                start_time = offer.get('listingStartDate') or 'N/A'
+                price_val = 0
+                currency = 'USD'
+                ps = offer.get('pricingSummary') or {}
+                p = ps.get('price') or {}
+                if p:
+                    price_val = float(p.get('value', 0) or 0)
+                    currency = (p.get('currency') or 'USD')
+                qty = offer.get('availableQuantity') or offer.get('lotSize') or 0
+                items.append({
+                    'itemId': listing_id,
+                    'title': offer.get('listingDescription') or title_fallback,
+                    'condition': 'N/A',
+                    'quantity': int(qty) if qty else 0,
+                    'start_time': start_time,
+                    'price': price_val,
+                    'currency': currency,
+                    'image_url': None,
+                    'category': 'N/A',
+                    'ebay_url': 'https://www.ebay.com/itm/{}'.format(listing_id)
+                })
+        return {'success': True, 'items': items, 'note_sell': 'Using Sell Inventory API (OAuth).'}
+    except Exception as e:
+        import traceback
+        return {'success': False, 'error': 'Sell API error: {}'.format(str(e)), 'detail': traceback.format_exc()[:300]}
+
 def search_ebay_recently_listed(search_term=None, num_items=25):
     """
-    Search user's own recently listed (active) items from eBay using GetMyeBaySelling ActiveList.
+    Search user's own recently listed (active) items from eBay.
+    Tries Trading API (GetMyeBaySelling) first; if OAuth and that fails or returns 0, tries Sell Inventory API.
     Sorted by listing date (newest first). Optional filter by search term.
     """
     try:
@@ -1039,10 +1130,27 @@ def search_ebay_recently_listed(search_term=None, num_items=25):
                 }
         else:
             user_token = token_result['access_token']
+        is_legacy = token_result.get('is_legacy', False) if token_result.get('success') else False
+        api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
+
         result = get_active_listings_basic(user_token)
-        if not result['success']:
+        items = result.get('items', []) if result.get('success') else []
+        note_sell = None
+
+        # If Trading API failed (e.g. OAuth token invalid for Trading) or returned 0 with OAuth, try Sell API
+        if not result.get('success') and result.get('trading_failed') and not is_legacy:
+            sell_result = get_active_listings_sell_api(api_base_url, user_token)
+            if sell_result.get('success'):
+                items = sell_result.get('items', [])
+                note_sell = sell_result.get('note_sell')
+        elif result.get('success') and len(items) == 0 and not is_legacy:
+            sell_result = get_active_listings_sell_api(api_base_url, user_token)
+            if sell_result.get('success') and sell_result.get('items'):
+                items = sell_result.get('items', [])
+                note_sell = sell_result.get('note_sell')
+
+        if not result.get('success') and not items:
             return result
-        items = result.get('items', [])
         if search_term and search_term.strip():
             search_term_lower = search_term.strip().lower()
             items = [i for i in items if search_term_lower in (i.get('title') or '').lower() or search_term_lower in (i.get('itemId') or '').lower()]
@@ -1075,6 +1183,8 @@ def search_ebay_recently_listed(search_term=None, num_items=25):
                 'matching_item_id': matching_item_id
             })
         note = 'Showing your recently listed (active) items' + (' matching "{}"'.format(search_term.strip()) if search_term and search_term.strip() else '')
+        if note_sell:
+            note = note + '. ' + note_sell
         return {
             'success': True,
             'listings': listings,

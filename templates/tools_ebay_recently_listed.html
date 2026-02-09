@@ -120,6 +120,7 @@
     {% else %}
     <div class="alert alert-info">
         <i class="fas fa-info-circle me-2"></i>No active listings found matching your search criteria.
+        <p class="mb-0 mt-2"><strong>Tip:</strong> If you sign in with eBay OAuth, the Trading API may not return your listings. The app will try the Sell Inventory API as a fallback; only listings created via the Inventory API appear there. For full coverage, you can add a legacy <strong>User Token</strong> in Settings (eBay integration).</p>
     </div>
     {% endif %}
 </div>
