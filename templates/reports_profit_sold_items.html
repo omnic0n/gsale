@@ -75,12 +75,18 @@
             </tr>
             <tr style="font-weight: bold; background-color: #e9ecef;">
                 <td colspan="6"><strong>Purchase (this date)</strong></td>
-                <td colspan="4"><strong>${{ "%.2f"|format(purchase_price|default(0)) }}</strong></td>
+                <td></td>
+                <td></td>
+                <td><strong>${{ "%.2f"|format(purchase_price|default(0)) }}</strong></td>
+                <td></td>
                 <td></td>
             </tr>
             <tr style="font-weight: bold; background-color: #f8f9fa;">
                 <td colspan="6"><strong>Profit</strong></td>
-                <td colspan="4"><strong class="{% if (items|selectattr('net')|map(attribute='net')|sum - (purchase_price|default(0))) >= 0 %}text-success{% else %}text-danger{% endif %}">${{ "%.2f"|format((items|selectattr('net')|map(attribute='net')|sum - (purchase_price|default(0)))) }}</strong></td>
+                <td></td>
+                <td></td>
+                <td><strong class="{% if (items|selectattr('net')|map(attribute='net')|sum - (purchase_price|default(0))) >= 0 %}text-success{% else %}text-danger{% endif %}">${{ "%.2f"|format((items|selectattr('net')|map(attribute='net')|sum - (purchase_price|default(0)))) }}</strong></td>
+                <td></td>
                 <td></td>
             </tr>
         </tfoot>
