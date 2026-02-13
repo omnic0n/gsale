@@ -444,7 +444,7 @@ def get_sold_items_by_group_date(group_date):
     return list(cur.fetchall())
 
 def get_purchase_price_for_group_date(group_date):
-    """Total purchase price (collection.price) for all groups with the given date."""
+    """Total purchase price (collection.price) for all groups with the given date. Returns Decimal for consistent math with sale totals."""
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT COALESCE(SUM(price), 0) AS total
@@ -452,7 +452,10 @@ def get_purchase_price_for_group_date(group_date):
         WHERE date = %s AND account = %s
     """, (group_date, session.get('id')))
     row = cur.fetchone()
-    return float(row['total']) if row and row.get('total') is not None else 0
+    if row and row.get('total') is not None:
+        return row['total']  # keep Decimal from DB so (net sum - purchase_price) works in template
+    from decimal import Decimal
+    return Decimal('0')
 
 def get_total_items_in_group(group_id):
     cur = mysql.connection.cursor()
