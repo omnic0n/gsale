@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <p class="mb-3">
+        <a href="{{ url_for('reports_profit') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Profit Report</a>
+    </p>
+    <h4>Sold items for date: {{ group_date }}</h4>
+    <p class="text-muted">Items from groups (collections) with purchase date {{ group_date }}.</p>
+
+    <table class="blueTable">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Group</th>
+                <th>eBay</th>
+                <th>Sold Date</th>
+                <th>Days to Sell</th>
+                <th>Gross</th>
+                <th>Net</th>
+                <th>Shipping Fee</th>
+                <th>Returned Fee</th>
+                <th>Storage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set ns = namespace(count=1) %}
+            {% for item in items %}
+            <tr {% if item['returned'] %}style="background-color: #ffe6e6;"{% endif %}>
+                <td>{{ ns.count }}</td>
+                <td>
+                    <a href="{{ url_for('describe_item', item=item['id']) }}?return_to=group_detail">
+                        <b>{{ item['name'] }}</b>
+                    </a>
+                </td>
+                <td>
+                    <a href="{{ url_for('group_detail') }}?group_id={{ item['group_id'] }}">{{ item['group_name'] }}</a>
+                </td>
+                <td>
+                    {% if item['ebay_item_id'] %}
+                    <a href="https://www.ebay.com/itm/{{ item['ebay_item_id'] }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>{{ item['sale_date'] }}</td>
+                <td>{{ item['days_to_sell'] }}</td>
+                <td>{{ item['gross'] }}</td>
+                <td>{{ item['net'] }}</td>
+                <td>{{ item['shipping_fee'] }}</td>
+                <td>{% if item['returned'] %}{{ item['returned_fee'] or '0.00' }}{% else %}-{% endif %}</td>
+                <td>{{ item['storage'] }}</td>
+            </tr>
+            {% set ns.count = ns.count + 1 %}
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #e9ecef; color: #495057;">
+                <td colspan="6"><strong>SUMMARY TOTALS</strong></td>
+                <td><strong>Gross</strong></td>
+                <td><strong>Net</strong></td>
+                <td><strong>Shipping</strong></td>
+                <td><strong>Returns</strong></td>
+                <td></td>
+            </tr>
+            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                <td colspan="6"></td>
+                <td><strong>{{ items|selectattr('gross')|map(attribute='gross')|sum }}</strong></td>
+                <td><strong>{{ items|selectattr('net')|map(attribute='net')|sum }}</strong></td>
+                <td><strong>{{ items|selectattr('shipping_fee')|map(attribute='shipping_fee')|sum }}</strong></td>
+                <td><strong>{{ items|selectattr('returned_fee')|map(attribute='returned_fee')|sum }}</strong></td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% if not items %}
+    <p class="text-muted">No sold items for this date.</p>
+    {% endif %}
+</div>
+{% endblock content %}

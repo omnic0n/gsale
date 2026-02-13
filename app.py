@@ -4207,6 +4207,18 @@ def reports_profit():
     return render_template('reports_profit.html', form=form)
 
 
+@app.route('/reports/profit/sold-items')
+@login_required
+def reports_profit_sold_items():
+    """Show sold items for a given group date (from profit report row)."""
+    group_date = request.args.get('date', type=str)
+    if not group_date:
+        flash('Date is required.', 'error')
+        return redirect(url_for('reports_profit'))
+    items = get_data.get_sold_items_by_group_date(group_date)
+    return render_template('reports_profit_sold_items.html', group_date=group_date, items=items)
+
+
 @app.route('/reports/sales',methods=["GET", "POST"])
 @login_required
 def reports_sale():
