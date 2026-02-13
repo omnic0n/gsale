@@ -4216,7 +4216,8 @@ def reports_profit_sold_items():
         flash('Date is required.', 'error')
         return redirect(url_for('reports_profit'))
     items = get_data.get_sold_items_by_group_date(group_date)
-    return render_template('reports_profit_sold_items.html', group_date=group_date, items=items)
+    purchase_price = get_data.get_purchase_price_for_group_date(group_date)
+    return render_template('reports_profit_sold_items.html', group_date=group_date, items=items, purchase_price=purchase_price)
 
 
 @app.route('/reports/sales',methods=["GET", "POST"])

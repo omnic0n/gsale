@@ -443,6 +443,17 @@ def get_sold_items_by_group_date(group_date):
     """, (group_date, session.get('id')))
     return list(cur.fetchall())
 
+def get_purchase_price_for_group_date(group_date):
+    """Total purchase price (collection.price) for all groups with the given date."""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT COALESCE(SUM(price), 0) AS total
+        FROM collection
+        WHERE date = %s AND account = %s
+    """, (group_date, session.get('id')))
+    row = cur.fetchone()
+    return float(row['total']) if row and row.get('total') is not None else 0
+
 def get_total_items_in_group(group_id):
     cur = mysql.connection.cursor()
     cur.execute(""" 

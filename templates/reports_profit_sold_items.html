@@ -17,8 +17,8 @@
                 <th>Sold Date</th>
                 <th>Days to Sell</th>
                 <th>Gross</th>
-                <th>Net</th>
                 <th>Shipping Fee</th>
+                <th>Net</th>
                 <th>Returned Fee</th>
                 <th>Storage</th>
             </tr>
@@ -48,8 +48,8 @@
                 <td>{{ item['sale_date'] }}</td>
                 <td>{{ item['days_to_sell'] }}</td>
                 <td>{{ item['gross'] }}</td>
-                <td>{{ item['net'] }}</td>
                 <td>{{ item['shipping_fee'] }}</td>
+                <td>{{ item['net'] }}</td>
                 <td>{% if item['returned'] %}{{ item['returned_fee'] or '0.00' }}{% else %}-{% endif %}</td>
                 <td>{{ item['storage'] }}</td>
             </tr>
@@ -60,17 +60,27 @@
             <tr style="font-weight: bold; background-color: #e9ecef; color: #495057;">
                 <td colspan="6"><strong>SUMMARY TOTALS</strong></td>
                 <td><strong>Gross</strong></td>
-                <td><strong>Net</strong></td>
                 <td><strong>Shipping</strong></td>
+                <td><strong>Net</strong></td>
                 <td><strong>Returns</strong></td>
                 <td></td>
             </tr>
             <tr style="font-weight: bold; background-color: #f8f9fa;">
                 <td colspan="6"></td>
                 <td><strong>{{ items|selectattr('gross')|map(attribute='gross')|sum }}</strong></td>
-                <td><strong>{{ items|selectattr('net')|map(attribute='net')|sum }}</strong></td>
                 <td><strong>{{ items|selectattr('shipping_fee')|map(attribute='shipping_fee')|sum }}</strong></td>
+                <td><strong>{{ items|selectattr('net')|map(attribute='net')|sum }}</strong></td>
                 <td><strong>{{ items|selectattr('returned_fee')|map(attribute='returned_fee')|sum }}</strong></td>
+                <td></td>
+            </tr>
+            <tr style="font-weight: bold; background-color: #e9ecef;">
+                <td colspan="6"><strong>Purchase (this date)</strong></td>
+                <td colspan="4"><strong>${{ "%.2f"|format(purchase_price|default(0)) }}</strong></td>
+                <td></td>
+            </tr>
+            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                <td colspan="6"><strong>Profit</strong></td>
+                <td colspan="4"><strong class="{% if (items|selectattr('net')|map(attribute='net')|sum - (purchase_price|default(0))) >= 0 %}text-success{% else %}text-danger{% endif %}">${{ "%.2f"|format((items|selectattr('net')|map(attribute='net')|sum - (purchase_price|default(0)))) }}</strong></td>
                 <td></td>
             </tr>
         </tfoot>
