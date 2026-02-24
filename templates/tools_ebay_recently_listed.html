@@ -66,10 +66,17 @@
     {% endif %}
     
     {% if results.listings %}
+    <div class="mb-2">
+        <button type="button" id="addSelectedToGroupBtn" class="btn btn-primary btn-sm" disabled>
+            <i class="fas fa-plus"></i> Add selected to group
+        </button>
+        <span id="selectedCount" class="ms-2 text-muted small">0 selected</span>
+    </div>
     <div class="table-responsive">
         <table class="blueTable">
             <thead>
                 <tr>
+                    <th style="width: 36px;">Add</th>
                     <th>Title</th>
                     <th>Item ID</th>
                     <th>Price</th>
@@ -80,7 +87,14 @@
             </thead>
             <tbody>
                 {% for item in results.listings %}
-                <tr>
+                <tr data-ebay-id="{{ item.itemId }}" data-name="{{ item.title|e }}" data-can-add="{{ '1' if not item.matching_item_id else '0' }}">
+                    <td>
+                        {% if not item.matching_item_id %}
+                        <input type="checkbox" class="form-check-input recently-listed-cb" value="1" title="Add to group">
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
                     <td style="max-width: 300px; word-wrap: break-word;">
                         {% if item.matching_item_id %}
                             {{ item.title }}
@@ -117,6 +131,35 @@
             </tbody>
         </table>
     </div>
+    <script>
+        (function() {
+            var btn = document.getElementById('addSelectedToGroupBtn');
+            var countEl = document.getElementById('selectedCount');
+            if (!btn) return;
+            function updateSelected() {
+                var checked = document.querySelectorAll('.recently-listed-cb:checked');
+                var n = checked.length;
+                btn.disabled = n === 0;
+                countEl.textContent = n + ' selected';
+            }
+            document.querySelectorAll('.recently-listed-cb').forEach(function(cb) {
+                cb.addEventListener('change', updateSelected);
+            });
+            btn.addEventListener('click', function() {
+                var rows = document.querySelectorAll('.recently-listed-cb:checked');
+                if (rows.length === 0) return;
+                var params = new URLSearchParams();
+                rows.forEach(function(cb) {
+                    var tr = cb.closest('tr');
+                    if (tr) {
+                        params.append('ebay_item_id', tr.getAttribute('data-ebay-id') || '');
+                        params.append('name', tr.getAttribute('data-name') || '');
+                    }
+                });
+                window.location = '{{ url_for("bought_items") }}?' + params.toString();
+            });
+        })();
+    </script>
     {% else %}
     <div class="alert alert-info">
         <i class="fas fa-info-circle me-2"></i>No active listings found matching your search criteria.

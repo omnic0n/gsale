@@ -4489,6 +4489,8 @@ def bought_items():
     group_id = request.args.get('group', type=str)
     ebay_item_id = request.args.get('ebay_item_id', type=str)
     name = request.args.get('name', type=str)
+    ebay_item_ids = request.args.getlist('ebay_item_id')
+    names = request.args.getlist('name')
     
     groups = get_data.get_all_from_groups('%')
     categories = get_data.get_all_from_categories()
@@ -4519,12 +4521,17 @@ def bought_items():
         set_data.set_bought_items_improved(details)
         return redirect(url_for('group_detail',group_id=group_data['id']))
     
-    # Pre-fill from eBay sold search when adding an item not in the system
-    initial_item_name = name or ''
-    initial_ebay_item_id = ebay_item_id or ''
+    # Pre-fill: multiple items from query params (e.g. eBay Recently Listed "Add selected") or single item
+    initial_items = []
+    if ebay_item_ids and names and len(ebay_item_ids) == len(names):
+        initial_items = [{'name': n or '', 'ebay_item_id': e or ''} for e, n in zip(ebay_item_ids, names)]
+    elif name or ebay_item_id:
+        initial_items = [{'name': name or '', 'ebay_item_id': ebay_item_id or ''}]
+    if not initial_items:
+        initial_items = [{'name': '', 'ebay_item_id': ''}]
     
     return render_template('items_purchased.html', form=form, categories=categories,
-                          initial_item_name=initial_item_name, initial_ebay_item_id=initial_ebay_item_id)
+                          initial_items=initial_items)
 
 @app.route('/items/modify',methods=["POST","GET"])
 @login_required

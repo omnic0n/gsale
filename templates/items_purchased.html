@@ -51,19 +51,19 @@
 
                         <!-- Items Container -->
                         <div id="itemsContainer">
-                            <!-- Always use HTML fallback approach -->
-                            <div class="item-row border rounded p-3 mb-3" data-index="0">
+                            {% for init_item in initial_items %}
+                            <div class="item-row border rounded p-3 mb-3" data-index="{{ loop.index0 }}">
                                 <div class="row align-items-end">
                                     <div class="col-md-5">
                                         <div class="form-group">
                                             <label class="form-control-label">Item Name</label>
-                                            <input class="form-control" name="items-0-name" type="text" required value="{{ initial_item_name|default('', true) }}">
+                                            <input class="form-control" name="items-{{ loop.index0 }}-name" type="text" required value="{{ init_item.name|e }}">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label class="form-control-label">Category</label>
-                                            <select class="form-control" name="items-0-category" required>
+                                            <select class="form-control" name="items-{{ loop.index0 }}-category" required>
                                                 <option value="">Select Category</option>
                                                 {% for category in categories %}
                                                 <option value="{{ category.id }}">{{ category.type }}</option>
@@ -75,18 +75,19 @@
                                         <div class="form-group">
                                             <label class="form-control-label">eBay Item ID</label>
                                             <small class="text-muted d-block">(Optional)</small>
-                                            <input class="form-control" name="items-0-ebay_item_id" type="text" placeholder="eBay Item ID" value="{{ initial_ebay_item_id|default('', true) }}">
+                                            <input class="form-control" name="items-{{ loop.index0 }}-ebay_item_id" type="text" placeholder="eBay Item ID" value="{{ init_item.ebay_item_id|e }}">
                                         </div>
                                     </div>
                                     <div class="col-md-1">
                                         <div class="form-group">
-                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" style="display: none;">
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" {% if initial_items|length <= 1 %}style="display: none;"{% endif %}>
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
 
                 <!-- Common Fields -->
@@ -148,7 +149,7 @@
     </div>
 
     <script>
-        let itemCount = {{ form.items.entries|length if form.items.entries else 1 }};
+        let itemCount = {{ initial_items|length }};
         const maxItems = 50;
         
         function updateItemCount() {
