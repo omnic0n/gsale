@@ -95,7 +95,7 @@
                         <span class="text-muted">—</span>
                         {% endif %}
                     </td>
-                    <td style="max-width: 300px; word-wrap: break-word;">
+                    <td style="word-wrap: break-word;">
                         {% if item.matching_item_id %}
                             {{ item.title }}
                         {% else %}
@@ -196,6 +196,13 @@
     border-collapse: collapse;
     margin-top: 1rem;
 }
+.blueTable th:nth-child(1), .blueTable td:nth-child(1) { width: 42px; }
+.blueTable th:nth-child(2), .blueTable td:nth-child(2) { min-width: 240px; }
+.blueTable th:nth-child(3), .blueTable td:nth-child(3) { min-width: 110px; }
+.blueTable th:nth-child(4), .blueTable td:nth-child(4) { min-width: 95px; }
+.blueTable th:nth-child(5), .blueTable td:nth-child(5) { min-width: 100px; }
+.blueTable th:nth-child(6), .blueTable td:nth-child(6) { min-width: 48px; }
+.blueTable th:nth-child(7), .blueTable td:nth-child(7) { min-width: 220px; }
 
 .blueTable thead {
     background-color: #4A90E2;
