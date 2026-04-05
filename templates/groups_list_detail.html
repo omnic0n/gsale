@@ -233,7 +233,7 @@
 <br>
 <div class="form-group mb-3" style="max-width: 32rem;">
     <label for="group-item-search" class="font-weight-bold">Search items in this collection</label>
-    <input type="search" id="group-item-search" class="form-control" placeholder="Type part of an item name…" autocomplete="off">
+    <input type="search" id="group-item-search" class="form-control" placeholder="Type part of an item name…" autocomplete="off" data-group-id="{{ group_id[0]['id'] }}">
     <small id="group-item-search-hint" class="form-text text-muted"></small>
 </div>
 <table class="blueTable" id="group-items-table">
@@ -334,8 +334,8 @@
 </div>
 <script>
 (function () {
-    var groupId = {{ group_id[0]['id']|tojson }};
     var input = document.getElementById('group-item-search');
+    var groupId = input ? input.getAttribute('data-group-id') : '';
     var hint = document.getElementById('group-item-search-hint');
     var tbody = document.getElementById('group-items-tbody');
     var tfoot = document.getElementById('group-items-tfoot');
