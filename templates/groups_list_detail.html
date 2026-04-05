@@ -166,15 +166,10 @@
                 {% endif %}
             </td>
             <td>
-                {% if group_id[0].get('neighborhood_id') %}
-                    {% set matching_neighborhood = neighborhoods | selectattr('id', 'equalto', group_id[0].get('neighborhood_id')) | first %}
-                    {% if matching_neighborhood %}
-                        <span class="neighborhood-name">
-                            {{ matching_neighborhood.name }}{% if matching_neighborhood.city %} - {{ matching_neighborhood.city }}{% endif %}
-                        </span>
-                    {% else %}
-                        <span style="color: #999; font-size: 0.9em;">Neighborhood not found</span>
-                    {% endif %}
+                {% if neighborhood_display %}
+                    <span class="neighborhood-name">{{ neighborhood_display }}</span>
+                {% elif group_id[0].get('neighborhood_id') %}
+                    <span style="color: #999; font-size: 0.9em;">Neighborhood not found</span>
                 {% else %}
                     <span style="color: #999; font-size: 0.9em;">No neighborhood assigned</span>
                 {% endif %}
@@ -200,21 +195,13 @@
     </thead>
     <tbody>
         <tr>
-            <td>${{ group_id[0]['price'] }}</td>
-            <td>${{ sold_price + total_returned_fees }}</td>
-            <td>${{ total_returned_fees }}</td>
-            <td>${{ sold_price }}</td>
-            <td>{% if total_items['total'] %}
-                ${{ "%.2f"|format(sold_price/total_items['total']) }}
-                {% endif %}
-            </td>
-            <td>${{ sold_price - group_id[0]['price'] }}</td>
-            <td>{% if group_id[0]['price'] != 0 %}
-                {{ ((sold_price/group_id[0]['price']) * 100)| round }}%
-                {% else %}
-                0
-                {% endif %}
-            </td>
+            <td>${{ monetary.purchase }}</td>
+            <td>${{ monetary.sale_display }}</td>
+            <td>${{ monetary.returns }}</td>
+            <td>${{ monetary.net_after_returns }}</td>
+            <td>{% if total_items['total'] %}${{ monetary.avg_sale }}{% endif %}</td>
+            <td>${{ monetary.profit }}</td>
+            <td>{% if group_id[0]['price'] != 0 %}{{ monetary.roi_pct }}%{% else %}0{% endif %}</td>
         </tr>
     </tbody>
 </table>
@@ -320,10 +307,10 @@
         </tr>
         <tr style="font-weight: bold; background-color: #f8f9fa;">
             <td colspan="5"></td>
-            <td><strong>${{ "%.2f"|format(item_table_totals.sum_gross|float) }}</strong></td>
-            <td><strong>${{ "%.2f"|format(item_table_totals.sum_net|float) }}</strong></td>
-            <td><strong>${{ "%.2f"|format(item_table_totals.sum_shipping|float) }}</strong></td>
-            <td><strong>${{ "%.2f"|format(item_table_totals.sum_returned|float) }}</strong></td>
+            <td><strong>${{ item_totals_fmt.gross }}</strong></td>
+            <td><strong>${{ item_totals_fmt.net }}</strong></td>
+            <td><strong>${{ item_totals_fmt.shipping }}</strong></td>
+            <td><strong>${{ item_totals_fmt.returned }}</strong></td>
             <td colspan="2"></td>
         </tr>
     </tfoot>

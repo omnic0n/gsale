@@ -5038,6 +5038,50 @@ def group_detail():
     
     # Get group creator information
     group_creator = get_data.get_group_creator(id)
+
+    # Precompute display values so the template does not run arithmetic or filters on large structures.
+    g0 = group_id[0]
+    try:
+        sp = float(sold_price) if sold_price is not None else 0.0
+    except (TypeError, ValueError):
+        sp = 0.0
+    try:
+        trf = float(total_returned_fees) if total_returned_fees is not None else 0.0
+    except (TypeError, ValueError):
+        trf = 0.0
+    try:
+        purchase_f = float(g0['price']) if g0.get('price') is not None else 0.0
+    except (TypeError, ValueError):
+        purchase_f = 0.0
+    monetary = {
+        'purchase': '%.2f' % purchase_f,
+        'sale_display': '%.2f' % (sp + trf),
+        'returns': '%.2f' % trf,
+        'net_after_returns': '%.2f' % sp,
+        'avg_sale': '%.2f' % (sp / total_count) if total_count else '0.00',
+        'profit': '%.2f' % (sp - purchase_f),
+        'roi_pct': int(round((sp / purchase_f) * 100)) if purchase_f else 0,
+    }
+    it = item_table_totals or {}
+    try:
+        item_totals_fmt = {
+            'gross': '%.2f' % float(it.get('sum_gross') or 0),
+            'net': '%.2f' % float(it.get('sum_net') or 0),
+            'shipping': '%.2f' % float(it.get('sum_shipping') or 0),
+            'returned': '%.2f' % float(it.get('sum_returned') or 0),
+        }
+    except (TypeError, ValueError):
+        item_totals_fmt = {'gross': '0.00', 'net': '0.00', 'shipping': '0.00', 'returned': '0.00'}
+
+    neighborhood_display = None
+    nid = g0.get('neighborhood_id')
+    if nid is not None and neighborhoods:
+        for n in neighborhoods:
+            if str(n.get('id')) == str(nid):
+                neighborhood_display = (n.get('name') or '') + (
+                    (' - ' + n['city']) if n.get('city') else ''
+                )
+                break
     
     return render_template('groups_list_detail.html', 
                             group_id=group_id,
@@ -5046,6 +5090,9 @@ def group_detail():
                             total_sold_items=total_sold_items,
                             sold_price=sold_price,
                             total_returned_fees=total_returned_fees,
+                            monetary=monetary,
+                            item_totals_fmt=item_totals_fmt,
+                            neighborhood_display=neighborhood_display,
                             form=form,
                             quicksell=quicksell,
                             groups=groups,
