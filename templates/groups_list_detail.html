@@ -278,7 +278,9 @@
                 <span class="text-muted">-</span>
                 {% endif %}
             </td>
-            <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['sale_date'] }}{% endif %}</td>
+            <td>{% if item['sold'] == 0 %}
+                <a href="/items/sold?item={{ item['id'] }}&return_to=group_detail&group_id={{ group_id[0]['id'] }}" class="btn btn-sm btn-success">Not Sold</a>
+                {% else %}{{ item['sale_date'] }}{% endif %}</td>
             <td>{% if item['sold'] == 0 %}Not Sold{% else %}{{ item['days_to_sell'] }}{% endif %}</td>
             <td>{{ item['gross'] }}</td>
             <td>{{ item['net'] }}</td>
@@ -394,7 +396,15 @@
         tr.appendChild(tdEbay);
 
         var tdSoldDate = document.createElement('td');
-        tdSoldDate.textContent = sold ? (item.sale_date || '') : 'Not Sold';
+        if (sold) {
+            tdSoldDate.textContent = item.sale_date || '';
+        } else {
+            var sellLink = document.createElement('a');
+            sellLink.href = '/items/sold?item=' + encodeURIComponent(item.id) + '&return_to=group_detail&group_id=' + encodeURIComponent(groupId);
+            sellLink.className = 'btn btn-sm btn-success';
+            sellLink.textContent = 'Not Sold';
+            tdSoldDate.appendChild(sellLink);
+        }
         tr.appendChild(tdSoldDate);
 
         var tdDays = document.createElement('td');

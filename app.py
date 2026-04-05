@@ -4694,8 +4694,15 @@ def sold_items():
         details = request.form
         set_data.set_mark_sold(details['id'], 1)
         set_data.set_sale_data(details)
+        ret_to = details.get('return_to')
+        ret_gid = details.get('return_group_id')
+        if ret_to == 'group_detail' and ret_gid:
+            return redirect(url_for('group_detail', group_id=ret_gid))
         return redirect(url_for('describe_item',item=details['id']))
-    return render_template('items_sold.html', form=form)
+    return_to = request.args.get('return_to')
+    return_group_id = request.args.get('group_id')
+    return render_template('items_sold.html', form=form,
+                           return_to=return_to, return_group_id=return_group_id)
 
 
 @app.route('/api/ebay-item-data/<item_id>')
