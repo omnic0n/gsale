@@ -192,6 +192,16 @@ def get_all_from_groups(date):
     
     return list(cur.fetchall())
 
+def get_group_choices_for_account(date_pattern='%'):
+    """id and name only — for dropdowns (avoids SELECT * on every collection row). Same date filter as get_all_from_groups."""
+    cur = mysql.connection.cursor()
+    like_pat = '%' + date_pattern + '%'
+    cur.execute(
+        "SELECT id, name FROM collection WHERE date LIKE %s AND account = %s ORDER BY name ASC",
+        (like_pat, session['id']),
+    )
+    return list(cur.fetchall())
+
 def get_purchased_from_date(start_date, end_date):
     """Optimized purchase report query"""
     cur = mysql.connection.cursor()
@@ -369,10 +379,11 @@ def get_list_of_items_with_name(name, sold):
     else:
         return deduplicated_items
 
-def get_data_from_item_groups(group_id):
+def get_data_from_item_groups(group_id, limit=None, offset=None):
+    """Items for a group detail table. Optional limit/offset for pagination."""
     cur = mysql.connection.cursor()
     # Use subquery for most recent sale per item to avoid duplicates from multiple sale records
-    cur.execute(""" SELECT 
+    sql = """ SELECT 
                     items.id,
                     items.name, 
                     items.sold, 
@@ -401,8 +412,47 @@ def get_data_from_item_groups(group_id):
                     WHERE items.group_id = %s AND collection.group_id = %s
                     GROUP BY items.id, items.name, items.sold, items.category_id, items.storage,
                              items.returned, items.ebay_item_id, collection.date
-                    ORDER BY sale_date""", (group_id, get_current_group_id()))
+                    ORDER BY sale_date"""
+    params = [group_id, get_current_group_id()]
+    if limit is not None:
+        sql += " LIMIT %s OFFSET %s"
+        params.append(int(limit))
+        params.append(int(offset or 0))
+    cur.execute(sql, tuple(params))
     return list(cur.fetchall())
+
+def get_group_detail_table_totals(group_id):
+    """Sum gross/net/shipping/returned for all items in a group (latest sale per item). For footer when list is paginated."""
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            COALESCE(SUM(latest.price), 0) AS sum_gross,
+            COALESCE(SUM(latest.price - latest.shipping_fee - COALESCE(latest.returned_fee, 0)), 0) AS sum_net,
+            COALESCE(SUM(latest.shipping_fee), 0) AS sum_shipping,
+            COALESCE(SUM(CASE WHEN i.returned = 1 THEN COALESCE(latest.returned_fee, 0) ELSE 0 END), 0) AS sum_returned
+        FROM items i
+        INNER JOIN collection c ON i.group_id = c.id
+        LEFT JOIN (
+            SELECT s1.id, s1.price, s1.shipping_fee, s1.returned_fee
+            FROM sale s1
+            INNER JOIN (
+                SELECT id, MAX(date) AS max_date
+                FROM sale
+                GROUP BY id
+            ) s2 ON s1.id = s2.id AND s1.date = s2.max_date
+        ) latest ON i.id = latest.id
+        WHERE i.group_id = %s AND c.group_id = %s
+    """, (group_id, get_current_group_id()))
+    row = cur.fetchone()
+    cur.close()
+    if not row:
+        return {
+            'sum_gross': 0,
+            'sum_net': 0,
+            'sum_shipping': 0,
+            'sum_returned': 0,
+        }
+    return row
 
 def get_sold_items_by_group_date(group_date):
     """Get all sold items for groups (collections) with the given date. Same structure as group detail items."""

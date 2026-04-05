@@ -4492,7 +4492,7 @@ def bought_items():
     ebay_item_ids = request.args.getlist('ebay_item_id')
     names = request.args.getlist('name')
     
-    groups = get_data.get_all_from_groups('%')
+    groups = get_data.get_group_choices_for_account()
     categories = get_data.get_all_from_categories()
 
     form = PurchaseForm()
@@ -4536,7 +4536,7 @@ def bought_items():
 @app.route('/items/modify',methods=["POST","GET"])
 @login_required
 def modify_items():
-    groups = get_data.get_all_from_groups('%')
+    groups = get_data.get_group_choices_for_account()
     categories = get_data.get_all_from_categories()
     id = request.args.get('item', type = str)
     return_to = request.args.get('return_to', type = str)
@@ -4624,7 +4624,7 @@ def items_remove():
 def quick_sell():
     group_id = request.args.get('group', type = str)
 
-    groups = get_data.get_all_from_groups('%')
+    groups = get_data.get_group_choices_for_account()
     categories = get_data.get_all_from_categories()
 
     form = ItemForm()
@@ -4996,8 +4996,18 @@ def group_detail():
         flash('Group not found or access denied.', 'error')
         return redirect(url_for('index'))
     
-    items = get_data.get_data_from_item_groups(id)
+    per_page = 50
+    page = request.args.get('page', default=1, type=int)
+    if page < 1:
+        page = 1
     total_items = get_data.get_total_items_in_group(id)
+    total_count = int(total_items['total']) if total_items and total_items.get('total') is not None else 0
+    total_pages = max(1, (total_count + per_page - 1) // per_page) if total_count else 1
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * per_page
+    items = get_data.get_data_from_item_groups(id, per_page, offset)
+    item_table_totals = get_data.get_group_detail_table_totals(id)
     total_sold_items = get_data.get_total_items_in_group_sold(id)
     sold_price = get_data.get_group_profit(id)
     total_returned_fees = get_data.get_total_returned_fees_in_group(id)
@@ -5020,7 +5030,7 @@ def group_detail():
             return redirect(url_for('quick_sell',group=details['id']))
 
     # Get groups and categories for modal dropdowns
-    groups = get_data.get_all_from_groups('%')
+    groups = get_data.get_group_choices_for_account()
     categories = get_data.get_all_from_categories()
     
     # Get neighborhoods for assignment dropdown
@@ -5041,7 +5051,12 @@ def group_detail():
                             groups=groups,
                             categories=categories,
                             neighborhoods=neighborhoods,
-                            group_creator=group_creator)
+                            group_creator=group_creator,
+                            page=page,
+                            total_pages=total_pages,
+                            per_page=per_page,
+                            total_count=total_count,
+                            item_table_totals=item_table_totals)
 
 @app.route('/groups/remove',methods=["POST","GET"])
 @login_required
