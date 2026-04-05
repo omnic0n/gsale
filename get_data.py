@@ -427,6 +427,56 @@ def get_data_from_item_groups(group_id, limit=None, offset=None):
     cur.execute(sql, tuple(params))
     return list(cur.fetchall())
 
+def search_items_in_group_by_name(group_id, q, limit=150):
+    """All items in a group whose name contains q (case-insensitive). Same columns as get_data_from_item_groups."""
+    q = validate_string_input(q, max_length=80, default='').strip()
+    if not q:
+        return []
+    try:
+        limit = int(limit)
+    except (TypeError, ValueError):
+        limit = 150
+    limit = min(max(limit, 1), 300)
+    needle = q.lower()
+    cur = mysql.connection.cursor()
+    sql = """ SELECT 
+                    items.id,
+                    items.name, 
+                    items.sold, 
+                    COALESCE(MAX(categories.uuid_id), items.category_id) AS category_id,
+                    items.storage,
+                    items.returned,
+                    items.ebay_item_id,
+                    MAX(sale.price) AS gross,
+                    MAX(sale.shipping_fee) AS shipping_fee,
+                    MAX(sale.returned_fee) AS returned_fee,
+                    (MAX(sale.price) - MAX(sale.shipping_fee) - COALESCE(MAX(sale.returned_fee), 0)) AS net,
+                    MAX(sale.date) AS sale_date,
+                    DATEDIFF(MAX(sale.date), collection.date) AS days_to_sell 
+                    FROM items items
+                    INNER JOIN collection collection ON items.group_id = collection.id
+                    LEFT JOIN (
+                        SELECT s1.id, s1.price, s1.shipping_fee, s1.returned_fee, s1.date
+                        FROM sale s1
+                        INNER JOIN (
+                            SELECT s.id, MAX(s.date) AS max_date
+                            FROM sale s
+                            INNER JOIN items i2 ON s.id = i2.id
+                            WHERE i2.group_id = %s
+                            GROUP BY s.id
+                        ) sm ON s1.id = sm.id AND s1.date = sm.max_date
+                    ) sale ON items.id = sale.id
+                    LEFT JOIN categories ON items.category_id = categories.id
+                    WHERE items.group_id = %s AND collection.group_id = %s
+                    AND LOCATE(%s, LOWER(items.name)) > 0
+                    GROUP BY items.id, items.name, items.sold, items.category_id, items.storage,
+                             items.returned, items.ebay_item_id, collection.date
+                    ORDER BY items.name ASC
+                    LIMIT %s"""
+    params = [group_id, group_id, get_current_group_id(), needle, limit]
+    cur.execute(sql, tuple(params))
+    return list(cur.fetchall())
+
 def get_group_detail_table_totals(group_id):
     """Sum gross/net/shipping/returned for all items in a group (latest sale per item). For footer when list is paginated."""
     cur = mysql.connection.cursor()

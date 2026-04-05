@@ -5105,6 +5105,42 @@ def group_detail():
                             total_count=total_count,
                             item_table_totals=item_table_totals)
 
+def _serialize_group_item_row_for_json(row):
+    """Make group item row JSON-safe for realtime search API."""
+    from decimal import Decimal
+    from datetime import date as date_type, datetime as datetime_type
+    if not row:
+        return {}
+    out = {}
+    for key, v in dict(row).items():
+        if v is None:
+            out[key] = None
+        elif isinstance(v, (datetime_type, date_type)):
+            out[key] = v.isoformat()
+        elif isinstance(v, Decimal):
+            out[key] = float(v)
+        elif isinstance(v, (int, float)):
+            out[key] = v
+        elif isinstance(v, bytes):
+            out[key] = v.decode('utf-8', errors='replace')
+        else:
+            out[key] = v
+    return out
+
+@app.route('/groups/api/items-search')
+@login_required
+def group_items_search_api():
+    """Realtime search: items in a collection whose name contains the query (case-insensitive)."""
+    group_id = request.args.get('group_id', type=str)
+    q = request.args.get('q', default='', type=str) or ''
+    if not group_id:
+        return jsonify({'ok': False, 'error': 'group_id is required'}), 400
+    if not get_data.get_data_from_group_list(group_id):
+        return jsonify({'ok': False, 'error': 'Group not found'}), 404
+    rows = get_data.search_items_in_group_by_name(group_id, q)
+    items = [_serialize_group_item_row_for_json(r) for r in rows]
+    return jsonify({'ok': True, 'items': items, 'count': len(items)})
+
 @app.route('/groups/remove',methods=["POST","GET"])
 @login_required
 def group_remove():
