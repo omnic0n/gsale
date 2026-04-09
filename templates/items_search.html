@@ -6,7 +6,7 @@
         <legend class="border-bottom mb-4">Real-time Search</legend>
         <div class="form-group">
             <label for="searchName" class="form-control-label">Item Name</label>
-            <input type="text" id="searchName" class="form-control form-control-lg" placeholder="Start typing to search...">
+            <input type="text" id="searchName" class="form-control form-control-lg" placeholder="Start typing to search..." value="{{ initial_search|default('', true)|e }}">
         </div>
         <div class="form-group">
             <label for="searchSold" class="form-control-label">Sold Status</label>
@@ -432,6 +432,14 @@ function displayResults(items) {
 document.addEventListener('DOMContentLoaded', function() {
     const nameInput = document.getElementById('searchName');
     const soldSelect = document.getElementById('searchSold');
+    // Sync from URL (?q= or ?name=) if present (e.g. top bar search)
+    try {
+        var params = new URLSearchParams(window.location.search);
+        var fromUrl = (params.get('q') || params.get('name') || '').trim();
+        if (fromUrl && !nameInput.value) {
+            nameInput.value = fromUrl;
+        }
+    } catch (e) {}
     
     // Add input event listener for real-time search
     nameInput.addEventListener('input', performSearch);

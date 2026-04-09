@@ -4867,7 +4867,9 @@ def list_items():
 @app.route('/items/search', methods=["POST","GET"])
 @login_required
 def items_search():
-    return render_template('items_search.html')
+    # Top bar and links may pass ?q= or ?name=
+    initial_search = (request.args.get('q') or request.args.get('name') or '').strip()
+    return render_template('items_search.html', initial_search=initial_search)
 
 @app.route('/groups/search', methods=["POST","GET"])
 @login_required
@@ -5540,7 +5542,7 @@ def api_group_members(group_id):
 def api_items_search():
     """Real-time search API for items"""
     try:
-        name = request.args.get('name', '')
+        name = request.args.get('name') or request.args.get('q') or ''
         sold = request.args.get('sold', '')
         
         # Handle "All Items" case (empty sold parameter)
