@@ -31,39 +31,55 @@
           <nav class="sidebar-nav">
             <a href="/" class="{% if request.path == '/' %}sidebar-active{% endif %}"><i class="fas fa-house mr-2" style="opacity:.55;width:1.1rem;"></i>Home</a>
           </nav>
-          <span class="nav-section-label">Groups</span>
-          <nav class="sidebar-nav">
-            <a href="/groups/list" class="{% if request.path.startswith('/groups/list') or request.path.startswith('/groups/detail') or request.path.startswith('/groups/modify') %}sidebar-active{% endif %}">List</a>
-            <a href="/groups/create" class="{% if request.path.startswith('/groups/create') %}sidebar-active{% endif %}">Create</a>
-            <a href="/groups/search" class="{% if request.path.startswith('/groups/search') %}sidebar-active{% endif %}">Search</a>
-          </nav>
-          <span class="nav-section-label">Items</span>
-          <nav class="sidebar-nav">
-            <a href="/items/bought" class="{% if request.path.startswith('/items/bought') or request.path.startswith('/items/quick_sell') %}sidebar-active{% endif %}">Add</a>
-            <a href="/items/sold" class="{% if request.path.startswith('/items/sold') %}sidebar-active{% endif %}">Sell</a>
-            <a href="/items/list" class="{% if request.path.startswith('/items/list') or request.path.startswith('/items/describe') or request.path.startswith('/items/modify') %}sidebar-active{% endif %}">List</a>
-            <a href="/items/search" class="{% if request.path.startswith('/items/search') %}sidebar-active{% endif %}">Search</a>
-          </nav>
-          <span class="nav-section-label">Reports</span>
-          <nav class="sidebar-nav">
-            <a href="/reports/profit" class="{% if request.path.startswith('/reports/profit') %}sidebar-active{% endif %}">Profit</a>
-            <a href="/reports/sales" class="{% if request.path.startswith('/reports/sales') %}sidebar-active{% endif %}">Sales</a>
-            <a href="/reports/purchases" class="{% if request.path.startswith('/reports/purchases') %}sidebar-active{% endif %}">Purchases</a>
-            <a href="/reports/city" class="{% if request.path.startswith('/reports/city') %}sidebar-active{% endif %}">City</a>
-            <a href="/reports/categories" class="{% if request.path.startswith('/reports/categories') %}sidebar-active{% endif %}">Categories</a>
-            <a href="/reports/neighborhood" class="{% if request.path.startswith('/reports/neighborhood') %}sidebar-active{% endif %}">Neighborhood</a>
-          </nav>
-          <span class="nav-section-label">Settings</span>
-          <nav class="sidebar-nav">
-            <a href="/settings/ebay-listings" class="{% if request.path.startswith('/settings/ebay-listings') %}sidebar-active{% endif %}">eBay Listings</a>
-            <a href="/categories" class="{% if request.path.startswith('/categories') %}sidebar-active{% endif %}">Categories</a>
-            <a href="/settings/neighborhoods" class="{% if request.path.startswith('/settings/neighborhoods') %}sidebar-active{% endif %}">Neighborhoods</a>
-          </nav>
-          <span class="nav-section-label">Tools</span>
-          <nav class="sidebar-nav">
-            <a href="/tools/ebay-sold-search" class="{% if request.path.startswith('/tools/ebay-sold-search') %}sidebar-active{% endif %}">eBay Sold Search</a>
-            <a href="/tools/ebay-recently-listed" class="{% if request.path.startswith('/tools/ebay-recently-listed') %}sidebar-active{% endif %}">eBay Recently Listed</a>
-          </nav>
+
+          <details class="sidebar-expand" {% if request.path.startswith('/groups/') %}open{% endif %}>
+            <summary>Groups <span class="sidebar-expand-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span></summary>
+            <nav class="sidebar-nav sidebar-nav-nested">
+              <a href="/groups/list" class="{% if request.path.startswith('/groups/list') or request.path.startswith('/groups/detail') or request.path.startswith('/groups/modify') %}sidebar-active{% endif %}">List</a>
+              <a href="/groups/create" class="{% if request.path.startswith('/groups/create') %}sidebar-active{% endif %}">Create</a>
+              <a href="/groups/search" class="{% if request.path.startswith('/groups/search') %}sidebar-active{% endif %}">Search</a>
+            </nav>
+          </details>
+
+          <details class="sidebar-expand" {% if request.path.startswith('/items/') %}open{% endif %}>
+            <summary>Items <span class="sidebar-expand-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span></summary>
+            <nav class="sidebar-nav sidebar-nav-nested">
+              <a href="/items/bought" class="{% if request.path.startswith('/items/bought') or request.path.startswith('/items/quick_sell') %}sidebar-active{% endif %}">Add</a>
+              <a href="/items/sold" class="{% if request.path.startswith('/items/sold') %}sidebar-active{% endif %}">Sell</a>
+              <a href="/items/list" class="{% if request.path.startswith('/items/list') or request.path.startswith('/items/describe') or request.path.startswith('/items/modify') %}sidebar-active{% endif %}">List</a>
+              <a href="/items/search" class="{% if request.path.startswith('/items/search') %}sidebar-active{% endif %}">Search</a>
+            </nav>
+          </details>
+
+          <details class="sidebar-expand" {% if request.path.startswith('/reports/') %}open{% endif %}>
+            <summary>Reports <span class="sidebar-expand-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span></summary>
+            <nav class="sidebar-nav sidebar-nav-nested">
+              <a href="/reports/profit" class="{% if request.path.startswith('/reports/profit') %}sidebar-active{% endif %}">Profit</a>
+              <a href="/reports/sales" class="{% if request.path.startswith('/reports/sales') %}sidebar-active{% endif %}">Sales</a>
+              <a href="/reports/purchases" class="{% if request.path.startswith('/reports/purchases') %}sidebar-active{% endif %}">Purchases</a>
+              <a href="/reports/city" class="{% if request.path.startswith('/reports/city') %}sidebar-active{% endif %}">City</a>
+              <a href="/reports/categories" class="{% if request.path.startswith('/reports/categories') %}sidebar-active{% endif %}">Categories</a>
+              <a href="/reports/neighborhood" class="{% if request.path.startswith('/reports/neighborhood') %}sidebar-active{% endif %}">Neighborhood</a>
+            </nav>
+          </details>
+
+          <details class="sidebar-expand" {% if request.path.startswith('/settings/') or request.path.startswith('/categories') %}open{% endif %}>
+            <summary>Settings <span class="sidebar-expand-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span></summary>
+            <nav class="sidebar-nav sidebar-nav-nested">
+              <a href="/settings/ebay-listings" class="{% if request.path.startswith('/settings/ebay-listings') %}sidebar-active{% endif %}">eBay Listings</a>
+              <a href="/categories" class="{% if request.path.startswith('/categories') %}sidebar-active{% endif %}">Categories</a>
+              <a href="/settings/neighborhoods" class="{% if request.path.startswith('/settings/neighborhoods') %}sidebar-active{% endif %}">Neighborhoods</a>
+            </nav>
+          </details>
+
+          <details class="sidebar-expand" {% if request.path.startswith('/tools/') %}open{% endif %}>
+            <summary>Tools <span class="sidebar-expand-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span></summary>
+            <nav class="sidebar-nav sidebar-nav-nested">
+              <a href="/tools/ebay-sold-search" class="{% if request.path.startswith('/tools/ebay-sold-search') %}sidebar-active{% endif %}">eBay Sold Search</a>
+              <a href="/tools/ebay-recently-listed" class="{% if request.path.startswith('/tools/ebay-recently-listed') %}sidebar-active{% endif %}">eBay Recently Listed</a>
+            </nav>
+          </details>
+
           {% if session.get('is_admin') %}
           <span class="nav-section-label">Admin</span>
           <nav class="sidebar-nav admin-badge">

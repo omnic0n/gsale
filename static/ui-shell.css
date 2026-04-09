@@ -109,6 +109,64 @@ body.app-ui {
   font-weight: 600;
 }
 
+/* Expandable sidebar sections (Groups, Items, …) */
+details.sidebar-expand {
+  border-bottom: 1px solid transparent;
+  margin-bottom: 0.15rem;
+}
+
+details.sidebar-expand > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 1.25rem 0.55rem 1rem;
+  margin: 0 0.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+details.sidebar-expand > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.sidebar-expand > summary:hover {
+  background: #f5f5f2;
+}
+
+details.sidebar-expand[open] > summary {
+  color: var(--text);
+}
+
+details.sidebar-expand .sidebar-expand-chevron {
+  display: inline-flex;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+details.sidebar-expand[open] .sidebar-expand-chevron {
+  transform: rotate(180deg);
+}
+
+.sidebar-nav-nested {
+  padding: 0.15rem 0 0.5rem 0;
+  border-left: 2px solid #ebebe6;
+  margin: 0 0.85rem 0.35rem 1.35rem;
+}
+
+.sidebar-nav-nested a {
+  padding-left: 0.75rem;
+  margin-left: 0;
+  margin-right: 0.5rem;
+  font-size: 0.88rem;
+}
+
 .sidebar-footer {
   padding: 1rem 1.25rem;
   border-top: 1px solid var(--border);
