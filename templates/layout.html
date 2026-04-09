@@ -97,9 +97,14 @@
         <header class="app-topbar">
           <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Open menu"><i class="fas fa-bars"></i></button>
           <div class="app-topbar-search">
-            <form action="/items/search" method="get" class="search-wrap">
-              <i class="fas fa-search"></i>
-              <input type="search" name="q" placeholder="Search items…" aria-label="Search items" autocomplete="off">
+            <form action="{{ url_for('items_search') }}" method="get" class="search-wrap">
+              <div class="search-field-wrap">
+                <i class="fas fa-search"></i>
+                <input type="search" name="q" placeholder="Search items…" aria-label="Search items" autocomplete="off">
+              </div>
+              <button type="submit" class="app-topbar-search-submit" aria-label="Search items">
+                <i class="fas fa-arrow-right"></i>
+              </button>
             </form>
           </div>
           <div class="app-topbar-actions">

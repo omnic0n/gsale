@@ -222,8 +222,18 @@ details.sidebar-expand[open] .sidebar-expand-chevron {
   max-width: 420px;
 }
 
-.app-topbar-search form {
+.app-topbar-search form.search-wrap {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.app-topbar-search .search-field-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
 }
 
 .app-topbar-search input[type="search"],
@@ -237,11 +247,7 @@ details.sidebar-expand[open] .sidebar-expand-chevron {
   color: var(--text) !important;
 }
 
-.app-topbar-search .search-wrap {
-  position: relative;
-}
-
-.app-topbar-search .search-wrap i {
+.app-topbar-search .search-field-wrap i {
   position: absolute;
   left: 0.9rem;
   top: 50%;
@@ -249,6 +255,30 @@ details.sidebar-expand[open] .sidebar-expand-chevron {
   color: var(--text-muted);
   font-size: 0.85rem;
   pointer-events: none;
+}
+
+.app-topbar-search-submit {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.app-topbar-search-submit:hover {
+  background: #222;
+  color: #fff !important;
+}
+
+.app-topbar-search-submit:active {
+  transform: scale(0.96);
 }
 
 .app-topbar-actions {
