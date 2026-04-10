@@ -23,6 +23,7 @@ except ImportError:
     google_requests = None
 
 import get_data, set_data
+import shippo_rates
 import files
 import function
 import config
@@ -4664,7 +4665,12 @@ def quick_sell():
         id = set_data.set_quick_sale(details)
         return redirect(url_for('describe_item',item=id))
     prefill_from_ebay = bool(prefill_ebay_id or request.args.get('name') or request.args.get('price'))
-    return render_template('quick_sell.html', form=form, prefill_from_ebay=prefill_from_ebay)
+    return render_template(
+        'quick_sell.html',
+        form=form,
+        prefill_from_ebay=prefill_from_ebay,
+        shippo_ready=shippo_rates.is_shippo_configured(app),
+    )
 
 @app.route('/items/sold',methods=["POST","GET"])
 @login_required
@@ -4717,8 +4723,13 @@ def sold_items():
         return redirect(url_for('describe_item',item=details['id']))
     return_to = request.args.get('return_to')
     return_group_id = request.args.get('group_id')
-    return render_template('items_sold.html', form=form,
-                           return_to=return_to, return_group_id=return_group_id)
+    return render_template(
+        'items_sold.html',
+        form=form,
+        return_to=return_to,
+        return_group_id=return_group_id,
+        shippo_ready=shippo_rates.is_shippo_configured(app),
+    )
 
 
 @app.route('/api/ebay-item-data/<item_id>')
@@ -5590,6 +5601,35 @@ def api_items_search():
             })
         
         return jsonify({'success': True, 'items': results})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/shippo-rates', methods=['POST'])
+@login_required
+def api_shippo_rates():
+    """Return Shippo rate quotes (goshippo.com) for a parcel and destination."""
+    try:
+        if not shippo_rates.is_shippo_configured(app):
+            return jsonify({
+                'success': False,
+                'message': 'Shippo is not configured. Set SHIPPO_API_TOKEN and ship-from address fields.',
+            }), 400
+        body = request.get_json()
+        if not body:
+            return jsonify({'success': False, 'message': 'JSON body required'}), 400
+        address_to = shippo_rates.build_address_to(body)
+        parcel = shippo_rates.build_parcel(body)
+        address_from = shippo_rates.get_address_from(app)
+        token = shippo_rates.get_shippo_token(app)
+        shipment = shippo_rates.request_shipment_rates(token, address_from, address_to, parcel)
+        rates = shippo_rates.normalize_rates(shipment)
+        return jsonify({
+            'success': True,
+            'rates': rates,
+            'shipment_status': shipment.get('status'),
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

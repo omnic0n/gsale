@@ -67,16 +67,17 @@
                 <div class="form-group">
                     {{ form.shipping_fee.label(class="form-control-label") }}
                     {% if form.shipping_fee.errors %}
-                        {{ form.shipping_fee(class="form-control form-control-lg is-invalid") }}
+                        {{ form.shipping_fee(class="form-control form-control-lg is-invalid", id="shipping_fee") }}
                         <div class="invalid-feedback">
                             {% for error in form.shipping_fee.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.shipping_fee(class="form-control form-control-lg") }}
+                        {{ form.shipping_fee(class="form-control form-control-lg", id="shipping_fee") }}
                     {% endif %}
                 </div>
+                {% include '_shippo_rates_widget.html' %}
                 <div class="form-group">
                     {{ form.category.label(class="form-control-label") }}
                     {% if form.category.errors %}

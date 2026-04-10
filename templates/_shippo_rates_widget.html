@@ -1,0 +1,144 @@
+{% set shippo_ready = shippo_ready|default(false) %}
+<div class="card border-secondary mb-3" id="shippo-rates-card">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-truck mr-2"></i>Shipping rate estimate (Shippo)</span>
+    </div>
+    <div class="card-body py-3">
+        {% if shippo_ready %}
+        <p class="small text-muted mb-2">Enter the buyer&rsquo;s address and package size. Rates are returned from your Shippo account (carriers you enabled there).</p>
+        <div class="form-row">
+            <div class="form-group col-md-6 mb-2">
+                <label class="small mb-0" for="shippo-to-street1">Street</label>
+                <input type="text" class="form-control form-control-sm" id="shippo-to-street1" placeholder="123 Main St" autocomplete="shipping street-address">
+            </div>
+            <div class="form-group col-md-3 mb-2">
+                <label class="small mb-0" for="shippo-to-city">City</label>
+                <input type="text" class="form-control form-control-sm" id="shippo-to-city" autocomplete="shipping address-level2">
+            </div>
+            <div class="form-group col-md-1 mb-2">
+                <label class="small mb-0" for="shippo-to-state">ST</label>
+                <input type="text" class="form-control form-control-sm" id="shippo-to-state" maxlength="2" placeholder="CA" autocomplete="shipping address-level1">
+            </div>
+            <div class="form-group col-md-2 mb-2">
+                <label class="small mb-0" for="shippo-to-zip">ZIP</label>
+                <input type="text" class="form-control form-control-sm" id="shippo-to-zip" placeholder="94107" autocomplete="shipping postal-code">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-6 col-md-2 mb-2">
+                <label class="small mb-0" for="shippo-weight-lb">Weight (lb)</label>
+                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" id="shippo-weight-lb" value="1">
+            </div>
+            <div class="form-group col-6 col-md-2 mb-2">
+                <label class="small mb-0" for="shippo-l-in">L (in)</label>
+                <input type="number" step="0.1" min="0.1" class="form-control form-control-sm" id="shippo-l-in" value="12">
+            </div>
+            <div class="form-group col-6 col-md-2 mb-2">
+                <label class="small mb-0" for="shippo-w-in">W (in)</label>
+                <input type="number" step="0.1" min="0.1" class="form-control form-control-sm" id="shippo-w-in" value="9">
+            </div>
+            <div class="form-group col-6 col-md-2 mb-2">
+                <label class="small mb-0" for="shippo-h-in">H (in)</label>
+                <input type="number" step="0.1" min="0.1" class="form-control form-control-sm" id="shippo-h-in" value="3">
+            </div>
+            <div class="form-group col-12 col-md-4 mb-2 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-primary btn-block" id="shippo-fetch-rates">
+                    <i class="fas fa-calculator mr-1"></i>Get rates
+                </button>
+            </div>
+        </div>
+        <div id="shippo-rates-error" class="alert alert-danger py-2 small mb-2" style="display:none;"></div>
+        <div id="shippo-rates-table-wrap" style="display:none;">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered mb-0" id="shippo-rates-table">
+                    <thead><tr><th>Carrier</th><th>Service</th><th>Price</th><th></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <p class="small text-muted mb-0 mt-2">Click <strong>Use</strong> to copy the amount into the shipping field above.</p>
+        </div>
+        {% else %}
+        <p class="small text-muted mb-0">
+            To enable Shippo quotes, set <code>SHIPPO_API_TOKEN</code> and ship-from fields
+            (<code>SHIPPO_FROM_STREET1</code>, <code>SHIPPO_FROM_CITY</code>, <code>SHIPPO_FROM_STATE</code>, <code>SHIPPO_FROM_ZIP</code>, etc.)
+            in your app config or environment, then restart the app.
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% if shippo_ready %}
+<script>
+(function() {
+    var btn = document.getElementById('shippo-fetch-rates');
+    if (!btn) return;
+    var shippingInput = document.getElementById('shipping_fee');
+    btn.addEventListener('click', function() {
+        var errEl = document.getElementById('shippo-rates-error');
+        var wrap = document.getElementById('shippo-rates-table-wrap');
+        var tbody = document.querySelector('#shippo-rates-table tbody');
+        errEl.style.display = 'none';
+        wrap.style.display = 'none';
+        tbody.innerHTML = '';
+        var payload = {
+            to_street1: document.getElementById('shippo-to-street1').value,
+            to_city: document.getElementById('shippo-to-city').value,
+            to_state: document.getElementById('shippo-to-state').value,
+            to_zip: document.getElementById('shippo-to-zip').value,
+            weight_lb: document.getElementById('shippo-weight-lb').value,
+            length_in: document.getElementById('shippo-l-in').value,
+            width_in: document.getElementById('shippo-w-in').value,
+            height_in: document.getElementById('shippo-h-in').value
+        };
+        btn.disabled = true;
+        fetch('/api/shippo-rates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+        .then(function(result) {
+            btn.disabled = false;
+            if (!result.ok || !result.data.success) {
+                errEl.textContent = (result.data && result.data.message) ? result.data.message : 'Request failed';
+                errEl.style.display = 'block';
+                return;
+            }
+            var rates = result.data.rates || [];
+            if (rates.length === 0) {
+                errEl.textContent = 'No rates returned. Check addresses and carrier accounts in Shippo.';
+                errEl.style.display = 'block';
+                return;
+            }
+            rates.forEach(function(rate) {
+                var tr = document.createElement('tr');
+                var amt = rate.amount;
+                var cur = rate.currency || 'USD';
+                var td1 = document.createElement('td'); td1.textContent = rate.provider || '';
+                var td2 = document.createElement('td'); td2.textContent = rate.service || '';
+                var td3 = document.createElement('td'); td3.textContent = cur + ' ' + amt;
+                var td4 = document.createElement('td');
+                var useBtn = document.createElement('button');
+                useBtn.type = 'button';
+                useBtn.className = 'btn btn-sm btn-success';
+                useBtn.textContent = 'Use';
+                useBtn.addEventListener('click', function() {
+                    if (shippingInput) {
+                        var v = parseFloat(amt);
+                        shippingInput.value = isNaN(v) ? '' : v.toFixed(2);
+                    }
+                });
+                td4.appendChild(useBtn);
+                tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+                tbody.appendChild(tr);
+            });
+            wrap.style.display = 'block';
+        })
+        .catch(function() {
+            btn.disabled = false;
+            errEl.textContent = 'Network error';
+            errEl.style.display = 'block';
+        });
+    });
+})();
+</script>
+{% endif %}
