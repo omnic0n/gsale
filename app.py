@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm, EbayRecentlyListedSearchForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -5870,21 +5870,34 @@ def api_add_group():
             'message': str(e)
         }), 500
 
+def _tools_ebay_list_limit():
+    """Query ?limit=25|50|100 for eBay Tools list pages; default 25."""
+    raw = request.args.get('limit', default='25', type=str)
+    try:
+        n = int(raw)
+    except (TypeError, ValueError):
+        return 25
+    if n in (25, 50, 100):
+        return n
+    return 25
+
+
 @app.route('/tools/ebay-sold-search', methods=['GET'])
 @login_required
 def ebay_sold_search():
-    """Show last 25 of the user's sold items on eBay (no search form)."""
+    """Show the user's sold items on eBay; optional ?limit=25|50|100 (default 25)."""
     refresh_token_if_needed()
-    
+
+    limit = _tools_ebay_list_limit()
     results = None
     error = None
     rate_limited = False
-    
+
     search_results = search_ebay_sold_items(
         search_term=None,
-        num_items=25
+        num_items=limit
     )
-    
+
     if search_results['success']:
         results = search_results
     else:
@@ -5894,27 +5907,41 @@ def ebay_sold_search():
             flash('eBay API rate limit exceeded. Please wait a few minutes before trying again.', 'warning')
         else:
             flash('eBay error: {}'.format(error), 'error')
-    
-    return render_template('tools_ebay_sold_search.html', results=results, error=error, rate_limited=rate_limited)
 
-@app.route('/tools/ebay-recently-listed', methods=['GET', 'POST'])
+    return render_template(
+        'tools_ebay_sold_search.html',
+        results=results,
+        error=error,
+        rate_limited=rate_limited,
+        limit=limit,
+    )
+
+@app.route('/tools/ebay-recently-listed', methods=['GET'])
 @login_required
 def ebay_recently_listed():
-    """Search user's own recently listed (active) items on eBay"""
+    """Show user's recently listed (active) eBay items; optional ?limit=25|50|100 (default 25)."""
     refresh_token_if_needed()
-    form = EbayRecentlyListedSearchForm()
+    limit = _tools_ebay_list_limit()
     results = None
     error = None
-    if request.method == 'POST' and form.validate_on_submit():
-        search_term = form.search_term.data if form.search_term.data else None
-        num_items = form.num_items.data
-        search_results = search_ebay_recently_listed(search_term=search_term, num_items=num_items)
-        if search_results['success']:
-            results = search_results
-        else:
-            error = search_results.get('error', 'Unknown error occurred')
-            flash('Error: {}'.format(error), 'error')
-    return render_template('tools_ebay_recently_listed.html', form=form, results=results, error=error)
+    search_results = search_ebay_recently_listed(search_term=None, num_items=limit)
+    if search_results['success']:
+        results = search_results
+    else:
+        error = search_results.get('error', 'Unknown error occurred')
+        flash('Error: {}'.format(error), 'error')
+    return render_template('tools_ebay_recently_listed.html', results=results, error=error, limit=limit)
+
+
+@app.route('/tools/shipping', methods=['GET'])
+@login_required
+def tools_shipping():
+    """Standalone Shippo rate lookup (Tools)."""
+    return render_template(
+        'tools_shipping.html',
+        shippo_ready=shippo_rates.is_shippo_configured(app),
+    )
+
 
 @app.route('/reports/neighborhood/detail/<neighborhood_id>')
 @login_required

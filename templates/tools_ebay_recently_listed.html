@@ -1,57 +1,33 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="content-section">
-    <fieldset class="form-group">
-        <legend class="border-bottom mb-4">
-            <i class="fas fa-clock me-2"></i>My eBay Recently Listed Items
-        </legend>
-        
-        <div class="mb-3">
-            <p class="text-muted">
-                View your currently active listings, sorted by when you listed them (newest first). Leave search term empty to see all active items.
-            </p>
+    <h4 class="mb-2">
+        <i class="fas fa-clock mr-2"></i>My eBay recently listed (active)
+    </h4>
+    <div class="d-flex flex-wrap align-items-center justify-content-between">
+        <p class="text-muted mb-0 pr-md-3">Showing up to {{ limit|default(25) }} active listings from your eBay account (newest first).</p>
+        <div class="d-flex align-items-center mt-2 mt-md-0">
+            <label for="ebay-recent-limit-select" class="small text-muted mb-0 mr-2">Show</label>
+            <select id="ebay-recent-limit-select" class="form-control form-control-sm" style="width: auto;" aria-label="Number of listings to show">
+                {% set lim = limit|default(25) %}
+                <option value="25" {% if lim == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if lim == 50 %}selected{% endif %}>50</option>
+                <option value="100" {% if lim == 100 %}selected{% endif %}>100</option>
+            </select>
         </div>
-        
-        <form method="POST" action="">
-            {{ form.hidden_tag() }}
-            
-            <div class="form-row">
-                <div class="form-group col-md-6 mb-3">
-                    {{ form.search_term.label(class="form-control-label") }}
-                    {% if form.search_term.errors %}
-                        {{ form.search_term(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.search_term.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.search_term(class="form-control form-control-lg") }}
-                    {% endif %}
-                    <small class="form-text text-muted">Optional: Filter by item title or eBay item ID</small>
-                </div>
-                
-                <div class="form-group col-md-6 mb-3">
-                    {{ form.num_items.label(class="form-control-label") }}
-                    {% if form.num_items.errors %}
-                        {{ form.num_items(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.num_items.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.num_items(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
-            </div>
-        </form>
-    </fieldset>
+    </div>
 </div>
+<script>
+(function() {
+    var sel = document.getElementById('ebay-recent-limit-select');
+    if (!sel) return;
+    sel.addEventListener('change', function() {
+        var u = new URL(window.location.href);
+        u.searchParams.set('limit', this.value);
+        window.location.href = u.toString();
+    });
+})();
+</script>
 
 {% if results %}
 <div class="content-section mt-4">
@@ -120,9 +96,9 @@
                             <a href="/items/describe?item={{ item.matching_item_id }}" class="btn btn-sm btn-outline-success ms-2">
                                 <i class="fas fa-link"></i> View Item
                             </a>
-                        {% else %}
-                            <a href="{{ url_for('bought_items') }}?ebay_item_id={{ item.itemId }}&name={{ item.title|urlencode }}" class="btn btn-sm btn-outline-secondary ms-2">
-                                <i class="fas fa-plus"></i> Add Item
+                        {% elif item.itemId and item.itemId != 'N/A' %}
+                            <a href="{{ url_for('quick_sell', ebay_item_id=item.itemId, name=item.title, price=item.price) }}" class="btn btn-sm btn-outline-secondary ms-2">
+                                <i class="fas fa-dollar-sign"></i> Sell item
                             </a>
                         {% endif %}
                     </td>
@@ -162,7 +138,7 @@
     </script>
     {% else %}
     <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No active listings found matching your search criteria.
+        <i class="fas fa-info-circle me-2"></i>No active listings returned.
         <p class="mb-0 mt-2"><strong>Tip:</strong> If you sign in with eBay OAuth, the Trading API may not return your listings. The app will try the Sell Inventory API as a fallback; only listings created via the Inventory API appear there. For full coverage, you can add a legacy <strong>User Token</strong> in Settings (eBay integration).</p>
     </div>
     {% endif %}

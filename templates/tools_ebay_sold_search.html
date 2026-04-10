@@ -4,8 +4,30 @@
     <h4 class="mb-2">
         <i class="fas fa-shopping-bag mr-2"></i>My eBay sold items
     </h4>
-    <p class="text-muted mb-0">Showing up to the last 25 sold listings from your eBay account.</p>
+    <div class="d-flex flex-wrap align-items-center justify-content-between">
+        <p class="text-muted mb-0 pr-md-3">Showing up to {{ limit|default(25) }} sold listings from your eBay account (newest first).</p>
+        <div class="d-flex align-items-center mt-2 mt-md-0">
+            <label for="ebay-sold-limit-select" class="small text-muted mb-0 mr-2">Show</label>
+            <select id="ebay-sold-limit-select" class="form-control form-control-sm" style="width: auto;" aria-label="Number of listings to show">
+                {% set lim = limit|default(25) %}
+                <option value="25" {% if lim == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if lim == 50 %}selected{% endif %}>50</option>
+                <option value="100" {% if lim == 100 %}selected{% endif %}>100</option>
+            </select>
+        </div>
+    </div>
 </div>
+<script>
+(function() {
+    var sel = document.getElementById('ebay-sold-limit-select');
+    if (!sel) return;
+    sel.addEventListener('change', function() {
+        var u = new URL(window.location.href);
+        u.searchParams.set('limit', this.value);
+        window.location.href = u.toString();
+    });
+})();
+</script>
 
 {% if results %}
 <div class="content-section mt-4">
