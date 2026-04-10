@@ -49,6 +49,26 @@
                     <span id="itemCount" class="ml-3 text-muted">1 item(s)</span>
                 </div>
 
+                <div class="form-group mb-4 p-3 border rounded bg-light">
+                    <div class="row align-items-end">
+                        <div class="col-md-8 mb-2 mb-md-0">
+                            <label class="form-control-label mb-1" for="bulkCategorySelect">Set category for all rows</label>
+                            <select id="bulkCategorySelect" class="form-control">
+                                <option value="">— Choose a category —</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.type }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted mb-0">Pick a category and click Apply to fill every item row. You can still change any row afterward. New rows use this value if set.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" id="applyBulkCategoryBtn" class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-layer-group"></i> Apply to all rows
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                         <!-- Items Container -->
                         <div id="itemsContainer">
                             {% for init_item in initial_items %}
@@ -63,7 +83,7 @@
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label class="form-control-label">Category</label>
-                                            <select class="form-control" name="items-{{ loop.index0 }}-category" required>
+                                            <select class="form-control item-category-select" name="items-{{ loop.index0 }}-category" required>
                                                 <option value="">Select Category</option>
                                                 {% for category in categories %}
                                                 <option value="{{ category.id }}">{{ category.type }}</option>
@@ -185,7 +205,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label class="form-control-label">Category</label>
-                                        <select class="form-control" name="items-${newIndex}-category" required>
+                                        <select class="form-control item-category-select" name="items-${newIndex}-category" required>
                                             ${categoryChoices}
                                         </select>
                                     </div>
@@ -209,8 +229,25 @@
                     `;
             
             container.insertAdjacentHTML('beforeend', newItemHtml);
+            var bulk = document.getElementById('bulkCategorySelect');
+            var lastRow = container.lastElementChild;
+            if (bulk && bulk.value && lastRow) {
+                var ns = lastRow.querySelector('select.item-category-select');
+                if (ns) ns.value = bulk.value;
+            }
             itemCount++;
             updateItemCount();
+        }
+
+        function applyBulkCategoryToAll() {
+            var bulk = document.getElementById('bulkCategorySelect');
+            if (!bulk || !bulk.value) {
+                alert('Choose a category in the dropdown first.');
+                return;
+            }
+            document.querySelectorAll('#itemsContainer select.item-category-select').forEach(function(sel) {
+                sel.value = bulk.value;
+            });
         }
         
         function removeLastItem() {
@@ -236,6 +273,8 @@
         // Event listeners
         document.getElementById('addNewItem').addEventListener('click', addNewItem);
         document.getElementById('removeLastItem').addEventListener('click', removeLastItem);
+        var applyBulkBtn = document.getElementById('applyBulkCategoryBtn');
+        if (applyBulkBtn) applyBulkBtn.addEventListener('click', applyBulkCategoryToAll);
         
         // Delegate event listener for remove buttons
         document.getElementById('itemsContainer').addEventListener('click', function(e) {
