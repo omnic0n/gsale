@@ -42,11 +42,16 @@
     {% endif %}
     
     {% if results.listings %}
-    <div class="mb-2">
+    <div class="mb-2 d-flex flex-wrap align-items-center">
         <button type="button" id="addSelectedToGroupBtn" class="btn btn-primary btn-sm" disabled>
             <i class="fas fa-plus"></i> Add selected to group
         </button>
-        <span id="selectedCount" class="ms-2 text-muted small">0 selected</span>
+        <span id="selectedCount" class="ml-2 mr-2 text-muted small">0 selected</span>
+        <div class="btn-group btn-group-sm mr-2" role="group" aria-label="Selection">
+            <button type="button" id="recentListedSelectAll" class="btn btn-outline-secondary">Select all</button>
+            <button type="button" id="recentListedSelectNone" class="btn btn-outline-secondary">Clear</button>
+        </div>
+        <span class="text-muted small d-none d-md-inline">Tip: <kbd>Shift</kbd>+click checkboxes to select a range.</span>
     </div>
     <div class="table-responsive">
         <table class="blueTable">
@@ -66,7 +71,7 @@
                 <tr data-ebay-id="{{ item.itemId }}" data-name="{{ item.title|e }}" data-can-add="{{ '1' if not item.matching_item_id else '0' }}">
                     <td class="text-end">
                         {% if not item.matching_item_id %}
-                        <input type="checkbox" class="form-check-input recently-listed-cb" value="1" title="Add to group">
+                        <input type="checkbox" class="form-check-input recently-listed-cb" value="1" title="Add to group. Shift+click another row to select the range.">
                         {% else %}
                         <span class="text-muted">—</span>
                         {% endif %}
@@ -111,16 +116,56 @@
         (function() {
             var btn = document.getElementById('addSelectedToGroupBtn');
             var countEl = document.getElementById('selectedCount');
+            var selectAllBtn = document.getElementById('recentListedSelectAll');
+            var selectNoneBtn = document.getElementById('recentListedSelectNone');
             if (!btn) return;
+
+            function getCheckboxes() {
+                return Array.prototype.slice.call(document.querySelectorAll('.recently-listed-cb'));
+            }
+
+            var lastCheckboxIndex = -1;
+
             function updateSelected() {
                 var checked = document.querySelectorAll('.recently-listed-cb:checked');
                 var n = checked.length;
                 btn.disabled = n === 0;
                 countEl.textContent = n + ' selected';
             }
-            document.querySelectorAll('.recently-listed-cb').forEach(function(cb) {
-                cb.addEventListener('change', updateSelected);
+
+            getCheckboxes().forEach(function(cb, idx) {
+                cb.addEventListener('click', function(e) {
+                    var cbs = getCheckboxes();
+                    var i = cbs.indexOf(this);
+                    if (i < 0) return;
+                    if (e.shiftKey && lastCheckboxIndex >= 0) {
+                        var lo = Math.min(lastCheckboxIndex, i);
+                        var hi = Math.max(lastCheckboxIndex, i);
+                        var val = this.checked;
+                        for (var j = lo; j <= hi; j++) {
+                            cbs[j].checked = val;
+                        }
+                    }
+                    lastCheckboxIndex = i;
+                    updateSelected();
+                });
             });
+
+            if (selectAllBtn) {
+                selectAllBtn.addEventListener('click', function() {
+                    getCheckboxes().forEach(function(cb) { cb.checked = true; });
+                    lastCheckboxIndex = getCheckboxes().length - 1;
+                    updateSelected();
+                });
+            }
+            if (selectNoneBtn) {
+                selectNoneBtn.addEventListener('click', function() {
+                    getCheckboxes().forEach(function(cb) { cb.checked = false; });
+                    lastCheckboxIndex = -1;
+                    updateSelected();
+                });
+            }
+
             btn.addEventListener('click', function() {
                 var rows = document.querySelectorAll('.recently-listed-cb:checked');
                 if (rows.length === 0) return;
