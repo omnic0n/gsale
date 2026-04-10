@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, make_response
 from flask_mysqldb import MySQL
-from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm, EbaySoldItemsSearchForm, EbayRecentlyListedSearchForm
+from forms import PurchaseForm, SaleForm, GroupForm, ListForm, ItemForm, ReportsForm, ButtonForm, ReturnItemForm, CityReportForm, NeighborhoodForm, NeighborhoodReportForm, EbayRecentlyListedSearchForm
 from upload_function import *
 from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
@@ -4623,6 +4623,9 @@ def items_remove():
 @login_required
 def quick_sell():
     group_id = request.args.get('group', type = str)
+    prefill_ebay_id = request.args.get('ebay_item_id', type=str)
+    prefill_name = request.args.get('name', type=str)
+    prefill_price = request.args.get('price', type=str)
 
     groups = get_data.get_group_choices_for_account()
     categories = get_data.get_all_from_categories()
@@ -4640,6 +4643,18 @@ def quick_sell():
         form.group.data = group_id
         form.list_date.data = group_data['date']
 
+    # Prefill from eBay sold tools (or shared links): sell into a group with listing details
+    if request.method == 'GET':
+        if prefill_ebay_id:
+            form.ebay_item_id.data = prefill_ebay_id
+        if prefill_name:
+            form.name.data = prefill_name
+        if prefill_price is not None and str(prefill_price).strip() != '':
+            try:
+                form.price.data = '%.2f' % float(prefill_price)
+            except (TypeError, ValueError):
+                pass
+
     if request.method == "POST":
         details = request.form
         group_data = get_data.get_all_from_group(details['group'])
@@ -4648,7 +4663,8 @@ def quick_sell():
             return redirect(url_for('index'))
         id = set_data.set_quick_sale(details)
         return redirect(url_for('describe_item',item=id))
-    return render_template('quick_sell.html', form=form)
+    prefill_from_ebay = bool(prefill_ebay_id or request.args.get('name') or request.args.get('price'))
+    return render_template('quick_sell.html', form=form, prefill_from_ebay=prefill_from_ebay)
 
 @app.route('/items/sold',methods=["POST","GET"])
 @login_required
@@ -5715,39 +5731,32 @@ def api_add_group():
             'message': str(e)
         }), 500
 
-@app.route('/tools/ebay-sold-search', methods=['GET', 'POST'])
+@app.route('/tools/ebay-sold-search', methods=['GET'])
 @login_required
 def ebay_sold_search():
-    """Search user's own sold items on eBay"""
-    # Refresh eBay token if needed before processing
+    """Show last 25 of the user's sold items on eBay (no search form)."""
     refresh_token_if_needed()
     
-    form = EbaySoldItemsSearchForm()
     results = None
     error = None
     rate_limited = False
     
-    if request.method == 'POST' and form.validate_on_submit():
-        search_term = form.search_term.data if form.search_term.data else None
-        num_items = form.num_items.data
-        
-        # Search user's sold items
-        search_results = search_ebay_sold_items(
-            search_term=search_term,
-            num_items=num_items
-        )
-        
-        if search_results['success']:
-            results = search_results
-        else:
-            error = search_results.get('error', 'Unknown error occurred')
-            rate_limited = search_results.get('rate_limited', False)
-            if rate_limited:
-                flash('eBay API rate limit exceeded. Please wait a few minutes before trying again.', 'warning')
-            else:
-                flash(f'Search error: {error}', 'error')
+    search_results = search_ebay_sold_items(
+        search_term=None,
+        num_items=25
+    )
     
-    return render_template('tools_ebay_sold_search.html', form=form, results=results, error=error, rate_limited=rate_limited)
+    if search_results['success']:
+        results = search_results
+    else:
+        error = search_results.get('error', 'Unknown error occurred')
+        rate_limited = search_results.get('rate_limited', False)
+        if rate_limited:
+            flash('eBay API rate limit exceeded. Please wait a few minutes before trying again.', 'warning')
+        else:
+            flash('eBay error: {}'.format(error), 'error')
+    
+    return render_template('tools_ebay_sold_search.html', results=results, error=error, rate_limited=rate_limited)
 
 @app.route('/tools/ebay-recently-listed', methods=['GET', 'POST'])
 @login_required

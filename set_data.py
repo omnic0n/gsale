@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from flask import session
 import datetime
 from datetime import date, timedelta
@@ -98,8 +99,8 @@ def set_bought_items_improved(details):
     return item_count
 
 def set_quick_sale(details):
-    # Validate inputs
-    if not isinstance(details, dict):
+    # Validate inputs (request.form is a MultiDict, not dict)
+    if not isinstance(details, Mapping):
         raise ValueError("Invalid details format")
     
     if not isinstance(details.get('name'), str) or len(details.get('name', '')) > 150:
@@ -128,10 +129,20 @@ def set_quick_sale(details):
     except (ValueError, TypeError):
         raise ValueError("Invalid shipping fee")
     
+    ebay_item_id = details.get('ebay_item_id') or ''
+    if isinstance(ebay_item_id, str):
+        ebay_item_id = ebay_item_id.strip() or None
+        if ebay_item_id and len(ebay_item_id) > 50:
+            ebay_item_id = ebay_item_id[:50]
+    else:
+        ebay_item_id = None
+
     item_id = generate_uuid()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO items(id, name, group_id, category_id, list_date, sold) VALUES (%s, %s, %s, %s, %s, 1)", 
-                (item_id, details['name'], details['group'], details['category'], details['list_date']))
+    cur.execute(
+        "INSERT INTO items(id, name, group_id, category_id, list_date, sold, ebay_item_id) VALUES (%s, %s, %s, %s, %s, 1, %s)",
+        (item_id, details['name'], details['group'], details['category'], details['list_date'], ebay_item_id),
+    )
     cur.execute("INSERT INTO sale(id, price, shipping_fee, date) VALUES (%s, %s, %s, %s)",
                 (item_id, price, shipping_fee, date.today().strftime("%Y-%m-%d")))
     mysql.connection.commit()
