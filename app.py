@@ -1245,6 +1245,8 @@ def get_item_transaction_details(user_token, item_id):
                 if fee_data.get('order_id') is not None and fee_data.get('order_id') != '':
                     transaction_data['order_id'] = fee_data['order_id']
                 transaction_data['order_id'] = transaction_data.get('order_id') or order_id
+                if fee_details.get('ship_to_address'):
+                    transaction_data['ship_to_address'] = fee_details['ship_to_address']
                 return {'success': True, 'transaction_data': transaction_data}
             if transaction_data is not None:
                 return {'success': True, 'transaction_data': transaction_data}
@@ -1741,34 +1743,47 @@ def get_transaction_identifiers(user_token, item_id):
 # eBay Fee Retrieval Functions
 def get_ebay_fees_from_order_api(order_id):
     """
-    Retrieve fee information using Order API
+    Retrieve fee information using Fulfillment API getOrder.
+    Also extracts buyer ship-to when eBay returns it (may require a second getOrder without fieldGroups).
     """
     try:
         token_result = get_valid_ebay_token()
         if not token_result['success']:
             return token_result
-        
+
         api_base_url = app.config.get('EBAY_API_BASE_URL', 'https://api.ebay.com')
-        url = f"{api_base_url}/sell/fulfillment/v1/order/{order_id}"
-        
+        url = "{}/sell/fulfillment/v1/order/{}".format(api_base_url, order_id)
+
         headers = {
-            'Authorization': f"Bearer {token_result['access_token']}",
+            'Authorization': "Bearer {}".format(token_result['access_token']),
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
         }
-        
-        # Only TAX_BREAKDOWN is supported for fieldGroups (FEE_BREAKDOWN is not valid)
+
         params = {'fieldGroups': 'TAX_BREAKDOWN'}
         response = requests.get(url, headers=headers, params=params)
 
-        if response.status_code == 200:
-            data = response.json()
-            return extract_fee_data(data)
-        else:
+        if response.status_code != 200:
             print("[getOrder] failed order_id={} status={} body={}".format(order_id, response.status_code, response.text[:200]))
-            return {'success': False, 'error': f'Order API failed: {response.status_code}'}
-            
+            return {'success': False, 'error': 'Order API failed: {}'.format(response.status_code)}
+
+        data = response.json()
+        fee_result = extract_fee_data(data)
+        if not fee_result.get('success'):
+            return fee_result
+
+        ship_to = extract_ship_to_address_from_fulfillment_order(data)
+        if ship_to is None:
+            resp2 = requests.get(url, headers=headers)
+            if resp2.status_code == 200:
+                data2 = resp2.json()
+                ship_to = extract_ship_to_address_from_fulfillment_order(data2)
+
+        fee_result['ship_to_address'] = ship_to
+        fee_result['order_json'] = data
+        return fee_result
+
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1863,6 +1878,60 @@ def extract_fee_data(order_data):
     except Exception as e:
         return {'success': False, 'error': f'Fee extraction error: {str(e)}'}
 
+
+def extract_ship_to_address_from_fulfillment_order(order_data):
+    """
+    Buyer ship-to from Fulfillment API order JSON.
+    Primary: fulfillmentStartInstructions[].shippingStep.shipTo.contactAddress
+    Fallback: buyer.buyerRegistrationAddress (when ship-to block is missing, e.g. some edge cases)
+    Returns None if unavailable (e.g. Fulfilled by eBay — no seller-visible ship-to).
+    """
+    if not order_data or not isinstance(order_data, dict):
+        return None
+
+    def _pack(full_name, contact_address, source):
+        if not isinstance(contact_address, dict):
+            return None
+        postal = (contact_address.get('postalCode') or '').strip()
+        city = (contact_address.get('city') or '').strip()
+        state = (contact_address.get('stateOrProvince') or '').strip()
+        if not postal and not (city and state):
+            return None
+        return {
+            'name': (full_name or '').strip()[:120],
+            'street1': (contact_address.get('addressLine1') or '').strip()[:120],
+            'street2': (contact_address.get('addressLine2') or '').strip()[:120],
+            'city': city[:80],
+            'state': state[:30],
+            'postal_code': postal[:12],
+            'country': (contact_address.get('countryCode') or 'US').strip()[:2],
+            'source': source,
+        }
+
+    for instr in order_data.get('fulfillmentStartInstructions') or []:
+        if not isinstance(instr, dict):
+            continue
+        step = instr.get('shippingStep') or {}
+        ship_to = step.get('shipTo') or {}
+        if not isinstance(ship_to, dict):
+            continue
+        ca = ship_to.get('contactAddress') or {}
+        fn = (ship_to.get('fullName') or '').strip()
+        got = _pack(fn, ca, 'fulfillment_ship_to')
+        if got:
+            return got
+
+    buyer = order_data.get('buyer') or {}
+    if isinstance(buyer, dict):
+        bra = buyer.get('buyerRegistrationAddress') or {}
+        if isinstance(bra, dict) and bra:
+            got = _pack('', bra, 'buyer_registration')
+            if got:
+                return got
+
+    return None
+
+
 def get_ebay_final_value_fees_trading_api(order_ids):
     """
     Retrieve Final Value Fees using Trading API GetOrders (Most Reliable)
@@ -1871,9 +1940,9 @@ def get_ebay_final_value_fees_trading_api(order_ids):
         token_result = get_valid_ebay_token()
         if not token_result['success']:
             return token_result
-        
+
         url = "https://api.ebay.com/ws/api.dll"
-        
+
         headers = {
             'X-EBAY-API-CALL-NAME': 'GetOrders',
             'X-EBAY-API-VERSION': '1193',
@@ -1881,31 +1950,30 @@ def get_ebay_final_value_fees_trading_api(order_ids):
             'X-EBAY-API-COMPATIBILITY-LEVEL': '1193',
             'Content-Type': 'text/xml'
         }
-        
-        # Build XML request with order IDs
-        order_xml = ''.join([f'<OrderID>{order_id}</OrderID>' for order_id in order_ids])
-        
-        xml_body = f"""
+
+        order_xml = ''.join(['<OrderID>{}</OrderID>'.format(oid) for oid in order_ids])
+
+        xml_body = """
         <?xml version="1.0" encoding="utf-8"?>
         <GetOrdersRequest xmlns="urn:ebay:apis:eBLBaseComponents">
             <RequesterCredentials>
-                <eBayAuthToken>{token_result['access_token']}</eBayAuthToken>
+                <eBayAuthToken>{}</eBayAuthToken>
             </RequesterCredentials>
             <OrderIDArray>
-                {order_xml}
+                {}
             </OrderIDArray>
             <IncludeFinalValueFee>true</IncludeFinalValueFee>
             <DetailLevel>ReturnAll</DetailLevel>
         </GetOrdersRequest>
-        """
-        
+        """.format(token_result['access_token'], order_xml)
+
         response = requests.post(url, headers=headers, data=xml_body)
-        
+
         if response.status_code == 200:
             return parse_fvf_from_xml(response.text)
         else:
-            return {'success': False, 'error': f'GetOrders failed: {response.status_code}'}
-            
+            return {'success': False, 'error': 'GetOrders failed: {}'.format(response.status_code)}
+
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -4787,18 +4855,22 @@ def get_ebay_item_data(item_id):
             print("  Order earnings: ${:.2f}".format(final_price if final_price else net_earnings))
             print("==========================================================")
             print("")
+            ship_to = trans_data.get('ship_to_address')
+            out = {
+                'order_id': order_id,
+                'net_earnings': net_earnings,
+                'final_price': final_price,
+                'total_fees': total_fees,
+                'subtotal': subtotal,
+                'shipping': shipping,
+                'sales_tax': sales_tax,
+                'order_total': order_total,
+            }
+            if ship_to:
+                out['ship_to_address'] = ship_to
             return jsonify({
                 'success': True,
-                'ebay_data': {
-                    'order_id': order_id,
-                    'net_earnings': net_earnings,
-                    'final_price': final_price,
-                    'total_fees': total_fees,
-                    'subtotal': subtotal,
-                    'shipping': shipping,
-                    'sales_tax': sales_tax,
-                    'order_total': order_total
-                }
+                'ebay_data': out
             })
         else:
             print("[ebay-item-data] No data for item_id={} ebay_item_id={}: {}".format(item_id, ebay_item_id, transaction_data.get('error', 'Unknown error')))
@@ -4812,6 +4884,33 @@ def get_ebay_item_data(item_id):
             'success': False,
             'message': f'Error fetching eBay data: {str(e)}'
         })
+
+
+@app.route('/api/ebay-order-address/<ebay_item_id>')
+@login_required
+def api_ebay_order_address(ebay_item_id):
+    """Buyer ship-to from Fulfillment API for a sold listing (eBay item ID), for Shippo prefill."""
+    try:
+        token_result = get_valid_ebay_token()
+        if token_result['success']:
+            user_token = token_result['access_token']
+        else:
+            user_token = app.config.get('EBAY_USER_TOKEN')
+        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+            return jsonify({'success': False, 'message': 'eBay authentication required'}), 401
+        td = get_item_transaction_details(user_token, ebay_item_id)
+        if not td.get('success'):
+            return jsonify({'success': False, 'message': td.get('error', 'Could not load order')}), 400
+        st = (td.get('transaction_data') or {}).get('ship_to_address')
+        if not st:
+            return jsonify({
+                'success': False,
+                'message': 'No buyer address on this order (Fulfilled by eBay, GSP hub only, or order not found).',
+            }), 404
+        return jsonify({'success': True, 'ship_to_address': st})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 #List Section
 

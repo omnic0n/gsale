@@ -97,4 +97,28 @@
             </div>
         </form>
     </div>
+{% if prefill_from_ebay and shippo_ready %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var hid = document.querySelector('input[name="ebay_item_id"]');
+    var eid = hid && hid.value ? hid.value.trim() : '';
+    if (!eid) return;
+    function set(id, v) {
+        var n = document.getElementById(id);
+        if (n && v != null && v !== '') n.value = v;
+    }
+    fetch('/api/ebay-order-address/' + encodeURIComponent(eid))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success || !data.ship_to_address) return;
+            var st = data.ship_to_address;
+            set('shippo-to-street1', st.street1);
+            set('shippo-to-city', st.city);
+            set('shippo-to-state', st.state);
+            set('shippo-to-zip', st.postal_code);
+        })
+        .catch(function() {});
+});
+</script>
+{% endif %}
 {% endblock content %}

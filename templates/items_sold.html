@@ -103,7 +103,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         const d = data.ebay_data;
                         const netEarnings = d.net_earnings ?? d.final_price ?? '';
                         priceInput.value = netEarnings !== '' ? Number(netEarnings).toFixed(2) : '';
-                        
+                        const st = d.ship_to_address;
+                        if (st) {
+                            const el = (id) => document.getElementById(id);
+                            const set = (id, v) => { const n = el(id); if (n && v != null && v !== '') n.value = v; };
+                            set('shippo-to-street1', st.street1);
+                            set('shippo-to-city', st.city);
+                            set('shippo-to-state', st.state);
+                            set('shippo-to-zip', st.postal_code);
+                        }
                         priceInput.dispatchEvent(new Event('change', { bubbles: true }));
                         ebayStatus.style.display = 'none';
                     } else {
