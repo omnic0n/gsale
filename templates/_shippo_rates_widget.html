@@ -25,9 +25,13 @@
             </div>
         </div>
         <div class="form-row">
-            <div class="form-group col-6 col-md-2 mb-2">
+            <div class="form-group col-4 col-md-2 mb-2">
                 <label class="small mb-0" for="shippo-weight-lb">Weight (lb)</label>
-                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" id="shippo-weight-lb" value="1">
+                <input type="number" step="1" min="0" class="form-control form-control-sm" id="shippo-weight-lb" value="1" inputmode="numeric">
+            </div>
+            <div class="form-group col-4 col-md-2 mb-2">
+                <label class="small mb-0" for="shippo-weight-oz">Weight (oz)</label>
+                <input type="number" step="0.1" min="0" max="15.9" class="form-control form-control-sm" id="shippo-weight-oz" value="0" inputmode="decimal" title="Ounces (0–15.9; add another pound if higher)">
             </div>
             <div class="form-group col-6 col-md-2 mb-2">
                 <label class="small mb-0" for="shippo-l-in">L (in)</label>
@@ -41,7 +45,7 @@
                 <label class="small mb-0" for="shippo-h-in">H (in)</label>
                 <input type="number" step="0.1" min="0.1" class="form-control form-control-sm" id="shippo-h-in" value="3">
             </div>
-            <div class="form-group col-12 col-md-4 mb-2 d-flex align-items-end">
+            <div class="form-group col-12 col-md-2 mb-2 d-flex align-items-end">
                 <button type="button" class="btn btn-sm btn-outline-primary btn-block" id="shippo-fetch-rates">
                     <i class="fas fa-calculator mr-1"></i>Get rates
                 </button>
@@ -85,6 +89,7 @@
             to_state: document.getElementById('shippo-to-state').value,
             to_zip: document.getElementById('shippo-to-zip').value,
             weight_lb: document.getElementById('shippo-weight-lb').value,
+            weight_oz: document.getElementById('shippo-weight-oz').value,
             length_in: document.getElementById('shippo-l-in').value,
             width_in: document.getElementById('shippo-w-in').value,
             height_in: document.getElementById('shippo-h-in').value

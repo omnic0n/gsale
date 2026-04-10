@@ -64,6 +64,16 @@ def _float_or_default(val, default):
         return default
 
 
+def _optional_float(val):
+    """None if missing/blank; otherwise parse float."""
+    try:
+        if val is None or str(val).strip() == "":
+            return None
+        return float(val)
+    except (TypeError, ValueError):
+        return None
+
+
 def build_address_to(body):
     """Validate and build address_to from JSON body."""
     zip_code = (body.get("to_zip") or "").strip()
@@ -87,9 +97,16 @@ def build_address_to(body):
 
 
 def build_parcel(body):
-    weight = _float_or_default(body.get("weight_lb"), 1.0)
-    if weight <= 0 or weight > 150:
-        raise ValueError("Weight must be between 0 and 150 lb.")
+    lb = _optional_float(body.get("weight_lb"))
+    oz = _optional_float(body.get("weight_oz"))
+    if lb is None and oz is None:
+        weight = 1.0
+    else:
+        weight = (lb or 0.0) + (oz or 0.0) / 16.0
+    if weight <= 0:
+        raise ValueError("Weight must be greater than 0 (pounds and/or ounces).")
+    if weight > 150:
+        raise ValueError("Combined weight must not exceed 150 lb.")
     length = _float_or_default(body.get("length_in"), 12.0)
     width = _float_or_default(body.get("width_in"), 9.0)
     height = _float_or_default(body.get("height_in"), 3.0)
