@@ -197,7 +197,7 @@ def get_group_choices_for_account(date_pattern='%'):
     cur = mysql.connection.cursor()
     like_pat = '%' + date_pattern + '%'
     cur.execute(
-        "SELECT id, name FROM collection WHERE date LIKE %s AND account = %s ORDER BY name ASC",
+        "SELECT id, name FROM collection WHERE date LIKE %s AND account = %s ORDER BY date DESC, name ASC",
         (like_pat, session['id']),
     )
     return list(cur.fetchall())
