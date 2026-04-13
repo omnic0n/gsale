@@ -125,6 +125,8 @@ def build_parcel(body):
 
 def request_shipment_rates(token, address_from, address_to, parcel):
     """POST /shipments/ with async=false; return parsed JSON or raise."""
+    # Do not set carrier_accounts: if present, Shippo only returns those IDs.
+    # Omitting it polls every active carrier on the Shippo account (USPS, UPS, FedEx, etc.).
     payload = {
         "address_from": {k: v for k, v in address_from.items() if v is not None},
         "address_to": address_to,

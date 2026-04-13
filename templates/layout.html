@@ -296,15 +296,15 @@
           $('#divDay').attr('data-error');
         }
         
-        $('#type').prop("selectedIndex", {{ type_value }});
-        {{ type_value }}
+        {% set report_type_sel = type_value|default('0') %}
+        $('#type').prop("selectedIndex", {{ report_type_sel }});
         hideMonth();
         hideYear();
         hideDay();
         hideDate();
-        {% if type_value == '2' %}showYear();
-        {% elif type_value == '1' %}showYear(); showMonth();
-        {% elif type_value == '3' %}showDay(); showYear();
+        {% if report_type_sel == '2' %}showYear();
+        {% elif report_type_sel == '1' %}showYear(); showMonth();
+        {% elif report_type_sel == '3' %}showDay(); showYear();
         {% else %}showDate();
         {% endif %}
         $('#type').on('change', function() {

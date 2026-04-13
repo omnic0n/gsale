@@ -4230,7 +4230,13 @@ def index():
 def reports_profit():
     if request.method == "GET":
         form = ReportsForm(formdata=None)
-        form.process(data={'year': datetime.now().year, 'month': datetime.now().month})
+        form.process(
+            data={
+                'year': datetime.now().year,
+                'month': datetime.now().month,
+                'type': 2,
+            }
+        )
     else:
         form = ReportsForm()
 
@@ -4273,7 +4279,13 @@ def reports_profit():
                             sold_dates=sold_dates, 
                             purchased_dates=purchased_dates,
                             type_value=details['type'])
-    return render_template('reports_profit.html', form=form)
+    return render_template(
+        'reports_profit.html',
+        form=form,
+        type_value='2',
+        sold_dates=[],
+        purchased_dates=[],
+    )
 
 
 @app.route('/reports/profit/sold-items')
