@@ -23,6 +23,7 @@ except ImportError:
     google_requests = None
 
 import get_data, set_data
+import reports_cache
 import shippo_rates
 import files
 import function
@@ -103,31 +104,6 @@ try:
 except Exception as e:
     print("Error initializing MySQL: {}".format(e))
     mysql = None
-
-# Simple report caching
-report_cache = {}
-CACHE_DURATION = 300  # 5 minutes
-
-def get_cache_key(report_type, params):
-    """Generate cache key for reports"""
-    param_str = json.dumps(params, sort_keys=True)
-    return "{}_{}".format(report_type, hashlib.md5(param_str.encode()).hexdigest())
-
-def get_cached_report(report_type, params):
-    """Get cached report data if available and not expired"""
-    cache_key = get_cache_key(report_type, params)
-    if cache_key in report_cache:
-        timestamp, data = report_cache[cache_key]
-        if datetime.now().timestamp() - timestamp < CACHE_DURATION:
-            return data
-        else:
-            del report_cache[cache_key]
-    return None
-
-def cache_report(report_type, params, data):
-    """Cache report data with timestamp"""
-    cache_key = get_cache_key(report_type, params)
-    report_cache[cache_key] = (datetime.now().timestamp(), data)
 
 def login_required(f):
     """Decorator to check if user is logged in and redirect to login with next parameter"""
@@ -4252,7 +4228,7 @@ def reports_profit():
             'day': details.get('day', '')
         }
         
-        cached_data = get_cached_report('profit', cache_params)
+        cached_data = reports_cache.get_cached_report('profit', cache_params)
         if cached_data:
             return render_template('reports_profit.html', 
                                 form=form, 
@@ -4269,7 +4245,7 @@ def reports_profit():
             purchased_dates = get_data.get_purchased_from_day(details['day'],details['year'])
         
         # Cache the results
-        cache_report('profit', cache_params, {
+        reports_cache.cache_report('profit', cache_params, {
             'sold_dates': sold_dates,
             'purchased_dates': purchased_dates
         })

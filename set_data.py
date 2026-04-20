@@ -4,6 +4,8 @@ import datetime
 from datetime import date, timedelta
 import uuid
 
+import reports_cache
+
 # We'll get the mysql object passed to us or use a global reference
 mysql = None
 
@@ -11,6 +13,11 @@ def set_mysql_connection(mysql_connection):
     """Set the MySQL connection from the main app"""
     global mysql
     mysql = mysql_connection
+
+
+def _invalidate_report_cache():
+    """Profit/sales reports cache in-memory; clear after any change that affects totals."""
+    reports_cache.clear_report_cache()
 
 #Item Data
 
@@ -34,6 +41,7 @@ def set_mark_sold(id, sold):
     """, (sold, id, session.get('id')))
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
 
 def set_bought_items_improved(details):
     """Improved function to handle bulk item adding with individual categories and eBay item IDs"""
@@ -95,6 +103,7 @@ def set_bought_items_improved(details):
     
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
     
     return item_count
 
@@ -147,6 +156,7 @@ def set_quick_sale(details):
                 (item_id, price, shipping_fee, date.today().strftime("%Y-%m-%d")))
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
     return item_id
 
 def set_sale_data(details):
@@ -184,6 +194,7 @@ def set_sale_data(details):
     """, (sale_date, price, shipping_fee, details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
 
 
 def set_items_modify(details):
@@ -216,6 +227,7 @@ def set_items_modify(details):
     """, (details['name'], details['group'], details['category'], details['returned'], details['storage'], details['list_date'], ebay_item_id, details['id'], session.get('id')))
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
 
 def remove_item_data(id):
     # Validate input
@@ -230,6 +242,7 @@ def remove_item_data(id):
     """, (id, session.get('id')))
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
 
 
 #Group Data
@@ -275,6 +288,7 @@ def set_group_add(group_name, details, image_id):
           session.get('group_id'), latitude, longitude, location_address, neighborhood_id))
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
     return group_id
 
 def set_group_modify(details, image_id):
@@ -323,6 +337,7 @@ def set_group_modify(details, image_id):
           details['id'], session.get('group_id')))
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
 
 def remove_group_data(id):
     # Validate input
@@ -336,6 +351,7 @@ def remove_group_data(id):
     """, (id, session.get('group_id')))
     mysql.connection.commit()
     cur.close()
+    _invalidate_report_cache()
 
 
 
@@ -673,6 +689,7 @@ def mark_item_returned(item_id, returned_fee):
         """, (returned_fee, item_id, session.get('id')))
         
         mysql.connection.commit()
+        _invalidate_report_cache()
         return True
     except Exception as e:
         mysql.connection.rollback()
