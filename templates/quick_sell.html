@@ -97,16 +97,31 @@
             </div>
         </form>
     </div>
-{% if prefill_from_ebay and shippo_ready %}
+{% if prefill_from_ebay %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var hid = document.querySelector('input[name="ebay_item_id"]');
     var eid = hid && hid.value ? hid.value.trim() : '';
     if (!eid) return;
+    var priceInput = document.getElementById('price');
     function set(id, v) {
         var n = document.getElementById(id);
         if (n && v != null && v !== '') n.value = v;
     }
+    // Same net earnings as Sell Item (/api/ebay-item-data), not gross from sold-search links
+    fetch('/api/ebay-listing-data/' + encodeURIComponent(eid))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success || !data.ebay_data || !priceInput) return;
+            var d = data.ebay_data;
+            var netEarnings = d.net_earnings != null && d.net_earnings !== '' ? d.net_earnings : d.final_price;
+            if (netEarnings !== '' && netEarnings != null) {
+                priceInput.value = Number(netEarnings).toFixed(2);
+                priceInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        })
+        .catch(function() {});
+{% if shippo_ready %}
     fetch('/api/ebay-order-address/' + encodeURIComponent(eid))
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -118,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
             set('shippo-to-zip', st.postal_code);
         })
         .catch(function() {});
+{% endif %}
 });
 </script>
 {% endif %}

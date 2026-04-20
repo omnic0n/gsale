@@ -89,7 +89,7 @@
                                 <i class="fas fa-link"></i> View Item
                             </a>
                         {% elif item.itemId and item.itemId != 'N/A' %}
-                            <a href="{{ url_for('quick_sell', ebay_item_id=item.itemId, name=item.title, price=item.price) }}" class="btn btn-sm btn-outline-secondary ml-2">
+                            <a href="{{ url_for('quick_sell', ebay_item_id=item.itemId, name=item.title) }}" class="btn btn-sm btn-outline-secondary ml-2">
                                 <i class="fas fa-dollar-sign"></i> Sell item
                             </a>
                         {% endif %}

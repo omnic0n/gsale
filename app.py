@@ -4812,85 +4812,102 @@ def sold_items():
     )
 
 
+def _ebay_user_token_or_json_error():
+    token_result = get_valid_ebay_token()
+    if token_result['success']:
+        user_token = token_result['access_token']
+    else:
+        user_token = app.config.get('EBAY_USER_TOKEN')
+    if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
+        return None, {'success': False, 'message': 'eBay authentication required'}
+    return user_token, None
+
+
+def _ebay_financial_api_payload(user_token, ebay_item_id, log_internal_item_id=None):
+    """
+    Same eBay order/fee breakdown used by Sell Item and Quick Sell (prefill by listing ID).
+    log_internal_item_id: GSale item id for debug logs when resolving from DB; None for quick sell.
+    """
+    transaction_data = get_item_transaction_details(user_token, ebay_item_id)
+    if transaction_data['success']:
+        trans_data = transaction_data['transaction_data']
+        order_id = trans_data.get('order_id') or trans_data.get('orderId') or ''
+        subtotal = round(float(trans_data.get('subtotal', 0)), 2)
+        shipping = round(float(trans_data.get('shipping', 0)), 2)
+        sales_tax = round(float(trans_data.get('sales_tax', 0)), 2)
+        order_total = round(float(trans_data.get('order_total', 0)) or (subtotal + shipping + sales_tax), 2)
+        final_price = round(float(trans_data.get('final_price', 0)), 2)
+        total_fees = round(float(trans_data.get('total_fees', 0)), 2)
+        net_earnings = round(float(trans_data.get('net_earnings', 0)), 2)
+        print("")
+        print("========== eBay order breakdown ==========")
+        print("  gsale item_id:", log_internal_item_id if log_internal_item_id is not None else '(listing only / quick sell)')
+        print("  ebay_item_id:", ebay_item_id)
+        print("  order_id:     ", order_id)
+        print("  Subtotal:     ${:.2f}".format(subtotal))
+        print("  Shipping:     ${:.2f}".format(shipping))
+        print("  Sales tax:    ${:.2f}".format(sales_tax))
+        print("  Order total:  ${:.2f}".format(order_total))
+        print("  Total fees:   ${:.2f}".format(total_fees))
+        print("  Order earnings: ${:.2f}".format(final_price if final_price else net_earnings))
+        print("==========================================")
+        print("")
+        ship_to = trans_data.get('ship_to_address')
+        out = {
+            'order_id': order_id,
+            'net_earnings': net_earnings,
+            'final_price': final_price,
+            'total_fees': total_fees,
+            'subtotal': subtotal,
+            'shipping': shipping,
+            'sales_tax': sales_tax,
+            'order_total': order_total,
+        }
+        if ship_to:
+            out['ship_to_address'] = ship_to
+        return {'success': True, 'ebay_data': out}
+    err = transaction_data.get('error', 'Unknown error')
+    if log_internal_item_id is not None:
+        print("[ebay-item-data] No data for item_id={} ebay_item_id={}: {}".format(log_internal_item_id, ebay_item_id, err))
+    else:
+        print("[ebay-listing-data] No data for ebay_item_id={}: {}".format(ebay_item_id, err))
+    return {'success': False, 'message': f"Could not fetch eBay data: {err}"}
+
+
 @app.route('/api/ebay-item-data/<item_id>')
 @login_required
 def get_ebay_item_data(item_id):
     """API endpoint to fetch eBay financial data for a specific item"""
     try:
-        # Get item data
         item_data = get_data.get_data_for_item_describe(item_id)
         if not item_data or not item_data[0].get('ebay_item_id'):
             return jsonify({
                 'success': False,
                 'message': 'No eBay item ID found for this item'
             })
-        
+
         ebay_item_id = item_data[0]['ebay_item_id']
-        
-        # Get eBay financial data
-        token_result = get_valid_ebay_token()
-        if token_result['success']:
-            user_token = token_result['access_token']
-        else:
-            user_token = app.config.get('EBAY_USER_TOKEN')
-        
-        if not user_token or user_token == 'YOUR_EBAY_USER_TOKEN_HERE':
-            return jsonify({
-                'success': False,
-                'message': 'eBay authentication required'
-            })
-        
-        # Fetch transaction details
-        transaction_data = get_item_transaction_details(user_token, ebay_item_id)
-        
-        if transaction_data['success']:
-            trans_data = transaction_data['transaction_data']
-            order_id = trans_data.get('order_id') or trans_data.get('orderId') or ''
-            subtotal = round(float(trans_data.get('subtotal', 0)), 2)
-            shipping = round(float(trans_data.get('shipping', 0)), 2)
-            sales_tax = round(float(trans_data.get('sales_tax', 0)), 2)
-            order_total = round(float(trans_data.get('order_total', 0)) or (subtotal + shipping + sales_tax), 2)
-            final_price = round(float(trans_data.get('final_price', 0)), 2)
-            total_fees = round(float(trans_data.get('total_fees', 0)), 2)
-            net_earnings = round(float(trans_data.get('net_earnings', 0)), 2)
-            # Debug: print to terminal (sell item page)
-            print("")
-            print("========== eBay order breakdown (sell item page) ==========")
-            print("  item_id:      ", item_id)
-            print("  ebay_item_id: ", ebay_item_id)
-            print("  order_id:     ", order_id)
-            print("  Subtotal:     ${:.2f}".format(subtotal))
-            print("  Shipping:     ${:.2f}".format(shipping))
-            print("  Sales tax:    ${:.2f}".format(sales_tax))
-            print("  Order total:  ${:.2f}".format(order_total))
-            print("  Total fees:   ${:.2f}".format(total_fees))
-            print("  Order earnings: ${:.2f}".format(final_price if final_price else net_earnings))
-            print("==========================================================")
-            print("")
-            ship_to = trans_data.get('ship_to_address')
-            out = {
-                'order_id': order_id,
-                'net_earnings': net_earnings,
-                'final_price': final_price,
-                'total_fees': total_fees,
-                'subtotal': subtotal,
-                'shipping': shipping,
-                'sales_tax': sales_tax,
-                'order_total': order_total,
-            }
-            if ship_to:
-                out['ship_to_address'] = ship_to
-            return jsonify({
-                'success': True,
-                'ebay_data': out
-            })
-        else:
-            print("[ebay-item-data] No data for item_id={} ebay_item_id={}: {}".format(item_id, ebay_item_id, transaction_data.get('error', 'Unknown error')))
-            return jsonify({
-                'success': False,
-                'message': f"Could not fetch eBay data: {transaction_data.get('error', 'Unknown error')}"
-            })
-            
+        user_token, err_body = _ebay_user_token_or_json_error()
+        if err_body is not None:
+            return jsonify(err_body)
+        return jsonify(_ebay_financial_api_payload(user_token, ebay_item_id, log_internal_item_id=item_id))
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error fetching eBay data: {str(e)}'
+        })
+
+
+@app.route('/api/ebay-listing-data/<ebay_item_id>')
+@login_required
+def get_ebay_listing_data(ebay_item_id):
+    """eBay financials by listing ID (no GSale item row). Used to match Sell Item net price on Quick Sell."""
+    try:
+        user_token, err_body = _ebay_user_token_or_json_error()
+        if err_body is not None:
+            return jsonify(err_body)
+        return jsonify(_ebay_financial_api_payload(user_token, ebay_item_id, log_internal_item_id=None))
     except Exception as e:
         return jsonify({
             'success': False,
