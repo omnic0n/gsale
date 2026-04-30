@@ -94,12 +94,14 @@
     height: 100vh;
     z-index: 9999;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     background-color: rgba(0, 0, 0, 0.6);
-    padding: 0;
+    padding: 1rem;
     margin: 0;
-    overflow: hidden;
+    box-sizing: border-box;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .custom-modal-backdrop {
@@ -117,13 +119,14 @@
     z-index: 10001;
     width: 80%;
     max-width: 800px;
-    min-width: 600px;
+    min-width: min(600px, 100%);
     height: auto;
-    max-height: 95vh;
-    margin: 20px auto;
+    max-height: none;
+    margin: 0 auto 1rem;
     padding: 0;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
 }
 
 .custom-modal-content {
@@ -151,6 +154,14 @@
     flex-shrink: 0;
 }
 
+.custom-modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
 .custom-modal-title {
     margin: 0;
     font-size: 1.5rem;
@@ -162,11 +173,11 @@
     padding: 20px;
     background-color: white;
     color: black;
-    flex: 1;
+    flex: 1 1 auto;
     overflow-y: auto;
     overflow-x: hidden;
     display: block;
-    min-height: 400px;
+    min-height: 0;
 }
 
 .custom-modal-footer {

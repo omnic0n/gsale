@@ -11,8 +11,12 @@
     height: 100%;
     z-index: 1050;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background-color: rgba(0, 0, 0, 0.5);
 }
 
@@ -31,7 +35,8 @@
     z-index: 1055;
     width: 90%;
     max-width: 600px;
-    margin: 1.75rem auto;
+    margin: 0 auto 1.5rem;
+    flex-shrink: 0;
 }
 
 .custom-modal-content {
@@ -41,6 +46,10 @@
     border: 1px solid #dee2e6;
     position: relative;
     color: black;
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .custom-modal-header {
@@ -50,6 +59,15 @@
     padding: 1rem;
     border-bottom: 1px solid #dee2e6;
     background-color: white;
+    flex-shrink: 0;
+}
+
+.custom-modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .custom-modal-title {
@@ -63,6 +81,10 @@
     padding: 1rem;
     background-color: white;
     color: black;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .custom-modal-footer {
@@ -73,6 +95,7 @@
     padding: 1rem;
     border-top: 1px solid #dee2e6;
     background-color: white;
+    flex-shrink: 0;
 }
 
 .btn-close {
@@ -661,8 +684,10 @@ function openEditModal(itemId, name, groupId, categoryId, storage, ebayItemId, s
         categorySelect.value = categorySelect.options[0].value;
     }
     
-    // Show modal
-    document.getElementById('editItemModal').style.display = 'flex';
+    // Show modal (scroll overlay to top so first fields aren't clipped)
+    var modal = document.getElementById('editItemModal');
+    modal.style.display = 'flex';
+    modal.scrollTop = 0;
 }
 
 function closeEditModal() {
