@@ -56,7 +56,7 @@
             </thead>
             <tbody>
                 {% for item in results.listings %}
-                <tr>
+                <tr class="{% if item.matching_item_id and item.db_sold == 0 %}ebay-sold-row-not-in-db{% endif %}">
                     <td style="max-width: 300px; word-wrap: break-word;">
                         {% if item.matching_item_id %}
                             {{ item.title }}
@@ -143,6 +143,11 @@
 .no-match-title {
     color: #dc3545;
     font-weight: 500;
+}
+
+/* Linked to GSale but item still marked available (sold on eBay, not in app) */
+.blueTable tbody tr.ebay-sold-row-not-in-db td {
+    background-color: #e8f5e9 !important;
 }
 </style>
 {% endblock %}

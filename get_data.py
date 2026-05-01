@@ -647,6 +647,29 @@ def get_item_id_by_ebay_item_id(ebay_item_id):
     result = cur.fetchone()
     return result['id'] if result else None
 
+def get_sold_status_for_item_ids(item_ids):
+    """Map GSale item id -> items.sold (0 or 1) for the current account. Omits unknown ids."""
+    if not item_ids:
+        return {}
+    unique = list({i for i in item_ids if i})
+    if not unique:
+        return {}
+    cur = mysql.connection.cursor()
+    placeholders = ','.join(['%s'] * len(unique))
+    cur.execute(
+        """
+        SELECT i.id, i.sold
+        FROM items i
+        INNER JOIN collection c ON i.group_id = c.id
+        WHERE i.id IN ({})
+          AND c.account = %s
+        """.format(placeholders),
+        (*unique, get_current_user_id()),
+    )
+    rows = cur.fetchall() or []
+    cur.close()
+    return {r['id']: r['sold'] for r in rows}
+
 def get_data_for_item_describe(item_id):
     cur = mysql.connection.cursor()
     cur.execute(""" SELECT 

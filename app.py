@@ -2941,6 +2941,15 @@ def search_ebay_sold_items(search_term=None, num_items=25, min_price=None, max_p
                 'matching_item_id': matching_item_id  # Item ID in our database if match found
             })
         
+        matched_ids = [L['matching_item_id'] for L in listings if L.get('matching_item_id')]
+        sold_by_item = get_data.get_sold_status_for_item_ids(matched_ids)
+        for L in listings:
+            mid = L.get('matching_item_id')
+            if mid:
+                L['db_sold'] = sold_by_item.get(mid)
+            else:
+                L['db_sold'] = None
+        
         # Build note message
         if search_term and search_term.strip():
             note = f'Showing your sold items matching "{search_term}"'
